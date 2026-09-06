@@ -13,6 +13,7 @@ import {
 } from "./views/LanternView";
 import { LANTERN_LOGO_SVG } from "./views/lanternLogo";
 import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
+import { loadThemeCardCommands } from "./features/themeCards/copyAsToml";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -41,6 +42,7 @@ export default class BrumesPlugin extends Plugin {
 
 		loadTagFeature(this);
 		loadBrumesBlocks(this);
+		loadThemeCardCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
 
 		this.applySettings();

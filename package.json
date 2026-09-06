@@ -19,7 +19,8 @@
 	"author": "4rtamis",
 	"license": "MIT",
 	"dependencies": {
-		"obsidian": "^1.12.3"
+		"obsidian": "^1.12.3",
+		"smol-toml": "^1.8.0"
 	},
 	"devDependencies": {
 		"@codemirror/state": "6.5.0",
