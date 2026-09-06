@@ -324,9 +324,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Story theme parser")
+				.setName("Theme card parser")
 				.setDesc(
-					"Enable the story-theme code block parser and context menu action.",
+					"Enable the theme-card code block parser and context menu action. The older story-theme ID keeps working.",
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -339,6 +339,87 @@ export class BrumesSettingTab extends PluginSettingTab {
 							this.runTask(
 								async () => {
 									this.plugin.settings.features.storyThemeParser =
+										value;
+									await this.plugin.saveSettings({
+										refreshMarkdown: true,
+									});
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+
+		section.addSetting((setting) => {
+			setting
+				.setName("Challenge parser")
+				.setDesc(
+					"Enable the litm-challenge code block parser and context menu action.",
+				)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.challengeParser)
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.features.challengeParser =
+										value;
+									await this.plugin.saveSettings({
+										refreshMarkdown: true,
+									});
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+
+		section.addSetting((setting) => {
+			setting
+				.setName("Journey parser")
+				.setDesc(
+					"Enable the litm-journey code block parser and context menu action.",
+				)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.journeyParser)
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.features.journeyParser =
+										value;
+									await this.plugin.saveSettings({
+										refreshMarkdown: true,
+									});
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+
+		section.addSetting((setting) => {
+			setting
+				.setName("Theme kit parser")
+				.setDesc(
+					"Enable the litm-theme-kit code block parser and context menu action.",
+				)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.themeKitParser)
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.features.themeKitParser =
 										value;
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
