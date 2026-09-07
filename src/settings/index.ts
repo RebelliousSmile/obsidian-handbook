@@ -8,8 +8,8 @@ import {
 	getBorderPresetForMode,
 } from "./borderPresets";
 
-const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Brumes settings";
-const SETTINGS_SAVE_NOTICE = "Failed to save Brumes settings.";
+const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Handbook settings";
+const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
 
 export class BrumesSettingTab extends PluginSettingTab {
 	plugin: BrumesPlugin;
@@ -537,7 +537,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		hasPreset: boolean,
 	): DocumentFragment {
 		const fragment = this.containerEl.doc.createDocumentFragment();
-		fragment.append("Brumes is designed to work alongside the theme ");
+		fragment.append("Handbook is designed to work alongside the theme ");
 		this.appendLink(
 			fragment,
 			"Border",

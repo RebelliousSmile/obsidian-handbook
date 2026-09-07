@@ -1,24 +1,22 @@
-<p align="center">
-  <img src="doc/brumes.webp" alt="Brumes banner" width="960">
-</p>
+# Handbook
 
-# Brumes
+Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mist** and **:Otherscape** vaults with game-specific styling, custom inline syntax, themed callouts, theme cards, challenge and danger profiles, and optional canvas helpers.
 
-Brumes is an Obsidian plugin for running **City of Mist** and **Legend in the Mist** vaults with game-specific styling, custom inline syntax, themed callouts, Story Theme cards, and optional canvas helpers.
+It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
-Note: **:Otherscape** suuport is planned, but not implemented yet.
+Note: the **:Otherscape** declension is in progress. City of Mist and Legend in the Mist are complete.
 
 ## Installation
 
 ### 1. Prepare a vault
 
-Brumes is easiest to test in a dedicated vault.
+Handbook is easiest to test in a dedicated vault.
 
 | Install                                                                       | Why                                                          |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [BRAT](https://github.com/TfTHacker/obsidian42-brat)                          | Required to install Brumes from GitHub                       |
-| [Border theme](https://github.com/Akifyss/obsidian-border)                    | The visual base Brumes is designed around                    |
-| [Style Settings](https://github.com/mgmeyers/obsidian-style-settings)         | Needed to import the Border preset Brumes provides           |
+| [BRAT](https://github.com/TfTHacker/obsidian42-brat)                          | Required to install Handbook from GitHub                       |
+| [Border theme](https://github.com/Akifyss/obsidian-border)                    | The visual base Handbook is designed around                    |
+| [Style Settings](https://github.com/mgmeyers/obsidian-style-settings)         | Needed to import the Border preset Handbook provides           |
 | [Advanced Canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) | Optional, only needed for Iceberg and Mountain card snippets |
 
 Suggested vault setup:
@@ -28,23 +26,23 @@ Suggested vault setup:
 3. Install `BRAT`, `Style Settings`, and optionally `Advanced Canvas`.
 4. Switch your theme to `Border`.
 
-### 2. Install Brumes with BRAT
+### 2. Install Handbook with BRAT
 
 1. Open `Settings -> BRAT`.
 2. Choose `Add Beta plugin`.
-3. Enter `4rtamis/obsidian-brumes`.
-4. Install the plugin, then enable `Brumes`.
+3. Enter `RebelliousSmile/obsidian-handbook`.
+4. Install the plugin, then enable `Handbook`.
 
-### 3. Configure Brumes
+### 3. Configure Handbook
 
-1. Open `Settings -> Brumes`.
+1. Open `Settings -> Handbook`.
 2. Pick your `Game mode`.
 3. Click `Copy preset` for the active mode.
 4. Import that preset through `Style Settings` if you are using `Border`.
 
 ### 4. Optional canvas setup
 
-If you use `Advanced Canvas`, Brumes can generate mode-specific node-style snippets:
+If you use `Advanced Canvas`, Handbook can generate mode-specific node-style snippets:
 
 - `City of Mist` mode: copy the `Iceberg canvas snippet`
 - `Legend in the Mist` mode: copy the `Mountain canvas snippet`
@@ -60,7 +58,7 @@ Then:
 
 ### 1. Custom inline syntax
 
-Brumes parses brace-based syntax in the editor and in reading view:
+Handbook parses brace-based syntax in the editor and in reading view:
 
 ```md
 {power-tag}
@@ -75,11 +73,11 @@ Brumes parses brace-based syntax in the editor and in reading view:
 - `{status-3}` creates a status with a rating
 - `{limit:5}` creates a limit
 
-The plugin also adds a Brumes editor context-menu entry so you can insert starter tags, callouts, and Story Theme templates without memorizing the syntax.
+The plugin also adds a Handbook editor context-menu entry so you can insert starter tags, callouts, and Story Theme templates without memorizing the syntax.
 
 ### 2. Callouts
 
-Brumes builds on standard Obsidian callouts, but gives them mode-specific styling and aliases.
+Handbook builds on standard Obsidian callouts, but gives them mode-specific styling and aliases.
 
 City of Mist examples:
 
@@ -117,11 +115,11 @@ Default Legend in the Mist aliases include:
 - `note`
 - `read-aloud`
 
-Aliases are editable in Brumes settings, and the first alias in each list is what the context menu inserts.
+Aliases are editable in Handbook settings, and the first alias in each list is what the context menu inserts.
 
 ### 3. Theme cards for Legend in the Mist
 
-In `Legend in the Mist` mode, Brumes renders a `theme-card` code block into a styled card. A hero theme names its might level and its themebook:
+In `Legend in the Mist` mode, Handbook renders a `theme-card` code block into a styled card. A hero theme names its might level and its themebook:
 
 ````md
 ```theme-card
@@ -153,13 +151,13 @@ How it works:
 - Later normal tags become power tags
 - `{!weakness}` lines become weakness tags
 
-If you omit the level, Brumes falls back to a standard card style, without a level badge and without a category line.
+If you omit the level, Handbook falls back to a standard card style, without a level badge and without a category line.
 
 The former `story-theme` id still renders the same card, so older notes keep working, but it is deprecated: prefer `theme-card` in new notes.
 
 ### 4. Challenges for Legend in the Mist
 
-In `Legend in the Mist` mode, Brumes can render a `litm-challenge` code block into a challenge profile card:
+In `Legend in the Mist` mode, Handbook can render a `litm-challenge` code block into a challenge profile card:
 
 ````md
 ```litm-challenge
@@ -199,7 +197,7 @@ How it works:
 
 ### 5. Journeys for Legend in the Mist
 
-In `Legend in the Mist` mode, Brumes can render a `litm-journey` code block into a journey sheet:
+In `Legend in the Mist` mode, Handbook can render a `litm-journey` code block into a journey sheet:
 
 ````md
 ```litm-journey
@@ -251,7 +249,7 @@ How it works:
 
 ### 6. Theme kits for Legend in the Mist
 
-In `Legend in the Mist` mode, Brumes can render a `litm-theme-kit` code block into a ready-made theme card:
+In `Legend in the Mist` mode, Handbook can render a `litm-theme-kit` code block into a ready-made theme card:
 
 ````md
 ```litm-theme-kit
@@ -276,7 +274,7 @@ How it works:
 
 ### 7. Iceberg and Mountain card snippets
 
-Brumes includes copyable snippet templates for `Advanced Canvas`.
+Handbook includes copyable snippet templates for `Advanced Canvas`.
 
 - `Iceberg Card` is the City of Mist helper
 - `Mountain Card` is the Legend in the Mist helper
@@ -301,11 +299,11 @@ The selected game mode changes more than colors. It also switches which callouts
 
 ### 9. Lantern in the Mist integration
 
-Brumes can add a ribbon button that opens an embedded `Lantern in the Mist` view inside Obsidian. The target URL is configurable from plugin settings.
+Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` view inside Obsidian. The target URL is configurable from plugin settings.
 
 ## License
 
-- Plugin code: [MIT](LICENSE)
+- Plugin code: [MIT](LICENSE), originally (c) 4rtamis as Brumes, modifications (c) François-Xavier Guillois
 - Font files: each bundled font keeps its own upstream license
 - Assets: status is still under discussion with Son of Oak
 

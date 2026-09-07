@@ -31,7 +31,7 @@ export default class BrumesPlugin extends Plugin {
 
 		log.setLevel(this.settings.logLevel);
 		addIcon(LANTERN_ICON, LANTERN_LOGO_SVG);
-		log.info("Brumes plugin loaded");
+		log.info("Handbook plugin loaded");
 
 		this.registerView(
 			LANTERN_VIEW_TYPE,
@@ -56,14 +56,14 @@ export default class BrumesPlugin extends Plugin {
 
 		this.lanternRibbonEl?.remove();
 		this.lanternRibbonEl = null;
-		log.info("Brumes plugin unloaded");
+		log.info("Handbook plugin unloaded");
 	}
 
 	async activateLanternView() {
 		if (!this.settings.features.lanternIntegration) {
 			new Notice(
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				"Enable Lantern in the Mist integration in Brumes settings first.",
+				"Enable Lantern in the Mist integration in Handbook settings first.",
 			);
 			return;
 		}

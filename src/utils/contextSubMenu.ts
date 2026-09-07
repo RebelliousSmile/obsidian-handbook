@@ -10,7 +10,7 @@ function hasSubmenu(item: MenuItem): item is MenuItemWithSubmenu {
 
 function createSubmenu(item: MenuItem): Menu {
 	if (!hasSubmenu(item)) {
-		throw new Error("Brumes submenu API is not available in this Obsidian build.");
+		throw new Error("Handbook submenu API is not available in this Obsidian build.");
 	}
 
 	return item.setSubmenu();
@@ -20,12 +20,12 @@ export function getOrCreateBrumesSubmenu(menu: Menu): Menu {
 	let brumesSubmenu: Menu | null = null;
 
 	menu.addItem((item: MenuItem) => {
-		item.setTitle("Brumes").setIcon("dices").setSection("selection");
+		item.setTitle("Handbook").setIcon("dices").setSection("selection");
 		brumesSubmenu = createSubmenu(item);
 	});
 
 	if (!brumesSubmenu) {
-		throw new Error("Failed to create the Brumes submenu.");
+		throw new Error("Failed to create the Handbook submenu.");
 	}
 
 	return brumesSubmenu;
