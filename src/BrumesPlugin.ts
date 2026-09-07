@@ -3,7 +3,10 @@ import { loadTagFeature } from "./features/tags";
 import { BrumesSettingTab } from "./settings";
 import { BrumesSettings, normalizeSettings } from "./settings/types";
 import { log } from "./utils/logger";
-import { setBrumesModeClass } from "./features/modes/domModeClass";
+import {
+	setBrumesModeClass,
+	setBrumesWorkspaceThemeClass,
+} from "./features/modes/domModeClass";
 import { loadBrumesBlocks } from "./features/blocks/registry";
 import { registerBrumesContextMenu } from "./contextMenu";
 import {
@@ -85,6 +88,7 @@ export default class BrumesPlugin extends Plugin {
 	private applySettings(options: ApplySettingsOptions = {}) {
 		log.setLevel(this.settings.logLevel);
 		setBrumesModeClass(this.settings.mode);
+		setBrumesWorkspaceThemeClass(this.settings.features.workspaceTheme);
 		this.refreshLanternIntegration();
 		this.refreshContextMenu();
 		this.syncCalloutAliases?.();

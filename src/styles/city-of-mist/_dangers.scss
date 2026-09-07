@@ -1,0 +1,146 @@
+// A Danger profile is not a card: in the MC toolkit it is a block on the page,
+// a pale panel lifted off the paper by a shadow, with the name underlined and
+// the section headings shouted in condensed capitals. That is the shape the
+// v1 theme gave `div.danger`, and the one it keeps here.
+@mixin global {
+	.brumes-com-danger {
+		--brumes-com-danger-h: 42;
+		--brumes-com-danger-s: 38%;
+		--brumes-com-danger-l: 91%;
+		--brumes-com-danger-accent: #852d3a;
+		--brumes-com-danger-ink: #1c1917;
+
+		max-width: 34rem;
+		margin: 1em 0;
+		padding: 0.6em 1em 0.8em;
+		color: var(--brumes-com-danger-ink);
+		background-color: hsl(
+			var(--brumes-com-danger-h),
+			var(--brumes-com-danger-s),
+			var(--brumes-com-danger-l)
+		);
+		box-shadow: #00000050 0px 0px 8px 1px;
+	}
+
+	// The Mist does not lighten the page at night.
+	&.theme-dark .brumes-com-danger {
+		--brumes-com-danger-s: 45%;
+		--brumes-com-danger-l: 14%;
+		--brumes-com-danger-accent: #d9737f;
+		--brumes-com-danger-ink: #e8e2d4;
+	}
+
+	.brumes-com-danger--name {
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 900;
+		font-size: 1.5em;
+		line-height: 1.1;
+		text-transform: uppercase;
+		text-decoration: underline;
+		text-decoration-thickness: 3px;
+		text-underline-offset: 0.12em;
+	}
+
+	.brumes-com-danger--description {
+		p {
+			margin: 0.3em 0 0;
+			font-family: "Courier Prime", monospace;
+			font-size: 0.9em;
+			line-height: 1.4;
+		}
+	}
+
+	.brumes-com-danger--section {
+		margin-top: 0.7em;
+	}
+
+	// Bebas Neue stands in for the Rift of the printed toolkit.
+	.brumes-com-danger--section-title {
+		margin: 0 0 0.2em;
+		font-family: "Bebas Neue", sans-serif;
+		font-weight: 400;
+		font-size: 1.5em;
+		line-height: 1;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--brumes-com-danger-accent);
+		border-bottom: 2px solid currentColor;
+	}
+
+	.brumes-com-danger--spectrum-list,
+	.brumes-com-danger--move-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	// Spectrums read as columns when there is room, and stack on a narrow
+	// pane. Multicol rather than a grid: a short list must not leave a hole
+	// where its second column would be.
+	.brumes-com-danger--spectrum-list {
+		columns: 2 12rem;
+		column-gap: 1.2em;
+	}
+
+	.brumes-com-danger--spectrum {
+		margin: 0 0 0.3em;
+		break-inside: avoid;
+		line-height: 1.4;
+	}
+
+	// The books mark a spectrum with no maximum `hurt:∞`: the Danger is immune
+	// to anything imposed on it. The shared limit style prints the value, so
+	// the infinity replaces it here rather than in the tag itself.
+	.brumes-com-danger--spectrum[data-immune="true"] .brumes-limit::after {
+		content: ":∞";
+	}
+
+	.brumes-com-danger--outcome {
+		display: block;
+		margin-top: 0.1em;
+		padding-left: 0.9em;
+		font-size: 0.9em;
+		font-style: italic;
+		opacity: 0.85;
+
+		&::before {
+			content: "→ ";
+			font-style: normal;
+			opacity: 0.6;
+		}
+	}
+
+	.brumes-com-danger--move {
+		margin: 0 0 0.35em;
+		line-height: 1.4;
+	}
+
+	.brumes-com-danger--move-label {
+		margin-right: 0.4em;
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 900;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+
+		&::after {
+			content: ":";
+		}
+	}
+
+	// A custom move is an MC intrusion: it fires on its own condition, so it
+	// is marked apart from the soft and hard moves.
+	.brumes-com-danger--move-custom .brumes-com-danger--move-label {
+		color: var(--brumes-com-danger-accent);
+	}
+
+	.brumes-com-danger--move-name {
+		margin-right: 0.35em;
+		font-weight: 700;
+
+		&::after {
+			content: " —";
+			font-weight: 400;
+			opacity: 0.6;
+		}
+	}
+}

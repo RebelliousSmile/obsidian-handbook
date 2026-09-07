@@ -7,11 +7,14 @@ export type LogLevel = "none" | "error" | "warn" | "info" | "debug";
 
 export interface BrumesFeatureSettings {
 	tagsSyntax: boolean;
+	workspaceTheme: boolean;
 	lanternIntegration: boolean;
 	storyThemeParser: boolean;
 	challengeParser: boolean;
 	journeyParser: boolean;
 	themeKitParser: boolean;
+	comThemeCardParser: boolean;
+	comDangerParser: boolean;
 }
 
 export interface CityOfMistCalloutAliases {
@@ -60,11 +63,14 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 	lanternUrl: "https://lantern.ravenloft.fr",
 	features: {
 		tagsSyntax: true,
+		workspaceTheme: true,
 		lanternIntegration: true,
 		storyThemeParser: true,
 		challengeParser: true,
 		journeyParser: true,
 		themeKitParser: true,
+		comThemeCardParser: true,
+		comDangerParser: true,
 	},
 	calloutAliases: {
 		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,

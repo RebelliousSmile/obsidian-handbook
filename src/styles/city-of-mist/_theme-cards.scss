@@ -1,0 +1,187 @@
+// The City of Mist theme speaks a precise visual language: a 3px frame, a
+// 5px radius, a soft drop shadow, printed headings in condensed uppercase and
+// hand-written answers in a rounded serif. A theme card is a card of that
+// deck, not a generic panel, so it borrows all of it.
+@mixin global {
+	.brumes-com-theme-card {
+		--brumes-com-card-accent: #514a49;
+		--brumes-com-card-paper: #e0d9c1;
+		--brumes-com-card-ink: #1c1917;
+
+		max-width: 30rem;
+		margin: 1em 0;
+		padding: 0;
+		color: var(--brumes-com-card-ink);
+		background-color: var(--brumes-com-card-paper);
+		border: 3px solid var(--brumes-com-card-accent);
+		border-radius: 5px;
+		box-shadow: #00000050 0px 0px 8px 1px;
+		overflow: hidden;
+	}
+
+	// A Mythos card wears the red of the legend, a Logos card the grey of
+	// ordinary life.
+	.brumes-com-theme-card--mythos {
+		--brumes-com-card-accent: #852d3a;
+	}
+
+	.brumes-com-theme-card--crew,
+	.brumes-com-theme-card--extra {
+		--brumes-com-card-accent: #6b5f3f;
+	}
+
+	.brumes-com-theme-card--header {
+		padding: 0.25rem 0.65rem 0.4rem;
+		background-color: var(--brumes-com-card-accent);
+	}
+
+	// The themebook is printed on the card, so it takes the heading voice of
+	// the theme; the title is written in by the player, so it takes the
+	// rounded serif the clues and moves use for written words.
+	.brumes-com-theme-card--themebook {
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 900;
+		font-size: 1.6em;
+		line-height: 1.1;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--brumes-com-card-paper);
+	}
+
+	.brumes-com-theme-card--title {
+		font-family: "Averia Serif Libre", serif;
+		font-size: 1em;
+		line-height: 1.2;
+		color: #fff;
+		opacity: 0.9;
+	}
+
+	.brumes-com-theme-card--drive {
+		padding: 0.45em 0.65em;
+		font-family: "Averia Serif Libre", serif;
+		font-size: 0.95em;
+		border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+	}
+
+	.brumes-com-theme-card--drive-label {
+		display: block;
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 800;
+		font-size: 0.8em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--brumes-com-card-accent);
+	}
+
+	.brumes-com-theme-card--tags {
+		margin: 0;
+		padding: 0.55em 0.65em;
+		list-style: none;
+	}
+
+	.brumes-com-theme-card--tag {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5em;
+		margin: 0 0 0.35em;
+		padding: 0;
+	}
+
+	.brumes-com-theme-card--tag:last-child {
+		margin-bottom: 0;
+	}
+
+	// On the printed card the weaknesses sit below a rule, apart from the
+	// powers. The rule only exists where the two kinds meet.
+	.brumes-com-theme-card--tag-power
+		+ .brumes-com-theme-card--tag-weakness {
+		margin-top: 0.5em;
+		padding-top: 0.5em;
+		border-top: 1px dashed rgba(0, 0, 0, 0.3);
+	}
+
+	// The letter of the themebook question the tag answers, kept in the margin
+	// so the tags still line up when a card has none.
+	.brumes-com-theme-card--question {
+		flex: 0 0 1.1em;
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 900;
+		font-size: 0.9em;
+		text-align: center;
+		color: var(--brumes-com-card-accent);
+	}
+
+	.brumes-com-theme-card--improvements {
+		margin: 0;
+		padding: 0 0.65em 0.55em;
+		list-style: none;
+	}
+
+	.brumes-com-theme-card--improvement {
+		margin: 0 0 0.35em;
+		padding: 0;
+		font-family: "Roboto", sans-serif;
+		font-size: 0.85em;
+		line-height: 1.35;
+	}
+
+	.brumes-com-theme-card--improvement-name {
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--brumes-com-card-accent);
+	}
+
+	.brumes-com-theme-card--improvement-name::after {
+		content: " — ";
+		color: var(--brumes-com-card-ink);
+	}
+
+	.brumes-com-theme-card--tracks {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.2em;
+		padding: 0.4em 0.65em;
+		background-color: rgba(0, 0, 0, 0.08);
+		border-top: 2px solid rgba(0, 0, 0, 0.15);
+	}
+
+	.brumes-com-theme-card--track {
+		display: flex;
+		align-items: center;
+		gap: 0.4em;
+	}
+
+	.brumes-com-theme-card--track-label {
+		font-family: "Fira Sans Extra Condensed", sans-serif;
+		font-weight: 800;
+		font-size: 0.8em;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	.brumes-com-theme-card--track-boxes {
+		display: inline-flex;
+		gap: 0.25em;
+	}
+
+	.brumes-com-theme-card--box {
+		width: 0.85em;
+		height: 0.85em;
+		border: 2px solid var(--brumes-com-card-ink);
+		border-radius: 1px;
+	}
+
+	.brumes-com-theme-card--box[data-state="filled"] {
+		background-color: var(--brumes-com-card-ink);
+	}
+
+	// An `identity:` on a Mythos, or a `fade:` on a Logos: shown, not hidden,
+	// with the reason in the tooltip.
+	.brumes-com-theme-card--mismatch {
+		text-decoration: underline wavy #852d3a;
+		text-underline-offset: 0.3em;
+		cursor: help;
+	}
+}

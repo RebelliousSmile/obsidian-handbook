@@ -5,6 +5,8 @@ export type ForcedTagKind = "power" | "weakness";
 
 export interface TagSpanOptions {
 	force?: ForcedTagKind;
+	/** A spent tag: still on the card, unusable until it is recovered. */
+	burnt?: boolean;
 }
 
 /**
@@ -18,16 +20,17 @@ export function renderTagSpan(
 	options: TagSpanOptions = {},
 ): HTMLSpanElement {
 	const span = doc.createElement("span");
+	const burnt = options.burnt ? " brumes-burnt" : "";
 
 	if (options.force) {
-		span.className = `brumes-tag brumes-${options.force}`;
+		span.className = `brumes-tag brumes-${options.force}${burnt}`;
 		span.dataset.name = content;
 		span.textContent = content;
 		return span;
 	}
 
 	const tagInfo = classifyTag(content);
-	span.className = `brumes-tag ${tagInfo.className}`;
+	span.className = `brumes-tag ${tagInfo.className}${burnt}`;
 
 	if (tagInfo.type === "status") {
 		span.dataset.statusName = tagInfo.name!;

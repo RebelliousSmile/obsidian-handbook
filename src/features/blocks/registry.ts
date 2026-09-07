@@ -5,6 +5,8 @@ import { logScope } from "../../utils/logger";
 import { renderRawBlock } from "./fallback";
 import { BrumesBlock, blockIds, isBlockEnabled } from "./types";
 import { challengeBlock } from "../challenges/block";
+import { comDangerBlock } from "../comDangers/block";
+import { comThemeCardBlock } from "../comThemeCards/block";
 import { journeyBlock } from "../journeys/block";
 import { themeCardBlock } from "../themeCards/block";
 import { themeKitBlock } from "../themeKits/block";
@@ -17,6 +19,8 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	challengeBlock,
 	journeyBlock,
 	themeKitBlock,
+	comThemeCardBlock,
+	comDangerBlock,
 ];
 
 /** Deprecated ids already reported, so an alias warns once per session. */

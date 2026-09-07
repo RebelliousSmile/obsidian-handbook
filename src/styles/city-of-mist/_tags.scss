@@ -61,3 +61,12 @@
 		content: "";
 	}
 }
+
+@mixin burnt {
+	// A spent tag stays on the card, struck out until it is recovered.
+	.brumes-burnt {
+		opacity: 0.55;
+		text-decoration: line-through;
+		text-decoration-thickness: 0.1em;
+	}
+}

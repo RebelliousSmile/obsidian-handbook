@@ -5,6 +5,7 @@
 @use "./fonts/pt-serif.scss";
 @use "./fonts/roboto.scss";
 
+@use "./workspace";
 @use "./headings";
 @use "./links";
 @use "./lists";
@@ -12,9 +13,14 @@
 @use "./tags";
 @use "./callouts";
 @use "./tables";
+@use "./theme-cards";
+@use "./dangers";
 @use "./iceberg";
 
 .brumes--city-of-mist {
+	// Workspace
+	@include workspace.global;
+
 	// Text
 	--font-text-theme: "PT Serif", serif;
 
@@ -46,6 +52,7 @@
 	@include tags.weakness;
 	@include tags.status;
 	@include tags.limit;
+	@include tags.burnt;
 
 	// Callouts
 	@include callouts.global;
@@ -53,6 +60,12 @@
 	@include callouts.description;
 	@include callouts.clue;
 	@include callouts.aside;
+
+	// Theme Cards
+	@include theme-cards.global;
+
+	// Danger Profiles
+	@include dangers.global;
 }
 
 // Iceberg Cards

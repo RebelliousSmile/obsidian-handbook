@@ -122,6 +122,29 @@ export class BrumesSettingTab extends PluginSettingTab {
 	private renderGeneralSettings(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
+				.setName("Workspace theme")
+				.setDesc(
+					"Paint the whole window in the colours of the game, not only the notes. No other game has one yet.",
+				)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.workspaceTheme)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.features.workspaceTheme =
+										value;
+									await this.plugin.saveSettings();
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+
+		section.addSetting((setting) => {
+			setting
 				.setName("Tags, statuses and limits")
 				.setDesc(
 					"Enable the special Markdown syntax, parsing and context menu action for tags, statuses and limits.",
@@ -265,6 +288,62 @@ export class BrumesSettingTab extends PluginSettingTab {
 				await this.plugin.saveSettings();
 			},
 		);
+
+		section.addSetting((setting) => {
+			setting
+				.setName("Theme card parser")
+				.setDesc(
+					"Enable the com-theme-card code block parser and context menu action.",
+				)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(
+							this.plugin.settings.features.comThemeCardParser,
+						)
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.features.comThemeCardParser =
+										value;
+									await this.plugin.saveSettings({
+										refreshMarkdown: true,
+									});
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+
+		section.addSetting((setting) => {
+			setting
+				.setName("Danger profile parser")
+				.setDesc(
+					"Enable the com-danger code block parser and context menu action.",
+				)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.comDangerParser)
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.features.comDangerParser =
+										value;
+									await this.plugin.saveSettings({
+										refreshMarkdown: true,
+									});
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
 
 		section.addSetting((setting) => {
 			setting
