@@ -1,0 +1,10 @@
+# Une carte de thème Legend in the Mist, tous champs renseignés.
+title_tag = "The Lantern I Was Left"
+level = "adventure"
+category = "Relic"
+power_tags = [
+  "Burns without oil",
+  "Shows the way back",
+  "Older than the road",
+]
+weakness_tags = ["Its light draws what walks behind", "Heavy in the hand"]

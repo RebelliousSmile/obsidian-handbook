@@ -1,3 +1,5 @@
+import { parseJourneyDocument } from "./schema";
+
 export type JourneyType = "landscape" | "occasion" | "undertaking";
 
 export interface JourneyVignette {
@@ -45,6 +47,12 @@ function splitList(value: string): string[] {
 }
 
 export function parseJourney(source: string): JourneyData | null {
+	const document = parseJourneyDocument(source);
+
+	if (document) {
+		return document;
+	}
+
 	const lines = source
 		.split("\n")
 		.map((line) => line.trim())

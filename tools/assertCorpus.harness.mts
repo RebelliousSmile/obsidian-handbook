@@ -22,18 +22,14 @@ import type { BrumesBlock } from "../src/features/blocks/types";
 import { log } from "../src/utils/logger";
 
 /**
- * The blocks that do not yet honour the guideline. Phase 3 of
- * `2026_09_08_schema-design-guidelines` empties this list. A block absent from
- * it and missing from the rule fails the harness — which is the point: once
- * the list is empty, a new block added without a schema breaks here instead of
- * being discovered by an assert six months later.
+ * The blocks that do not yet honour the guideline.
+ *
+ * It is empty, and staying empty is the point: a new block added without a
+ * schema document and a copy command breaks here, instead of being discovered
+ * by an assert six months later the way these four were. Naming a block here
+ * is how a debt is taken on deliberately — never how one is hidden.
  */
-const BLOCKS_IN_DEBT = [
-	"theme-card",
-	"com-theme-card",
-	"litm-journey",
-	"litm-theme-kit",
-];
+const BLOCKS_IN_DEBT: string[] = [];
 
 // pnpm runs its scripts from the repo root, so the corpus is right there.
 const CORPUS = join(process.cwd(), "corpus");
@@ -276,6 +272,58 @@ function assertRule(): void {
 	}
 }
 
+/**
+ * A witness copied as TOML and read back must draw the same thing.
+ *
+ * This is the round trip the guideline sells: a block leaves the note, lands
+ * in Lantern or in another vault, and is still the block it was. Reading and
+ * writing can each be right on their own and still disagree — a field written
+ * under one name and read under another passes both halves and loses itself
+ * in between.
+ */
+function assertAllerRetour(): void {
+	for (const spec of TOML_EXPORTS) {
+		const file = `${spec.block.id}.toml`;
+
+		if (!hasWitness(spec.block.id)) {
+			continue;
+		}
+
+		const source = readFileSync(join(CORPUS, "temoins", file), "utf8");
+		const first = spec.block.parse(source);
+
+		if (first === null) {
+			// assertTemoins has already said so; nothing to add here.
+			continue;
+		}
+
+		let second: unknown;
+
+		try {
+			second = spec.block.parse(spec.toToml(first));
+		} catch (error) {
+			fail(file, `the round trip threw: ${String(error)}`);
+			continue;
+		}
+
+		if (second === null) {
+			fail(file, "what the copy command wrote no longer parses");
+			continue;
+		}
+
+		const before = renderedText(
+			spec.block.render(first, doc as unknown as Document) as unknown as El,
+		);
+		const after = renderedText(
+			spec.block.render(second, doc as unknown as Document) as unknown as El,
+		);
+
+		if (before !== after) {
+			fail(file, "the copy and the original do not draw the same thing");
+		}
+	}
+}
+
 function reportDebt(): void {
 	const named: string[] = [];
 
@@ -290,7 +338,7 @@ function reportDebt(): void {
 		return;
 	}
 
-	console.log(`debt: ${named.join(", ")} (phase 3 closes this)`);
+	console.log(`debt: ${named.join(", ")}`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -303,6 +351,7 @@ log.setLevel("warn");
 assertTemoins();
 assertRefus();
 assertRule();
+assertAllerRetour();
 
 if (failures.length > 0) {
 	for (const failure of failures) {

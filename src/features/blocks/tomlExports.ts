@@ -3,8 +3,14 @@ import { challengeBlock } from "../challenges/block";
 import { challengeToToml } from "../challenges/schema";
 import { comDangerBlock } from "../comDangers/block";
 import { comDangerToToml } from "../comDangers/schema";
+import { comThemeCardBlock } from "../comThemeCards/block";
+import { comThemeCardToToml } from "../comThemeCards/schema";
+import { journeyBlock } from "../journeys/block";
+import { journeyToToml } from "../journeys/schema";
 import { themeCardBlock } from "../themeCards/block";
-import { themeCardToToml } from "../themeCards/toml";
+import { themeCardToToml } from "../themeCards/schema";
+import { themeKitBlock } from "../themeKits/block";
+import { themeKitToToml } from "../themeKits/schema";
 import {
 	describeMissingPart,
 	loadCopyAsTomlCommand,
@@ -12,7 +18,10 @@ import {
 } from "./copyAsToml";
 
 /**
- * Every block that can leave the note as a schema-in-the-mist document.
+ * Every block that can leave the note as a schema document. The list holds all
+ * six, and the guideline leaves no room for a seventh that would not be here:
+ * a format without an upstream writes its own shape rather than being exempt
+ * from having one.
  *
  * The list is exported rather than kept inside the loader so the corpus
  * harness can read it: the guideline says each block owes the schema a copy
@@ -38,6 +47,39 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: challengeToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must open with the challenge name"),
+	},
+	{
+		block: journeyBlock,
+		commandId: "copy-journey-as-toml",
+		noun: "journey",
+		toToml: journeyToToml,
+		describeFailure: (source) =>
+			describeMissingPart(
+				source,
+				"it must open with a landscape, occasion or undertaking line, then the name",
+			),
+	},
+	{
+		block: themeKitBlock,
+		commandId: "copy-theme-kit-as-toml",
+		noun: "theme kit",
+		toToml: themeKitToToml,
+		describeFailure: (source) =>
+			describeMissingPart(
+				source,
+				"it needs a name and at least one power tag such as {Power Tag}",
+			),
+	},
+	{
+		block: comThemeCardBlock,
+		commandId: "copy-com-theme-card-as-toml",
+		noun: "city theme card",
+		toToml: comThemeCardToToml,
+		describeFailure: (source) =>
+			describeMissingPart(
+				source,
+				"it must open with the themebook, then a title or a tag",
+			),
 	},
 	{
 		block: comDangerBlock,

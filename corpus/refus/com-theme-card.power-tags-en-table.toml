@@ -1,0 +1,11 @@
+# attend: dégradé
+# Les tags sont une liste de tables — `[[power_tags]]`. Écrits comme une table
+# unique, ils se perdent eux-mêmes ; le titre et le reste de la carte tiennent.
+themebook = "Adaptation"
+title = "What the Water Taught Me"
+
+[power_tags]
+text = "Breathes where nothing breathes"
+
+[[weakness_tags]]
+text = "The shore no longer holds me"

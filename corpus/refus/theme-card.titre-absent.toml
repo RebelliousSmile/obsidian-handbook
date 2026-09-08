@@ -1,0 +1,6 @@
+# attend: null
+# `title_tag` est l'identité de la carte. Sans lui il n'y a pas de carte : le
+# lecteur rend null et la grammaire terse ne trouve aucun tag à reprendre.
+level = "origin"
+category = "Trait"
+power_tags = ["Burns without oil"]

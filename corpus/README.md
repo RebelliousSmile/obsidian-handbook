@@ -58,18 +58,26 @@ ou
 La ligne suivante dit en clair de quoi il s'agit. Un refus se lit sans ouvrir le
 harnais.
 
-## Le corpus grandit
+## Les six blocs
 
-Aujourd'hui il couvre **deux blocs** : `litm-challenge` et `com-danger`, les
-seuls qui savent lire un document TOML.
+Le corpus couvre les **six** blocs fencés : `theme-card`, `litm-challenge`,
+`litm-journey`, `litm-theme-kit`, `com-theme-card`, `com-danger`. Chacun a son
+témoin et ses refus, et aucun n'est en dette.
 
-La phase 3 du plan `2026_09_08_schema-design-guidelines` porte les quatre autres
-— `theme-card`, `com-theme-card`, `litm-journey`, `litm-theme-kit` — et le
-corpus les rejoint alors. **Six à la fin.**
+Le harnais garde la liste des blocs en dette **vide**. Un bloc neuf qui n'y
+figure pas et n'a ni témoin ni commande de copie fait échouer
+`pnpm assert:corpus` — c'est ainsi que la règle se tient toute seule.
 
-Tant que l'écart n'est pas fermé, le harnais tient une liste nommée des blocs en
-dette : un bloc qui n'y figure pas et manque à la règle fait échouer
-`pnpm assert:corpus`.
+### Tout bloc ne sait pas rendre `null`
+
+`com-theme-card` n'a que des refus **dégradés**. Ce n'est pas un oubli : quand
+le lecteur de document renonce, la grammaire terse reprend la main, et celle de
+la carte de thème City of Mist lit la deuxième ligne venue comme un titre. Elle
+rend donc quelque chose là où les cinq autres grammaires ne trouvent rien.
+
+Le harnais mesure ce que `block.parse` renvoie, pas ce que le seul lecteur de
+document aurait renvoyé. Écrire `# attend: null` sur un bloc dont la grammaire
+rattrape tout ferait passer une assertion pour un contrôle.
 
 ## Lancer
 

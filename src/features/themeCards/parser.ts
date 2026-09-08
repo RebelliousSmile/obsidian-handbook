@@ -1,3 +1,5 @@
+import { parseThemeCardDocument } from "./schema";
+
 export type ThemeCardLevel = "origin" | "adventure" | "greatness" | "standard";
 
 export interface ThemeCardData {
@@ -15,6 +17,12 @@ const VALID_LEVELS = ["origin", "adventure", "greatness"];
  * Parse the content of a ```theme-card code block
  */
 export function parseThemeCard(source: string): ThemeCardData | null {
+	const document = parseThemeCardDocument(source);
+
+	if (document) {
+		return document;
+	}
+
 	const lines = source
 		.split("\n")
 		.map((line) => line.trim())

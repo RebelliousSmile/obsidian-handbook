@@ -1,0 +1,13 @@
+# attend: dégradé
+# `kind` connaît mystery, identity et neutral. Une valeur hors de cette liste
+# est lue comme une motivation, ce qui ne contredit aucun themebook : le texte
+# du moteur reste, seule sa nature retombe.
+themebook = "Personality"
+title = "The Face I Keep Practising"
+
+[drive]
+kind = "obsession"
+text = "Who am I when no one is watching?"
+
+[[power_tags]]
+text = "A smile for every room"
