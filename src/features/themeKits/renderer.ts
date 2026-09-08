@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import { ThemeKitData } from "./parser";
@@ -54,7 +55,7 @@ export function renderThemeKit(data: ThemeKitData, doc: Document): HTMLElement {
 			}
 
 			const quest = doc.createElement("div");
-			quest.textContent = data.quest;
+			renderProse(quest, data.quest, doc);
 
 			return quest;
 		},
@@ -73,7 +74,7 @@ export function renderThemeKit(data: ThemeKitData, doc: Document): HTMLElement {
 			if (data.improvement.effect) {
 				const effect = doc.createElement("span");
 				effect.classList.add("brumes-theme-kit--improvement-effect");
-				effect.textContent = data.improvement.effect;
+				renderProse(effect, data.improvement.effect, doc);
 				improvement.appendChild(effect);
 			}
 

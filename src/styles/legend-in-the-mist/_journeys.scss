@@ -106,5 +106,22 @@
 			content: "› ";
 			color: var(--text-muted);
 		}
+
+		// Parsing gaps, surfaced instead of dropped silently.
+		&--warnings {
+			margin-top: 0.4em;
+			padding-top: 0.5em;
+			border-top: 1px dashed var(--background-modifier-border);
+			font-size: 0.8em;
+			color: var(--text-muted);
+		}
+
+		&--warnings-title {
+			margin: 0 0 0.2em;
+		}
+
+		&--warnings-list li::before {
+			content: "– ";
+		}
 	}
 }

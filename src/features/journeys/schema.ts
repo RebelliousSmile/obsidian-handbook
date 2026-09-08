@@ -90,6 +90,9 @@ export function documentToJourney(value: unknown): JourneyData | null {
 		tags: asStringList(document.tags),
 		consequences: asStringList(document.consequences),
 		vignettes: readVignettes(document.vignettes),
+		// A schema document is structured data, not free text: nothing here
+		// is the kind of mistake parseJourney's terse grammar has to catch.
+		warnings: [],
 	};
 
 	const benefits = asString(document.benefits);

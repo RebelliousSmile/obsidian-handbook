@@ -253,6 +253,7 @@ How it works:
 - A limit is a name followed by its rating; a progress limit adds its consequence after ` > `
 - A threat names its trigger after ` : `, then owns every `>` line below it
 - Tags are written `{multi word tag}` or as single words, and statuses keep their tier
+- Write `{name-2}` anywhere in a description, a consequence, a trigger or an effect to render that status as a tag, the same braces used to group a multi-word tag
 
 ### 5. Journeys for Legend in the Mist
 
@@ -301,10 +302,12 @@ How it works:
 
 - First line is the journey type, `Landscape`, `Occasion` or `Undertaking`, written on its own or prefixed by `Journey - `
 - Second line is the journey name
-- Lines starting with `:` are the description, and `tags:` lists the journey tags
+- Lines starting with `:` are the description, and `tags:` lists the journey tags — written as single words, or `{multi word tag}` braced the same way `litm-challenge` does
 - `benefits:` describes what a successful step earns, and only `Undertaking` journeys use it
-- `CONSEQUENCES` opens the shared consequence list, where every `>` line before the first vignette lands
+- `CONSEQUENCES` (or `GENERAL CONSEQUENCES`, the wording most official profiles print) opens the shared consequence list, where every `>` line before the first vignette lands
 - `VIGNETTE ` starts a vignette, its trigger following ` : `, and it owns every `>` line below it
+- Write `{name-2}` anywhere in a description, a consequence or a trigger to render that status as a tag
+- A line the parser cannot make sense of, a `benefits:` on a Landscape or an Occasion, a vignette missing its ` : ` trigger, or a consequence written before any `CONSEQUENCES` heading, is never dropped silently: it is still rendered where possible, and listed in a muted footer under the card
 
 ### 6. Theme kits for Legend in the Mist
 
