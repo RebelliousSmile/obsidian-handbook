@@ -4,9 +4,15 @@ import { BrumesSettingTab } from "./settings";
 import { BrumesSettings, normalizeSettings } from "./settings/types";
 import { log } from "./utils/logger";
 import {
+	clearBrumesModeClasses,
 	setBrumesModeClass,
 	setBrumesWorkspaceThemeClass,
 } from "./features/modes/domModeClass";
+import { getGameStyleValues } from "./features/modes/gameStyleValues";
+import {
+	buildGameStyle,
+	GameStyleWriter,
+} from "./features/modes/styleElement";
 import { loadBrumesBlocks } from "./features/blocks/registry";
 import { registerBrumesContextMenu } from "./contextMenu";
 import {
@@ -28,6 +34,7 @@ export default class BrumesPlugin extends Plugin {
 	private contextMenuEventRef: EventRef | null = null;
 	private lanternRibbonEl: HTMLElement | null = null;
 	private syncCalloutAliases: (() => void) | null = null;
+	private readonly gameStyle = new GameStyleWriter();
 
 	async onload() {
 		await this.loadSettings();
@@ -48,6 +55,17 @@ export default class BrumesPlugin extends Plugin {
 		loadThemeCardCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
 
+		this.registerEvent(
+			this.app.workspace.on("window-open", (win) => {
+				this.dressDocument(win.doc);
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("window-close", (win) => {
+				this.undressDocument(win.doc);
+			}),
+		);
+
 		this.applySettings();
 	}
 
@@ -59,6 +77,12 @@ export default class BrumesPlugin extends Plugin {
 
 		this.lanternRibbonEl?.remove();
 		this.lanternRibbonEl = null;
+
+		for (const doc of this.collectDocuments()) {
+			clearBrumesModeClasses(doc);
+		}
+		this.gameStyle.removeGameStyle();
+
 		log.info("Handbook plugin unloaded");
 	}
 
@@ -87,8 +111,7 @@ export default class BrumesPlugin extends Plugin {
 
 	private applySettings(options: ApplySettingsOptions = {}) {
 		log.setLevel(this.settings.logLevel);
-		setBrumesModeClass(this.settings.mode);
-		setBrumesWorkspaceThemeClass(this.settings.features.workspaceTheme);
+		this.applyGameStyle();
 		this.refreshLanternIntegration();
 		this.refreshContextMenu();
 		this.syncCalloutAliases?.();
@@ -100,6 +123,53 @@ export default class BrumesPlugin extends Plugin {
 		if (options.refreshMarkdown) {
 			this.refreshMarkdownViews();
 		}
+	}
+
+	/**
+	 * The game is written as one block of custom properties into a style
+	 * element the plugin owns, in every open document. Switching games
+	 * replaces that block whole, so nothing of the previous one survives.
+	 */
+	private applyGameStyle() {
+		this.gameStyle.applyGameStyle(
+			buildGameStyle(
+				this.settings.mode,
+				getGameStyleValues(this.settings.mode),
+				this.settings.features.workspaceTheme,
+			),
+		);
+
+		for (const doc of this.collectDocuments()) {
+			this.dressDocument(doc);
+		}
+	}
+
+	private dressDocument(doc: Document) {
+		setBrumesModeClass(this.settings.mode, doc);
+		setBrumesWorkspaceThemeClass(
+			this.settings.features.workspaceTheme,
+			doc,
+		);
+		this.gameStyle.addDocument(doc);
+	}
+
+	private undressDocument(doc: Document) {
+		clearBrumesModeClasses(doc);
+		this.gameStyle.forgetDocument(doc);
+	}
+
+	/** The main window, plus one document per detached window in use. */
+	private collectDocuments(): Document[] {
+		const documents: Document[] = [this.app.workspace.rootSplit.doc];
+
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			const doc = leaf.getContainer().doc;
+			if (documents.indexOf(doc) === -1) {
+				documents.push(doc);
+			}
+		});
+
+		return documents;
 	}
 
 	private refreshContextMenu() {

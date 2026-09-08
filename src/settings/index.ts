@@ -5,8 +5,7 @@ import { log } from "../utils/logger";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
-	getBorderPresetForMode,
-} from "./borderPresets";
+} from "./canvasSnippets";
 
 const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Handbook settings";
 const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
@@ -53,7 +52,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						}),
 				);
 		});
-		this.renderBorderSection(generalSection);
+		this.renderMigrationNotice(generalSection);
 		this.renderGeneralSettings(generalSection);
 
 		const cityOfMistSection = this.createSection(
@@ -82,40 +81,11 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAdvancedSection(advancedSection);
 	}
 
-	private renderBorderSection(section: SettingGroup) {
-		const preset = getBorderPresetForMode(this.plugin.settings.mode);
-
+	private renderMigrationNotice(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
-				.setName("Border preset")
-				.setDesc(this.createBorderPresetDescription(Boolean(preset)))
-				.addButton((button) =>
-					button
-						.setButtonText(preset ? "Copy preset" : "Unavailable")
-						.setDisabled(!preset)
-						.onClick(() => {
-							if (!preset) {
-								new Notice(
-									// eslint-disable-next-line obsidianmd/ui/sentence-case
-									"No Border preset is available for :Otherscape yet.",
-								);
-								return;
-							}
-
-							this.runTask(
-								async () => {
-									await navigator.clipboard.writeText(
-										preset.content,
-									);
-									new Notice(
-										`${preset.label} Border preset copied to clipboard.`,
-									);
-								},
-								"Failed to copy Border preset",
-								"Failed to copy the Border preset.",
-							);
-						}),
-				);
+				.setName("Colours and fonts")
+				.setDesc(this.createMigrationDescription());
 		});
 	}
 
@@ -612,20 +582,18 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private createBorderPresetDescription(
-		hasPreset: boolean,
-	): DocumentFragment {
+	private createMigrationDescription(): DocumentFragment {
 		const fragment = this.containerEl.doc.createDocumentFragment();
-		fragment.append("Handbook is designed to work alongside the theme ");
+		fragment.append(
+			"Colours and fonts are written by the plugin itself. No theme and no other plugin is required. If a preset was imported into ",
+		);
 		this.appendLink(
 			fragment,
-			"Border",
-			"https://github.com/Akifyss/obsidian-border",
+			"Style Settings",
+			"https://github.com/mgmeyers/obsidian-style-settings",
 		);
 		fragment.append(
-			hasPreset
-				? " by Akifyss. Copy the preset for the selected mode, then import it with the Style Settings plugin."
-				: " by Akifyss. A preset for :Otherscape is not available yet.",
+			" before, open that plugin and reset the sections it created: the leftover keys still override what is written here.",
 		);
 		return fragment;
 	}

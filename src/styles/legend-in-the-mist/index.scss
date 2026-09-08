@@ -20,15 +20,11 @@
 @use "./mountain";
 
 .brumes--legend-in-the-mist {
-	// Text
-	--font-text-theme: "Labrada", sans-serif;
-
-	// Interface
-	// TODO: Change font if relevant
-	//--font-interface-theme: "Labrada", sans-serif;
+	// Fonts, colours and heading metrics are written by the plugin itself,
+	// from `src/features/modes/gameStyleValues.ts`. Nothing here declares a
+	// custom property any more.
 
 	// Headings
-	--font-header-theme: "PragRoman", sans-serif;
 	@include headings.inline-title-underline;
 
 	// Lists

@@ -14,17 +14,21 @@ Handbook is easiest to test in a dedicated vault.
 
 | Install                                                                       | Why                                                          |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [BRAT](https://github.com/TfTHacker/obsidian42-brat)                          | Required to install Handbook from GitHub                       |
-| [Border theme](https://github.com/Akifyss/obsidian-border)                    | The visual base Handbook is designed around                    |
-| [Style Settings](https://github.com/mgmeyers/obsidian-style-settings)         | Needed to import the Border preset Handbook provides           |
+| [BRAT](https://github.com/TfTHacker/obsidian42-brat)                          | Required to install Handbook from GitHub                     |
 | [Advanced Canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) | Optional, only needed for Iceberg and Mountain card snippets |
+
+Handbook writes its own colors and fonts into a style element it owns, scoped
+by game mode, in light and in dark. No theme and no other plugin is required
+for the visual base. Earlier versions shipped a `Style Settings` preset for the
+`Border` theme; that channel is gone. If you imported one of those presets,
+open `Style Settings` and reset the sections it created — the leftover keys
+still override what Handbook writes.
 
 Suggested vault setup:
 
 1. Create a fresh Obsidian vault for testing or play.
 2. Enable Community plugins.
-3. Install `BRAT`, `Style Settings`, and optionally `Advanced Canvas`.
-4. Switch your theme to `Border`.
+3. Install `BRAT`, and optionally `Advanced Canvas`.
 
 ### 2. Install Handbook with BRAT
 
@@ -36,9 +40,8 @@ Suggested vault setup:
 ### 3. Configure Handbook
 
 1. Open `Settings -> Handbook`.
-2. Pick your `Game mode`.
-3. Click `Copy preset` for the active mode.
-4. Import that preset through `Style Settings` if you are using `Border`.
+2. Pick your `Game mode`. The rendering follows immediately, with no reload
+   and no preset to import.
 
 ### 4. Optional canvas setup
 
@@ -295,7 +298,7 @@ Available Mountain variants:
 
 ### 8. Mode switching
 
-The selected game mode changes more than colors. It also switches which callouts, presets, context-menu actions, and special renderers are active in the vault.
+The selected game mode changes more than colors. It also switches which callouts, block formats, context-menu actions, and special renderers are active in the vault. Switching rewrites the whole style block, so nothing of the previous game survives the change.
 
 ### 9. Lantern in the Mist integration
 

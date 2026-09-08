@@ -21,15 +21,11 @@
 	// Workspace
 	@include workspace.global;
 
-	// Text
-	--font-text-theme: "PT Serif", serif;
-
-	// Interface
-	// TODO: Change font if relevant
-	//--font-interface-theme: "Roboto", sans-serif;
+	// Fonts, colours and heading metrics are written by the plugin itself,
+	// from `src/features/modes/gameStyleValues.ts`. Nothing here declares a
+	// custom property any more.
 
 	// Headings
-	--font-header-theme: "Fira Sans Extra Condensed", sans-serif;
 	@include headings.inline-title-underline;
 
 	// Links
