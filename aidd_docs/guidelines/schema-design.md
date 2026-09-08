@@ -134,6 +134,41 @@ Le corpus a deux moitiés, et les deux sont nécessaires :
 - **La règle s'applique par schéma, pas par champ.** Un schéma est en anglais ou
   en français, jamais moitié-moitié.
 
+## Une couleur : au pack ou au SCSS ?
+
+Depuis que les packs possèdent le rendu, une couleur a **deux maisons** et une
+seule est la bonne. La règle générale est écrite en tête de
+`src/styles/styles.scss`, et elle tient en une ligne de partage :
+
+- **ce qui habille la page** — le papier, l'encre, les liens, une marque de
+  surligneur sur un mot, une table, une case à cocher — appartient au **pack**,
+  parce que chaque note le porte quoi qu'on y écrive, que ça change d'un jeu à
+  l'autre et d'une polarité à l'autre, et qu'un lecteur peut vouloir le changer
+  dans `overrides.json` ;
+- **ce qui tient à l'anatomie d'un bloc** — l'accent d'une carte Mythos, la
+  teinte d'un panneau de danger — reste dans le **SCSS**, parce qu'un pack
+  atteint déjà un bloc par `shapes` : deux portes vers le même bloc seraient
+  deux vérités sur lui.
+
+Trois familles échappent des deux côtés, et c'est mesuré, pas supposé :
+
+- un vocabulaire qu'**Obsidian possède** et qu'un pack ne peut pas énumérer
+  (`data-callout`) : un jeton par type serait vingt noms pour rien ;
+- une **texture accordée au fond derrière elle** — un bord pressé sur du
+  parchemin : la scinder en deux jetons ferait flotter le liseré ;
+- un document que les propriétés du pack **n'atteignent pas**. Une carte de
+  canvas ouvre sa note dans une iframe : une règle qui cible
+  `.canvas-node-iframe-body[…]` ne lit aucun jeton, alors qu'une règle qui cible
+  `.canvas-node[…]` seul est un descendant ordinaire de `body` et les lit tous.
+  Dans le premier cas, la duplication est le prix à payer, et il se dit.
+
+Ce qui peut devenir un jeton **le devient**. La phase 6 du plan
+`2026_09_08_schema-design-guidelines` a fait sortir trois défauts rien qu'en
+posant la question fichier par fichier : des tables écrites en aveugle dans un
+jeu qui déclare deux polarités (coffre sombre = en-tête beige à encre noire), et
+deux valeurs écrites à la main qui ratent de peu un jeton déjà déclaré et lu par
+personne.
+
 ## L'échappatoire SCSS
 
 Certains cas ne se laissent pas exprimer en jetons : une découpe, un masque, une
@@ -143,7 +178,9 @@ conditions :
 1. elle est **déclarée** — le partial dit qu'il sort du modèle de jetons ;
 2. elle est **motivée** — le partial dit pourquoi le jeton ne suffisait pas.
 
-Une échappatoire silencieuse redevient de la dette de forme.
+Une échappatoire silencieuse redevient de la dette de forme. Le motif se met
+**en tête du partial**, pas à côté de la valeur : un lecteur doit savoir avant de
+lire le fichier pourquoi il n'y trouvera pas que des `var()`.
 
 Et jamais de recopie de géométrie entre partials : extraire un `@mixin`, puis
 l'`@include`. Jamais dupliquer les valeurs, jamais dupliquer l'image.

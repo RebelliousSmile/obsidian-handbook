@@ -32,15 +32,20 @@ Renommé : `manifest.json` (`id`, `name`, `author`, `authorUrl`), `package.json`
 | `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`) + `styles.scss`, `_neutralize.scss`, `_fallbacks.scss`, `settings.scss`, `lantern.scss` |
 | `src/contextMenu/`, `src/utils/` | menus contextuels, `logger.ts` |
 | `assets/` | illustrations source à déposer dans le coffre, un dossier par jeu |
+| `corpus/` | les documents qui prouvent : `temoins/` (doivent passer), `refus/` (doivent être rejetés) |
+| `tools/` | les harnais durables et leurs lanceurs — **linté par `pnpm lint`**, voir plus bas |
 | `dist/` | artefacts de build : `main.js`, `styles.css`, `manifest.json` |
 
 ### Commandes
 
 ```bash
 pnpm install
-pnpm build   # tsc -noEmit -skipLibCheck && esbuild production
-pnpm dev     # esbuild --watch
-pnpm lint
+pnpm build            # tsc -noEmit -skipLibCheck && esbuild production
+pnpm dev              # esbuild --watch
+pnpm lint             # eslint . — pas seulement src/
+pnpm assert:corpus    # chaque bloc lit un témoin, dégrade un refus, et a sa commande de copie
+pnpm assert:override  # overrides.json : surcharger une zone, la retirer, retrouver le rendu d'origine
+pnpm dump:dom         # le DOM rendu des six blocs, à comparer d'une phase à l'autre
 ```
 
 ## Topologie git
@@ -57,14 +62,18 @@ Récupérer un correctif amont reste possible et sans engagement :
 
 ```bash
 git fetch upstream
-git log --oneline master..upstream/master
+git log --oneline main..upstream/master
 git cherry-pick <sha>
 ```
+
+⚠ **`origin` est sur `main`, `upstream` sur `master`.** Les deux noms cohabitent
+et ce fichier a longtemps écrit `master` des deux côtés : une branche partie de
+`master` part de rien.
 
 ### Cycle de travail
 
 ```bash
-git switch -c feat/<sujet> master
+git switch -c feat/<sujet> main
 # modifier src/
 rtk proxy pnpm build
 # tester dans le vault (voir plus bas)
@@ -72,7 +81,7 @@ git add src/ && git commit -m "..."
 git push -u origin feat/<sujet>
 ```
 
-- Une branche = un sujet. Merge dans `master` quand c'est testé ; pas de PR à faire valider par un tiers.
+- Une branche = un sujet. Merge dans `main` quand c'est testé ; pas de PR à faire valider par un tiers.
 - Messages de commit en anglais (le code et le README le sont).
 - **Ne pas commiter `dist/`** : il est dans `.gitignore`, c'est du build local.
 - `CLAUDE.md` et `aidd_docs/` ne sont plus masqués : `.git/info/exclude` a été vidé de ses règles de fork le 2026-09-07. Les commiter ou non est un choix ouvert, plus une interdiction.
@@ -120,7 +129,9 @@ Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspond
 
 ### Un jeu est une donnée
 
-Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en variantes `base` / `light` / `dark`, et ses assets. **Aucun SCSS n'est écrit pour un jeu neuf** — :Otherscape est né comme ça, sans partial ni classe à lui.
+Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en variantes `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. **Aucun SCSS n'est écrit pour un jeu neuf** — :Otherscape est né comme ça, sans partial ni classe à lui.
+
+**Un pack déclare ses polarités, il n'en dérive aucune** (`GamePolarity`, `src/games/types.ts`). Une couche non déclarée n'est **pas écrite**, plutôt qu'écrite en copie de `base` — un pack dont le `base` est fortement clair casserait un coffre en thème sombre. Une polarité unique s'écrit sur le sélecteur de mode nu, après `base`, donc elle gagne à spécificité égale quel que soit le réglage du thème ; deux polarités s'écrivent en sélecteurs composés. État au 2026-09-08 : City of Mist et :Otherscape déclarent `["light", "dark"]`, Legend in the Mist `["light"]` — le jeu n'imprime que du parchemin, et le schéma sombre qui existait avait été inventé.
 
 Ajouter un jeu :
 
@@ -137,6 +148,21 @@ Trois règles qui mordent :
 ### Le réglage fin passe par un fichier, pas par des curseurs
 
 `<dossier du plugin>/overrides.json` : un pack amputé de tout sauf des valeurs à changer, qui prend le dessus sur le pack du jeu pour celles-là seulement. Retirer le fichier redonne exactement le rendu du jeu. Une valeur fautive se perd elle-même, journalisée une fois, le reste s'applique.
+
+Il ne porte pas que des valeurs : la clé `shapes` surcharge **la forme d'un bloc, zone par zone** — renommer le libellé imprimé d'une zone (`heading`), en cacher une (`hidden`). Une zone qu'aucune forme ne connaît est signalée une fois par session et le reste charge ; un fichier ne nommant qu'un bloc laisse les cinq autres où ils étaient.
+
+```json
+{
+	"shapes": {
+		"litm-challenge": {
+			"threats": { "heading": "Menaces et conséquences" },
+			"secrets": { "hidden": true }
+		}
+	}
+}
+```
+
+L'aller-retour est **mesuré**, pas constaté à l'œil : `pnpm assert:override` rend un témoin sans fichier, avec, puis sans, et compare caractère par caractère. Un œil ne distingue pas « identique » de « presque identique ». La commande « Reload illustrations and personal overrides » relit le fichier sans recharger le greffon.
 
 ### Les illustrations vivent dans le coffre
 
@@ -180,9 +206,21 @@ Trois pièges :
 
 `tsconfig.json` vise une lib ES antérieure à ES2017 : **`Object.values` et `Array.prototype.flat` ne compilent pas**. Utiliser `reduce`, `indexOf`, boucles `for…of`.
 
-### Pas de runner de tests
+### Pas de runner de tests, mais des assertions durables
 
-Le dépôt n'a ni vitest ni jest. Pour prouver un parser/renderer : harnais jetable `src/__assert_*.ts` (classe `El` bouchon + faux `Document` avec `createElement`), bundlé par `esbuild.buildSync({platform:'node', format:'cjs', external:['obsidian','fs']})`, exécuté par `node`.
+Le dépôt n'a toujours ni vitest ni jest, et n'en prendra pas : la convention a été formalisée en outils plutôt que réinventée par bloc.
+
+| Script | Ce qu'il affirme |
+| --- | --- |
+| `pnpm assert:corpus` | chaque bloc de `BRUMES_BLOCKS` lit un témoin entièrement, dégrade un refus sans exception ni bloc vide, et possède sa commande de copie |
+| `pnpm assert:override` | `overrides.json` surcharge une zone, la retirer restaure le rendu au caractère près, une zone inconnue avertit une fois |
+| `pnpm dump:dom` | rend le DOM des six blocs — à comparer d'une phase à l'autre : une phase qui ne touche pas au balisage doit le laisser identique |
+
+Le motif : un lanceur `tools/<nom>.mjs` bundle son harnais `tools/<nom>.harness.mts` par `esbuild.buildSync({platform:'node', format:'cjs', external:['obsidian','fs']})`, puis `node` l'exécute. **Aucune dépendance neuve** — `tsx` n'est pas installé et n'a pas à l'être.
+
+Le corpus est partagé par les deux camps : `corpus/temoins/` (le schéma les accepte, le plugin les rend) et `corpus/refus/` (le schéma les rejette, le plugin les dégrade), un fichier par faute, nommé par la faute. **Les deux moitiés sont nécessaires** — sans le témoin, une série de refus ne prouve rien, un schéma qui rejette tout les passerait tous.
+
+Pour le ponctuel, le harnais jetable reste : `src/__assert_*.ts` (classe `El` bouchon + faux `Document` avec `createElement`), même motif de bundling.
 
 ⚠ `pnpm build` lance `tsc -noEmit` sur **tout le dépôt**, pas sur `src/` : `tsconfig.json` porte `"include": ["**/*.ts"]`. C'est donc **l'extension d'un fichier qui le protège, pas son dossier** — un harnais en `.mts` échappe à `tsc`, un `.ts` posé n'importe où y passe. `rm -f src/__assert_*.ts __assert_*.cjs` **avant** de builder, sinon le build casse sur le harnais.
 
