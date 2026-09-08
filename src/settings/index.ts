@@ -122,15 +122,13 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	private renderMigrationNotice(section: SettingGroup) {
 		section.addSetting((setting) => {
-			setting
-				.setName("Colours and fonts")
-				.setDesc(this.createMigrationDescription());
+			setting.setName("Colours and fonts");
+			setting.descEl.append(this.createMigrationDescription());
 		});
 
 		section.addSetting((setting) => {
 			setting
 				.setName("Personal overrides")
-				.setDesc(this.createOverrideDescription())
 				.addButton((button) =>
 					button.setButtonText("Reload").onClick(() => {
 						this.runTask(
@@ -143,6 +141,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						);
 					}),
 				);
+			setting.descEl.append(this.createOverrideDescription());
 		});
 	}
 
@@ -156,7 +155,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName("Illustrations")
-				.setDesc(this.createAssetDescription())
 				.addButton((button) =>
 					button.setButtonText("Check files").onClick(() => {
 						this.runTask(
@@ -169,6 +167,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						);
 					}),
 				);
+			setting.descEl.append(this.createAssetDescription());
 		});
 	}
 
@@ -449,7 +448,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName("Iceberg canvas snippet")
-				.setDesc(this.createIcebergDescription())
 				.setDisabled(!isActive)
 				.addButton((button) =>
 					button
@@ -470,6 +468,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
+			setting.descEl.append(this.createIcebergDescription());
 		});
 	}
 
@@ -615,7 +614,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName("Mountain canvas snippet")
-				.setDesc(this.createMountainDescription())
 				.setDisabled(!isActive)
 				.addButton((button) =>
 					button
@@ -636,6 +634,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
+			setting.descEl.append(this.createMountainDescription());
 		});
 	}
 
