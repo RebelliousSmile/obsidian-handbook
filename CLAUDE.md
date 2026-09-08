@@ -25,12 +25,13 @@ Renommé : `manifest.json` (`id`, `name`, `author`, `authorUrl`), `package.json`
 | Chemin | Rôle |
 | --- | --- |
 | `src/main.ts`, `src/BrumesPlugin.ts` | entrée et classe du plugin |
-| `src/features/` | `blocks` (registre), `callouts`, `comDangers`, `comThemeCards`, `modes`, `storyThemes`, `tags` |
+| `src/features/` | `blocks` (registre), `callouts`, `challenges`, `comDangers`, `comThemeCards`, `journeys`, `modes`, `tags`, `themeCards`, `themeKits` |
+| `src/games/` | un jeu = un pack de données : `registry.ts`, `types.ts`, `tokens.ts`, `assets.ts`, `overrides.ts`, `fromSchema.ts` + un fichier par jeu |
 | `src/views/` | `LanternView.ts`, `lanternLogo.ts` |
-| `src/settings/` | onglet de réglages, `borderPresets.ts`, types |
-| `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`) + `styles.scss`, `settings.scss`, `lantern.scss` |
+| `src/settings/` | onglet de réglages, `borderPresets.ts` (réduit aux snippets Advanced Canvas), `canvasSnippets.ts`, types |
+| `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`) + `styles.scss`, `_neutralize.scss`, `_fallbacks.scss`, `settings.scss`, `lantern.scss` |
 | `src/contextMenu/`, `src/utils/` | menus contextuels, `logger.ts` |
-| `themes/` | presets `*.settings.json` |
+| `assets/` | illustrations source à déposer dans le coffre, un dossier par jeu |
 | `dist/` | artefacts de build : `main.js`, `styles.css`, `manifest.json` |
 
 ### Commandes
@@ -78,16 +79,78 @@ git push -u origin feat/<sujet>
 
 ### Tester sans BRAT
 
-Copier les 3 artefacts dans le vault, puis recharger le plugin (Ctrl+P → *Reload app without saving*, ou toggle off/on dans Community plugins) :
+**Un coffre par jeu depuis le 2026-09-07** — le coffre unique `Documents/Perso` ne fait plus foi :
+
+| Jeu | Coffre |
+| --- | --- |
+| City of Mist | `C:/Users/fxgui/Documents/Perso/RPG/city-of-mist` |
+| Legend in the Mist | `C:/Users/fxgui/Documents/Perso/RPG/legend-in-the-mist` |
+
+Les deux sont **imbriqués** dans l'ancien coffre `Documents/Perso`, qui existe toujours et voit les mêmes notes. Déployer dans les deux coffres de jeu, puis recharger le plugin (Ctrl+P → *Reload app without saving*, ou toggle off/on dans Community plugins) :
 
 ```bash
-cp dist/main.js dist/styles.css dist/manifest.json \
-   "C:/Users/fxgui/Documents/Perso/.obsidian/plugins/obsidian-handbook/"
+for v in "C:/Users/fxgui/Documents/Perso/RPG/city-of-mist"          "C:/Users/fxgui/Documents/Perso/RPG/legend-in-the-mist"; do
+  cp dist/main.js dist/styles.css dist/manifest.json      "$v/.obsidian/plugins/obsidian-handbook/"
+done
 ```
 
-Le dossier de vault est **`obsidian-handbook/`** depuis le renommage du 2026-09-07. L'ancien `brumes/` y subsiste encore avec son propre `data.json` : tant que les deux plugins sont activés en même temps, ils enregistrent les mêmes processeurs de blocs et posent la même classe de body — désactiver « Brumes » dans Community plugins avant d'activer « Handbook ».
+Chaque coffre a son propre `data.json` (réglages utilisateur) dans ce dossier : **ne jamais l'écraser** lors de la copie.
 
-Le vault contient aussi `data.json` (réglages utilisateur) : **ne jamais l'écraser** lors de la copie.
+Depuis la phase 4, **déployer aussi les illustrations** — sinon les blocs se rendent en dégradé, ce qui n'est pas un bug :
+
+```bash
+mkdir -p "$v/.obsidian/plugins/obsidian-handbook/assets"
+cp -r assets/city-of-mist assets/legend-in-the-mist    "$v/.obsidian/plugins/obsidian-handbook/assets/"
+```
+
+Bancs de test, à la racine de chaque coffre : `Handbook - Test blocs *.md` pour les blocs fencés, `Handbook - Test canvas *.canvas` pour les styles de nœud Advanced Canvas.
+
+### Advanced Canvas : le snippet est un prérequis, pas un détail
+
+Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspondant est présent **et activé** dans le coffre. Sans lui, Advanced Canvas ne connaît pas le style, ne pose aucun `data-iceberg-card` / `data-mountain-card`, et tout le SCSS est mort — un rendu « rien ne se passe » qui n'a rien à voir avec le CSS.
+
+- Fichiers : `<coffre>/.obsidian/snippets/iceberg.css` et `mountain.css`, noms imposés par le texte des réglages. Contenu = `ADVANCED_CANVAS_*_SNIPPET` de `src/settings/borderPresets.ts`.
+- L'activation se fait à la main dans `Settings → Appearance → CSS snippets` : Obsidian garde `appearance.json` en mémoire et réécrirait toute édition faite pendant qu'il tourne.
+- Si le dossier `snippets/` vient d'être créé, Obsidian ne le surveille pas encore : rafraîchir la liste ou recharger l'application.
+- Advanced Canvas passe la clé du snippet par `toCamelCase` : `key: iceberg-card` est stocké `"icebergCard"` dans le `.canvas` et ressort en `data-iceberg-card` dans le DOM. Un canvas écrit à la main doit utiliser la forme **camelCase**.
+
+## Packs de jeu : le plugin possède son rendu (depuis le 2026-09-08)
+
+**Style Settings et le thème Border ne sont plus des prérequis.** `themes/*.settings.json` a été supprimé, l'onglet de réglages n'offre plus de bouton de copie de preset. Le plugin écrit lui-même ses variables CSS dans **un unique élément `<style>` qu'il possède** (`src/features/modes/styleElement.ts`, `id: brumes-game-style`) : un seul point d'écriture, donc un seul point de nettoyage, et changer de jeu ne laisse aucun résidu de l'ancien.
+
+### Un jeu est une donnée
+
+Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en variantes `base` / `light` / `dark`, et ses assets. **Aucun SCSS n'est écrit pour un jeu neuf** — :Otherscape est né comme ça, sans partial ni classe à lui.
+
+Ajouter un jeu :
+
+1. un fichier `src/games/<jeu>.ts` exportant un `GamePack` ;
+2. une ligne dans `DECLARED_PACKS` de `src/games/registry.ts` ;
+3. rien d'autre. La liste déroulante des réglages, la classe de body et le style suivent.
+
+Trois règles qui mordent :
+
+- **Les variantes s'écrivent en sélecteur composé** : `.brumes--<jeu>.theme-dark`, jamais `.theme-dark` seul. Les deux classes sont sur le même `body` — à spécificité égale seul l'ordre des feuilles trancherait, et rien ne garantit que la nôtre passe après celle du thème actif.
+- **L'identifiant d'un pack est un suffixe de classe CSS et une clé du `data.json` de l'utilisateur** : minuscules, chiffres, traits d'union simples (`isValidGamePackId`). Un pack qui échoue au contrôle est écarté seul, les autres chargent.
+- **Le registre est statique par choix.** `domModeClass.ts` calcule `MODE_CLASSES = gamePackClasses()` au chargement du module, et l'onglet de réglages comme `settings/types.ts` consultent le registre chacun de leur côté. Charger des packs depuis le coffre suppose de rendre ces trois points dynamiques — c'est un refactor, pas un ajout. Motif consigné dans `aidd_docs/tasks/2026_09/2026_09_08_game-packs-owned-rendering/schema-boundary.md`.
+
+### Le réglage fin passe par un fichier, pas par des curseurs
+
+`<dossier du plugin>/overrides.json` : un pack amputé de tout sauf des valeurs à changer, qui prend le dessus sur le pack du jeu pour celles-là seulement. Retirer le fichier redonne exactement le rendu du jeu. Une valeur fautive se perd elle-même, journalisée une fois, le reste s'applique.
+
+### Les illustrations vivent dans le coffre
+
+Le pack les nomme **par rôle**, jamais par image : `assets.images["iceberg-group"] = "iceberg-group.svg"`, et le SCSS lit `var(--brumes-image-iceberg-group)`. Résolution dans `<dossier du plugin>/assets/<id du pack>/` sauf si le pack déclare un `root`. Un rôle absent **dégrade** — le gabarit se rend à plat, il ne réserve pas une boîte pour une image qui ne vient pas (`missingAssetClass`, `_fallbacks.scss`). L'onglet de réglages liste les fichiers manquants du jeu actif.
+
+Les **polices restent embarquées** (libres, redistribuables) ; seules les illustrations sortent. `dist/styles.css` est passé de 6,21 Mo à **3,64 Mo**, dont l'essentiel est désormais les fontes.
+
+### Le format est publié, mais rien ne le télécharge
+
+Le schéma vit dans le dépôt frère `schema-in-the-mist`, en `appearance/game-pack.schema.json`, à côté des schémas de contenu et **sans partager un seul champ** avec eux (`meta` volontairement absent). `src/games/fromSchema.ts` lit un document de cette forme et écrit un pack.
+
+**Aucune dépendance à l'exécution** : ni fetch, ni import du dépôt distant. Le contrat est honoré par la forme de la donnée. Un pack charge réseau coupé.
+
+Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans un chemin de lecture de l'ancienne forme. Un champ inconnu laisse un avertissement **une fois par session**, pas un par rendu.
 
 ## Conventions de travail
 
@@ -105,6 +168,7 @@ Trois pièges :
 
 - `@typescript-eslint/parser` est importé par `eslint.config.mjs` mais **absent de `package.json`** ; si eslint casse sur `Cannot find module '@typescript-eslint/scope-manager'`, la résolution locale est à réparer dans `node_modules`, pas dans un fichier suivi.
 - `pnpm lint` via le runner échoue parfois : appeler `./node_modules/.bin/eslint src --ext .ts` directement.
+- `@typescript-eslint/restrict-template-expressions` : **une garde de type `x is string` réduit `x` à `never` dans la branche négative**, et `never` ne s'interpole pas. Capturer la valeur brute avant la garde (`const declared = String(value);`) pour pouvoir la nommer dans le message d'erreur.
 - `eslint-plugin-obsidianmd` impose la **sentence case** sur les chaînes d'UI, considère `id` comme un sigle (« The older story-theme ID keeps working. ») et **veut abaisser les noms propres** : écrire une description de réglage sans y mettre « City of Mist » plutôt que de désactiver la règle.
 
 ### Cible ES basse
@@ -117,9 +181,14 @@ Le dépôt n'a ni vitest ni jest. Pour prouver un parser/renderer : harnais jeta
 
 ⚠ `pnpm build` lance `tsc -noEmit` sur **tout `src/`** : `rm -f src/__assert_*.ts __assert_*.cjs` **avant** de builder, sinon le build casse sur le harnais.
 
+Deux pièges qui coûtent un aller-retour chacun (constatés le 2026-09-08) :
+
+- **Le script de bundling du harnais doit vivre à la racine du dépôt**, pas dans un dossier temporaire : écrit ailleurs, `node` ne résout pas `esbuild` et sort `ERR_MODULE_NOT_FOUND: Cannot find package 'esbuild'`.
+- **`log.warn` est muet par défaut.** `src/utils/logger.ts` démarre à `currentLogLevel = "error"` et `shouldLog` compare `LEVEL_ORDER[currentLogLevel] <= LEVEL_ORDER[level]` : un harnais qui affirme un avertissement doit appeler `log.setLevel("warn")` d'abord, sinon il mesure un silence et le prend pour un échec.
+
 ### SCSS : les partials pèsent des mégaoctets
 
-`src/styles/legend-in-the-mist/_theme-cards.scss` fait ~2,5 Mo (illustrations de cartes en `data:` URI) et `dist/styles.css` ~6,5 Mo. **Ne jamais `cat` ces fichiers** : les lire par `grep -n … -A n` ou `sed -n`. Pour partager la géométrie d'une carte entre partials, extraire un `@mixin` (`theme-cards.frame`) et l'`@include` — jamais recopier les valeurs, jamais dupliquer l'image.
+Depuis le 2026-09-08 les illustrations sont sorties du bundle : `_theme-cards.scss` a maigri et `dist/styles.css` est à **3,64 Mo**. Le poids restant est celui des **polices**, embarquées par décision — `fonts/caveat.scss` 670 Ko, `fonts/im-fell-great-primer.scss` 596 Ko, `fonts/im-fell-english.scss` 508 Ko. **Ne jamais `cat` ces fichiers ni `dist/styles.css`** : les lire par `grep -n … -A n` ou `sed -n`. Pour partager la géométrie d'une carte entre partials, extraire un `@mixin` (`theme-cards.frame`) et l'`@include` — jamais recopier les valeurs, jamais dupliquer l'image.
 
 ### Registre de blocs
 
