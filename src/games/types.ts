@@ -32,6 +32,13 @@ export interface GameStyleValues {
  * role a block template asks for — `theme-card-frame`, say — to a file under
  * that root.
  */
+export interface GameFontFace {
+	/** Relative to the pack's asset folder, like an image. */
+	file: string;
+	weight?: string;
+	style?: string;
+}
+
 export interface GameAssets {
 	root?: string;
 	images?: Record<string, string>;
@@ -40,9 +47,13 @@ export interface GameAssets {
 	 * to the file that carries the face. Writing :Otherscape showed the gap:
 	 * a pack can name a family in `--font-text-theme` but nothing loads it,
 	 * so a new game silently borrows whatever face another game's partial
-	 * happened to emit. Read from phase 4 on, with the images.
+	 * happened to emit.
+	 *
+	 * A bare string is the file; the long form exists because a family with a
+	 * single face still has a weight, and a face declared without one is
+	 * matched as regular and then synthetically emboldened.
 	 */
-	fonts?: Record<string, string>;
+	fonts?: Record<string, string | GameFontFace>;
 }
 
 export interface GamePack {

@@ -24,6 +24,21 @@ function copyManifest() {
 	console.log("📄 Copied manifest.json");
 }
 
+// The illustrations no longer live inside the stylesheet: they are files the
+// plugin looks for in its own folder in the vault, so the build has to put
+// them next to `main.js` for a release to carry them at all.
+function copyAssets() {
+	const src = path.resolve("assets");
+	if (!fs.existsSync(src)) {
+		return;
+	}
+
+	const dest = path.resolve(outdir, "assets");
+	fs.rmSync(dest, { recursive: true, force: true });
+	fs.cpSync(src, dest, { recursive: true });
+	console.log("🖼  Copied assets");
+}
+
 const styleBuildOptions = {
 	banner: { js: banner, css: banner },
 	entryPoints: ["src/styles/styles.scss"],
@@ -74,6 +89,7 @@ async function run() {
 		]);
 
 		copyManifest();
+		copyAssets();
 
 		await Promise.all([styleCtx.watch(), pluginCtx.watch()]);
 		console.log("👀 Watching for changes...");
@@ -86,6 +102,7 @@ async function run() {
 	]);
 
 	copyManifest();
+	copyAssets();
 	console.log("✨ Build completed.");
 }
 

@@ -110,4 +110,41 @@ export const legendInTheMistPack: GamePack = {
 			},
 		},
 	},
+	assets: {
+		// See the note in the City of Mist pack: the illustrations live in the
+		// vault. This game carries most of them, the four theme card frames
+		// included.
+		images: {
+			"inline-title-rule": "inline-title-rule.svg",
+			"heading-2-rule": "heading-2-rule.svg",
+			"separator": "separator.svg",
+			"checkbox-minus": "checkbox-minus.svg",
+			"checkbox-plus": "checkbox-plus.svg",
+			"checkbox-tilde": "checkbox-tilde.svg",
+			"weakness-mark": "weakness-mark.svg",
+			"limit-mark": "limit-mark.svg",
+			"limit-mark-empty": "limit-mark-empty.svg",
+			// The might icons come twice over, once tinted for the canvas card
+			// and once for the theme card. Same shape, different fill, and a
+			// background image cannot be recoloured by CSS.
+			"mountain-might-origin": "mountain-might-origin.svg",
+			"mountain-might-adventure": "mountain-might-adventure.svg",
+			"mountain-might-greatness": "mountain-might-greatness.svg",
+			"card-might-origin": "card-might-origin.svg",
+			"card-might-adventure": "card-might-adventure.svg",
+			"card-might-greatness": "card-might-greatness.svg",
+			"theme-card": "theme-card.png",
+			"theme-card-origin": "theme-card-origin.png",
+			"theme-card-adventure": "theme-card-adventure.png",
+			"theme-card-greatness": "theme-card-greatness.png",
+		},
+		// PragRoman is free to use and free to give away, but its licence
+		// forbids including it in a product — which a plugin release is. It
+		// therefore leaves the bundle and is asked for like an illustration:
+		// present, the headings are the book's; absent, every token that
+		// names it falls through to the next family in its stack.
+		fonts: {
+			PragRoman: { file: "fonts/pragroman.ttf", weight: "500" },
+		},
+	},
 };

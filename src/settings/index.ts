@@ -58,6 +58,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 				});
 		});
 		this.renderMigrationNotice(generalSection);
+		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
 
 		const cityOfMistSection = this.createSection(
@@ -101,7 +102,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					button.setButtonText("Reload").onClick(() => {
 						this.runTask(
 							async () => {
-								await this.plugin.reloadStyleOverride();
+								await this.plugin.reloadStyleSources();
 								new Notice("Personal overrides reloaded.");
 							},
 							"Failed to reload the personal overrides",
@@ -110,6 +111,80 @@ export class BrumesSettingTab extends PluginSettingTab {
 					}),
 				);
 		});
+	}
+
+	/**
+	 * The illustrations of a game are files in the vault, not data URIs baked
+	 * into the stylesheet. This says how many the active game reads, where it
+	 * looks for them, and which are absent: a block whose image is missing
+	 * still renders, flat, so the list is information rather than an error.
+	 */
+	private renderAssetSetup(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting
+				.setName("Illustrations")
+				.setDesc(this.createAssetDescription())
+				.addButton((button) =>
+					button.setButtonText("Check files").onClick(() => {
+						this.runTask(
+							async () => {
+								await this.plugin.reloadStyleSources();
+								this.display();
+							},
+							"Failed to look for the illustration files",
+							"Failed to look for the illustration files.",
+						);
+					}),
+				);
+		});
+	}
+
+	private createAssetDescription(): DocumentFragment {
+		const fragment = this.containerEl.doc.createDocumentFragment();
+		const state = this.plugin.getAssetState();
+		const pack = resolveGamePack(this.plugin.settings.mode);
+
+		if (state.packId !== pack.id) {
+			fragment.append(
+				"The files of the active game have not been looked for yet. The button below does it.",
+			);
+			return fragment;
+		}
+
+		const expected = state.roles.length + state.families.length;
+
+		if (expected === 0) {
+			fragment.append("The active game brings no file of its own.");
+			return fragment;
+		}
+
+		fragment.append(`The active game reads ${expected} files from `);
+		fragment.createEl("code", { text: state.folder });
+		fragment.append(". ");
+
+		const absent: string[] = [];
+		for (const entry of state.missing) {
+			absent.push(entry.path);
+		}
+		for (const entry of state.missingFonts) {
+			absent.push(entry.path);
+		}
+
+		if (absent.length === 0) {
+			fragment.append("All of them are there.");
+			return fragment;
+		}
+
+		fragment.append(
+			`${absent.length} are absent. A block whose illustration is missing renders plain, and a typeface that is missing falls back on the next one in its stack. Drop these in to complete the game:`,
+		);
+
+		const list = fragment.createEl("ul");
+		for (const path of absent) {
+			list.createEl("li").createEl("code", { text: path });
+		}
+
+		return fragment;
 	}
 
 	private renderGeneralSettings(section: SettingGroup) {

@@ -67,7 +67,39 @@ Suggested vault setup:
 2. Pick your `Game mode`. The rendering follows immediately, with no reload
    and no preset to import.
 
-### 4. Optional canvas setup
+### 4. Add the illustrations
+
+Handbook no longer carries its art inside its stylesheet: a game names the
+files it draws with, and the plugin looks for them in the vault. They live in
+Handbook's own folder, one subfolder per game:
+
+```txt
+.obsidian/plugins/obsidian-handbook/assets/
+├── city-of-mist/
+│   ├── callout-edge.svg
+│   └── iceberg-*.svg
+└── legend-in-the-mist/
+    ├── theme-card*.png
+    ├── fonts/pragroman.ttf
+    └── ...
+```
+
+The `Illustrations` setting names the folder of the active game, counts the
+files it reads, and lists the ones it did not find; `Check files` looks again
+after a drop, with no reload.
+
+**Until the files are there, the game renders degraded, never broken.** A card
+without its frame keeps its text on a flat ground and a border, a badge without
+its icon goes away instead of leaving an empty box, a drawn checkbox mark
+becomes a typed one, and a missing typeface falls through to the next family in
+its stack. Nothing errors and nothing renders as a broken image.
+
+One file is asked for rather than shipped by choice: `pragroman.ttf`, the
+display face of the Legend in the Mist headings. Its license allows giving it
+away but not including it in a product, so it is downloaded by whoever wants
+it and dropped in like an illustration.
+
+### 5. Optional canvas setup
 
 If you use `Advanced Canvas`, Handbook can generate mode-specific node-style snippets:
 
@@ -331,7 +363,8 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 ## License
 
 - Plugin code: [MIT](LICENSE), originally (c) 4rtamis as Brumes, modifications (c) François-Xavier Guillois
-- Font files: each bundled font keeps its own upstream license
+- Font files: each bundled font keeps its own upstream license, and every one of them is redistributable; a face that is not is asked for from the vault instead
+- Illustrations: read from the vault, not carried in the stylesheet
 - Assets: status is still under discussion with Son of Oak
 
 ### Font License Files
@@ -341,12 +374,11 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 - [Caveat](licenses/fonts/Caveat.LICENSE.txt)
 - [Courier Prime](licenses/fonts/CourierPrime.LICENSE.txt)
 - [Fira Sans Extra Condensed](licenses/fonts/Fira.LICENSE.txt)
-- [Frederick Text](licenses/fonts/FrederickText.LICENSE.txt)
 - [IM Fell English](licenses/fonts/IMFellEnglish.LICENSE.txt)
 - [IM Fell Great Primer](licenses/fonts/IMFellGreatPrimer.LICENSE.txt)
 - [Labrada](licenses/fonts/Labrada.LICENSE.txt)
 - [PT Serif / ParaType](licenses/fonts/ParaType.LICENSE.txt)
-- [PragRoman](licenses/fonts/PragRoman.LICENSE.txt)
+- [PragRoman](licenses/fonts/PragRoman.LICENSE.txt) (not bundled, supplied by the user)
 - [Roboto](licenses/fonts/Roboto.LICENSE.txt)
 
 ### Asset Status

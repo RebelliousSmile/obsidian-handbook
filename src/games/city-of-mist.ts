@@ -132,4 +132,16 @@ export const cityOfMistPack: GamePack = {
 			},
 		},
 	},
+	assets: {
+		// The illustrations the blocks ask for, keyed by the role the SCSS
+		// reads them under. They live in the vault rather than in the bundle:
+		// the artwork of a published game is the reader's copy to hold, and the
+		// theme card frames alone weighed 2.48 MB of the stylesheet.
+		images: {
+			"callout-edge": "callout-edge.svg",
+			"iceberg-location": "iceberg-location.svg",
+			"iceberg-character": "iceberg-character.svg",
+			"iceberg-group": "iceberg-group.svg",
+		},
+	},
 };

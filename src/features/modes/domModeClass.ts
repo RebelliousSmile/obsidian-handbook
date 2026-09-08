@@ -1,7 +1,9 @@
+import { missingAssetClass } from "../../games/assets";
 import { gamePackClass, gamePackClasses } from "../../games/registry";
 import { BrumesMode } from "../../settings/types";
 
 const WORKSPACE_THEME_CLASS = "brumes--workspace-theme";
+const MISSING_ASSET_PREFIX = missingAssetClass("");
 
 /** One class per declared pack, so a new game needs no edit here. */
 const MODE_CLASSES = gamePackClasses();
@@ -40,6 +42,32 @@ export function setBrumesWorkspaceThemeClass(enabled: boolean, doc: Document) {
 	body.classList.remove(WORKSPACE_THEME_CLASS);
 }
 
+/**
+ * Say which illustrations the vault does not have, so the fallback rules can
+ * key off a class rather than guess from a missing value. Dropping an image
+ * is rarely enough on its own: a card without its frame needs a flat ground
+ * and a border to still read as a card.
+ */
+export function setBrumesMissingAssetClasses(roles: string[], doc: Document) {
+	const body = doc.body;
+	const stale: string[] = [];
+
+	for (let index = 0; index < body.classList.length; index++) {
+		const cls = body.classList.item(index);
+		if (cls && cls.indexOf(MISSING_ASSET_PREFIX) === 0) {
+			stale.push(cls);
+		}
+	}
+
+	for (const cls of stale) {
+		body.classList.remove(cls);
+	}
+
+	for (const role of roles) {
+		body.classList.add(missingAssetClass(role));
+	}
+}
+
 /** Leave a document as the plugin found it. */
 export function clearBrumesModeClasses(doc: Document) {
 	const body = doc.body;
@@ -49,4 +77,5 @@ export function clearBrumesModeClasses(doc: Document) {
 	}
 
 	body.classList.remove(WORKSPACE_THEME_CLASS);
+	setBrumesMissingAssetClasses([], doc);
 }
