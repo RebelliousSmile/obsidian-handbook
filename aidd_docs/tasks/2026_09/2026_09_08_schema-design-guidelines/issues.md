@@ -1,8 +1,8 @@
 # Issues à ouvrir hors `handbook`
 
-> **Aucune issue n'est ouverte par ce plan.** Ouvrir une issue est une action
-> sortante : elle demande un accord explicite. Ce fichier les rédige, il ne les
-> poste pas.
+> **Les sept issues sont ouvertes** (2026-09-08), sur accord explicite : ouvrir
+> une issue est une action sortante. Ce fichier reste le texte de référence ;
+> les numéros sont dans le récapitulatif.
 >
 > Le plan `2026_09_08_schema-design-guidelines` n'écrit que dans `handbook`.
 > Tout ce qui demande une intervention ailleurs est ici.
@@ -106,12 +106,23 @@ ouvert, y déplacer :
 
 ## Récapitulatif
 
-| # | Dépôt cible                      | Titre                                                        |
-| - | -------------------------------- | ------------------------------------------------------------ |
-| 1 | `schema-in-the-mist`             | Extraire `appearance/game-pack.schema.json` vers son propre dépôt |
-| 2 | `schema-in-the-mist` (ou le futur dépôt d'apparence) | Étendre `game-pack` aux zones nommées et aux polarités déclarées |
-| 3 | `schema-in-the-mist`             | Publier les formes de `journey` et de `theme kit`            |
-| 4 | `schema-adrenaline`              | Généraliser le corpus refus / témoins aux trois dépôts       |
-| 5 | `schema-pbta`, `schema-in-the-mist` | Porter `audit-schemas.ts` depuis `schema-adrenaline`       |
-| 6 | `schema-in-the-mist`, `schema-adrenaline` | Porter `validate:refs` depuis `schema-pbta`         |
-| 7 | `lantern`                        | Lire les six blocs exportés par Handbook                     |
+| # | Dépôt cible          | Issue | Titre                                                        |
+| - | -------------------- | ----- | ------------------------------------------------------------ |
+| 1 | `schema-in-the-mist` | [#4](https://github.com/RebelliousSmile/schema-in-the-mist/issues/4) | Extraire `appearance/game-pack.schema.json` vers son propre dépôt |
+| 2 | `schema-in-the-mist` | [#5](https://github.com/RebelliousSmile/schema-in-the-mist/issues/5) | Étendre `game-pack` aux zones nommées et aux polarités déclarées |
+| 3 | `schema-in-the-mist` | [#6](https://github.com/RebelliousSmile/schema-in-the-mist/issues/6) | Publier les formes de `journey` et de `theme kit`            |
+| 4 | `schema-adrenaline`  | [#1](https://github.com/RebelliousSmile/schema-adrenaline/issues/1) | Généraliser le corpus refus / témoins aux trois dépôts       |
+| 5 | `schema-pbta`        | [#1](https://github.com/RebelliousSmile/schema-pbta/issues/1) | Porter `audit-schemas.ts` depuis `schema-adrenaline`         |
+| 6 | `schema-in-the-mist` | [#7](https://github.com/RebelliousSmile/schema-in-the-mist/issues/7) | Porter `validate:refs` depuis `schema-pbta`                  |
+| 7 | `lantern`            | [#1](https://github.com/RebelliousSmile/lantern/issues/1) | Lire les six blocs exportés par Handbook                     |
+
+Deux portages n'ont qu'une moitié d'issue. Les lignes 5 et 6 visaient chacune
+**deux** dépôts ; sept issues n'en couvrent qu'un chacune. Les jumelles restent
+à ouvrir, et les corps le disent :
+
+- `audit-schemas.ts` sur `schema-in-the-mist` ;
+- `validate:refs` sur `schema-adrenaline`.
+
+Cible retenue pour la ligne 7 : **`lantern`**, pas `lantern-in-the-mist`. Les
+deux dépôts existent ; `lantern` est le multi-système dérivé du premier, et le
+seul des deux dont les issues sont actives.
