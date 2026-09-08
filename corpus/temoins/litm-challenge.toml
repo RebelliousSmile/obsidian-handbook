@@ -1,0 +1,71 @@
+# Témoin : un défi complet, tous les champs renseignés.
+# Le schéma doit l'accepter, et Handbook doit le rendre entièrement.
+
+name = "The Drowned Bell Tower"
+description = "A bell tower half-swallowed by the marsh, still ringing at dusk."
+rating = 3
+roles = ["obstacle", "landmark"]
+tags_and_statuses = ["waterlogged", "sinking-2", "echoing"]
+general_consequences = [
+  "The bell tolls and something below answers.",
+  "The stairs give way underfoot.",
+]
+
+[[mights]]
+name = "Ancient Stonework"
+level = "adventure"
+vulnerability = "Fire cracks the mortar."
+
+[[mights]]
+name = "The Marsh Itself"
+level = "greatness"
+
+[[mights]]
+name = "Rotten Timber"
+level = "origin"
+vulnerability = "It will not hold a second climber."
+
+[[limits]]
+name = "Flooded"
+level = 4
+on_max = "The tower slips fully under and takes the bell with it."
+
+[[limits]]
+name = "Bound to the Marsh"
+is_immune = true
+
+[[limits]]
+name = "Silence the Bell"
+level = 3
+is_progress = true
+on_max = "The tolling stops and the marsh goes still."
+
+[[threats]]
+name = "The Tolling"
+description = "Whenever someone climbs above the waterline"
+consequences = [
+  "Everything in the marsh knows where you are.",
+  "Take the status deafened-2.",
+]
+
+[[threats]]
+name = "Collapse"
+description = "When the stonework takes fire damage"
+consequences = ["The floor you stand on falls away."]
+
+[[special_features]]
+name = "Cold Rope"
+description = "A knotted rope hangs from the belfry, colder than the water."
+
+[[secrets]]
+label = "What rings the bell"
+text = "Nothing pulls the rope. The marsh moves the bell from below."
+
+[[secrets]]
+text = "The bell was cast from a melted-down reliquary."
+
+[meta]
+publication_type = "corpus"
+source = "Handbook corpus"
+authors = ["Handbook"]
+page = 1

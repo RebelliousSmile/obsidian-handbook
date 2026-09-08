@@ -5,15 +5,22 @@ import { comDangerBlock } from "../comDangers/block";
 import { comDangerToToml } from "../comDangers/schema";
 import { themeCardBlock } from "../themeCards/block";
 import { themeCardToToml } from "../themeCards/toml";
-import { describeMissingPart, loadCopyAsTomlCommand } from "./copyAsToml";
+import {
+	describeMissingPart,
+	loadCopyAsTomlCommand,
+	TomlExport,
+} from "./copyAsToml";
 
 /**
- * The blocks that can leave the note as a schema-in-the-mist document, and
- * only those: a journey and a theme kit have no shape upstream, so they have
- * nothing to be copied into.
+ * Every block that can leave the note as a schema-in-the-mist document.
+ *
+ * The list is exported rather than kept inside the loader so the corpus
+ * harness can read it: the guideline says each block owes the schema a copy
+ * command, and a rule nothing checks is the failure it is meant to prevent,
+ * one level up. See `aidd_docs/guidelines/schema-design.md`.
  */
-export function loadTomlExportCommands(plugin: BrumesPlugin): void {
-	loadCopyAsTomlCommand(plugin, {
+export const TOML_EXPORTS: TomlExport<unknown>[] = [
+	{
 		block: themeCardBlock,
 		commandId: "copy-theme-card-as-toml",
 		noun: "theme card",
@@ -23,18 +30,16 @@ export function loadTomlExportCommands(plugin: BrumesPlugin): void {
 				source,
 				"it has no title tag, add a line such as {Title Tag}",
 			),
-	});
-
-	loadCopyAsTomlCommand(plugin, {
+	},
+	{
 		block: challengeBlock,
 		commandId: "copy-challenge-as-toml",
 		noun: "challenge",
 		toToml: challengeToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must open with the challenge name"),
-	});
-
-	loadCopyAsTomlCommand(plugin, {
+	},
+	{
 		block: comDangerBlock,
 		commandId: "copy-danger-as-toml",
 		noun: "danger",
@@ -44,5 +49,11 @@ export function loadTomlExportCommands(plugin: BrumesPlugin): void {
 				source,
 				"it must open with the name and hold at least one section",
 			),
-	});
+	},
+];
+
+export function loadTomlExportCommands(plugin: BrumesPlugin): void {
+	for (const spec of TOML_EXPORTS) {
+		loadCopyAsTomlCommand(plugin, spec);
+	}
 }

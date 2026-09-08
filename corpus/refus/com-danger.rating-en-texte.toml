@@ -1,0 +1,9 @@
+# attend: dégradé
+# `rating` est un nombre. Écrit en texte, il se perd lui-même et le reste du
+# profil se rend quand même.
+name = "The Hollow Chorus"
+rating = "four"
+
+[[spectrums]]
+name = "Congregation"
+maximum = 5

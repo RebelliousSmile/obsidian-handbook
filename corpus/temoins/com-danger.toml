@@ -1,0 +1,43 @@
+# Témoin : un profil de Danger complet, tous les champs renseignés,
+# y compris les deux champs à nous : is_countdown et on_max.
+
+name = "The Hollow Chorus"
+description = "A congregation that sings with one throat and no face."
+rating = 4
+
+soft_moves = [
+  "A hymn starts up somewhere behind you.",
+  "Someone you know joins the singing.",
+]
+hard_moves = [
+  "The chorus takes your name and sings it back.",
+  "You lose an hour and gain a verse.",
+]
+
+[[spectrums]]
+name = "Congregation"
+maximum = 5
+on_max = "Everyone in the block is singing."
+
+[[spectrums]]
+name = "The Hymn"
+maximum = 4
+is_countdown = true
+on_max = "The last verse is sung and the chorus becomes real."
+
+[[spectrums]]
+name = "Faceless"
+is_immune = true
+
+[[custom_moves]]
+name = "Call and Response"
+description = "Answer a question the chorus asked, and it answers one of yours."
+
+[[custom_moves]]
+description = "An unnamed move: the chorus does something no one wrote down."
+
+[meta]
+publication_type = "corpus"
+source = "Handbook corpus"
+authors = ["Handbook"]
+page = 1

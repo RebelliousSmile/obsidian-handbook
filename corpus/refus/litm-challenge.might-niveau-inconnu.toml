@@ -1,0 +1,9 @@
+# attend: dégradé
+# `level` ne connaît que origin, adventure, greatness. Un niveau inventé se
+# perd ; la puissance garde son nom et sa vulnérabilité.
+name = "The Drowned Bell Tower"
+
+[[mights]]
+name = "Ancient Stonework"
+level = "legendary"
+vulnerability = "Fire cracks the mortar."
