@@ -1,12 +1,10 @@
+import { gamePackClass, gamePackClasses } from "../../games/registry";
 import { BrumesMode } from "../../settings/types";
 
 const WORKSPACE_THEME_CLASS = "brumes--workspace-theme";
 
-const MODE_CLASSES = [
-	"brumes--city-of-mist",
-	"brumes--otherscape",
-	"brumes--legend-in-the-mist",
-];
+/** One class per declared pack, so a new game needs no edit here. */
+const MODE_CLASSES = gamePackClasses();
 
 /**
  * Every function here takes the document to act on. Obsidian opens detached
@@ -23,7 +21,7 @@ export function setBrumesModeClass(mode: BrumesMode, doc: Document) {
 	}
 
 	// Add the new class
-	body.classList.add(`brumes--${mode}`);
+	body.classList.add(gamePackClass(mode));
 }
 
 /**

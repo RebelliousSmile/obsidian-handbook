@@ -1,6 +1,8 @@
 import { App, Notice, PluginSettingTab, SettingGroup } from "obsidian";
 import BrumesPlugin from "../BrumesPlugin";
-import { BrumesMode, LogLevel, sanitizeAliases } from "./types";
+import { LogLevel, sanitizeAliases } from "./types";
+import { GAME_PACKS, resolveGamePack } from "../games/registry";
+import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
@@ -30,17 +32,19 @@ export class BrumesSettingTab extends PluginSettingTab {
 				.setDesc(
 					"Choose the game line you are preparing for. This updates the main style and the editor context menu.",
 				)
-				.addDropdown((drop) =>
-					drop
-						.addOption("city-of-mist", "City of Mist") // eslint-disable-line obsidianmd/ui/sentence-case
-						.addOption("legend-in-the-mist", "Legend in the Mist") // eslint-disable-line obsidianmd/ui/sentence-case
-						.addOption("otherscape", ":Otherscape") // eslint-disable-line obsidianmd/ui/sentence-case
-						.setValue(this.plugin.settings.mode)
-						.onChange((value) => {
+				.addDropdown((drop) => {
+					// The list is the registry: a fourth pack shows up here
+					// without a line being written, and its name comes from
+					// the data rather than from a string in the interface.
+					for (const pack of GAME_PACKS) {
+						drop.addOption(pack.id, pack.label);
+					}
+
+					drop.setValue(this.plugin.settings.mode).onChange(
+						(value) => {
 							this.runTask(
 								async () => {
-									this.plugin.settings.mode =
-										value as BrumesMode;
+									this.plugin.settings.mode = value;
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
@@ -49,8 +53,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
 							);
-						}),
-				);
+						},
+					);
+				});
 		});
 		this.renderMigrationNotice(generalSection);
 		this.renderGeneralSettings(generalSection);
@@ -86,6 +91,24 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting
 				.setName("Colours and fonts")
 				.setDesc(this.createMigrationDescription());
+		});
+
+		section.addSetting((setting) => {
+			setting
+				.setName("Personal overrides")
+				.setDesc(this.createOverrideDescription())
+				.addButton((button) =>
+					button.setButtonText("Reload").onClick(() => {
+						this.runTask(
+							async () => {
+								await this.plugin.reloadStyleOverride();
+								new Notice("Personal overrides reloaded.");
+							},
+							"Failed to reload the personal overrides",
+							"Failed to reload the personal overrides.",
+						);
+					}),
+				);
 		});
 	}
 
@@ -580,6 +603,27 @@ export class BrumesSettingTab extends PluginSettingTab {
 					});
 				});
 		});
+	}
+
+	/**
+	 * What replaces the sliders of the preset: a file the user writes, that
+	 * wins over the pack of the active game for the values it declares.
+	 */
+	private createOverrideDescription(): DocumentFragment {
+		const fragment = this.containerEl.doc.createDocumentFragment();
+		const pack = resolveGamePack(this.plugin.settings.mode);
+
+		fragment.append("The active pack is ");
+		fragment.createEl("strong", { text: pack.label });
+		fragment.append(
+			". To change a colour or a font of your own, write the custom properties into ",
+		);
+		fragment.createEl("code", { text: OVERRIDE_FILE_NAME });
+		fragment.append(
+			", in this plugin's folder in the vault. What the file leaves out keeps the value of the game; removing the file restores it whole.",
+		);
+
+		return fragment;
 	}
 
 	private createMigrationDescription(): DocumentFragment {

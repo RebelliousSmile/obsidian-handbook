@@ -8,10 +8,9 @@
 // without it.
 @mixin global {
 	&.brumes--workspace-theme {
-		// City of Mist is printed in magenta.
-		--accent-h: 327.13;
-		--accent-s: 100%;
-		--accent-l: 45%;
+		// The accent belongs to the game pack in `src/games/`, which writes
+		// it whether or not this layer is on. It was restated here in the same
+		// magenta; one of the two copies would have drifted.
 
 		// Nothing in the books is rounded.
 		--radius-s: 0px;

@@ -3,7 +3,7 @@ import {
 	GameStyleLayer,
 	GameStyleTokens,
 	GameStyleValues,
-} from "./gameStyleValues";
+} from "../../games/types";
 
 const STYLE_ELEMENT_ID = "brumes-game-style";
 

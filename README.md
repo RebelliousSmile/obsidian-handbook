@@ -24,6 +24,25 @@ for the visual base. Earlier versions shipped a `Style Settings` preset for the
 open `Style Settings` and reset the sections it created — the leftover keys
 still override what Handbook writes.
 
+The fine-grained knobs that preset offered come back as a file you write. Put
+an `overrides.json` in Handbook's own folder in the vault
+(`.obsidian/plugins/obsidian-handbook/overrides.json`) and it wins over the
+active game for the custom properties it declares, and for nothing else:
+
+```json
+{
+	"base": { "note": { "--h1-size": "2.4em" } },
+	"dark": { "note": { "--background-primary": "#1B1B1F" } }
+}
+```
+
+`base` applies whichever theme is on, `light` and `dark` only under theirs; the
+`workspace` slot next to `note` holds what the workspace theme toggle writes.
+A value the file leaves out keeps the game's; removing the file restores the
+game whole. The file is read at startup and on the *Reload personal overrides*
+command, or on the *Reload* button in the settings tab. A malformed value is
+dropped and reported in the console, and the rest of the file still applies.
+
 Suggested vault setup:
 
 1. Create a fresh Obsidian vault for testing or play.

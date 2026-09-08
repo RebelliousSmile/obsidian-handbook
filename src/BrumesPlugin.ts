@@ -8,11 +8,16 @@ import {
 	setBrumesModeClass,
 	setBrumesWorkspaceThemeClass,
 } from "./features/modes/domModeClass";
-import { getGameStyleValues } from "./features/modes/gameStyleValues";
 import {
 	buildGameStyle,
 	GameStyleWriter,
 } from "./features/modes/styleElement";
+import { resolveGamePack } from "./games/registry";
+import {
+	GameStyleOverride,
+	loadGameStyleOverride,
+	mergeGameStyle,
+} from "./games/overrides";
 import { loadBrumesBlocks } from "./features/blocks/registry";
 import { registerBrumesContextMenu } from "./contextMenu";
 import {
@@ -35,6 +40,7 @@ export default class BrumesPlugin extends Plugin {
 	private lanternRibbonEl: HTMLElement | null = null;
 	private syncCalloutAliases: (() => void) | null = null;
 	private readonly gameStyle = new GameStyleWriter();
+	private styleOverride: GameStyleOverride = {};
 
 	async onload() {
 		await this.loadSettings();
@@ -55,6 +61,14 @@ export default class BrumesPlugin extends Plugin {
 		loadThemeCardCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
 
+		this.addCommand({
+			id: "reload-style-overrides",
+			name: "Reload personal overrides",
+			callback: () => {
+				void this.reloadStyleOverride();
+			},
+		});
+
 		this.registerEvent(
 			this.app.workspace.on("window-open", (win) => {
 				this.dressDocument(win.doc);
@@ -67,6 +81,10 @@ export default class BrumesPlugin extends Plugin {
 		);
 
 		this.applySettings();
+
+		// The override file lives in the plugin folder, which the vault does
+		// not watch, so it is read once here and on demand afterwards.
+		void this.reloadStyleOverride();
 	}
 
 	onunload() {
@@ -131,10 +149,12 @@ export default class BrumesPlugin extends Plugin {
 	 * replaces that block whole, so nothing of the previous one survives.
 	 */
 	private applyGameStyle() {
+		const pack = resolveGamePack(this.settings.mode);
+
 		this.gameStyle.applyGameStyle(
 			buildGameStyle(
-				this.settings.mode,
-				getGameStyleValues(this.settings.mode),
+				pack.id,
+				mergeGameStyle(pack.style, this.styleOverride),
 				this.settings.features.workspaceTheme,
 			),
 		);
@@ -142,6 +162,12 @@ export default class BrumesPlugin extends Plugin {
 		for (const doc of this.collectDocuments()) {
 			this.dressDocument(doc);
 		}
+	}
+
+	/** Read the user's own values again and repaint, without a restart. */
+	async reloadStyleOverride() {
+		this.styleOverride = await loadGameStyleOverride(this);
+		this.applyGameStyle();
 	}
 
 	private dressDocument(doc: Document) {
