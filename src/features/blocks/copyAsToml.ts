@@ -1,12 +1,9 @@
 import { Editor, Notice } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
-import { blockIds, isBlockEnabled } from "../blocks/types";
 import { logScope } from "../../utils/logger";
-import { themeCardBlock } from "./block";
-import { parseThemeCard } from "./parser";
-import { themeCardToToml } from "./toml";
+import { BrumesBlock, blockIds, isBlockEnabled } from "./types";
 
-const log = logScope("ThemeCardToml");
+const log = logScope("BlockToml");
 
 const FENCE = /^(\s*)(`{3,}|~{3,})(.*)$/;
 
@@ -73,7 +70,7 @@ export function getFencedBlockAtCursor(editor: Editor): FencedBlock | null {
 		opener = null;
 	}
 
-	// An unclosed fence still counts, so a card being typed can be copied.
+	// An unclosed fence still counts, so a block being typed can be copied.
 	if (opener && cursorLine >= opener.line) {
 		return {
 			language: opener.language,
@@ -84,45 +81,56 @@ export function getFencedBlockAtCursor(editor: Editor): FencedBlock | null {
 	return null;
 }
 
-function getThemeCardSourceAtCursor(editor: Editor): string | null {
-	const block = getFencedBlockAtCursor(editor);
-	if (!block) {
+/**
+ * A block that can leave the note as a schema-in-the-mist document: the block
+ * itself, the serializer, and the wording the notices use when the source
+ * under the cursor will not parse.
+ */
+export interface TomlExport<T> {
+	block: BrumesBlock<T>;
+	/**
+	 * The command id, written out rather than derived from the block id:
+	 * a block has been renamed before, and a hotkey bound to the command
+	 * must survive the next rename.
+	 */
+	commandId: string;
+	/** How the command and the notices name it, e.g. "theme card". */
+	noun: string;
+	toToml(data: T): string;
+	/** What the block is missing, so the notice says what to fix. */
+	describeFailure(source: string): string;
+}
+
+function getSourceAtCursor<T>(
+	editor: Editor,
+	block: BrumesBlock<T>,
+): string | null {
+	const fenced = getFencedBlockAtCursor(editor);
+	if (!fenced) {
 		return null;
 	}
 
-	return blockIds(themeCardBlock).includes(block.language)
-		? block.source
-		: null;
+	return blockIds(block).indexOf(fenced.language) === -1
+		? null
+		: fenced.source;
 }
 
-/** Name the part a card is missing, so the notice says what to fix. */
-function describeParseFailure(source: string): string {
-	const lines = source
-		.split("\n")
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0);
+async function copyAsToml<T>(
+	source: string,
+	spec: TomlExport<T>,
+): Promise<void> {
+	const data = spec.block.parse(source);
 
-	if (lines.length === 0) {
-		return "the block is empty";
-	}
-
-	return "it has no title tag, add a line such as {Title Tag}";
-}
-
-async function copyThemeCardAsToml(source: string): Promise<void> {
-	const card = parseThemeCard(source);
-
-	if (card === null) {
+	if (data === null) {
 		new Notice(
-			`Cannot copy this theme card: ${describeParseFailure(source)}.`,
+			`Cannot copy this ${spec.noun}: ${spec.describeFailure(source)}.`,
 		);
 		return;
 	}
 
 	try {
-		await navigator.clipboard.writeText(themeCardToToml(card));
-		// eslint-disable-next-line obsidianmd/ui/sentence-case
-		new Notice("Theme card copied as TOML.");
+		await navigator.clipboard.writeText(spec.toToml(data));
+		new Notice(`Copied the ${spec.noun} as TOML.`);
 	} catch (error) {
 		log.error("Could not write the TOML to the clipboard", error);
 		// eslint-disable-next-line obsidianmd/ui/sentence-case
@@ -131,29 +139,41 @@ async function copyThemeCardAsToml(source: string): Promise<void> {
 }
 
 /**
- * Offer the theme card under the cursor as TOML, in the shape the shared
- * schema defines, so it can be pasted into Lantern in the Mist.
+ * Offer the block under the cursor as TOML, in the shape the shared schema
+ * defines, so it can be pasted into Lantern in the Mist.
  */
-export function loadThemeCardCommands(plugin: BrumesPlugin): void {
+export function loadCopyAsTomlCommand<T>(
+	plugin: BrumesPlugin,
+	spec: TomlExport<T>,
+): void {
 	plugin.addCommand({
-		id: "copy-theme-card-as-toml",
-		// eslint-disable-next-line obsidianmd/ui/sentence-case
-		name: "Copy theme card as TOML",
+		id: spec.commandId,
+		name: `Copy ${spec.noun} as TOML`,
 		editorCheckCallback: (checking: boolean, editor: Editor) => {
-			if (!isBlockEnabled(themeCardBlock, plugin.settings)) {
+			if (!isBlockEnabled(spec.block, plugin.settings)) {
 				return false;
 			}
 
-			const source = getThemeCardSourceAtCursor(editor);
+			const source = getSourceAtCursor(editor, spec.block);
 			if (source === null) {
 				return false;
 			}
 
 			if (!checking) {
-				void copyThemeCardAsToml(source);
+				void copyAsToml(source, spec);
 			}
 
 			return true;
 		},
 	});
+}
+
+/** Name the part a block is missing, so the notice says what to fix. */
+export function describeMissingPart(source: string, part: string): string {
+	const lines = source
+		.split("\n")
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+
+	return lines.length === 0 ? "the block is empty" : part;
 }

@@ -1,0 +1,10 @@
+# attend: dégradé
+# `power_tags` est une liste de chaînes. Écrite comme une table, elle se perd
+# elle-même. Le kit se rend amputé de ses pouvoirs, là où la grammaire terse
+# aurait refusé un kit sans tag : le document est pris au mot, pas deviné.
+name = "The Ferryman's Kit"
+category = "Skill or Trade"
+quest = "Carry someone across who should not be carried."
+
+[power_tags]
+first = "Reads the current"

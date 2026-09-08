@@ -1,5 +1,7 @@
+import { renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import { ThemeCardData } from "./parser";
+import { themeCardShape } from "./shape";
 
 export function renderThemeCard(
 	data: ThemeCardData,
@@ -11,38 +13,47 @@ export function renderThemeCard(
 		`brumes-story-theme--might-${data.level}`,
 	);
 
-	if (data.category) {
-		const category = doc.createElement("div");
-		category.classList.add("brumes-story-theme--category");
-		category.textContent = data.category.toUpperCase();
-		container.appendChild(category);
-	}
+	renderZones(container, themeCardShape, {
+		category: () => {
+			if (!data.category) {
+				return null;
+			}
 
-	// Title tag as the first power tag
-	const titleBox = doc.createElement("div");
-	titleBox.classList.add("brumes-story-theme--title-box");
-	const titleTag = doc.createElement("span");
-	titleTag.classList.add("brumes-story-theme--title");
-	titleTag.dataset.name = data.titleTag;
-	titleTag.textContent = data.titleTag;
-	titleBox.appendChild(titleTag);
-	container.appendChild(titleBox);
+			const category = doc.createElement("div");
+			category.textContent = data.category.toUpperCase();
 
-	const tagList = doc.createElement("ul");
-	tagList.classList.add("brumes-story-theme--tags");
+			return category;
+		},
+		// The title tag is the card's first power tag, drawn apart from the
+		// others because the frame gives it its own band.
+		"title-box": () => {
+			const titleBox = doc.createElement("div");
+			const titleTag = doc.createElement("span");
+			titleTag.classList.add("brumes-story-theme--title");
+			titleTag.dataset.name = data.titleTag;
+			titleTag.textContent = data.titleTag;
+			titleBox.appendChild(titleTag);
 
-	for (const tag of data.powerTags) {
-		const li = doc.createElement("li");
-		li.appendChild(renderTagSpan(tag, doc, { force: "power" }));
-		tagList.appendChild(li);
-	}
+			return titleBox;
+		},
+		tags: () => {
+			const tagList = doc.createElement("ul");
 
-	for (const tag of data.weaknessTags) {
-		const li = doc.createElement("li");
-		li.appendChild(renderTagSpan(tag, doc, { force: "weakness" }));
-		tagList.appendChild(li);
-	}
+			for (const tag of data.powerTags) {
+				const li = doc.createElement("li");
+				li.appendChild(renderTagSpan(tag, doc, { force: "power" }));
+				tagList.appendChild(li);
+			}
 
-	container.appendChild(tagList);
+			for (const tag of data.weaknessTags) {
+				const li = doc.createElement("li");
+				li.appendChild(renderTagSpan(tag, doc, { force: "weakness" }));
+				tagList.appendChild(li);
+			}
+
+			return tagList;
+		},
+	});
+
 	return container;
 }

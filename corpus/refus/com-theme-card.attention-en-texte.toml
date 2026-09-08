@@ -1,0 +1,10 @@
+# attend: dégradé
+# `filled` est un nombre de cases. Écrit en texte, il retombe à zéro : la piste
+# se dessine vide plutôt que de disparaître.
+themebook = "Divination"
+title = "The Reading I Cannot Stop"
+
+[attention]
+kind = "attention"
+filled = "deux"
+maximum = 3

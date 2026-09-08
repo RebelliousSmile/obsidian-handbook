@@ -20,6 +20,8 @@
  * `undefined`.
  */
 
+import type { ShapeOverrides } from "../features/blocks/shape";
+
 /** Custom property name to value, written verbatim into the style block. */
 export type GameStyleTokens = Record<string, string>;
 
@@ -35,6 +37,29 @@ export interface GameStyleValues {
 	base: GameStyleLayer;
 	light: GameStyleLayer;
 	dark: GameStyleLayer;
+}
+
+/**
+ * A polarity a game's own material carries.
+ *
+ * It is a claim about the books, not about Obsidian: a line whose pages are
+ * printed white and black sources both, and a line printed on parchment alone
+ * sources one. Nothing derives a polarity — a pack that does not name one does
+ * not get it, and the layer it left empty is simply not written.
+ *
+ * The stylesheet is held to the same claim. A partial may split on a theme
+ * only as a compound selector on its own mode class — `.brumes--<game>` and
+ * `.theme-dark` sit on the same `body`, so a bare `.theme-dark` would fire for
+ * every game, including one that never had a night — and only for a polarity
+ * the pack declares. A game that sources one and a stylesheet that draws two
+ * disagree about the books, and the stylesheet is the one that is wrong.
+ */
+export type GamePolarity = "light" | "dark";
+
+export const GAME_POLARITIES: GamePolarity[] = ["light", "dark"];
+
+export function isGamePolarity(value: unknown): value is GamePolarity {
+	return value === "light" || value === "dark";
 }
 
 /**
@@ -75,7 +100,32 @@ export interface GamePack {
 	/** Shown in the interface. Comes from the data, never from a literal. */
 	label: string;
 	style: GameStyleValues;
+	/**
+	 * The polarities the game's material sources, in the order they are read.
+	 *
+	 * Two of them and the vault's theme decides, on a compound selector. One
+	 * of them and it holds whichever theme is active — the pack declares its
+	 * polarity and sticks to it, rather than degrading to a bare `base` the
+	 * moment someone toggles a theme the game never had. None, and only `base`
+	 * is written.
+	 *
+	 * Left out on purpose rather than defaulted: a default here would be a
+	 * polarity invented to fill a hole, which is exactly what a reader of the
+	 * rendering could not tell from a sourced one.
+	 */
+	polarities?: GamePolarity[];
 	assets?: GameAssets;
+	/**
+	 * What the game changes about the blocks themselves, block by block and
+	 * zone by zone.
+	 *
+	 * Partial by construction: a pack that says nothing about a zone leaves it
+	 * as the block declares it, and a pack that says nothing at all draws the
+	 * blocks every other game draws. It reaches names, illustrations and
+	 * whether a zone is drawn — never geometry, which stays in the SCSS, and
+	 * never the order of the zones, which is the block's.
+	 */
+	shapes?: ShapeOverrides;
 }
 
 /**

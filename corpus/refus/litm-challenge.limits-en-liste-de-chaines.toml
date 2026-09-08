@@ -1,0 +1,6 @@
+# attend: dégradé
+# `limits` est un tableau de tables. Une liste de chaînes ne porte pas de
+# niveau : elle est perdue entière, le reste du défi se rend.
+name = "The Drowned Bell Tower"
+limits = ["Flooded", "Bound to the Marsh"]
+tags_and_statuses = ["waterlogged", "sinking-2"]

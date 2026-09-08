@@ -1,0 +1,6 @@
+# attend: null
+# `name` est l'identité du kit. Sans lui il n'y a pas de kit, et la grammaire
+# terse ne trouve aucun tag entre accolades à reprendre.
+category = "Skill or Trade"
+power_tags = ["Reads the current"]
+quest = "Carry someone across who should not be carried."

@@ -1,0 +1,7 @@
+# attend: dégradé
+# `improvement` est une table à nom. Écrit comme une chaîne, il se perd
+# lui-même : le kit garde ses tags et sa quête.
+name = "The Ferryman's Kit"
+power_tags = ["Knows every landing"]
+quest = "Carry someone across who should not be carried."
+improvement = "The Long Pole"

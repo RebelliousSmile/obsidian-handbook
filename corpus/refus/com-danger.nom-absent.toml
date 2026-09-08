@@ -1,0 +1,6 @@
+# attend: null
+# Le nom est requis. Sans lui il n'y a pas de Danger : le lecteur rend null et
+# la grammaire terse reprend la main.
+description = "A congregation that sings with one throat and no face."
+rating = 4
+soft_moves = ["A hymn starts up somewhere behind you."]

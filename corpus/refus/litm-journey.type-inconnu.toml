@@ -1,0 +1,8 @@
+# attend: dégradé
+# `type` connaît landscape, occasion et undertaking. Un type hors de cette
+# liste retombe sur celui que le livre imprime le plus souvent ; le voyage se
+# rend.
+type = "expedition"
+name = "The Crossing at Ashfall"
+tags = ["No shelter"]
+consequences = ["The provisions run out two days early."]

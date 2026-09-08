@@ -1,0 +1,6 @@
+# attend: null
+# `name` est l'identité du voyage. Sans lui il n'y a pas de voyage, et la
+# grammaire terse n'a pas de ligne de type à lire non plus.
+type = "landscape"
+tags = ["Ash underfoot"]
+consequences = ["Someone arrives changed."]

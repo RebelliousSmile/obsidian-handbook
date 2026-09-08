@@ -2,6 +2,16 @@
 // a pale panel lifted off the paper by a shadow, with the name underlined and
 // the section headings shouted in condensed capitals. That is the shape the
 // v1 theme gave `div.danger`, and the one it keeps here.
+//
+// Its four colours stay here rather than move to the pack. They are the
+// anatomy of one block, not the dress of a page: nothing outside a danger
+// profile reads them, and a pack that wanted to change one would be reaching
+// into a block it already reaches through `shapes`.
+//
+// The night variant below is a compound selector on the mode class, and it is
+// only legitimate because City of Mist declares both polarities. A block in a
+// game that sources one must not split on a theme the game never had — that
+// rule lives in `src/games/types.ts`, beside `GamePolarity`.
 @mixin global {
 	.brumes-com-danger {
 		--brumes-com-danger-h: 42;
@@ -28,6 +38,21 @@
 		--brumes-com-danger-l: 14%;
 		--brumes-com-danger-accent: #d9737f;
 		--brumes-com-danger-ink: #e8e2d4;
+	}
+
+	.brumes-com-danger--header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.6em;
+	}
+
+	// The toolkit prints the overall rating as a bare numeral beside the name.
+	.brumes-com-danger--rating {
+		font-family: "Bebas Neue", sans-serif;
+		font-size: 1.5em;
+		line-height: 1;
+		color: var(--brumes-com-danger-accent);
 	}
 
 	.brumes-com-danger--name {
@@ -131,6 +156,15 @@
 	// is marked apart from the soft and hard moves.
 	.brumes-com-danger--move-custom .brumes-com-danger--move-label {
 		color: var(--brumes-com-danger-accent);
+	}
+
+	// Attribution, when a schema document carried some.
+	.brumes-com-danger--source {
+		margin-top: 0.8em;
+		font-family: "Courier Prime", monospace;
+		font-size: 0.8em;
+		text-align: right;
+		opacity: 0.6;
 	}
 
 	.brumes-com-danger--move-name {

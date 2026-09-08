@@ -11,6 +11,8 @@
 
 		&--header,
 		&--description,
+		&--general-consequences,
+		&--source,
 		&--secrets {
 			grid-column: 1 / -1;
 		}
@@ -30,6 +32,15 @@
 			font-size: 1.35em;
 			line-height: 1.1;
 			text-transform: uppercase;
+		}
+
+		&--rating {
+			font-family: var(--font-header-theme);
+			font-size: 0.9em;
+			padding: 0.05em 0.5em;
+			border: 1px solid var(--background-modifier-border);
+			border-radius: 999px;
+			color: var(--text-muted);
 		}
 
 		&--roles {
@@ -70,11 +81,42 @@
 			margin-bottom: 0.4em;
 		}
 
+		&--limit--progress {
+			border-left: 2px solid var(--background-modifier-border);
+			padding-left: 0.5em;
+		}
+
 		&--limit-consequence,
 		&--threat-trigger {
 			color: var(--text-muted);
 			font-style: italic;
 			padding-left: 0.8em;
+		}
+
+		&--might-aspect + &--might-aspect {
+			margin-top: 0.3em;
+		}
+
+		&--might--origin::before {
+			content: "Origin · ";
+		}
+
+		&--might--adventure::before {
+			content: "Adventure · ";
+		}
+
+		&--might--greatness::before {
+			content: "Greatness · ";
+		}
+
+		&--might--origin::before,
+		&--might--adventure::before,
+		&--might--greatness::before {
+			font-family: var(--font-header-theme);
+			font-size: 0.85em;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: var(--text-muted);
 		}
 
 		&--might-vulnerability {
@@ -98,6 +140,13 @@
 				content: " · ";
 				font-family: var(--font-text-theme);
 			}
+		}
+
+		// Attribution, when a schema document carried some.
+		&--source {
+			font-size: 0.8em;
+			text-align: right;
+			color: var(--text-muted);
 		}
 
 		&--consequence-list {

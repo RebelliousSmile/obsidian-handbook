@@ -1,12 +1,11 @@
+// Highlights and puts in italic tags, statuses and limits.
+//
+// The four highlighter colours are not written here. They are the game's own
+// marks, they differ between the two polarities the game declares, and a
+// reader may well want other ones — three reasons that all point at the pack,
+// which is where they now live, one set per polarity. This file keeps the
+// shape of a highlighter stroke and nothing about its colour.
 @mixin global {
-	// Highlights and puts in italic tags, statuses and limits
-	& {
-		--brumes-power-color: #fff2ab;
-		--brumes-status-color: #e2e9b4;
-		--brumes-limit-color: #f9d0c4;
-		--brumes-weakness-color: #edbb89;
-	}
-
 	.brumes-tag,
 	.brumes-tag-content {
 		position: relative;

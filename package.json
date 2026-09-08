@@ -7,6 +7,9 @@
 		"dev": "node esbuild.config.mjs --watch",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"lint": "eslint .",
+		"assert:corpus": "node tools/assert-corpus.mjs",
+		"dump:dom": "node tools/dump-dom.mjs",
+		"assert:override": "node tools/assert-override.mjs",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [

@@ -57,6 +57,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					);
 				});
 		});
+		this.renderPolarities(generalSection);
 		this.renderMigrationNotice(generalSection);
 		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
@@ -85,6 +86,38 @@ export class BrumesSettingTab extends PluginSettingTab {
 		const advancedSection = this.createSection(containerEl);
 		advancedSection.setHeading("Advanced");
 		this.renderAdvancedSection(advancedSection);
+	}
+
+	/**
+	 * Say which colour schemes the active game actually has.
+	 *
+	 * A line printed on parchment alone keeps its own register whichever theme
+	 * the vault is set to, and someone toggling dark and seeing nothing move
+	 * has no way to tell that from a broken setting. So it is written down,
+	 * next to the game rather than in a changelog.
+	 */
+	private renderPolarities(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting
+				.setName("Colour scheme")
+				.setDesc(this.createPolarityDescription());
+		});
+	}
+
+	private createPolarityDescription(): string {
+		const pack = resolveGamePack(this.plugin.settings.mode);
+		const polarities = pack.polarities ?? [];
+
+		if (polarities.length === 0) {
+			return "The active game brings no colour scheme of its own: it dresses your notes with its fonts and leaves the colours to the theme you are running.";
+		}
+
+		if (polarities.length === 1) {
+			const only = polarities[0] === "dark" ? "dark" : "light";
+			return `The active game has one scheme, the ${only} one its books are printed in, and it holds whichever theme the vault is set to. Toggling the theme is meant to leave your notes as they are.`;
+		}
+
+		return "The active game has both a light and a dark scheme, and follows the theme the vault is set to.";
 	}
 
 	private renderMigrationNotice(section: SettingGroup) {

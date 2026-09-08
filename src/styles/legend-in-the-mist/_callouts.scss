@@ -1,3 +1,15 @@
+// Why this file writes its colours instead of reading them
+//
+// Same reason as City of Mist's callouts: one tint per `data-callout` value,
+// a vocabulary Obsidian owns and a pack has no way to enumerate.
+//
+// One thing here is not a tint and could not be a token either. The paper is
+// painted by a `::before` rather than by `background`, because the note's own
+// texture has to show through it, and it is masked so the tint fades out at
+// the edges. `--brumes-callout-background` names the colour that pseudo
+// element uses, but it is set on `.callout` itself and reset per type, so a
+// value written on `body` by a pack would never reach it: what is declared
+// here is the layer, not a value a pack was invited to change.
 @mixin global {
 	.callout {
 		position: relative;

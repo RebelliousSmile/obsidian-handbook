@@ -1,3 +1,6 @@
+import { SchemaMeta } from "../blocks/schemaValues";
+import { parseComDangerDocument } from "./schema";
+
 /** A spectrum is overcome (defeat) or runs toward its own end (countdown). */
 export type ComSpectrumKind = "defeat" | "countdown";
 
@@ -24,8 +27,12 @@ export interface ComDangerMove {
 export interface ComDangerData {
 	name: string;
 	description: string[];
+	/** How dangerous the profile is overall, 0 to 5, when it says. */
+	rating?: number;
 	spectrums: ComSpectrum[];
 	moves: ComDangerMove[];
+	/** Where the profile comes from, when a document said. */
+	meta?: SchemaMeta;
 }
 
 type Section = "spectrums" | "countdown" | "moves";
@@ -44,6 +51,7 @@ const MOVE_KINDS: Record<string, ComMoveKind> = {
 	custom: "custom",
 };
 
+const RATING_PREFIX = "rating:";
 const OUTCOME_SEPARATOR = " > ";
 const SPECTRUM_PATTERN = /^(.*?)\s*(?::|\s)\s*(\d+|∞|inf|~|-)$/i;
 const IMMUNE_VALUES = ["∞", "inf", "~", "-"];
@@ -116,7 +124,22 @@ function parseMove(line: string): ComDangerMove | null {
 	return { kind, name, text: effect };
 }
 
+/**
+ * A Danger profile, read either as a schema-in-the-mist document or in the
+ * terse grammar. The document comes first because it announces itself: a TOML
+ * key or table opens it, which the grammar never does.
+ */
 export function parseComDanger(source: string): ComDangerData | null {
+	const document = parseComDangerDocument(source);
+
+	if (document !== null) {
+		return document;
+	}
+
+	return parseComDangerGrammar(source);
+}
+
+function parseComDangerGrammar(source: string): ComDangerData | null {
 	const lines = source
 		.split("\n")
 		.map((line) => line.trim())
@@ -146,7 +169,13 @@ export function parseComDanger(source: string): ComDangerData | null {
 		}
 
 		if (section === null) {
-			if (line.startsWith(":")) {
+			if (line.toLowerCase().startsWith(RATING_PREFIX)) {
+				const rating = parseInt(line.slice(RATING_PREFIX.length).trim(), 10);
+
+				if (!isNaN(rating)) {
+					data.rating = rating;
+				}
+			} else if (line.startsWith(":")) {
 				data.description.push(line.slice(1).trim());
 			}
 

@@ -1,0 +1,7 @@
+# attend: dégradé
+# `power_tags` est une liste. Écrite comme une chaîne, elle se perd elle-même
+# et le reste de la carte se rend.
+title_tag = "The Lantern I Was Left"
+level = "origin"
+power_tags = "Burns without oil, Shows the way back"
+weakness_tags = ["Heavy in the hand"]

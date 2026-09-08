@@ -19,6 +19,10 @@ import { accent, palette, tokens } from "./tokens";
  * it is in the book, a marker, and lands on the highlight rather than on the
  * links it would make illegible on white.
  *
+ * Both polarities come from the same sampling: the book prints the cool paper
+ * and the blue-teal ink as facing registers, page after page, so neither is a
+ * scheme derived from the other.
+ *
  * The typefaces are the book's by intent, not by name: NeoTokyo, Isotonic and
  * PP Fraktion Sans are commercial, so the pack asks for the closest faces the
  * plugin already carries — a heavy condensed grotesque for display, a
@@ -28,6 +32,7 @@ import { accent, palette, tokens } from "./tokens";
 export const otherscapePack: GamePack = {
 	id: "otherscape",
 	label: ":Otherscape",
+	polarities: ["light", "dark"],
 	style: {
 		base: {
 			note: {

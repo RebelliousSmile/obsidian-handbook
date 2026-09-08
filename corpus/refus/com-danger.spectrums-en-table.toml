@@ -1,0 +1,9 @@
+# attend: dégradé
+# `spectrums` est un tableau de tables. Écrit comme une table unique, la liste
+# est perdue ; le nom et les manœuvres restent.
+name = "The Hollow Chorus"
+hard_moves = ["The chorus takes your name and sings it back."]
+
+[spectrums]
+name = "Congregation"
+maximum = 5

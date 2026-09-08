@@ -1,0 +1,15 @@
+# Un kit de thème Legend in the Mist, tous champs renseignés. Forme à nous,
+# écrite avec les clés de la carte de thème qu'elle alimente.
+name = "The Ferryman's Kit"
+category = "Skill or Trade"
+power_tags = [
+  "Reads the current",
+  "Knows every landing",
+  "Never asks the fare twice",
+]
+weakness_tags = ["Owes the river", "Cannot leave the water"]
+quest = "Carry someone across who should not be carried."
+
+[improvement]
+name = "The Long Pole"
+effect = "Reach anything within a boat's length, once per crossing."

@@ -1,0 +1,31 @@
+# Un voyage Legend in the Mist, tous champs renseignés. La forme est à nous :
+# rien en amont ne décrit un voyage, ce qui est la raison de la décrire ici.
+type = "undertaking"
+name = "The Crossing at Ashfall"
+description = [
+  "A week of walking under a sky that never quite clears.",
+  "The road is there; what uses it at night is not.",
+]
+tags = ["Ash underfoot", "No shelter", "The long dusk"]
+benefits = "Reach the far shore before the thaw."
+consequences = [
+  "Someone in the party arrives changed.",
+  "The provisions run out two days early.",
+]
+
+[[vignettes]]
+name = "The Toll House"
+trigger = "The first night, when the fires are lit"
+consequences = [
+  "The keeper asks for a name, and keeps it.",
+  "Refuse, and the road doubles back on itself.",
+]
+
+[[vignettes]]
+name = "What the Ash Covers"
+trigger = "When someone digs"
+consequences = ["A door, face down, still latched from the other side."]
+
+[[vignettes]]
+name = "The Far Shore"
+consequences = ["The party is counted, and the count is wrong."]

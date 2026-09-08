@@ -3,6 +3,7 @@ import type {
 	BrumesMode,
 	BrumesSettings,
 } from "../../settings/types";
+import type { BlockShape } from "./shape";
 
 /**
  * Everything a fenced Brumes block needs: how it is written, when it is
@@ -21,6 +22,15 @@ export interface BrumesBlock<T> {
 	label: string;
 	/** Context menu entry icon. */
 	icon: string;
+	/**
+	 * The named zones the block is made of, in the order they are drawn.
+	 *
+	 * Required rather than optional, and deliberately so: a block that ships
+	 * without a shape is a block nothing but Handbook can draw. The shape
+	 * describes what the renderer already does — it is a description, not a
+	 * layout the renderer is asked to obey.
+	 */
+	shape: BlockShape;
 	parse(source: string): T | null;
 	render(data: T, doc: Document): HTMLElement;
 	template(): string;

@@ -1,5 +1,6 @@
 import { BrumesMode } from "../../settings/types";
 import {
+	GamePolarity,
 	GameStyleLayer,
 	GameStyleTokens,
 	GameStyleValues,
@@ -59,6 +60,17 @@ function renderLayer(
  * specificity only source order would decide, and nothing guarantees our
  * sheet comes after the active theme's.
  *
+ * How many variants get written is the pack's to say, never this function's to
+ * guess:
+ *
+ * - two polarities and the vault's theme picks, on those compound selectors;
+ * - one, and it is written on the bare mode selector, after `base` and so
+ *   above it — the game holds its own register whichever theme is active,
+ *   rather than losing its colours the moment someone toggles a scheme it
+ *   never had;
+ * - none, and `base` is all there is. A layer the pack did not declare is not
+ *   written, and not written as a copy of `base` either.
+ *
  * The declarations land on `body`, never on a note container: the iceberg and
  * mountain card mixins are included outside the mode class so they reach the
  * canvas, and they only see these values through inheritance.
@@ -67,14 +79,28 @@ export function buildGameStyle(
 	mode: BrumesMode,
 	values: GameStyleValues,
 	workspaceTheme: boolean,
+	polarities: GamePolarity[] = [],
 ): string {
 	const selector = `body.brumes--${mode}`;
+	const blocks = [renderLayer(selector, values.base, workspaceTheme)];
 
-	const blocks = [
-		renderLayer(selector, values.base, workspaceTheme),
-		renderLayer(`${selector}.theme-light`, values.light, workspaceTheme),
-		renderLayer(`${selector}.theme-dark`, values.dark, workspaceTheme),
-	];
+	if (polarities.length === 1) {
+		// Same selector as `base`, written after it: at equal specificity the
+		// later block wins, which is exactly the relation wanted here.
+		blocks.push(
+			renderLayer(selector, values[polarities[0]], workspaceTheme),
+		);
+	} else {
+		for (const polarity of polarities) {
+			blocks.push(
+				renderLayer(
+					`${selector}.theme-${polarity}`,
+					values[polarity],
+					workspaceTheme,
+				),
+			);
+		}
+	}
 
 	return blocks.filter((block) => block.length > 0).join("\n\n");
 }

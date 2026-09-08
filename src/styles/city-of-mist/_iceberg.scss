@@ -32,6 +32,26 @@ options:
     icon: eye-off
 */
 
+// Why this file is included outside the mode class, and what that costs
+//
+// `index.scss` includes this mixin at the top level rather than inside
+// `.brumes--city-of-mist`, because a canvas card embeds its note in an iframe
+// with a document of its own — the body class does not reach in there, so a
+// descendant selector rooted on it would leave the embedded card undressed.
+//
+// The price is paid only by the rules that also match
+// `.canvas-node-iframe-body[…]`: inside that document no custom property from
+// the pack arrives, so a token there would resolve to nothing. The rules that
+// match the card on the canvas alone are ordinary descendants of `body` and
+// read the pack like any other rule — which is what lets the plate behind the
+// art take `--brumes-iceberg-plate` rather than split on `.theme-dark`, as it
+// did until the polarities were declared. That bare selector fired on whatever
+// scheme the vault was running, for any game, and it read a workspace token
+// that is not written at all when the workspace theme is off.
+//
+// The shadow and the sticky note stay hard coded: the first is a canvas
+// shadow, not a note colour, and the second is a yellow sticky, which is the
+// same yellow at noon and at midnight.
 @mixin cards {
 	.canvas-node[data-iceberg-card] {
 		--shadow-stationary: #00000050 -5px 5px 20px 1px;
@@ -41,6 +61,39 @@ options:
 	.canvas-node[data-iceberg-card] .canvas-node-container {
 		border-radius: 0;
 		border: none;
+	}
+
+	// A card is pinned to a board, never laid square on it. The v1 theme let
+	// the angle be picked by hand through a `rot*` class; Advanced Canvas
+	// stamps a single attribute per node, so the angle is dealt from the
+	// node's rank among its siblings instead — stable for a given canvas,
+	// and nothing more for the user to set up.
+	$iceberg-tilts: (1, -2.4deg), (2, 1.6deg), (3, -1deg), (4, 2.1deg),
+		(5, -1.7deg), (6, 0.8deg), (7, -0.4deg);
+
+	@each $slot, $angle in $iceberg-tilts {
+		.canvas-node[data-iceberg-card]:nth-child(7n+#{$slot})
+			.canvas-node-container {
+			transform: rotate($angle);
+		}
+	}
+
+	// The card has no border of its own, so without this a chosen card gives
+	// no sign that it is chosen. Both states are covered because a single
+	// click only marks the node selected, never focused.
+	.canvas-node[data-iceberg-card].is-selected .canvas-node-container,
+	.canvas-node[data-iceberg-card].is-focused .canvas-node-container {
+		border: 2px solid var(--color-accent);
+	}
+
+	// Text that overruns the card must not print a scrollbar across the art.
+	.canvas-node[data-iceberg-card] .canvas-node-content,
+	.canvas-node-iframe-body[data-iceberg-card] .cm-scroller {
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
 	}
 
 	.canvas-node[data-iceberg-card] .canvas-node-content {
@@ -64,7 +117,7 @@ options:
 
 		background-repeat: no-repeat;
 		background-position: bottom center;
-		background-color: #515151;
+		background-color: var(--brumes-iceberg-plate);
 		background-size: contain;
 	}
 
@@ -93,4 +146,5 @@ options:
 	.canvas-node[data-iceberg-card="group"] .canvas-node-content::before {
 		background-image: var(--brumes-image-iceberg-group);
 	}
+
 }

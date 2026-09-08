@@ -1,3 +1,16 @@
+// Why this file writes its colours instead of reading them
+//
+// What follows is one tint per callout type, keyed by the `data-callout` value
+// Obsidian puts on the element. A pack cannot name them: it would need a token
+// per type, and the set of types is Obsidian's — plus whatever a plugin adds
+// tomorrow. Twenty-odd names in the pack would buy nothing a game would ever
+// want to change on its own, and would put the plugin in the business of
+// tracking someone else's vocabulary.
+//
+// So the palette lives here, as one closed list, in the one place that already
+// knows the selectors. What a pack does change — the paper, the ink, the
+// accent — it already changes above this: these tints are laid over the page,
+// not instead of it.
 @mixin global {
 	.callout {
 		background-color: #e0d0d0;

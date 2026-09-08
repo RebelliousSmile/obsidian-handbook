@@ -2,6 +2,7 @@ import { BrumesBlock } from "../blocks/types";
 import { pickRandomThemebook } from "../blocks/themebooks";
 import { ThemeKitData, parseThemeKit } from "./parser";
 import { renderThemeKit } from "./renderer";
+import { themeKitShape } from "./shape";
 
 function themeKitTemplate(): string {
 	const { themebook } = pickRandomThemebook();
@@ -25,6 +26,7 @@ export const themeKitBlock: BrumesBlock<ThemeKitData> = {
 	flag: "themeKitParser",
 	label: "Theme kit",
 	icon: "book-open",
+	shape: themeKitShape,
 	parse: parseThemeKit,
 	render: renderThemeKit,
 	template: themeKitTemplate,

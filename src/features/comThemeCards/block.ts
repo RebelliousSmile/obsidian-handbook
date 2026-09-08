@@ -2,6 +2,7 @@ import { BrumesBlock } from "../blocks/types";
 import { pickRandomComThemebook } from "../blocks/comThemebooks";
 import { ComThemeCardData, parseComThemeCard } from "./parser";
 import { renderComThemeCard } from "./renderer";
+import { comThemeCardShape } from "./shape";
 
 function comThemeCardTemplate(): string {
 	const { type, themebook } = pickRandomComThemebook();
@@ -29,6 +30,7 @@ export const comThemeCardBlock: BrumesBlock<ComThemeCardData> = {
 	flag: "comThemeCardParser",
 	label: "Theme card",
 	icon: "file-plus",
+	shape: comThemeCardShape,
 	parse: parseComThemeCard,
 	render: renderComThemeCard,
 	template: comThemeCardTemplate,

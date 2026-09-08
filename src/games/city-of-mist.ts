@@ -7,10 +7,15 @@ import { accent, palette, tokens } from "./tokens";
  * The light scheme is the one the v1 preset carried. The dark scheme lived in
  * `theme/CoM_dark.json` and was lost with the theme folder; it is restored
  * here, completed to cover the roles the light scheme covers.
+ *
+ * Both polarities are the line's own: its pages are printed white and black,
+ * so the vault's theme has something to pick between rather than a scheme the
+ * plugin made up for the occasion.
  */
 export const cityOfMistPack: GamePack = {
 	id: "city-of-mist",
 	label: "City of Mist",
+	polarities: ["light", "dark"],
 	style: {
 		base: {
 			note: {
@@ -83,6 +88,21 @@ export const cityOfMistPack: GamePack = {
 					"--tag-color": "#000000",
 					"--tag-background": "#FFF1A200",
 					"--tag-background-hover": "#00000000",
+					"--brumes-table-ink": "#000000",
+					"--brumes-table-header-paper": "#D4CCADAA",
+					"--table-header-color": "#000000",
+					"--brumes-table-row-paper": "#E5DCCBAA",
+					// The plate the iceberg art sits on. It is named here
+					// rather than split on `.theme-dark` in the partial: the
+					// canvas mixin is included outside the mode class and
+					// cannot tell one game from another.
+					"--brumes-iceberg-plate": "#515151",
+					// The four highlighter marks of the MC toolkit, kept from
+					// the v1 theme.
+					"--brumes-power-color": "#FFF2AB",
+					"--brumes-status-color": "#E2E9B4",
+					"--brumes-limit-color": "#F9D0C4",
+					"--brumes-weakness-color": "#EDBB89",
 				},
 			),
 			workspace: {
@@ -124,6 +144,25 @@ export const cityOfMistPack: GamePack = {
 					"--tag-color": "#E0DEF4",
 					"--tag-background": "#00000000",
 					"--tag-background-hover": "#00000000",
+					// The tables used to keep their beige header and black ink
+					// whatever the theme, because the partial wrote them by
+					// hand. Declared here, they follow the polarity like the
+					// rest of the page.
+					"--brumes-table-ink": "#E0DEF4",
+					"--brumes-table-header-paper": "#393552AA",
+					"--table-header-color": "#E0DEF4",
+					"--brumes-table-row-paper": "#232136AA",
+					// At night the plate behind the iceberg art sinks into the
+					// note instead of staying a lit grey rectangle.
+					"--brumes-iceberg-plate": "#232136",
+					// A highlighter on paper cannot be a highlighter at night:
+					// the tag keeps the note's text colour, so pale paper
+					// under light ink is unreadable. The v1 theme darkened the
+					// four marks instead, and so does this.
+					"--brumes-power-color": "#7B4A83",
+					"--brumes-status-color": "#6A8661",
+					"--brumes-limit-color": "#852D3A",
+					"--brumes-weakness-color": "#8D5E35",
 				},
 			),
 			workspace: {

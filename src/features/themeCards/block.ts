@@ -2,6 +2,7 @@ import { BrumesBlock } from "../blocks/types";
 import { pickRandomThemebook } from "../blocks/themebooks";
 import { ThemeCardData, parseThemeCard } from "./parser";
 import { renderThemeCard } from "./renderer";
+import { themeCardShape } from "./shape";
 
 function themeCardTemplate(): string {
 	const { might, themebook } = pickRandomThemebook();
@@ -26,6 +27,7 @@ export const themeCardBlock: BrumesBlock<ThemeCardData> = {
 	flag: "storyThemeParser",
 	label: "Theme card",
 	icon: "file-plus",
+	shape: themeCardShape,
 	parse: parseThemeCard,
 	render: renderThemeCard,
 	template: themeCardTemplate,

@@ -22,11 +22,17 @@ import {
 import { GAME_PACKS, resolveGamePack } from "./games/registry";
 import { GamePack } from "./games/types";
 import {
-	GameStyleOverride,
-	loadGameStyleOverride,
+	EMPTY_OVERRIDE,
+	GameOverride,
+	loadGameOverride,
 	mergeGameStyle,
 } from "./games/overrides";
+import {
+	mergeShapeOverrides,
+	setShapeOverrides,
+} from "./features/blocks/shape";
 import { loadBrumesBlocks } from "./features/blocks/registry";
+import { loadTomlExportCommands } from "./features/blocks/tomlExports";
 import { registerBrumesContextMenu } from "./contextMenu";
 import {
 	LANTERN_ICON,
@@ -47,7 +53,7 @@ export default class BrumesPlugin extends Plugin {
 	private lanternRibbonEl: HTMLElement | null = null;
 	private syncCalloutAliases: (() => void) | null = null;
 	private readonly gameStyle = new GameStyleWriter();
-	private styleOverride: GameStyleOverride = {};
+	private overrides: GameOverride = EMPTY_OVERRIDE;
 	private assets: GameAssetState = emptyAssetState("");
 
 	async onload() {
@@ -66,6 +72,7 @@ export default class BrumesPlugin extends Plugin {
 
 		loadTagFeature(this);
 		loadBrumesBlocks(this);
+		loadTomlExportCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
 
 		this.addCommand({
@@ -158,7 +165,14 @@ export default class BrumesPlugin extends Plugin {
 	 */
 	private applyGameStyle() {
 		const pack = resolveGamePack(this.settings.mode);
-		const style = mergeGameStyle(pack.style, this.styleOverride);
+		const style = mergeGameStyle(pack.style, this.overrides.style);
+
+		// The blocks are drawn with the game's shapes, the user's file over
+		// them. It is set before the style so that a document repainted below
+		// already draws the zones the game asks for.
+		setShapeOverrides(
+			mergeShapeOverrides(pack.shapes ?? {}, this.overrides.shapes),
+		);
 
 		// The illustrations found in the vault join the base layer as custom
 		// properties, so a template reads an image the way it reads a colour.
@@ -189,6 +203,9 @@ export default class BrumesPlugin extends Plugin {
 				},
 			},
 			this.settings.features.workspaceTheme,
+			// The game says which polarities it has, and the user's file may
+			// claim others; nothing here supplies one neither of them named.
+			this.overrides.polarities ?? pack.polarities,
 		);
 
 		this.gameStyle.applyGameStyle(
@@ -223,9 +240,12 @@ export default class BrumesPlugin extends Plugin {
 
 	/** Read the user's own values again and repaint, without a restart. */
 	async reloadStyleSources() {
-		this.styleOverride = await loadGameStyleOverride(this);
+		this.overrides = await loadGameOverride(this);
 		this.assets = emptyAssetState("");
 		this.applyGameStyle();
+		// A shape is read when a block renders, so a file that changed one is
+		// only visible once the notes are drawn again.
+		this.refreshMarkdownViews();
 	}
 
 	private dressDocument(doc: Document) {
