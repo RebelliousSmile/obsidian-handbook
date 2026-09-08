@@ -1,3 +1,4 @@
+import { renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import {
 	ComThemeCardData,
@@ -5,6 +6,7 @@ import {
 	ComThemeTrack,
 	isMismatchedTrack,
 } from "./parser";
+import { comThemeCardShape } from "./shape";
 
 const DRIVE_LABELS: Record<string, string> = {
 	mystery: "Mystery",
@@ -94,114 +96,117 @@ export function renderComThemeCard(
 	const container = doc.createElement("div");
 	container.classList.add("brumes-com-theme-card");
 
+	// The card's type is a state of the whole card, not a zone of it.
 	if (data.type) {
 		container.classList.add(`brumes-com-theme-card--${data.type}`);
 	}
 
-	const header = doc.createElement("header");
-	header.classList.add("brumes-com-theme-card--header");
-	addLine(
-		header,
-		doc,
-		"brumes-com-theme-card--themebook",
-		data.themebook,
-	);
+	renderZones(container, comThemeCardShape, {
+		header: () => {
+			const header = doc.createElement("header");
+			addLine(header, doc, "brumes-com-theme-card--themebook", data.themebook);
 
-	if (data.title) {
-		addLine(header, doc, "brumes-com-theme-card--title", data.title);
-	}
-
-	container.appendChild(header);
-
-	if (data.drive) {
-		const drive = doc.createElement("div");
-		drive.classList.add(
-			"brumes-com-theme-card--drive",
-			`brumes-com-theme-card--drive-${data.drive.kind}`,
-		);
-
-		const label = doc.createElement("span");
-		label.classList.add("brumes-com-theme-card--drive-label");
-		label.textContent = DRIVE_LABELS[data.drive.kind];
-		drive.appendChild(label);
-
-		const text = doc.createElement("span");
-		text.classList.add("brumes-com-theme-card--drive-text");
-		text.textContent = data.drive.text;
-		drive.appendChild(text);
-
-		if (data.drive.mismatched) {
-			drive.classList.add("brumes-com-theme-card--mismatch");
-			drive.title = MISMATCH_HINT;
-		}
-
-		container.appendChild(drive);
-	}
-
-	if (data.powerTags.length > 0 || data.weaknessTags.length > 0) {
-		const list = doc.createElement("ul");
-		list.classList.add("brumes-com-theme-card--tags");
-
-		for (const tag of data.powerTags) {
-			list.appendChild(renderTagItem(tag, doc, "power"));
-		}
-
-		for (const tag of data.weaknessTags) {
-			list.appendChild(renderTagItem(tag, doc, "weakness"));
-		}
-
-		container.appendChild(list);
-	}
-
-	if (data.improvements.length > 0) {
-		const list = doc.createElement("ul");
-		list.classList.add("brumes-com-theme-card--improvements");
-
-		for (const improvement of data.improvements) {
-			const item = doc.createElement("li");
-			item.classList.add("brumes-com-theme-card--improvement");
-
-			const name = doc.createElement("span");
-			name.classList.add("brumes-com-theme-card--improvement-name");
-			name.textContent = improvement.name;
-			item.appendChild(name);
-
-			if (improvement.effect) {
-				const effect = doc.createElement("span");
-				effect.classList.add(
-					"brumes-com-theme-card--improvement-effect",
-				);
-				effect.textContent = improvement.effect;
-				item.appendChild(effect);
+			if (data.title) {
+				addLine(header, doc, "brumes-com-theme-card--title", data.title);
 			}
 
-			list.appendChild(item);
-		}
-
-		container.appendChild(list);
-	}
-
-	if (data.attention || data.deterioration) {
-		const footer = doc.createElement("footer");
-		footer.classList.add("brumes-com-theme-card--tracks");
-
-		if (data.attention) {
-			footer.appendChild(renderTrack(data.attention, doc));
-		}
-
-		if (data.deterioration) {
-			const track = renderTrack(data.deterioration, doc);
-
-			if (isMismatchedTrack(data)) {
-				track.classList.add("brumes-com-theme-card--mismatch");
-				track.title = MISMATCH_HINT;
+			return header;
+		},
+		drive: () => {
+			if (!data.drive) {
+				return null;
 			}
 
-			footer.appendChild(track);
-		}
+			const drive = doc.createElement("div");
+			drive.classList.add(`brumes-com-theme-card--drive-${data.drive.kind}`);
 
-		container.appendChild(footer);
-	}
+			const label = doc.createElement("span");
+			label.classList.add("brumes-com-theme-card--drive-label");
+			label.textContent = DRIVE_LABELS[data.drive.kind];
+			drive.appendChild(label);
+
+			const text = doc.createElement("span");
+			text.classList.add("brumes-com-theme-card--drive-text");
+			text.textContent = data.drive.text;
+			drive.appendChild(text);
+
+			if (data.drive.mismatched) {
+				drive.classList.add("brumes-com-theme-card--mismatch");
+				drive.title = MISMATCH_HINT;
+			}
+
+			return drive;
+		},
+		tags: () => {
+			if (data.powerTags.length === 0 && data.weaknessTags.length === 0) {
+				return null;
+			}
+
+			const list = doc.createElement("ul");
+
+			for (const tag of data.powerTags) {
+				list.appendChild(renderTagItem(tag, doc, "power"));
+			}
+
+			for (const tag of data.weaknessTags) {
+				list.appendChild(renderTagItem(tag, doc, "weakness"));
+			}
+
+			return list;
+		},
+		improvements: () => {
+			if (data.improvements.length === 0) {
+				return null;
+			}
+
+			const list = doc.createElement("ul");
+
+			for (const improvement of data.improvements) {
+				const item = doc.createElement("li");
+				item.classList.add("brumes-com-theme-card--improvement");
+
+				const name = doc.createElement("span");
+				name.classList.add("brumes-com-theme-card--improvement-name");
+				name.textContent = improvement.name;
+				item.appendChild(name);
+
+				if (improvement.effect) {
+					const effect = doc.createElement("span");
+					effect.classList.add("brumes-com-theme-card--improvement-effect");
+					effect.textContent = improvement.effect;
+					item.appendChild(effect);
+				}
+
+				list.appendChild(item);
+			}
+
+			return list;
+		},
+		tracks: () => {
+			if (!data.attention && !data.deterioration) {
+				return null;
+			}
+
+			const footer = doc.createElement("footer");
+
+			if (data.attention) {
+				footer.appendChild(renderTrack(data.attention, doc));
+			}
+
+			if (data.deterioration) {
+				const track = renderTrack(data.deterioration, doc);
+
+				if (isMismatchedTrack(data)) {
+					track.classList.add("brumes-com-theme-card--mismatch");
+					track.title = MISMATCH_HINT;
+				}
+
+				footer.appendChild(track);
+			}
+
+			return footer;
+		},
+	});
 
 	return container;
 }

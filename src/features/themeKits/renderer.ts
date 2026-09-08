@@ -1,19 +1,21 @@
+import { renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import { ThemeKitData } from "./parser";
+import { themeKitShape } from "./shape";
 
-function addTagList(
-	container: HTMLElement,
+function tagList(
 	doc: Document,
-	name: string,
 	tags: string[],
 	force: "power" | "weakness",
-): void {
+): HTMLElement | null {
 	if (tags.length === 0) {
-		return;
+		return null;
 	}
 
 	const list = doc.createElement("ul");
-	list.classList.add("brumes-theme-kit--tags", `brumes-theme-kit--${name}`);
+	// The shared class the two tag zones have in common; the shape names the
+	// zones, not the family, so the renderer carries this one.
+	list.classList.add("brumes-theme-kit--tags");
 
 	for (const tag of tags) {
 		const item = doc.createElement("li");
@@ -21,53 +23,64 @@ function addTagList(
 		list.appendChild(item);
 	}
 
-	container.appendChild(list);
+	return list;
 }
 
 export function renderThemeKit(data: ThemeKitData, doc: Document): HTMLElement {
 	const container = doc.createElement("div");
 	container.classList.add("brumes-theme-kit");
 
-	if (data.category) {
-		const category = doc.createElement("div");
-		category.classList.add("brumes-theme-kit--category");
-		category.textContent = data.category.toUpperCase();
-		container.appendChild(category);
-	}
+	renderZones(container, themeKitShape, {
+		category: () => {
+			if (!data.category) {
+				return null;
+			}
 
-	const name = doc.createElement("div");
-	name.classList.add("brumes-theme-kit--name");
-	name.textContent = data.name;
-	container.appendChild(name);
+			const category = doc.createElement("div");
+			category.textContent = data.category.toUpperCase();
 
-	addTagList(container, doc, "power-tags", data.powerTags, "power");
-	addTagList(container, doc, "weakness-tags", data.weaknessTags, "weakness");
+			return category;
+		},
+		name: () => {
+			const name = doc.createElement("div");
+			name.textContent = data.name;
 
-	if (data.quest) {
-		const quest = doc.createElement("div");
-		quest.classList.add("brumes-theme-kit--quest");
-		quest.textContent = data.quest;
-		container.appendChild(quest);
-	}
+			return name;
+		},
+		"power-tags": () => tagList(doc, data.powerTags, "power"),
+		"weakness-tags": () => tagList(doc, data.weaknessTags, "weakness"),
+		quest: () => {
+			if (!data.quest) {
+				return null;
+			}
 
-	if (data.improvement) {
-		const improvement = doc.createElement("div");
-		improvement.classList.add("brumes-theme-kit--improvement");
+			const quest = doc.createElement("div");
+			quest.textContent = data.quest;
 
-		const name = doc.createElement("span");
-		name.classList.add("brumes-theme-kit--improvement-name");
-		name.textContent = data.improvement.name;
-		improvement.appendChild(name);
+			return quest;
+		},
+		improvement: () => {
+			if (!data.improvement) {
+				return null;
+			}
 
-		if (data.improvement.effect) {
-			const effect = doc.createElement("span");
-			effect.classList.add("brumes-theme-kit--improvement-effect");
-			effect.textContent = data.improvement.effect;
-			improvement.appendChild(effect);
-		}
+			const improvement = doc.createElement("div");
 
-		container.appendChild(improvement);
-	}
+			const name = doc.createElement("span");
+			name.classList.add("brumes-theme-kit--improvement-name");
+			name.textContent = data.improvement.name;
+			improvement.appendChild(name);
+
+			if (data.improvement.effect) {
+				const effect = doc.createElement("span");
+				effect.classList.add("brumes-theme-kit--improvement-effect");
+				effect.textContent = data.improvement.effect;
+				improvement.appendChild(effect);
+			}
+
+			return improvement;
+		},
+	});
 
 	return container;
 }

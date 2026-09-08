@@ -1,6 +1,7 @@
 import { BrumesBlock } from "../blocks/types";
 import { ChallengeData, parseChallenge } from "./parser";
 import { renderChallenge } from "./renderer";
+import { challengeShape } from "./shape";
 
 function challengeTemplate(): string {
 	return [
@@ -36,6 +37,7 @@ export const challengeBlock: BrumesBlock<ChallengeData> = {
 	flag: "challengeParser",
 	label: "Challenge",
 	icon: "swords",
+	shape: challengeShape,
 	parse: parseChallenge,
 	render: renderChallenge,
 	template: challengeTemplate,

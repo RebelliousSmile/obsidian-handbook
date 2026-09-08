@@ -1,6 +1,7 @@
 import { BrumesBlock } from "../blocks/types";
 import { ComDangerData, parseComDanger } from "./parser";
 import { renderComDanger } from "./renderer";
+import { comDangerShape } from "./shape";
 
 function comDangerTemplate(): string {
 	return [
@@ -28,6 +29,7 @@ export const comDangerBlock: BrumesBlock<ComDangerData> = {
 	flag: "comDangerParser",
 	label: "Danger profile",
 	icon: "skull",
+	shape: comDangerShape,
 	parse: parseComDanger,
 	render: renderComDanger,
 	template: comDangerTemplate,

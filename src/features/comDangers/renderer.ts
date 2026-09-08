@@ -1,6 +1,8 @@
 import { metaSourceLine } from "../blocks/schemaValues";
+import { renderZones } from "../blocks/shape";
 import { renderRatedLimit } from "../blocks/tagSpan";
 import { ComDangerData, ComDangerMove, ComSpectrum } from "./parser";
+import { comDangerShape } from "./shape";
 
 const MOVE_LABELS: Record<ComDangerMove["kind"], string> = {
 	soft: "Soft",
@@ -8,25 +10,21 @@ const MOVE_LABELS: Record<ComDangerMove["kind"], string> = {
 	custom: "Custom",
 };
 
-/** Open a card section, its heading carrying the printed profile wording. */
-function addSection(
-	container: HTMLElement,
-	doc: Document,
-	name: string,
-	title: string,
-): HTMLElement {
+/**
+ * Open a card section, its heading carrying the printed profile wording.
+ *
+ * The zone class comes from the shape; what this adds is the section family
+ * and the heading, neither of which the vocabulary has a word for.
+ */
+function openSection(doc: Document, title: string): HTMLElement {
 	const section = doc.createElement("section");
-	section.classList.add(
-		"brumes-com-danger--section",
-		`brumes-com-danger--${name}`,
-	);
+	section.classList.add("brumes-com-danger--section");
 
 	const heading = doc.createElement("h4");
 	heading.classList.add("brumes-com-danger--section-title");
 	heading.textContent = title;
 	section.appendChild(heading);
 
-	container.appendChild(section);
 	return section;
 }
 
@@ -95,39 +93,8 @@ export function renderComDanger(
 	const container = doc.createElement("div");
 	container.classList.add("brumes-com-danger");
 
-	const header = doc.createElement("header");
-	header.classList.add("brumes-com-danger--header");
-
-	const name = doc.createElement("div");
-	name.classList.add("brumes-com-danger--name");
-	name.textContent = data.name;
-	header.appendChild(name);
-
-	if (typeof data.rating === "number") {
-		const rating = doc.createElement("div");
-		rating.classList.add("brumes-com-danger--rating");
-		rating.textContent = String(data.rating);
-		header.appendChild(rating);
-	}
-
-	container.appendChild(header);
-
-	if (data.description.length > 0) {
-		const description = doc.createElement("section");
-		description.classList.add(
-			"brumes-com-danger--section",
-			"brumes-com-danger--description",
-		);
-
-		for (const paragraph of data.description) {
-			const p = doc.createElement("p");
-			p.textContent = paragraph;
-			description.appendChild(p);
-		}
-
-		container.appendChild(description);
-	}
-
+	// One parsed list, split in two by each spectrum's kind. The zones name the
+	// halves; nothing in the vocabulary says they were ever one list.
 	const defeat: ComSpectrum[] = [];
 	const countdown: ComSpectrum[] = [];
 
@@ -139,48 +106,91 @@ export function renderComDanger(
 		}
 	}
 
-	if (defeat.length > 0) {
-		const section = addSection(container, doc, "spectrums", "Spectrums");
+	function spectrumSection(
+		title: string,
+		spectrums: ComSpectrum[],
+	): HTMLElement | null {
+		if (spectrums.length === 0) {
+			return null;
+		}
+
+		const section = openSection(doc, title);
 		const list = addList(section, doc, "spectrum");
 
-		for (const spectrum of defeat) {
+		for (const spectrum of spectrums) {
 			list.appendChild(renderSpectrum(spectrum, doc));
 		}
+
+		return section;
 	}
 
-	if (countdown.length > 0) {
-		const section = addSection(
-			container,
-			doc,
-			"countdown",
-			"Countdown spectrums",
-		);
-		const list = addList(section, doc, "spectrum");
+	renderZones(container, comDangerShape, {
+		header: () => {
+			const header = doc.createElement("header");
 
-		for (const spectrum of countdown) {
-			list.appendChild(renderSpectrum(spectrum, doc));
-		}
-	}
+			const name = doc.createElement("div");
+			name.classList.add("brumes-com-danger--name");
+			name.textContent = data.name;
+			header.appendChild(name);
 
-	if (data.moves.length > 0) {
-		const section = addSection(container, doc, "moves", "Moves");
-		const list = addList(section, doc, "move");
+			if (typeof data.rating === "number") {
+				const rating = doc.createElement("div");
+				rating.classList.add("brumes-com-danger--rating");
+				rating.textContent = String(data.rating);
+				header.appendChild(rating);
+			}
 
-		for (const move of data.moves) {
-			list.appendChild(renderMove(move, doc));
-		}
-	}
+			return header;
+		},
+		description: () => {
+			if (data.description.length === 0) {
+				return null;
+			}
 
-	if (data.meta) {
-		const source = metaSourceLine(data.meta);
+			const description = doc.createElement("section");
+			description.classList.add("brumes-com-danger--section");
 
-		if (source) {
+			for (const paragraph of data.description) {
+				const p = doc.createElement("p");
+				p.textContent = paragraph;
+				description.appendChild(p);
+			}
+
+			return description;
+		},
+		spectrums: () => spectrumSection("Spectrums", defeat),
+		countdown: () => spectrumSection("Countdown spectrums", countdown),
+		moves: () => {
+			if (data.moves.length === 0) {
+				return null;
+			}
+
+			const section = openSection(doc, "Moves");
+			const list = addList(section, doc, "move");
+
+			for (const move of data.moves) {
+				list.appendChild(renderMove(move, doc));
+			}
+
+			return section;
+		},
+		source: () => {
+			if (!data.meta) {
+				return null;
+			}
+
+			const source = metaSourceLine(data.meta);
+
+			if (!source) {
+				return null;
+			}
+
 			const footer = doc.createElement("footer");
-			footer.classList.add("brumes-com-danger--source");
 			footer.textContent = source;
-			container.appendChild(footer);
-		}
-	}
+
+			return footer;
+		},
+	});
 
 	return container;
 }
