@@ -6,7 +6,7 @@ Dépôt autonome depuis le **2026-09-07**. Objectif : développer le plugin comm
 
 - Plugin Obsidian **Handbook** (`id: obsidian-handbook`), thème + outils pour les JDR de Son of Oak : City of Mist, Legend in the Mist, :Otherscape.
 - Fork de **Brumes** (`4rtamis/obsidian-brumes`), MIT, détaché le 2026-09-07. Le copyright d'origine reste dans `LICENSE`, l'origine est créditée dans le README.
-- Version : `package.json` et `manifest.json` portent **`2.0.1`**, version canonique rétablie sur la ligne 2.x le 2026-09-09. `minAppVersion: 1.12.7`.
+- Version : `package.json` et `manifest.json` portent **`2.1.1`**. `minAppVersion: 1.12.7`.
 - Stack : TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), lint ESLint (dont `eslint-plugin-obsidianmd`).
 - Gestionnaire de paquets : **pnpm** (`pnpm-lock.yaml` fait foi ; `package-lock.json` traîne encore et devrait disparaître).
 
