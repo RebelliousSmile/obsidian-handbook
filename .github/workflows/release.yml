@@ -29,7 +29,12 @@ jobs:
               run: |
                   tag="${GITHUB_REF#refs/tags/}"
 
+                  release_flags=()
+                  if [[ "$tag" == *-* ]]; then
+                    release_flags+=(--prerelease)
+                  fi
+
                   gh release create "$tag" \
                     --title="$tag" \
-                    --draft \
+                    "${release_flags[@]}" \
                     dist/main.js dist/manifest.json dist/styles.css
