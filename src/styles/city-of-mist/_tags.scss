@@ -1,24 +1,11 @@
+// Highlights and puts in italic tags, statuses and limits.
+//
+// The four highlighter colours are not written here. They are the game's own
+// marks, they differ between the two polarities the game declares, and a
+// reader may well want other ones — three reasons that all point at the pack,
+// which is where they now live, one set per polarity. This file keeps the
+// shape of a highlighter stroke and nothing about its colour.
 @mixin global {
-	// Highlights and puts in italic tags, statuses and limits.
-	// The four paper colours come from the v1 theme, where they were the
-	// highlighter marks of the MC toolkit.
-	& {
-		--brumes-power-color: #fff2ab;
-		--brumes-status-color: #e2e9b4;
-		--brumes-limit-color: #f9d0c4;
-		--brumes-weakness-color: #edbb89;
-	}
-
-	// A highlighter on paper cannot be a highlighter at night: the tag keeps
-	// the note text colour, so pale paper under light ink is unreadable. The
-	// v1 theme darkened the four marks instead, and so does this.
-	&.theme-dark {
-		--brumes-power-color: #7b4a83;
-		--brumes-status-color: #6a8661;
-		--brumes-limit-color: #852d3a;
-		--brumes-weakness-color: #8d5e35;
-	}
-
 	.brumes-tag,
 	.brumes-tag-content {
 		position: relative;

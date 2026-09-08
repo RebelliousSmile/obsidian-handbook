@@ -1,13 +1,11 @@
+// Highlights and puts in italic tags, statuses and limits.
+// Example: Legend in the Mist - Vol. II - The Narrator | p.87
+//
+// The four highlighter colours live in the pack, like City of Mist's: they are
+// the game's marks, and a reader who wants other ones should be able to say so
+// in `overrides.json` rather than fork a stylesheet. This file keeps the shape
+// of the stroke.
 @mixin global {
-	// Highlights and puts in italic tags, statuses and limits
-	// Example: Legend in the Mist - Vol. II - The Narrator | p.87
-	& {
-		--brumes-power-color: #efd693;
-		--brumes-status-color: #bccdb0;
-		--brumes-limit-color: #d9b2aa;
-		--brumes-weakness-color: #edbb89;
-	}
-
 	.brumes-tag,
 	.brumes-tag-content {
 		position: relative;
@@ -74,6 +72,11 @@
 		margin-right: 1.5ch; /* Adjusted for ::after content */
 	}
 
+	// The two inks below are not the page's: the numeral is printed over the
+	// limit mark illustration, so its colour is tuned against that artwork and
+	// changes only if the artwork does. A pack that swapped the image would
+	// have to swap them too, which is why they sit next to it rather than in
+	// a layer that knows nothing about the picture.
 	.brumes-limit::after {
 		content: attr(data-limit-value);
 		color: #e3d2c1;

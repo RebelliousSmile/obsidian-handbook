@@ -32,6 +32,26 @@ options:
     icon: eye-off
 */
 
+// Why this file is included outside the mode class, and what that costs
+//
+// `index.scss` includes this mixin at the top level rather than inside
+// `.brumes--city-of-mist`, because a canvas card embeds its note in an iframe
+// with a document of its own — the body class does not reach in there, so a
+// descendant selector rooted on it would leave the embedded card undressed.
+//
+// The price is paid only by the rules that also match
+// `.canvas-node-iframe-body[…]`: inside that document no custom property from
+// the pack arrives, so a token there would resolve to nothing. The rules that
+// match the card on the canvas alone are ordinary descendants of `body` and
+// read the pack like any other rule — which is what lets the plate behind the
+// art take `--brumes-iceberg-plate` rather than split on `.theme-dark`, as it
+// did until the polarities were declared. That bare selector fired on whatever
+// scheme the vault was running, for any game, and it read a workspace token
+// that is not written at all when the workspace theme is off.
+//
+// The shadow and the sticky note stay hard coded: the first is a canvas
+// shadow, not a note colour, and the second is a yellow sticky, which is the
+// same yellow at noon and at midnight.
 @mixin cards {
 	.canvas-node[data-iceberg-card] {
 		--shadow-stationary: #00000050 -5px 5px 20px 1px;
@@ -97,7 +117,7 @@ options:
 
 		background-repeat: no-repeat;
 		background-position: bottom center;
-		background-color: #515151;
+		background-color: var(--brumes-iceberg-plate);
 		background-size: contain;
 	}
 
@@ -127,9 +147,4 @@ options:
 		background-image: var(--brumes-image-iceberg-group);
 	}
 
-	// At night the plate behind the art should sink into the note rather
-	// than stay a lit grey rectangle, as it did in the v1 theme.
-	.theme-dark .canvas-node[data-iceberg-card] .canvas-node-content::before {
-		background-color: var(--background-secondary);
-	}
 }

@@ -1,6 +1,12 @@
+// The colours a list needs are the pack's — the tick and its mark are the
+// game's leather and parchment. What stays here is spacing, and the images the
+// checkboxes are drawn with, which the pack names by role and this file places.
 @mixin unordered-list {
-	// FIXME: This is a temporary fix to remove the indent since Border's settings seems to be broken.
-	// Remove this when Border's settings are fixed.
+	// Not a scheme value, so not the pack's: it cancels the indent Obsidian
+	// applies while editing but not while reading, which would shift a list
+	// under the cursor. It was written against the Border theme, which the
+	// plugin no longer depends on — whether Obsidian alone still needs it has
+	// not been measured since, so it is kept rather than dropped on a guess.
 	--list-indent-editing: 0em;
 	.markdown-rendered ul > li {
 		margin-inline-start: 2ch;
@@ -113,8 +119,6 @@
 @mixin checkbox {
 	--checkbox-margin-inline-start: 0px;
 	--checkbox-size: 20px;
-	--checkbox-color: #aa9b82;
-	--checkbox-marker-color: #efeae6;
 
 	$letters: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "?";
 	@each $letter in $letters {

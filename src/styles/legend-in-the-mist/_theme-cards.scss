@@ -37,7 +37,7 @@
 			min-height: 10.88rem;
 
 			.brumes-story-theme--category {
-				color: #4d8061;
+				color: var(--brumes-might-origin-color);
 			}
 
 			&::after {
@@ -53,7 +53,7 @@
 			min-height: 10.67rem;
 
 			.brumes-story-theme--category {
-				color: #7d3c3c;
+				color: var(--brumes-might-adventure-color);
 			}
 
 			&::after {
@@ -69,7 +69,7 @@
 			min-height: 10.73rem;
 
 			.brumes-story-theme--category {
-				color: #5c5c91;
+				color: var(--brumes-might-greatness-color);
 			}
 
 			&::after {

@@ -1,8 +1,9 @@
 import { Plugin } from "obsidian";
 import { ShapeOverrides } from "../features/blocks/shape";
 import { logScope } from "../utils/logger";
-import { readPackTokens, readShapeOverrides } from "./fromSchema";
+import { readPackTokens, readPolarities, readShapeOverrides } from "./fromSchema";
 import {
+	GamePolarity,
 	GameStyleLayer,
 	GameStyleTokens,
 	GameStyleValues,
@@ -38,9 +39,23 @@ export type GameStyleOverride = {
 export interface GameOverride {
 	style: GameStyleOverride;
 	shapes: ShapeOverrides;
+	/**
+	 * The polarities the file claims for the active game, or null when it
+	 * claims none and the game's own hold.
+	 *
+	 * It is here because the alternative is a trap: a file that writes dark
+	 * values for a game declaring only light would see them read, merged, and
+	 * then never written, with nothing on screen to say why. Claiming the
+	 * polarity is how the file asks for the layer to exist at all.
+	 */
+	polarities: GamePolarity[] | null;
 }
 
-export const EMPTY_OVERRIDE: GameOverride = { style: {}, shapes: {} };
+export const EMPTY_OVERRIDE: GameOverride = {
+	style: {},
+	shapes: {},
+	polarities: null,
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -108,6 +123,10 @@ export function parseGameOverride(raw: string): GameOverride {
 		shapes: readShapeOverrides(
 			declared.shapes,
 			`${OVERRIDE_FILE_NAME} shapes`,
+		),
+		polarities: readPolarities(
+			declared.polarities,
+			`${OVERRIDE_FILE_NAME} polarities`,
 		),
 	};
 }

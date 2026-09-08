@@ -2,6 +2,16 @@
 // a pale panel lifted off the paper by a shadow, with the name underlined and
 // the section headings shouted in condensed capitals. That is the shape the
 // v1 theme gave `div.danger`, and the one it keeps here.
+//
+// Its four colours stay here rather than move to the pack. They are the
+// anatomy of one block, not the dress of a page: nothing outside a danger
+// profile reads them, and a pack that wanted to change one would be reaching
+// into a block it already reaches through `shapes`.
+//
+// The night variant below is a compound selector on the mode class, and it is
+// only legitimate because City of Mist declares both polarities. A block in a
+// game that sources one must not split on a theme the game never had — that
+// rule lives in `src/games/types.ts`, beside `GamePolarity`.
 @mixin global {
 	.brumes-com-danger {
 		--brumes-com-danger-h: 42;

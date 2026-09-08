@@ -29,16 +29,18 @@ import {
 	GameAssets,
 	GameFontFace,
 	GamePack,
+	GamePolarity,
 	GameStyleLayer,
 	GameStyleTokens,
 	GameStyleValues,
+	isGamePolarity,
 	isValidGamePackId,
 } from "./types";
 
 const log = logScope("Games");
 
 /** The fields a document may carry, by the level they sit at. */
-const PACK_FIELDS = ["id", "label", "style", "assets", "shapes"];
+const PACK_FIELDS = ["id", "label", "style", "polarities", "assets", "shapes"];
 const STYLE_FIELDS = ["base", "light", "dark"];
 const LAYER_FIELDS = ["note", "workspace"];
 const ASSET_FIELDS = ["root", "images", "fonts"];
@@ -445,6 +447,15 @@ export function readGamePack(source: unknown): GamePack | null {
 		style: readStyle(document.style),
 	};
 
+	const polarities = readPolarities(
+		document.polarities,
+		`pack "${id}" polarities`,
+	);
+
+	if (polarities) {
+		pack.polarities = polarities;
+	}
+
 	const assets = readAssets(document.assets);
 
 	if (assets) {
@@ -460,6 +471,48 @@ export function readGamePack(source: unknown): GamePack | null {
 	}
 
 	return pack;
+}
+
+/**
+ * The polarities a document claims.
+ *
+ * A name that is neither `light` nor `dark` loses itself and is reported once,
+ * like every other faulty value; a document that names none is left without
+ * the field rather than given a pair, because an invented polarity is
+ * indistinguishable from a sourced one once it is written.
+ */
+export function readPolarities(
+	value: unknown,
+	where: string,
+): GamePolarity[] | null {
+	if (value === undefined) {
+		return null;
+	}
+
+	if (!Array.isArray(value)) {
+		log.warn(`Ignoring "${where}": not a list of polarities.`);
+		return null;
+	}
+
+	const polarities: GamePolarity[] = [];
+	const strays: string[] = [];
+
+	for (const entry of value) {
+		if (!isGamePolarity(entry)) {
+			strays.push(String(entry));
+			continue;
+		}
+
+		if (polarities.indexOf(entry) === -1) {
+			polarities.push(entry);
+		}
+	}
+
+	if (strays.length > 0) {
+		reportUnknown(where, strays);
+	}
+
+	return polarities.length > 0 ? polarities : null;
 }
 
 /**
@@ -492,6 +545,10 @@ export function toGamePackDocument(pack: GamePack): Record<string, unknown> {
 		label: pack.label,
 		style,
 	};
+
+	if (pack.polarities) {
+		document.polarities = pack.polarities;
+	}
 
 	if (pack.assets) {
 		document.assets = pack.assets;

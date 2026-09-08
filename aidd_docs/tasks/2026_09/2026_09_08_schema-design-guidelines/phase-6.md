@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Polarités déclarées et skin
@@ -100,3 +100,97 @@ flowchart TD
 | 3    | Le réglage dit ce que le jeu actif supporte, sans qu'on ait à ouvrir le code pour le savoir                                    |
 | 4    | Aucun partial ne contourne les jetons sans dire pourquoi                                                                      |
 | 5    | Build vert, les deux portées de lint à zéro, corpus vert, les trois jeux corrects dans les deux thèmes, `data.json` intact     |
+
+## Ce qui a été fait
+
+### `1)` Polarités déclarées
+
+`GamePolarity`, `GAME_POLARITIES` et `isGamePolarity` vivent dans
+`src/games/types.ts` ; `GamePack.polarities` est optionnel et un pack muet ne se
+voit rien attribuer. Chaque pack déclare ce que ses maquettes sourcent :
+
+| Pack | Déclaration | Motif |
+| --- | --- | --- |
+| City of Mist | `["light", "dark"]` | les pages de maquette existent en blanc et en noir |
+| :Otherscape | `["light", "dark"]` | idem |
+| Legend in the Mist | `["light"]` | le jeu n'imprime que du parchemin |
+
+**Un changement visible** : la couche `dark` de Legend in the Mist a été vidée.
+Elle avait été inventée — son commentaire disait en toutes lettres « the game
+never had a dark scheme », ce que le critère 1 interdit. Conséquence : sous un
+Obsidian sombre, une note Legend in the Mist reste parchemin au lieu de basculer
+vers un registre cuir qu'aucun livre ne source.
+
+`fromSchema.ts` lit la déclaration par `readPolarities`, `PACK_FIELDS` connaît
+`polarities`, `toGamePackDocument` la réécrit, et `GameOverride` permet de la
+corriger depuis `overrides.json`.
+
+### `2)` `buildGameStyle` tenu à la déclaration
+
+Le writer reçoit les polarités en quatrième argument. Une couche non déclarée
+n'est pas écrite. Une polarité unique s'écrit sur le sélecteur de mode nu, après
+`base`, donc elle gagne à spécificité égale quel que soit le réglage du thème.
+Deux polarités s'écrivent en sélecteurs composés. `sanitizeValue` est inchangé.
+
+### `3)` Le réglage dit ce que le jeu supporte
+
+`renderPolarities` / `createPolarityDescription` dans `src/settings/index.ts`,
+en sentence case et sans nom propre de jeu.
+
+### `4)` Échappatoires SCSS déclarées
+
+`src/styles/styles.scss` porte en tête la règle générale : ce qui habille **la
+page** appartient au pack, ce qui tient à **l'anatomie d'un bloc** reste dans le
+SCSS, parce qu'un pack atteint déjà un bloc par `shapes` et que deux portes
+seraient deux vérités.
+
+Quatorze partials revus. Ce qui est devenu jeton :
+
+- les tables des deux jeux — City of Mist déclare deux polarités mais écrivait
+  ses tables en aveugle : un coffre sombre recevait un en-tête beige à encre
+  noire ;
+- les quatre surligneurs (pouvoir, statut, limite, faiblesse) des deux jeux, avec
+  un jeu de valeurs par polarité pour City of Mist ;
+- les trois teintes de might de Legend in the Mist, la case à cocher, la plaque
+  derrière l'iceberg.
+
+Deux dérives trouvées et corrigées au passage : `#402312` écrit à la main contre
+`--table-header-color: #422513` déjà déclaré et lu par personne, et
+`#7d3c3c` / `#5c5c91` contre la palette `#7D3C3D` / `#5C5C92`.
+
+Ce qui reste écrit, avec son motif en tête de fichier : les callouts (un vocabulaire
+`data-callout` qu'Obsidian possède et qu'un pack ne peut pas énumérer), les
+cartes de montagne et l'iceberg (une carte de canvas ouvre sa note dans une
+iframe où aucune propriété personnalisée du pack n'arrive), l'anatomie des
+profils de danger et des cartes de thème, la texture des tables de Legend in the
+Mist, et la couche `workspace` de City of Mist, qui est une décision unique
+plutôt qu'une liste de valeurs.
+
+Le dernier `.theme-dark` nu du dépôt a disparu : il se déclenchait sur le réglage
+du coffre pour n'importe quel jeu, y compris un qui n'a jamais eu de nuit.
+
+### `5)` Vérification
+
+```txt
+dist\main.js  111.4kb
+./node_modules/.bin/eslint src --ext .ts   exit=0
+eslint .                                   exit=0
+pnpm assert:corpus                         vert
+pnpm assert:override                       vert
+pnpm dump:dom                              identique à l'avant-phase
+```
+
+Le CSS compilé ne contient aucun sélecteur de thème nu :
+
+```txt
+.brumes--city-of-mist.brumes--workspace-theme.theme-dark
+.brumes--city-of-mist.theme-dark .brumes-com-danger
+.brumes--city-of-mist.brumes--workspace-theme.theme-light
+```
+
+Déployé dans les deux coffres, illustrations comprises ; le `data.json` de
+Legend in the Mist est intact et le coffre City of Mist n'en a pas.
+
+**Reste à la main de l'utilisateur** : basculer le thème d'Obsidian dans chaque
+coffre et regarder — City of Mist doit suivre le thème, Legend in the Mist rester
+parchemin.

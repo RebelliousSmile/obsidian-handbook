@@ -32,6 +32,23 @@ options:
     icon: eye-off
 */
 
+// Why the colours here are written and not read
+//
+// Like the iceberg cards, this mixin is included outside the mode class: a
+// canvas card embeds its note in an iframe with a document of its own, which
+// the body class and the plugin's style element never reach. Every selector
+// below is therefore doubled — `.canvas-node[…]` for the card on the canvas,
+// `.canvas-node-iframe-body[…]` for the same card once it is opened — and the
+// second half of each pair cannot inherit a single custom property from the
+// pack. A token would resolve to nothing exactly where it is needed most.
+//
+// So the card colours are written here even though three of them repeat the
+// pack's palette to the digit. It is a duplication, and a deliberate one: the
+// alternative is a card that loses its colour the moment it is opened.
+//
+// The white and black inks are not a polarity either. They follow the card's
+// own ground — a greatness card is dark, so its text is white — and would read
+// the same under any theme the vault is set to.
 @mixin cards {
 	.canvas-node[data-mountain-card],
 	.canvas-node-iframe-body[data-mountain-card] {

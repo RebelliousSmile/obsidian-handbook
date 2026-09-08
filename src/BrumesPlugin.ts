@@ -203,6 +203,9 @@ export default class BrumesPlugin extends Plugin {
 				},
 			},
 			this.settings.features.workspaceTheme,
+			// The game says which polarities it has, and the user's file may
+			// claim others; nothing here supplies one neither of them named.
+			this.overrides.polarities ?? pack.polarities,
 		);
 
 		this.gameStyle.applyGameStyle(

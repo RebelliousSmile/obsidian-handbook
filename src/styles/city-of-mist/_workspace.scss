@@ -6,6 +6,19 @@
 // It sits behind its own class rather than on the mode alone: repainting the
 // whole workspace is a choice, and a vault may want the tags and the cards
 // without it.
+//
+// The pack has a `workspace` layer of its own, gated on the same setting, and
+// most of what follows would fit in it. It is not moved there, and the reason
+// is that this is one decision rather than a list of values: the square
+// corners, the shouted headings, the ribbon and the icons that lose their
+// rounded caps are the same choice expressed sometimes as a custom property
+// and sometimes as a rule. Half of it in TypeScript and half here would be a
+// decision no one can read in one place. What the pack keeps is what a game
+// needs whether or not this layer is on.
+//
+// The two variants below are compound selectors, and City of Mist declares
+// both polarities, which is what makes them legitimate — see `GamePolarity`
+// in `src/games/types.ts`.
 @mixin global {
 	&.brumes--workspace-theme {
 		// The accent belongs to the game pack in `src/games/`, which writes

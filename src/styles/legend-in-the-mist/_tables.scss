@@ -1,3 +1,15 @@
+// What is a token here and what is not
+//
+// The ink and the papers come from the pack, like City of Mist's: they are the
+// game's scheme, and the header colour was already declared there — this file
+// used to write a near-miss of it by hand (`#402312` against the pack's
+// `#422513`), which is exactly the drift a token exists to prevent.
+//
+// The border and the inset shadow stay written here. They are not a scheme but
+// a texture: the pressed edge of a leather-bound oracle table, tuned against
+// the parchment behind it. A pack that changed one without the other would get
+// a rim floating over the wrong ground, so the two are kept together, in the
+// one place that can see both.
 @mixin oracle-table {
 	table {
 		width: 100%;
@@ -5,10 +17,10 @@
 		font-family: "Labrada", serif;
 		font-size: 0.95rem;
 		background: transparent;
-		color: #000000;
+		color: var(--brumes-table-ink);
 
 		thead {
-			background: #dac5b2;
+			background: var(--brumes-table-header-paper);
 			border: 2px solid #b09a85;
 			box-shadow: inset 0 0 10px #c3a897;
 
@@ -28,7 +40,7 @@
 				font-weight: bold;
 				text-transform: uppercase;
 				font-size: 0.7rem;
-				color: #402312;
+				color: var(--table-header-color);
 				border: 0;
 
 				.table-cell-wrapper {
@@ -44,8 +56,8 @@
 			--table-row-last-border-width: 0px;
 
 			tr {
-				--table-row-alt-background-hover: #e5dccb;
-				--table-row-alt-background: #e5dccb;
+				--table-row-alt-background-hover: var(--brumes-table-row-paper);
+				--table-row-alt-background: var(--brumes-table-row-paper);
 				--table-row-background-hover: transparent;
 				--table-row-background: transparent;
 			}

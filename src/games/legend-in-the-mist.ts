@@ -4,12 +4,23 @@ import { accent, palette, tokens } from "./tokens";
 /**
  * Legend in the Mist.
  *
- * The game never had a dark scheme. The one here keeps its warm leather
- * register instead of turning the parchment grey.
+ * One polarity, and it is a statement about the books rather than a gap: the
+ * line is printed on parchment and never had a dark scheme. So the light
+ * layer holds whichever theme the vault is set to — a note stays parchment in
+ * a dark Obsidian instead of falling back on a bare `base` that carries fonts
+ * and no colours at all.
+ *
+ * There was a dark scheme here until the polarities were declared. It was the
+ * plugin's own invention — warm leather rather than grey parchment, and quite
+ * defensible as a design — but nothing in the game sourced it, and a scheme
+ * nobody can trace back to a page is indistinguishable, once rendered, from
+ * one that was. It is in the history of this file if it is ever wanted as a
+ * pack of its own.
  */
 export const legendInTheMistPack: GamePack = {
 	id: "legend-in-the-mist",
 	label: "Legend in the Mist",
+	polarities: ["light"],
 	style: {
 		base: {
 			note: {
@@ -61,6 +72,27 @@ export const legendInTheMistPack: GamePack = {
 					"--link-external-color-hover": "#5E5EB0",
 					"--list-marker-color": "#000000",
 					"--table-header-color": "#422513",
+					"--brumes-table-ink": "#000000",
+					"--brumes-table-header-paper": "#DAC5B2",
+					"--brumes-table-row-paper": "#E5DCCB",
+					// The three tiers of might, named by role rather than by
+					// colour. The theme card reads them from here; the
+					// mountain cards restate them, because a canvas card is
+					// opened in a document these never reach — the reason is
+					// written at the top of `_mountain.scss`.
+					"--brumes-might-origin-color": "#4D8061",
+					"--brumes-might-adventure-color": "#7D3C3D",
+					"--brumes-might-greatness-color": "#5C5C92",
+					// The box a player ticks: leather on the parchment the
+					// note is printed on.
+					"--checkbox-color": "#AA9B82",
+					"--checkbox-marker-color": "#EFEAE6",
+					// The four highlighter marks.
+					// Vol. II - The Narrator | p.87
+					"--brumes-power-color": "#EFD693",
+					"--brumes-status-color": "#BCCDB0",
+					"--brumes-limit-color": "#D9B2AA",
+					"--brumes-weakness-color": "#EDBB89",
 				},
 			),
 			workspace: {
@@ -69,46 +101,12 @@ export const legendInTheMistPack: GamePack = {
 				"--brumes-root-split-background": "#EEEAE1",
 			},
 		},
-		dark: {
-			note: tokens(
-				accent("#C4776F"),
-				{
-					"--background-primary": "#1F1B17",
-					"--background-primary-alt": "#00000000",
-					"--text-normal": "#E8DFD2",
-					"--text-muted": "#A99C8A",
-					"--text-faint": "#756A5C",
-					"--h1-color": "#C4776F",
-					"--h2-color": "#C4776F",
-					"--h3-color": "#D19C94",
-				},
-				palette({
-					red: "#C4776F",
-					orange: "#C08A70",
-					yellow: "#EFD693",
-					green: "#7FB08F",
-					blue: "#9A9AD4",
-					cyan: "#8FC8DC",
-					purple: "#8E82BE",
-					pink: "#C6A6C4",
-				}),
-				{
-					"--bold-color": "#E8DFD2",
-					"--link-color": "#C4776F",
-					"--link-color-hover": "#D89C93",
-					"--link-unresolved-color": "#A98A86",
-					"--link-external-color": "#9A9AD4",
-					"--link-external-color-hover": "#B0B0E4",
-					"--list-marker-color": "#A99C8A",
-					"--table-header-color": "#D8B78A",
-				},
-			),
-			workspace: {
-				"--background-secondary": "#191512",
-				"--background-secondary-alt": "#14100D",
-				"--brumes-root-split-background": "#16130F",
-			},
-		},
+		// Not written, and not left half-written either: the polarities above
+		// say the game sources one, so the reader never reaches this. It is
+		// empty rather than absent because the three layers are the shape of a
+		// pack, and a pack that carries a scheme it does not declare would be a
+		// polarity waiting to be turned on by accident.
+		dark: { note: {}, workspace: {} },
 	},
 	assets: {
 		// See the note in the City of Mist pack: the illustrations live in the
