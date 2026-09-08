@@ -1,5 +1,6 @@
 import { Plugin } from "obsidian";
 import { logScope } from "../utils/logger";
+import { readPackTokens } from "./fromSchema";
 import {
 	GameStyleLayer,
 	GameStyleTokens,
@@ -29,42 +30,6 @@ export type GameStyleOverride = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
- * A faulty value costs itself and nothing more, on the model the blocks
- * already follow: it is dropped, reported once, and the rest of the file
- * applies. A hand-written file is expected to be wrong sometimes.
- */
-function readTokens(source: unknown, where: string): GameStyleTokens {
-	if (!isRecord(source)) {
-		log.warn(`Ignoring "${where}" in ${OVERRIDE_FILE_NAME}: not an object.`);
-		return {};
-	}
-
-	const tokens: GameStyleTokens = {};
-	const rejected: string[] = [];
-
-	for (const name of Object.keys(source)) {
-		const value = source[name];
-
-		if (name.indexOf("--") !== 0 || typeof value !== "string") {
-			rejected.push(name);
-			continue;
-		}
-
-		tokens[name] = value;
-	}
-
-	if (rejected.length > 0) {
-		log.warn(
-			`Ignoring in ${OVERRIDE_FILE_NAME}, under "${where}": ${rejected.join(
-				", ",
-			)}. A value is a custom property name and a string.`,
-		);
-	}
-
-	return tokens;
 }
 
 export function parseGameStyleOverride(raw: string): GameStyleOverride {
@@ -107,9 +72,12 @@ export function parseGameStyleOverride(raw: string): GameStyleOverride {
 				continue;
 			}
 
-			slots[slotName] = readTokens(
+			// The same reader the published pack document goes through: a
+			// hand-written override is a pack with most of it left out, and a
+			// faulty value costs itself and nothing more.
+			slots[slotName] = readPackTokens(
 				layer[slotName],
-				`${layerName}.${slotName}`,
+				`${OVERRIDE_FILE_NAME} ${layerName}.${slotName}`,
 			);
 		}
 

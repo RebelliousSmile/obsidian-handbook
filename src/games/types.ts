@@ -2,9 +2,22 @@
  * The shape of a game pack.
  *
  * A pack describes a game as data: who it is, which custom properties it
- * writes, and — from phase 4 on — where its illustrations live. It never
- * contains CSS: the plugin turns these tokens into one style block, and the
- * SCSS keeps only what a custom property cannot express.
+ * writes, and where its illustrations live. It never contains CSS: the plugin
+ * turns these tokens into one style block, and the SCSS keeps only what a
+ * custom property cannot express.
+ *
+ * These types are the published shape, read the way TypeScript reads it. The
+ * contract lives beside the content schemas, in schema-in-the-mist, as
+ * `appearance/game-pack.schema.json`; `fromSchema.ts` turns a document of that
+ * shape into the types below. Nothing at runtime reaches for that repository —
+ * the schema describes the format, it does not serve it.
+ *
+ * The format is frozen. A field is never renamed or removed without a reading
+ * path for the old form, because a pack lives in a user's vault as much as in
+ * this source. The one difference between the document and the types is
+ * optionality: a document may leave a layer out, the types always carry the
+ * three, and the reader fills the gap with empty records rather than with
+ * `undefined`.
  */
 
 /** Custom property name to value, written verbatim into the style block. */
@@ -27,10 +40,10 @@ export interface GameStyleValues {
 /**
  * Where the illustrations of a game live in the vault.
  *
- * Declared now and read from phase 4 on, so that moving the assets out of the
- * bundle does not reopen the format. `root` is a vault path; `images` maps a
- * role a block template asks for — `theme-card-frame`, say — to a file under
- * that root.
+ * `root` is a vault path; `images` maps a role a block template asks for —
+ * `theme-card-frame`, say — to a file under that root. A role a pack leaves
+ * out is not an error: the template that asks for it degrades rather than
+ * reserving a box for a picture that never comes.
  */
 export interface GameFontFace {
 	/** Relative to the pack's asset folder, like an image. */

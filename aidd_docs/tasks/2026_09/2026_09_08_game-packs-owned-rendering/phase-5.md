@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Schéma graphique frère dans schema-in-the-mist
