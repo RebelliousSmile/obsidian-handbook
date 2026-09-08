@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0-beta] - 2026-09-08
+
+### Added
+
+- Every fenced block now reads and writes a schema document, and every one has a "copy as TOML" command. `com-theme-card`, `litm-journey` and `litm-theme-kit` had neither; a format without an upstream shape is not exempt from publishing one, it is the reason to publish one (42820df, 4ebb954).
+- A block describes itself as an ordered list of named zones — what it holds and in what order — while the stylesheet keeps saying where each zone sits and how big it is. The schema never serialises CSS, and the stylesheet never reads the schema (c11023b).
+- A game pack can override a block's shape zone by zone through the `shapes` key of `overrides.json`: rename the printed heading of a zone, hide one. A zone no shape knows is reported once per session and the rest loads; a file naming one block leaves the other five untouched (f520b9c).
+- A pack declares which polarities the game actually sources, and derives none. City of Mist and :Otherscape declare `light` and `dark`, Legend in the Mist declares `light` alone. An undeclared layer is not written rather than written as a copy of the base one, which would break a dark vault for a game printed on white (a8b2e46).
+- `pnpm assert:corpus`, `pnpm assert:override` and `pnpm dump:dom`: three durable assertions and no new dependency. The first checks that every block in the registry reads a witness in full, degrades a rejection without throwing, and owns its copy command; the second renders a witness without `overrides.json`, with it, then without, and compares character by character; the third dumps the rendered DOM of the six blocks so a phase that should not touch the markup can be shown not to have (1f3ca93).
+- A shared corpus behind those assertions: `corpus/temoins/` holds one document per block that must render, `corpus/refus/` holds twenty documents that must be rejected, one per fault and named by the fault. Both halves are needed — without the witnesses, a run of rejections proves nothing, since a schema that rejects everything would pass them all (1f3ca93).
+- `aidd_docs/guidelines/schema-design.md`: what a fenced format owes the schema, written once. The four obligations, zero exemption, the values / shape / pixels boundary, polarity, the strict-schema and tolerant-consumer split, and the line that decides whether a colour belongs to the pack or to the stylesheet (41ce927, a0ae1f8).
+
+### Changed
+
+- Values that dress the page — paper, ink, links, a highlighter mark, tables, checkboxes — moved from the partials into the packs, where a reader can reach them through `overrides.json`. Values belonging to one block's anatomy stayed in the stylesheet, because a pack already reaches a block through `shapes` and two doors would be two truths. Three families keep their own colours and now say why at the top of the file: a vocabulary Obsidian owns and a pack cannot enumerate, a texture tuned against the ground behind it, and a canvas card, whose note opens in an iframe the pack's custom properties never reach (a8b2e46).
+- Two hand-written values that missed an already-declared token by a hair now read the token, and the Legend in the Mist tables, written blind, no longer render a beige header with black ink in a dark vault (a8b2e46).
+
+### Removed
+
+- The Legend in the Mist dark scheme. The game prints parchment and nothing else, so the dark layer was invented rather than sourced; the game now renders its parchment whatever the vault's theme is set to (a8b2e46).
+
 ## [1.1.0-beta] - 2026-09-08
 
 ### Added
