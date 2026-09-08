@@ -1,6 +1,6 @@
 ---
 objective: "Le plugin possède son socle visuel et un jeu devient une donnée : changer de jeu réécrit un seul élément de style, sans Style Settings ni résidu."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Packs de jeu — le plugin reprend la propriété de son rendu
