@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Surcharge de forme par le pack
@@ -73,6 +73,50 @@ flowchart TD
 3. `pnpm assert:corpus` vert.
 4. Poser un `overrides.json` surchargeant une zone, observer, le retirer,
    observer à nouveau. Déployer sans écraser le `data.json` des coffres.
+
+## Ce qui a été fait
+
+L'aller-retour du fichier est **mesuré**, pas constaté à l'œil :
+`tools/overrideRoundTrip.harness.mts`, lancé par `pnpm assert:override`, rend un
+témoin du corpus sans fichier, avec un fichier qui renomme une zone et en cache
+une autre, puis sans fichier à nouveau, et compare les deux rendus nus caractère
+par caractère. Un œil ne distingue pas « identique » de « presque identique » :
+c'est justement la promesse du point 3, donc c'est la machine qui la tient.
+
+Le même harnais vérifie qu'une zone qu'aucune forme ne connaît est signalée
+**une fois** et non une fois par rendu, et qu'un fichier ne nommant qu'un bloc
+laisse les cinq autres exactement où ils étaient.
+
+Côté coffre, `overrides.json` est posé dans
+`legend-in-the-mist/.obsidian/plugins/obsidian-handbook/` :
+
+```json
+{
+	"shapes": {
+		"litm-challenge": {
+			"threats": { "heading": "Menaces et conséquences" },
+			"secrets": { "hidden": true }
+		}
+	}
+}
+```
+
+Le retirer — un `rm` — redonne le bloc d'origine, et la commande « Reload
+illustrations and personal overrides » relit le fichier sans recharger le
+greffon.
+
+### Les écarts de la phase 4
+
+Trois ont été absorbés : la classe qu'une section partage avec ses sœurs est
+devenue `family`, et le libellé imprimé qu'elle ouvre est devenu `heading`. Ce
+sont des places et des étiquettes, donc du vocabulaire.
+
+Cinq sont restés, chacun avec son motif écrit au-dessus de lui dans son
+`shape.ts`, et la règle qui les tient est montée dans l'en-tête de
+`src/features/blocks/shape.ts` : une classe qui dépend d'une **valeur à
+l'intérieur** du bloc est un état du contenu, pas une place dans une mise en
+page. La nommer ferait du vocabulaire le miroir du modèle de données d'un seul
+renderer, dont un consommateur qui a le sien ne pourrait rien faire.
 
 ## Test acceptance criteria
 

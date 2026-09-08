@@ -1,23 +1,25 @@
 import { metaSourceLine } from "../blocks/schemaValues";
-import { renderZones } from "../blocks/shape";
+import { BlockZone, renderZones } from "../blocks/shape";
 import { renderRatedLimit, renderTagSpan } from "../blocks/tagSpan";
 import { ChallengeData } from "./parser";
 import { challengeShape } from "./shape";
 
 /**
- * Open a card section, its heading carrying the printed profile wording.
+ * Open a card section, its heading carrying the printed wording of the zone.
  *
- * The zone class comes from the shape; what this adds is the section family
- * and the heading, neither of which the vocabulary has a word for.
+ * The zone class and the section family come from the shape; the heading has
+ * to be posed here, because it must be the first thing inside the section and
+ * only this side holds the element while it is still empty.
  */
-function openSection(doc: Document, title: string): HTMLElement {
+function openSection(doc: Document, zone: BlockZone): HTMLElement {
 	const section = doc.createElement("section");
-	section.classList.add("brumes-challenge--section");
 
-	const heading = doc.createElement("h4");
-	heading.classList.add("brumes-challenge--section-title");
-	heading.textContent = title;
-	section.appendChild(heading);
+	if (zone.heading) {
+		const heading = doc.createElement("h4");
+		heading.classList.add("brumes-challenge--section-title");
+		heading.textContent = zone.heading;
+		section.appendChild(heading);
+	}
 
 	return section;
 }
@@ -64,13 +66,12 @@ export function renderChallenge(
 
 			return header;
 		},
-		description: () => {
+		description: (zone) => {
 			if (data.description.length === 0) {
 				return null;
 			}
 
-			const description = doc.createElement("section");
-			description.classList.add("brumes-challenge--section");
+			const description = openSection(doc, zone);
 
 			for (const paragraph of data.description) {
 				const p = doc.createElement("p");
@@ -80,12 +81,12 @@ export function renderChallenge(
 
 			return description;
 		},
-		limits: () => {
+		limits: (zone) => {
 			if (data.limits.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Limits");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "limit");
 
 			for (const limit of data.limits) {
@@ -112,12 +113,12 @@ export function renderChallenge(
 
 			return section;
 		},
-		might: () => {
+		might: (zone) => {
 			if (data.mights.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Might");
+			const section = openSection(doc, zone);
 
 			for (const might of data.mights) {
 				const aspect = addLine(
@@ -141,12 +142,12 @@ export function renderChallenge(
 
 			return section;
 		},
-		tags: () => {
+		tags: (zone) => {
 			if (data.tags.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Tags & statuses");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "tag");
 
 			for (const tag of data.tags) {
@@ -157,12 +158,12 @@ export function renderChallenge(
 
 			return section;
 		},
-		features: () => {
+		features: (zone) => {
 			if (data.features.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Special features");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "feature");
 
 			for (const feature of data.features) {
@@ -186,12 +187,12 @@ export function renderChallenge(
 
 			return section;
 		},
-		threats: () => {
+		threats: (zone) => {
 			if (data.threats.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Threats & consequences");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "threat");
 
 			for (const threat of data.threats) {
@@ -227,12 +228,12 @@ export function renderChallenge(
 
 			return section;
 		},
-		"general-consequences": () => {
+		"general-consequences": (zone) => {
 			if (data.generalConsequences.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "General consequences");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "consequence");
 
 			for (const consequence of data.generalConsequences) {
@@ -244,12 +245,12 @@ export function renderChallenge(
 
 			return section;
 		},
-		secrets: () => {
+		secrets: (zone) => {
 			if (data.secrets.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Secrets");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "secret");
 
 			for (const secret of data.secrets) {

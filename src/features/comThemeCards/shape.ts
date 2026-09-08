@@ -2,6 +2,7 @@ import { BlockShape } from "../blocks/shape";
 
 /** The zones of a City of Mist theme card, as the renderer draws them. */
 export const comThemeCardShape: BlockShape = {
+	block: "com-theme-card",
 	root: "brumes-com-theme-card",
 	zones: [
 		{ name: "header", holds: "the themebook, then the card's title" },
@@ -26,9 +27,9 @@ export const comThemeCardShape: BlockShape = {
 			optional: true,
 		},
 	],
+	// Kept as a gap on purpose: the card says something about itself — that it
+	// disagrees with its own themebook — and that is a state, not a place.
 	gaps: [
-		// The card says something about itself that the vocabulary cannot: that
-		// it disagrees with its own themebook.
 		"The card's type adds brumes-com-theme-card--<type> to the root, and a drive or a track that contradicts the themebook adds brumes-com-theme-card--mismatch. Neither is a zone.",
 	],
 };

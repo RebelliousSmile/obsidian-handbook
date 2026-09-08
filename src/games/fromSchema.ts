@@ -19,6 +19,11 @@
  * exactly as a pack declared in the code would be.
  */
 
+import {
+	ShapeOverrides,
+	ZoneOverride,
+	zoneOverrideFields,
+} from "../features/blocks/shape";
 import { logScope } from "../utils/logger";
 import {
 	GameAssets,
@@ -33,7 +38,7 @@ import {
 const log = logScope("Games");
 
 /** The fields a document may carry, by the level they sit at. */
-const PACK_FIELDS = ["id", "label", "style", "assets"];
+const PACK_FIELDS = ["id", "label", "style", "assets", "shapes"];
 const STYLE_FIELDS = ["base", "light", "dark"];
 const LAYER_FIELDS = ["note", "workspace"];
 const ASSET_FIELDS = ["root", "images", "fonts"];
@@ -140,6 +145,112 @@ export function readPackTokens(value: unknown, where: string): GameStyleTokens {
 	}
 
 	return tokens;
+}
+
+/**
+ * A block id and a zone name both end up in a class name, so both are held to
+ * the same spelling as a pack identifier.
+ */
+const NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const ZONE_TEXT_FIELDS = ["holds", "heading", "family", "image"];
+const ZONE_FLAG_FIELDS = ["optional", "hidden"];
+
+function readZoneOverride(value: unknown, where: string): ZoneOverride | null {
+	if (!isRecord(value)) {
+		log.warn(`Ignoring "${where}" in a pack document: not an object.`);
+		return null;
+	}
+
+	reportUnknown(where, unknownFields(value, zoneOverrideFields()));
+
+	const override: ZoneOverride = {};
+	let named = false;
+
+	for (const field of ZONE_TEXT_FIELDS) {
+		const text = asText(value[field]);
+
+		if (text) {
+			override[field as "holds" | "heading" | "family" | "image"] = text;
+			named = true;
+		}
+	}
+
+	for (const field of ZONE_FLAG_FIELDS) {
+		if (typeof value[field] === "boolean") {
+			override[field as "optional" | "hidden"] = value[field];
+			named = true;
+		}
+	}
+
+	// A zone that changes nothing is not an error and not a change: it is
+	// dropped so that resolving a shape never walks entries with nothing in
+	// them.
+	return named ? override : null;
+}
+
+/**
+ * What a document says about the blocks' own shapes.
+ *
+ * The tolerance is the one the tokens already hold to: a block, a zone or a
+ * field that arrives wrong loses itself, is reported once, and everything
+ * beside it applies. Nothing here knows which blocks exist — that is checked
+ * when a shape is resolved, by the only side that has the shapes in hand.
+ *
+ * Exported because the file a user writes by hand is a pack with most of it
+ * left out, and reads its shapes the same way.
+ */
+export function readShapeOverrides(
+	value: unknown,
+	where: string,
+): ShapeOverrides {
+	if (!isRecord(value)) {
+		if (value !== undefined) {
+			log.warn(`Ignoring "${where}": not an object.`);
+		}
+
+		return {};
+	}
+
+	const shapes: ShapeOverrides = {};
+
+	for (const blockId of Object.keys(value)) {
+		if (!NAME_PATTERN.test(blockId)) {
+			reportUnknown(where, [blockId]);
+			continue;
+		}
+
+		const declared = value[blockId];
+
+		if (!isRecord(declared)) {
+			log.warn(`Ignoring "${where}.${blockId}": not an object.`);
+			continue;
+		}
+
+		const zones: Record<string, ZoneOverride> = {};
+
+		for (const name of Object.keys(declared)) {
+			if (!NAME_PATTERN.test(name)) {
+				reportUnknown(`${where}.${blockId}`, [name]);
+				continue;
+			}
+
+			const zone = readZoneOverride(
+				declared[name],
+				`${where}.${blockId}.${name}`,
+			);
+
+			if (zone) {
+				zones[name] = zone;
+			}
+		}
+
+		if (Object.keys(zones).length > 0) {
+			shapes[blockId] = zones;
+		}
+	}
+
+	return shapes;
 }
 
 function readLayer(value: unknown, where: string): GameStyleLayer {
@@ -340,6 +451,14 @@ export function readGamePack(source: unknown): GamePack | null {
 		pack.assets = assets;
 	}
 
+	if (document.shapes !== undefined) {
+		const shapes = readShapeOverrides(document.shapes, "shapes");
+
+		if (Object.keys(shapes).length > 0) {
+			pack.shapes = shapes;
+		}
+	}
+
 	return pack;
 }
 
@@ -376,6 +495,10 @@ export function toGamePackDocument(pack: GamePack): Record<string, unknown> {
 
 	if (pack.assets) {
 		document.assets = pack.assets;
+	}
+
+	if (pack.shapes) {
+		document.shapes = pack.shapes;
 	}
 
 	return document;

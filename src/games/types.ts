@@ -20,6 +20,8 @@
  * `undefined`.
  */
 
+import type { ShapeOverrides } from "../features/blocks/shape";
+
 /** Custom property name to value, written verbatim into the style block. */
 export type GameStyleTokens = Record<string, string>;
 
@@ -76,6 +78,17 @@ export interface GamePack {
 	label: string;
 	style: GameStyleValues;
 	assets?: GameAssets;
+	/**
+	 * What the game changes about the blocks themselves, block by block and
+	 * zone by zone.
+	 *
+	 * Partial by construction: a pack that says nothing about a zone leaves it
+	 * as the block declares it, and a pack that says nothing at all draws the
+	 * blocks every other game draws. It reaches names, illustrations and
+	 * whether a zone is drawn — never geometry, which stays in the SCSS, and
+	 * never the order of the zones, which is the block's.
+	 */
+	shapes?: ShapeOverrides;
 }
 
 /**

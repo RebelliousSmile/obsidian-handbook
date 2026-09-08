@@ -1,22 +1,24 @@
-import { renderZones } from "../blocks/shape";
+import { BlockZone, renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import { JourneyData } from "./parser";
 import { journeyShape } from "./shape";
 
 /**
- * Open a card section, its heading carrying the printed journey wording.
+ * Open a card section, its heading carrying the printed wording of the zone.
  *
- * The zone class comes from the shape; what this adds is the section family
- * and the heading, neither of which the vocabulary has a word for.
+ * The zone class and the section family come from the shape; the heading has
+ * to be posed here, because it must be the first thing inside the section and
+ * only this side holds the element while it is still empty.
  */
-function openSection(doc: Document, title: string): HTMLElement {
+function openSection(doc: Document, zone: BlockZone): HTMLElement {
 	const section = doc.createElement("section");
-	section.classList.add("brumes-journey--section");
 
-	const heading = doc.createElement("h4");
-	heading.classList.add("brumes-journey--section-title");
-	heading.textContent = title;
-	section.appendChild(heading);
+	if (zone.heading) {
+		const heading = doc.createElement("h4");
+		heading.classList.add("brumes-journey--section-title");
+		heading.textContent = zone.heading;
+		section.appendChild(heading);
+	}
 
 	return section;
 }
@@ -64,13 +66,12 @@ export function renderJourney(data: JourneyData, doc: Document): HTMLElement {
 
 			return header;
 		},
-		description: () => {
+		description: (zone) => {
 			if (data.description.length === 0) {
 				return null;
 			}
 
-			const description = doc.createElement("section");
-			description.classList.add("brumes-journey--section");
+			const description = openSection(doc, zone);
 
 			for (const paragraph of data.description) {
 				const p = doc.createElement("p");
@@ -80,12 +81,12 @@ export function renderJourney(data: JourneyData, doc: Document): HTMLElement {
 
 			return description;
 		},
-		tags: () => {
+		tags: (zone) => {
 			if (data.tags.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Tags");
+			const section = openSection(doc, zone);
 			const list = doc.createElement("ul");
 			list.classList.add("brumes-journey--tag-list");
 
@@ -99,32 +100,32 @@ export function renderJourney(data: JourneyData, doc: Document): HTMLElement {
 
 			return section;
 		},
-		benefits: () => {
+		benefits: (zone) => {
 			if (!data.benefits) {
 				return null;
 			}
 
-			const section = openSection(doc, "Benefits");
+			const section = openSection(doc, zone);
 			addLine(section, doc, "brumes-journey--benefits-text", data.benefits);
 
 			return section;
 		},
-		consequences: () => {
+		consequences: (zone) => {
 			if (data.consequences.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "General consequences");
+			const section = openSection(doc, zone);
 			addConsequences(section, doc, data.consequences);
 
 			return section;
 		},
-		vignettes: () => {
+		vignettes: (zone) => {
 			if (data.vignettes.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Vignettes");
+			const section = openSection(doc, zone);
 			const list = doc.createElement("ul");
 			list.classList.add("brumes-journey--vignette-list");
 

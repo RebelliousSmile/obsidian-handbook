@@ -1,5 +1,5 @@
 import { metaSourceLine } from "../blocks/schemaValues";
-import { renderZones } from "../blocks/shape";
+import { BlockZone, renderZones } from "../blocks/shape";
 import { renderRatedLimit } from "../blocks/tagSpan";
 import { ComDangerData, ComDangerMove, ComSpectrum } from "./parser";
 import { comDangerShape } from "./shape";
@@ -11,19 +11,21 @@ const MOVE_LABELS: Record<ComDangerMove["kind"], string> = {
 };
 
 /**
- * Open a card section, its heading carrying the printed profile wording.
+ * Open a card section, its heading carrying the printed wording of the zone.
  *
- * The zone class comes from the shape; what this adds is the section family
- * and the heading, neither of which the vocabulary has a word for.
+ * The zone class and the section family come from the shape; the heading has
+ * to be posed here, because it must be the first thing inside the section and
+ * only this side holds the element while it is still empty.
  */
-function openSection(doc: Document, title: string): HTMLElement {
+function openSection(doc: Document, zone: BlockZone): HTMLElement {
 	const section = doc.createElement("section");
-	section.classList.add("brumes-com-danger--section");
 
-	const heading = doc.createElement("h4");
-	heading.classList.add("brumes-com-danger--section-title");
-	heading.textContent = title;
-	section.appendChild(heading);
+	if (zone.heading) {
+		const heading = doc.createElement("h4");
+		heading.classList.add("brumes-com-danger--section-title");
+		heading.textContent = zone.heading;
+		section.appendChild(heading);
+	}
 
 	return section;
 }
@@ -107,14 +109,14 @@ export function renderComDanger(
 	}
 
 	function spectrumSection(
-		title: string,
+		zone: BlockZone,
 		spectrums: ComSpectrum[],
 	): HTMLElement | null {
 		if (spectrums.length === 0) {
 			return null;
 		}
 
-		const section = openSection(doc, title);
+		const section = openSection(doc, zone);
 		const list = addList(section, doc, "spectrum");
 
 		for (const spectrum of spectrums) {
@@ -142,13 +144,12 @@ export function renderComDanger(
 
 			return header;
 		},
-		description: () => {
+		description: (zone) => {
 			if (data.description.length === 0) {
 				return null;
 			}
 
-			const description = doc.createElement("section");
-			description.classList.add("brumes-com-danger--section");
+			const description = openSection(doc, zone);
 
 			for (const paragraph of data.description) {
 				const p = doc.createElement("p");
@@ -158,14 +159,14 @@ export function renderComDanger(
 
 			return description;
 		},
-		spectrums: () => spectrumSection("Spectrums", defeat),
-		countdown: () => spectrumSection("Countdown spectrums", countdown),
-		moves: () => {
+		spectrums: (zone) => spectrumSection(zone, defeat),
+		countdown: (zone) => spectrumSection(zone, countdown),
+		moves: (zone) => {
 			if (data.moves.length === 0) {
 				return null;
 			}
 
-			const section = openSection(doc, "Moves");
+			const section = openSection(doc, zone);
 			const list = addList(section, doc, "move");
 
 			for (const move of data.moves) {

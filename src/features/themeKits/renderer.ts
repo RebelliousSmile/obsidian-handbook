@@ -12,10 +12,9 @@ function tagList(
 		return null;
 	}
 
+	// The class the two tag zones share is declared as their family in the
+	// shape, so it is posed with the zone class and not here.
 	const list = doc.createElement("ul");
-	// The shared class the two tag zones have in common; the shape names the
-	// zones, not the family, so the renderer carries this one.
-	list.classList.add("brumes-theme-kit--tags");
 
 	for (const tag of tags) {
 		const item = doc.createElement("li");
