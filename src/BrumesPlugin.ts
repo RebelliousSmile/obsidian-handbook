@@ -35,7 +35,6 @@ import {
 } from "./views/LanternView";
 import { LANTERN_LOGO_SVG } from "./views/lanternLogo";
 import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
-import { loadTomlExportCommands } from "./features/blocks/tomlExports";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -67,7 +66,6 @@ export default class BrumesPlugin extends Plugin {
 
 		loadTagFeature(this);
 		loadBrumesBlocks(this);
-		loadTomlExportCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
 
 		this.addCommand({
