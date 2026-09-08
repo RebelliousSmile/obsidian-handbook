@@ -5,6 +5,10 @@ import {
 	GameStyleTokens,
 	GameStyleValues,
 } from "../../games/types";
+import {
+	BLOCK_SCOPE_CLASS,
+	WORKSPACE_THEME_CLASS,
+} from "./domModeClass";
 
 const STYLE_ELEMENT_ID = "brumes-game-style";
 
@@ -32,24 +36,49 @@ function renderTokens(tokens: GameStyleTokens, indent: string): string {
 	return lines.join("\n");
 }
 
-function renderLayer(
-	selector: string,
-	layer: GameStyleLayer,
-	withWorkspace: boolean,
-): string {
-	const body = [renderTokens(layer.note, "\t")];
-
-	if (withWorkspace) {
-		body.push(renderTokens(layer.workspace, "\t"));
-	}
-
-	const declarations = body.filter((part) => part.length > 0).join("\n");
+function renderTokenBlock(selector: string, tokens: GameStyleTokens): string {
+	const declarations = renderTokens(tokens, "\t");
 
 	if (!declarations) {
 		return "";
 	}
 
 	return `${selector} {\n${declarations}\n}`;
+}
+
+function renderLayer(
+	noteSelector: string,
+	workspaceSelector: string,
+	layer: GameStyleLayer,
+	withWorkspace: boolean,
+): string {
+	const blocks = [renderTokenBlock(noteSelector, layer.note)];
+
+	if (withWorkspace) {
+		blocks.push(renderTokenBlock(workspaceSelector, layer.workspace));
+	}
+
+	return blocks.filter((block) => block.length > 0).join("\n\n");
+}
+
+function noteSelector(mode: BrumesMode, polarity?: GamePolarity): string {
+	const modeClass = `brumes--${mode}`;
+	const themeClass = polarity ? `.theme-${polarity}` : "";
+	const localScope = `.${BLOCK_SCOPE_CLASS}.${modeClass}`;
+
+	return [
+		`body.${modeClass}${themeClass} .markdown-source-view`,
+		`body.${modeClass}${themeClass} .markdown-reading-view`,
+		polarity ? `body.theme-${polarity} ${localScope}` : localScope,
+	].join(",\n");
+}
+
+function workspaceSelector(
+	mode: BrumesMode,
+	polarity?: GamePolarity,
+): string {
+	const themeClass = polarity ? `.theme-${polarity}` : "";
+	return `body.brumes--${mode}.${WORKSPACE_THEME_CLASS}${themeClass}`;
 }
 
 /**
@@ -71,9 +100,11 @@ function renderLayer(
  * - none, and `base` is all there is. A layer the pack did not declare is not
  *   written, and not written as a copy of `base` either.
  *
- * The declarations land on `body`, never on a note container: the iceberg and
- * mountain card mixins are included outside the mode class so they reach the
- * canvas, and they only see these values through inheritance.
+ * Note declarations land on Markdown views and on the local scope attached to
+ * rendered blocks. Workspace declarations land on `body` only while the
+ * workspace toggle class is present. This keeps a game's paper and ink inside
+ * notes without starving code-block widgets whose document missed the body
+ * mode class during an Obsidian live-preview refresh.
  */
 export function buildGameStyle(
 	mode: BrumesMode,
@@ -81,20 +112,32 @@ export function buildGameStyle(
 	workspaceTheme: boolean,
 	polarities: GamePolarity[] = [],
 ): string {
-	const selector = `body.brumes--${mode}`;
-	const blocks = [renderLayer(selector, values.base, workspaceTheme)];
+	const blocks = [
+		renderLayer(
+			noteSelector(mode),
+			workspaceSelector(mode),
+			values.base,
+			workspaceTheme,
+		),
+	];
 
 	if (polarities.length === 1) {
 		// Same selector as `base`, written after it: at equal specificity the
 		// later block wins, which is exactly the relation wanted here.
 		blocks.push(
-			renderLayer(selector, values[polarities[0]], workspaceTheme),
+			renderLayer(
+				noteSelector(mode),
+				workspaceSelector(mode),
+				values[polarities[0]],
+				workspaceTheme,
+			),
 		);
 	} else {
 		for (const polarity of polarities) {
 			blocks.push(
 				renderLayer(
-					`${selector}.theme-${polarity}`,
+					noteSelector(mode, polarity),
+					workspaceSelector(mode, polarity),
 					values[polarity],
 					workspaceTheme,
 				),

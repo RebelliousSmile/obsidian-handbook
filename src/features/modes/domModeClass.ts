@@ -2,7 +2,8 @@ import { missingAssetClass } from "../../games/assets";
 import { gamePackClass, gamePackClasses } from "../../games/registry";
 import { BrumesMode } from "../../settings/types";
 
-const WORKSPACE_THEME_CLASS = "brumes--workspace-theme";
+export const WORKSPACE_THEME_CLASS = "brumes--workspace-theme";
+export const BLOCK_SCOPE_CLASS = "brumes-block-scope";
 const MISSING_ASSET_PREFIX = missingAssetClass("");
 
 /** One class per declared pack, so a new game needs no edit here. */
