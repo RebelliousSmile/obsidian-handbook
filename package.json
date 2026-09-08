@@ -1,12 +1,17 @@
 {
 	"name": "obsidian-handbook",
-	"version": "1.0.0-beta",
+	"version": "2.1.2",
 	"description": "Theme and tools for Son of Oak's TTRPGs: City of Mist, Legend in the Mist and :Otherscape.",
 	"main": "dist/main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs --watch",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"lint": "eslint .",
+		"assert:corpus": "node tools/assert-corpus.mjs",
+		"dump:dom": "node tools/dump-dom.mjs",
+		"assert:override": "node tools/assert-override.mjs",
+		"assert:settings-ui": "node tools/assert-settings-ui.mjs",
+		"assert:style-scope": "node tools/assert-style-scope.mjs",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [

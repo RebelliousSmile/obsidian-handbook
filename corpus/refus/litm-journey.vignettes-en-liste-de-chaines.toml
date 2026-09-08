@@ -1,0 +1,8 @@
+# attend: dégradé
+# Les vignettes sont une liste de tables — `[[vignettes]]`, chacune avec un
+# nom. Écrites comme une liste de chaînes, elles se perdent elles-mêmes et le
+# voyage se rend sans elles.
+type = "occasion"
+name = "The Toll House"
+description = ["A door, face down, still latched from the other side."]
+vignettes = ["The keeper asks for a name", "The road doubles back"]

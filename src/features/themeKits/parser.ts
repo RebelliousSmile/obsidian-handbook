@@ -1,4 +1,5 @@
 import { ALL_THEMEBOOKS } from "../blocks/themebooks";
+import { parseThemeKitDocument } from "./schema";
 
 export interface ThemeKitImprovement {
 	name: string;
@@ -56,6 +57,12 @@ function collectTags(
 }
 
 export function parseThemeKit(source: string): ThemeKitData | null {
+	const document = parseThemeKitDocument(source);
+
+	if (document) {
+		return document;
+	}
+
 	const lines = source
 		.split("\n")
 		.map((line) => line.trim())

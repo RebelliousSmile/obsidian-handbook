@@ -6,12 +6,24 @@
 // It sits behind its own class rather than on the mode alone: repainting the
 // whole workspace is a choice, and a vault may want the tags and the cards
 // without it.
+//
+// The pack has a `workspace` layer of its own, gated on the same setting, and
+// most of what follows would fit in it. It is not moved there, and the reason
+// is that this is one decision rather than a list of values: the square
+// corners, the shouted headings, the ribbon and the icons that lose their
+// rounded caps are the same choice expressed sometimes as a custom property
+// and sometimes as a rule. Half of it in TypeScript and half here would be a
+// decision no one can read in one place. What the pack keeps is what a game
+// needs whether or not this layer is on.
+//
+// The two variants below are compound selectors, and City of Mist declares
+// both polarities, which is what makes them legitimate — see `GamePolarity`
+// in `src/games/types.ts`.
 @mixin global {
 	&.brumes--workspace-theme {
-		// City of Mist is printed in magenta.
-		--accent-h: 327.13;
-		--accent-s: 100%;
-		--accent-l: 45%;
+		// The accent belongs to the game pack in `src/games/`, which writes
+		// it whether or not this layer is on. It was restated here in the same
+		// magenta; one of the two copies would have drifted.
 
 		// Nothing in the books is rounded.
 		--radius-s: 0px;
@@ -108,9 +120,7 @@
 				color: var(--background-primary);
 			}
 
-			span.cm-hmd-internal-link span.cm-underline {
-				border-bottom: solid rgb(72, 67, 141) 2px;
-			}
+			--brumes-internal-link-line: rgb(72, 67, 141);
 		}
 
 		// Night: the Mist over the city.
@@ -149,13 +159,29 @@
 			--link-external-color-hover: #e6007e;
 			--link-external-decoration: none;
 
-			span.cm-hmd-internal-link span.cm-underline {
-				border-bottom: solid #5fc6f0 2px;
-			}
+			--brumes-internal-link-line: #5fc6f0;
 		}
 
-		span.cm-hmd-internal-link:hover span.cm-underline {
-			border-bottom: solid #e6007e 2px;
+		// The v1 theme drew the link line as a border. The plugin already
+		// underlines links in `_links.scss`, so a border here would print a
+		// second line under the first: only the colour is taken back.
+		.cm-hmd-internal-link,
+		.cm-hmd-internal-link .cm-underline,
+		a.internal-link {
+			text-decoration-color: var(--brumes-internal-link-line);
+		}
+
+		.cm-hmd-internal-link:hover,
+		.cm-hmd-internal-link:hover .cm-underline,
+		a.internal-link:hover {
+			text-decoration-color: #e6007e;
+		}
+
+		// External links answered to the same magenta on hover.
+		.cm-link:hover,
+		.cm-link:hover .cm-underline,
+		a.external-link:hover {
+			text-decoration-color: #e6007e;
 		}
 	}
 }

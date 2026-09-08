@@ -1,6 +1,7 @@
 import { BrumesBlock } from "../blocks/types";
 import { JourneyData, parseJourney } from "./parser";
 import { renderJourney } from "./renderer";
+import { journeyShape } from "./shape";
 
 function journeyTemplate(): string {
 	return [
@@ -24,6 +25,7 @@ export const journeyBlock: BrumesBlock<JourneyData> = {
 	flag: "journeyParser",
 	label: "Journey",
 	icon: "route",
+	shape: journeyShape,
 	parse: parseJourney,
 	render: renderJourney,
 	template: journeyTemplate,

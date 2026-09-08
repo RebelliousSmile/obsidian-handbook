@@ -1,5 +1,6 @@
 import { Editor, Menu, MenuItem } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import { gamePackClass } from "../../games/registry";
 import { BrumesSettings } from "../../settings/types";
 import { logScope } from "../../utils/logger";
 import { renderRawBlock } from "./fallback";
@@ -10,6 +11,7 @@ import { comThemeCardBlock } from "../comThemeCards/block";
 import { journeyBlock } from "../journeys/block";
 import { themeCardBlock } from "../themeCards/block";
 import { themeKitBlock } from "../themeKits/block";
+import { BLOCK_SCOPE_CLASS } from "../modes/domModeClass";
 
 const log = logScope("Blocks");
 
@@ -23,10 +25,28 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	comDangerBlock,
 ];
 
+/**
+ * A shape names the block it describes, so that it can be resolved without the
+ * registry in hand. The two spellings are checked against each other here,
+ * once, rather than trusted: an override file names a block by its id, and a
+ * shape that answers to another name would silently ignore it.
+ */
+function checkShapeIds(): void {
+	for (const block of BRUMES_BLOCKS) {
+		if (block.shape.block !== block.id) {
+			log.warn(
+				`The shape of "${block.id}" says it describes "${block.shape.block}"; overrides written for it will not be found.`,
+			);
+		}
+	}
+}
+
 /** Deprecated ids already reported, so an alias warns once per session. */
 const warnedAliases = new Set<string>();
 
 export function loadBrumesBlocks(plugin: BrumesPlugin): void {
+	checkShapeIds();
+
 	for (const block of BRUMES_BLOCKS) {
 		for (const id of blockIds(block)) {
 			plugin.registerMarkdownCodeBlockProcessor(id, (source, el, ctx) => {
@@ -53,6 +73,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				}
 
 				log.debug(`Rendering ${id}:`, parsed);
+				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(block.mode));
 				el.appendChild(block.render(parsed, el.doc));
 			});
 		}

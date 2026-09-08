@@ -1,0 +1,6 @@
+# attend: dégradé
+# `soft_moves` est une liste de chaînes. Écrit comme une chaîne unique, il se
+# perd ; les manœuvres dures passent.
+name = "The Hollow Chorus"
+soft_moves = "A hymn starts up somewhere behind you."
+hard_moves = ["You lose an hour and gain a verse."]

@@ -112,3 +112,150 @@ par le support GitHub — et `master` y a été poussé avec ses 89 commits d'hi
 
 Ce qui devient notre responsabilité et ne l'était pas : le versionnement, `versions.json`,
 les releases et BRAT. La version `2.0.0-beta` est encore celle héritée de l'amont.
+
+## 2026-09-07 (nuit) — audit fichier par fichier de la v1 vers la v2
+
+La note précédente disait « la couche d'ambiance retrouvée dans la v1 ». Elle
+était incomplète : `_workspace.scss` reprenait `index.scss`, `_ribbon.scss`,
+`_heading.scss` et `_link.scss`, mais personne n'avait comparé les treize
+partials de `1.0.0` un à un. Fait maintenant.
+
+### Ce qui était déjà repris
+
+`--font-text: "PT Serif"` et `--h1..h3-font: "Fira Sans Extra Condensed"` ne
+manquaient pas malgré les apparences : `index.scss` pose
+`--font-text-theme` / `--font-header-theme`, et Obsidian résout
+`--font-text: var(--font-text-override), var(--font-text-theme), var(--font-default)`.
+La classe de mode étant sur `body` (`setBrumesMode`), la chaîne fonctionne.
+Ne pas « réparer » cela.
+
+Repris aussi : rayons à zéro, accent magenta, cases à cocher, ruban, fonds
+clair/sombre, titres en majuscules et leurs tailles, magenta des titres en
+sombre, `.inline-title` souligné 5px, `svg` à bouts carrés, paddings de menu,
+onglet actif sans ergots, les trois callouts (`clue`, `description`, `move`),
+et les trois couleurs de marqueur en thème clair.
+
+### Trois régressions corrigées
+
+1. **Marqueurs illisibles en thème sombre.** La v1 avait deux jeux de couleurs
+   (`mark.tag` `#fff2ab` le jour / `#7b4a83` la nuit, idem status et spectrum) ;
+   la v2 n'avait gardé que le jeu clair. Un tag ne pose pas de `color`, il hérite
+   `--text-normal` : en sombre, encre claire sur papier clair. Bloc `&.theme-dark`
+   ajouté à `city-of-mist/_tags.scss` avec les trois valeurs de la v1, plus
+   `#8d5e35` pour la weakness, qui n'existait pas en v1 (dérivée dans la même
+   clé : hsl(28, 45%, 38%)).
+2. **Double soulignement des liens internes.** `_workspace.scss` ramenait le
+   `border-bottom: solid rgb(72,67,141) 2px` de la v1 alors que `_links.scss`
+   souligne déjà en `text-decoration`. Les deux s'additionnaient. Remplacé par
+   une variable `--brumes-internal-link-line` qui recolore le trait existant,
+   plus le magenta au survol, interne et externe.
+3. **Coupure typographique des titres perdue.** La v1 imprimait h1–h3 en Fira
+   Sans Extra Condensed et h4–h6 en PT Serif ; `--font-header-theme` mettant
+   les six en condensé, `--h4/h5/h6-font` sont rétablis dans `index.scss`.
+   Effet de bord voulu : les cases à cocher à lettres suivent `var(--h6-font)`
+   et rejoignent la lettre imprimée, déjà en PT Serif.
+
+Build vert, eslint à zéro, artefacts recopiés dans le vault.
+
+### Deux écarts laissés ouverts, ils demandent une décision
+
+- **Les huit teintes de papier du profil de Danger.** La v1 offrait
+  `div.danger.bg0` à `.bg7`, huit fonds `hsl` — le MC Toolkit n'imprime pas tous
+  ses Dangers sur le même papier. La v2 fige les valeurs de `bg1`
+  (`hsl(42, 38%, 91%)`). Les rétablir veut dire une clé `tint:` dans la
+  grammaire de `com-danger`, donc une **quatrième extension** hors
+  `schema-in-the-mist` (après `secrets`, `is_countdown`, `on_max`), et une
+  décision sur ce que l'export TOML en fait.
+- **L'inclinaison des cartes d'iceberg.** La v1 posait `rot1`…`rot-5`, cinq
+  degrés dans chaque sens, plus le nettoyage du chrome de canvas
+  (`.canvas-group-label { display: none }`, `--shadow-stationary: none`,
+  bordures à zéro) et un fond de `.media-embed` propre au thème sombre. La v2 a
+  **réécrit** l'iceberg pour le plugin Advanced Canvas (`data-iceberg-card`) au
+  lieu de canvas-css-class, et n'a pas reporté l'inclinaison. Ce n'est pas un
+  oubli mécanique : il faudrait un second attribut de nœud, donc une entrée de
+  plus dans le snippet `@advanced-canvas-node-style`.
+
+## 2026-09-07 (nuit) — cartes d'iceberg réparées, et la montagne existait déjà
+
+### Ce que la réécriture Advanced Canvas avait perdu
+
+La v1 stylait un canvas entier (classe `.iceberg` posée par le plugin *canvas-css-class*) ;
+la v2 style un nœud à la fois (attribut `data-iceberg-card` posé par Advanced Canvas).
+Le changement de portée explique la plupart des pertes. Restauré dans
+`src/styles/city-of-mist/_iceberg.scss` :
+
+- **l'inclinaison.** La v1 la choisissait à la main (`rot1`…`rot-5`, dix classes).
+  Advanced Canvas ne pose qu'un attribut par nœud, donc l'angle est tiré du rang du
+  nœud parmi ses frères : `:nth-child(7n+1)` … `7n+7`, sept angles entre −2,4° et +2,1°.
+  Stable pour un canvas donné, rien à régler.
+  ⚠ **à vérifier au test** : si les cartes changent d'angle quand on en sélectionne une,
+  c'est qu'Obsidian réordonne le DOM à la sélection — il faudra alors une seconde clé
+  `@advanced-canvas-node-style` (`key: iceberg-tilt`) plutôt qu'un `nth-child`.
+- **le retour de sélection.** `border: none` sur `.canvas-node-container` privait la carte
+  sélectionnée de tout signe : `.is-focused` reprend un liseré de 2px à l'accent.
+- **les barres de défilement**, que la v1 masquait et qui traversent sinon l'illustration.
+- **la plaque d'illustration en thème sombre** : `var(--background-secondary)` au lieu du
+  gris `#515151`, comme en v1.
+
+Pas restauré, et c'est délibéré : `.canvas-group-label { display: none }`,
+`.canvas-node-group .canvas-node-content { background-color: transparent }` et
+`--shadow-stationary: none` sur `.canvas-wrapper` étaient des règles **de canvas entier**.
+Sans classe de canvas en v2, les reprendre restylerait tous les canvas du coffre.
+L'ombre, elle, est déjà remplacée par `--shadow-stationary` posé sur le nœud iceberg.
+
+### La montagne : question déjà résolue avant d'être posée
+
+`src/styles/legend-in-the-mist/_mountain.scss` **utilise déjà Advanced Canvas**, exactement
+comme l'iceberg : bloc `@advanced-canvas-node-style` avec `key: mountain-card`, quatre
+options (*greatness*, *adventure*, *origin*, *standard*), un fond et une icône de puissance
+par option, `ADVANCED_CANVAS_MOUNTAIN_SNIPPET` dans `src/settings/borderPresets.ts` et un
+réglage « Mountain canvas snippet » avec bouton de copie (`src/settings/index.ts:516`).
+Rien à construire.
+
+Un seul défaut corrigé : le sélecteur `.canvas-node-iframe-body[data-iceberg-card] .cm-scroller`
+traînait dans le mixin de la montagne — copier-coller depuis l'iceberg, la règle
+`scrollbar-gutter` ne s'appliquait donc jamais aux nœuds montagne.
+
+La montagne perd le même retour de sélection que l'iceberg (`border: none`), **non corrigé** :
+son conteneur porte un `mask: radial-gradient(...)` qui rognerait tout liseré ou ombre ajoutés.
+À trancher en regardant le rendu.
+
+## 2026-09-07 (nuit, suite) — retour de sélection sur les cartes de canvas
+
+Vérifié dans `C:/Program Files/Obsidian/resources/obsidian.asar` plutôt que supposé : Obsidian
+signale un nœud choisi par **une seule règle**, portée par le conteneur —
+
+```css
+.canvas-node.is-selected .canvas-node-container,
+.canvas-node.is-focused .canvas-node-container {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-stationary), var(--shadow-border-accent);
+}
+```
+
+Deux enseignements :
+
+- **`is-selected` et `is-focused` sont deux états distincts.** Un simple clic ne pose que le
+  premier. La règle d'iceberg écrite plus tôt ne couvrait que `is-focused` : elle ne se
+  déclenchait donc quasiment jamais. Corrigé, les deux sélecteurs sont là.
+- **Un `border: none` sur le conteneur suffit à tuer le signal**, puisque la règle d'Obsidian ne
+  fait que *colorer* une bordure existante.
+
+Pour la montagne, un liseré sur le conteneur ne suffisait pas : `mask: radial-gradient(…)` est
+posé sur ce même élément, et un masque rogne tout ce que l'élément peint — bordure et ombre
+comprises. L'anneau est donc peint par `.canvas-node[data-mountain-card].is-selected::after`,
+sur le **nœud**, que le masque (un niveau plus bas) ne peut pas atteindre. `.canvas-node` est
+`position: absolute` avec largeur et hauteur posées en style inline par Obsidian, donc
+`inset: 0` épouse exactement la carte.
+
+L'iceberg garde son liseré sur le conteneur, et c'est voulu : sa carte est inclinée par
+`transform: rotate()` sur ce conteneur, un anneau posé sur le nœud non pivoté encadrerait de
+travers une carte penchée.
+
+Corrigé au passage : l'icône de puissance de la montagne passe de `vertical-align: top` à
+`-0.4em`. La ligne est en capitales, son centre optique est la hauteur de capitale (≈ 0,7em),
+pas la boîte de ligne ; centrer une icône de 1,5em dessus place son pied à 0,4em sous la
+ligne de base.
+
+`rtk proxy pnpm build` vert, `eslint src --ext .ts` à zéro, déployé dans les deux coffres.
+Reste à l'œil de l'utilisateur : l'anneau ne doit ni décaler ni redimensionner la carte.

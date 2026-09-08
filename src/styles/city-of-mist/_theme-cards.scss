@@ -2,6 +2,12 @@
 // 5px radius, a soft drop shadow, printed headings in condensed uppercase and
 // hand-written answers in a rounded serif. A theme card is a card of that
 // deck, not a generic panel, so it borrows all of it.
+//
+// The three card colours are the block's anatomy and stay here, like the
+// danger panel's. The accent is then re-declared per kind of theme, and that
+// vocabulary — mythos, logos, crew, extra — is the block's own: it comes out
+// of the parser, not out of a pack, and a token per kind would only move the
+// same closed list somewhere it reads worse.
 @mixin global {
 	.brumes-com-theme-card {
 		--brumes-com-card-accent: #514a49;

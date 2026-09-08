@@ -1,0 +1,34 @@
+# Une carte de thème City of Mist, tous champs renseignés, y compris ceux qui
+# sont à nous : la lettre de question portée par un tag et la marque de brûlure.
+themebook = "Divination"
+title = "The Reading I Cannot Stop"
+
+[drive]
+kind = "mystery"
+text = "Who keeps answering when I ask?"
+
+[attention]
+kind = "attention"
+filled = 2
+maximum = 3
+
+[deterioration]
+kind = "fade"
+filled = 1
+maximum = 3
+
+[[power_tags]]
+text = "Cards that deal themselves"
+question = "A"
+
+[[power_tags]]
+text = "A voice under the static"
+question = "B"
+burnt = true
+
+[[weakness_tags]]
+text = "It answers questions I did not ask"
+
+[[improvements]]
+name = "Second Sight"
+effect = "Once per session, ask the MC a question the fiction has not answered."

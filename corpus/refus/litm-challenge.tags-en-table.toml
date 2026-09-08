@@ -1,0 +1,8 @@
+# attend: dégradé
+# `tags_and_statuses` est une liste de chaînes. Écrit comme une table, il se
+# perd ; le nom et la description restent.
+name = "The Drowned Bell Tower"
+description = "A bell tower half-swallowed by the marsh."
+
+[tags_and_statuses]
+first = "waterlogged"

@@ -1,0 +1,7 @@
+# attend: dégradé
+# `level` connaît origin, adventure et greatness. Un niveau hors de cette liste
+# retombe sur le niveau d'une carte sans ligne de puissance, il ne coûte pas la
+# carte.
+title_tag = "The Lantern I Was Left"
+level = "legendary"
+power_tags = ["Shows the way back"]

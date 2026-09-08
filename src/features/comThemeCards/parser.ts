@@ -1,4 +1,5 @@
 import { ComThemeType, findComThemeType } from "../blocks/comThemebooks";
+import { parseComThemeCardDocument } from "./schema";
 
 /** What drives the theme: a Mythos asks a Mystery, a Logos states an Identity. */
 export type ComDriveKind = "mystery" | "identity" | "neutral";
@@ -131,6 +132,12 @@ function parseTagRun(
 
 /** Parse the content of a ```com-theme-card code block. */
 export function parseComThemeCard(source: string): ComThemeCardData | null {
+	const document = parseComThemeCardDocument(source);
+
+	if (document) {
+		return document;
+	}
+
 	const lines = source
 		.split("\n")
 		.map((line) => line.trim())

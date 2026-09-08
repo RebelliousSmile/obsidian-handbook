@@ -1,12 +1,13 @@
 import { App, Notice, PluginSettingTab, SettingGroup } from "obsidian";
 import BrumesPlugin from "../BrumesPlugin";
-import { BrumesMode, LogLevel, sanitizeAliases } from "./types";
+import { LogLevel, sanitizeAliases } from "./types";
+import { GAME_PACKS, resolveGamePack } from "../games/registry";
+import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
-	getBorderPresetForMode,
-} from "./borderPresets";
+} from "./canvasSnippets";
 
 const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Handbook settings";
 const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
@@ -31,17 +32,19 @@ export class BrumesSettingTab extends PluginSettingTab {
 				.setDesc(
 					"Choose the game line you are preparing for. This updates the main style and the editor context menu.",
 				)
-				.addDropdown((drop) =>
-					drop
-						.addOption("city-of-mist", "City of Mist") // eslint-disable-line obsidianmd/ui/sentence-case
-						.addOption("legend-in-the-mist", "Legend in the Mist") // eslint-disable-line obsidianmd/ui/sentence-case
-						.addOption("otherscape", ":Otherscape") // eslint-disable-line obsidianmd/ui/sentence-case
-						.setValue(this.plugin.settings.mode)
-						.onChange((value) => {
+				.addDropdown((drop) => {
+					// The list is the registry: a fourth pack shows up here
+					// without a line being written, and its name comes from
+					// the data rather than from a string in the interface.
+					for (const pack of GAME_PACKS) {
+						drop.addOption(pack.id, pack.label);
+					}
+
+					drop.setValue(this.plugin.settings.mode).onChange(
+						(value) => {
 							this.runTask(
 								async () => {
-									this.plugin.settings.mode =
-										value as BrumesMode;
+									this.plugin.settings.mode = value;
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
@@ -50,10 +53,13 @@ export class BrumesSettingTab extends PluginSettingTab {
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
 							);
-						}),
-				);
+						},
+					);
+				});
 		});
-		this.renderBorderSection(generalSection);
+		this.renderPolarities(generalSection);
+		this.renderMigrationNotice(generalSection);
+		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
 
 		const cityOfMistSection = this.createSection(
@@ -82,41 +88,135 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAdvancedSection(advancedSection);
 	}
 
-	private renderBorderSection(section: SettingGroup) {
-		const preset = getBorderPresetForMode(this.plugin.settings.mode);
+	/**
+	 * Say which colour schemes the active game actually has.
+	 *
+	 * A line printed on parchment alone keeps its own register whichever theme
+	 * the vault is set to, and someone toggling dark and seeing nothing move
+	 * has no way to tell that from a broken setting. So it is written down,
+	 * next to the game rather than in a changelog.
+	 */
+	private renderPolarities(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting
+				.setName("Colour scheme")
+				.setDesc(this.createPolarityDescription());
+		});
+	}
+
+	private createPolarityDescription(): string {
+		const pack = resolveGamePack(this.plugin.settings.mode);
+		const polarities = pack.polarities ?? [];
+
+		if (polarities.length === 0) {
+			return "The active game brings no colour scheme of its own: it dresses your notes with its fonts and leaves the colours to the theme you are running.";
+		}
+
+		if (polarities.length === 1) {
+			const only = polarities[0] === "dark" ? "dark" : "light";
+			return `The active game has one scheme, the ${only} one its books are printed in, and it holds whichever theme the vault is set to. Toggling the theme is meant to leave your notes as they are.`;
+		}
+
+		return "The active game has both a light and a dark scheme, and follows the theme the vault is set to.";
+	}
+
+	private renderMigrationNotice(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting.setName("Colours and fonts");
+			setting.descEl.append(this.createMigrationDescription());
+		});
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Border preset")
-				.setDesc(this.createBorderPresetDescription(Boolean(preset)))
+				.setName("Personal overrides")
 				.addButton((button) =>
-					button
-						.setButtonText(preset ? "Copy preset" : "Unavailable")
-						.setDisabled(!preset)
-						.onClick(() => {
-							if (!preset) {
-								new Notice(
-									// eslint-disable-next-line obsidianmd/ui/sentence-case
-									"No Border preset is available for :Otherscape yet.",
-								);
-								return;
-							}
-
-							this.runTask(
-								async () => {
-									await navigator.clipboard.writeText(
-										preset.content,
-									);
-									new Notice(
-										`${preset.label} Border preset copied to clipboard.`,
-									);
-								},
-								"Failed to copy Border preset",
-								"Failed to copy the Border preset.",
-							);
-						}),
+					button.setButtonText("Reload").onClick(() => {
+						this.runTask(
+							async () => {
+								await this.plugin.reloadStyleSources();
+								new Notice("Personal overrides reloaded.");
+							},
+							"Failed to reload the personal overrides",
+							"Failed to reload the personal overrides.",
+						);
+					}),
 				);
+			setting.descEl.append(this.createOverrideDescription());
 		});
+	}
+
+	/**
+	 * The illustrations of a game are files in the vault, not data URIs baked
+	 * into the stylesheet. This says how many the active game reads, where it
+	 * looks for them, and which are absent: a block whose image is missing
+	 * still renders, flat, so the list is information rather than an error.
+	 */
+	private renderAssetSetup(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting
+				.setName("Illustrations")
+				.addButton((button) =>
+					button.setButtonText("Check files").onClick(() => {
+						this.runTask(
+							async () => {
+								await this.plugin.reloadStyleSources();
+								this.display();
+							},
+							"Failed to look for the illustration files",
+							"Failed to look for the illustration files.",
+						);
+					}),
+				);
+			setting.descEl.append(this.createAssetDescription());
+		});
+	}
+
+	private createAssetDescription(): DocumentFragment {
+		const fragment = this.containerEl.doc.createDocumentFragment();
+		const state = this.plugin.getAssetState();
+		const pack = resolveGamePack(this.plugin.settings.mode);
+
+		if (state.packId !== pack.id) {
+			fragment.append(
+				"The files of the active game have not been looked for yet. The button below does it.",
+			);
+			return fragment;
+		}
+
+		const expected = state.roles.length + state.families.length;
+
+		if (expected === 0) {
+			fragment.append("The active game brings no file of its own.");
+			return fragment;
+		}
+
+		fragment.append(`The active game reads ${expected} files from `);
+		fragment.createEl("code", { text: state.folder });
+		fragment.append(". ");
+
+		const absent: string[] = [];
+		for (const entry of state.missing) {
+			absent.push(entry.path);
+		}
+		for (const entry of state.missingFonts) {
+			absent.push(entry.path);
+		}
+
+		if (absent.length === 0) {
+			fragment.append("All of them are there.");
+			return fragment;
+		}
+
+		fragment.append(
+			`${absent.length} are absent. A block whose illustration is missing renders plain, and a typeface that is missing falls back on the next one in its stack. Drop these in to complete the game:`,
+		);
+
+		const list = fragment.createEl("ul");
+		for (const path of absent) {
+			list.createEl("li").createEl("code", { text: path });
+		}
+
+		return fragment;
 	}
 
 	private renderGeneralSettings(section: SettingGroup) {
@@ -348,7 +448,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName("Iceberg canvas snippet")
-				.setDesc(this.createIcebergDescription())
 				.setDisabled(!isActive)
 				.addButton((button) =>
 					button
@@ -369,6 +468,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
+			setting.descEl.append(this.createIcebergDescription());
 		});
 	}
 
@@ -514,7 +614,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName("Mountain canvas snippet")
-				.setDesc(this.createMountainDescription())
 				.setDisabled(!isActive)
 				.addButton((button) =>
 					button
@@ -535,6 +634,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
+			setting.descEl.append(this.createMountainDescription());
 		});
 	}
 
@@ -612,20 +712,39 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private createBorderPresetDescription(
-		hasPreset: boolean,
-	): DocumentFragment {
+	/**
+	 * What replaces the sliders of the preset: a file the user writes, that
+	 * wins over the pack of the active game for the values it declares.
+	 */
+	private createOverrideDescription(): DocumentFragment {
 		const fragment = this.containerEl.doc.createDocumentFragment();
-		fragment.append("Handbook is designed to work alongside the theme ");
+		const pack = resolveGamePack(this.plugin.settings.mode);
+
+		fragment.append("The active pack is ");
+		fragment.createEl("strong", { text: pack.label });
+		fragment.append(
+			". To change a colour or a font of your own, write the custom properties into ",
+		);
+		fragment.createEl("code", { text: OVERRIDE_FILE_NAME });
+		fragment.append(
+			", in this plugin's folder in the vault. What the file leaves out keeps the value of the game; removing the file restores it whole.",
+		);
+
+		return fragment;
+	}
+
+	private createMigrationDescription(): DocumentFragment {
+		const fragment = this.containerEl.doc.createDocumentFragment();
+		fragment.append(
+			"Colours and fonts are written by the plugin itself. No theme and no other plugin is required. If a preset was imported into ",
+		);
 		this.appendLink(
 			fragment,
-			"Border",
-			"https://github.com/Akifyss/obsidian-border",
+			"Style Settings",
+			"https://github.com/mgmeyers/obsidian-style-settings",
 		);
 		fragment.append(
-			hasPreset
-				? " by Akifyss. Copy the preset for the selected mode, then import it with the Style Settings plugin."
-				: " by Akifyss. A preset for :Otherscape is not available yet.",
+			" before, open that plugin and reset the sections it created: the leftover keys still override what is written here.",
 		);
 		return fragment;
 	}

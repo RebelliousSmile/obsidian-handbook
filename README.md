@@ -4,7 +4,12 @@ Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mis
 
 It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
-Note: the **:Otherscape** declension is in progress. City of Mist and Legend in the Mist are complete.
+Note: the **:Otherscape** declension dresses a vault but does not furnish it. It
+carries its own colors, typography and theme-type colors, in light and dark, and
+every callout, tag and inline mark follows them. It has no art of its own yet, so
+the blocks written for another game keep that game's illustrations, and the theme
+card, challenge, journey and theme kit blocks remain Legend in the Mist's. City of
+Mist and Legend in the Mist are complete.
 
 ## Installation
 
@@ -14,17 +19,40 @@ Handbook is easiest to test in a dedicated vault.
 
 | Install                                                                       | Why                                                          |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [BRAT](https://github.com/TfTHacker/obsidian42-brat)                          | Required to install Handbook from GitHub                       |
-| [Border theme](https://github.com/Akifyss/obsidian-border)                    | The visual base Handbook is designed around                    |
-| [Style Settings](https://github.com/mgmeyers/obsidian-style-settings)         | Needed to import the Border preset Handbook provides           |
+| [BRAT](https://github.com/TfTHacker/obsidian42-brat)                          | Required to install Handbook from GitHub                     |
 | [Advanced Canvas](https://github.com/Developer-Mike/obsidian-advanced-canvas) | Optional, only needed for Iceberg and Mountain card snippets |
+
+Handbook writes its own colors and fonts into a style element it owns, scoped
+by game mode, in light and in dark. No theme and no other plugin is required
+for the visual base. Earlier versions shipped a `Style Settings` preset for the
+`Border` theme; that channel is gone. If you imported one of those presets,
+open `Style Settings` and reset the sections it created — the leftover keys
+still override what Handbook writes.
+
+The fine-grained knobs that preset offered come back as a file you write. Put
+an `overrides.json` in Handbook's own folder in the vault
+(`.obsidian/plugins/obsidian-handbook/overrides.json`) and it wins over the
+active game for the custom properties it declares, and for nothing else:
+
+```json
+{
+	"base": { "note": { "--h1-size": "2.4em" } },
+	"dark": { "note": { "--background-primary": "#1B1B1F" } }
+}
+```
+
+`base` applies whichever theme is on, `light` and `dark` only under theirs; the
+`workspace` slot next to `note` holds what the workspace theme toggle writes.
+A value the file leaves out keeps the game's; removing the file restores the
+game whole. The file is read at startup and on the *Reload personal overrides*
+command, or on the *Reload* button in the settings tab. A malformed value is
+dropped and reported in the console, and the rest of the file still applies.
 
 Suggested vault setup:
 
 1. Create a fresh Obsidian vault for testing or play.
 2. Enable Community plugins.
-3. Install `BRAT`, `Style Settings`, and optionally `Advanced Canvas`.
-4. Switch your theme to `Border`.
+3. Install `BRAT`, and optionally `Advanced Canvas`.
 
 ### 2. Install Handbook with BRAT
 
@@ -36,11 +64,42 @@ Suggested vault setup:
 ### 3. Configure Handbook
 
 1. Open `Settings -> Handbook`.
-2. Pick your `Game mode`.
-3. Click `Copy preset` for the active mode.
-4. Import that preset through `Style Settings` if you are using `Border`.
+2. Pick your `Game mode`. The rendering follows immediately, with no reload
+   and no preset to import.
 
-### 4. Optional canvas setup
+### 4. Add the illustrations
+
+Handbook no longer carries its art inside its stylesheet: a game names the
+files it draws with, and the plugin looks for them in the vault. They live in
+Handbook's own folder, one subfolder per game:
+
+```txt
+.obsidian/plugins/obsidian-handbook/assets/
+├── city-of-mist/
+│   ├── callout-edge.svg
+│   └── iceberg-*.svg
+└── legend-in-the-mist/
+    ├── theme-card*.png
+    ├── fonts/pragroman.ttf
+    └── ...
+```
+
+The `Illustrations` setting names the folder of the active game, counts the
+files it reads, and lists the ones it did not find; `Check files` looks again
+after a drop, with no reload.
+
+**Until the files are there, the game renders degraded, never broken.** A card
+without its frame keeps its text on a flat ground and a border, a badge without
+its icon goes away instead of leaving an empty box, a drawn checkbox mark
+becomes a typed one, and a missing typeface falls through to the next family in
+its stack. Nothing errors and nothing renders as a broken image.
+
+One file is asked for rather than shipped by choice: `pragroman.ttf`, the
+display face of the Legend in the Mist headings. Its license allows giving it
+away but not including it in a product, so it is downloaded by whoever wants
+it and dropped in like an illustration.
+
+### 5. Optional canvas setup
 
 If you use `Advanced Canvas`, Handbook can generate mode-specific node-style snippets:
 
@@ -298,7 +357,7 @@ Available Mountain variants:
 
 ### 8. Mode switching
 
-The selected game mode changes more than colors. It also switches which callouts, presets, context-menu actions, and special renderers are active in the vault.
+The selected game mode changes more than colors. It also switches which callouts, block formats, context-menu actions, and special renderers are active in the vault. Switching rewrites the whole style block, so nothing of the previous game survives the change.
 
 ### 9. Lantern in the Mist integration
 
@@ -307,7 +366,8 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 ## License
 
 - Plugin code: [MIT](LICENSE), originally (c) 4rtamis as Brumes, modifications (c) François-Xavier Guillois
-- Font files: each bundled font keeps its own upstream license
+- Font files: each bundled font keeps its own upstream license, and every one of them is redistributable; a face that is not is asked for from the vault instead
+- Illustrations: read from the vault, not carried in the stylesheet
 - Assets: status is still under discussion with Son of Oak
 
 ### Font License Files
@@ -317,12 +377,11 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 - [Caveat](licenses/fonts/Caveat.LICENSE.txt)
 - [Courier Prime](licenses/fonts/CourierPrime.LICENSE.txt)
 - [Fira Sans Extra Condensed](licenses/fonts/Fira.LICENSE.txt)
-- [Frederick Text](licenses/fonts/FrederickText.LICENSE.txt)
 - [IM Fell English](licenses/fonts/IMFellEnglish.LICENSE.txt)
 - [IM Fell Great Primer](licenses/fonts/IMFellGreatPrimer.LICENSE.txt)
 - [Labrada](licenses/fonts/Labrada.LICENSE.txt)
 - [PT Serif / ParaType](licenses/fonts/ParaType.LICENSE.txt)
-- [PragRoman](licenses/fonts/PragRoman.LICENSE.txt)
+- [PragRoman](licenses/fonts/PragRoman.LICENSE.txt) (not bundled, supplied by the user)
 - [Roboto](licenses/fonts/Roboto.LICENSE.txt)
 
 ### Asset Status
