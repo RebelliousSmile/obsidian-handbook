@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { renderTagSpan } from "../blocks/tagSpan";
 import {
 	ComThemeCardData,
@@ -29,7 +30,7 @@ function addLine(
 ): HTMLElement {
 	const line = doc.createElement("div");
 	line.classList.add(className);
-	line.textContent = text;
+	line.appendChild(renderProse(text, doc));
 	parent.appendChild(line);
 	return line;
 }
@@ -127,7 +128,7 @@ export function renderComThemeCard(
 
 		const text = doc.createElement("span");
 		text.classList.add("brumes-com-theme-card--drive-text");
-		text.textContent = data.drive.text;
+		text.appendChild(renderProse(data.drive.text, doc));
 		drive.appendChild(text);
 
 		if (data.drive.mismatched) {
@@ -171,7 +172,7 @@ export function renderComThemeCard(
 				effect.classList.add(
 					"brumes-com-theme-card--improvement-effect",
 				);
-				effect.textContent = improvement.effect;
+				effect.appendChild(renderProse(improvement.effect, doc));
 				item.appendChild(effect);
 			}
 

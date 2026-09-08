@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { renderRatedLimit, renderTagSpan } from "../blocks/tagSpan";
 import { ChallengeData } from "./parser";
 
@@ -35,7 +36,7 @@ function addLine(
 ): HTMLElement {
 	const line = doc.createElement("div");
 	line.classList.add(className);
-	line.textContent = text;
+	line.appendChild(renderProse(text, doc));
 	parent.appendChild(line);
 	return line;
 }
@@ -71,7 +72,7 @@ export function renderChallenge(
 
 		for (const paragraph of data.description) {
 			const p = doc.createElement("p");
-			p.textContent = paragraph;
+			p.appendChild(renderProse(paragraph, doc));
 			description.appendChild(p);
 		}
 
@@ -112,7 +113,7 @@ export function renderChallenge(
 		if (data.might.vulnerability) {
 			const vulnerability = doc.createElement("span");
 			vulnerability.classList.add("brumes-challenge--might-vulnerability");
-			vulnerability.textContent = data.might.vulnerability;
+			vulnerability.appendChild(renderProse(data.might.vulnerability, doc));
 			aspect.appendChild(vulnerability);
 		}
 	}
@@ -144,7 +145,7 @@ export function renderChallenge(
 			if (feature.effect) {
 				const effect = doc.createElement("span");
 				effect.classList.add("brumes-challenge--feature-effect");
-				effect.textContent = feature.effect;
+				effect.appendChild(renderProse(feature.effect, doc));
 				item.appendChild(effect);
 			}
 
@@ -182,7 +183,7 @@ export function renderChallenge(
 				for (const consequence of threat.consequences) {
 					const line = doc.createElement("li");
 					line.classList.add("brumes-challenge--consequence");
-					line.textContent = consequence;
+					line.appendChild(renderProse(consequence, doc));
 					consequences.appendChild(line);
 				}
 
@@ -210,7 +211,7 @@ export function renderChallenge(
 
 			const text = doc.createElement("span");
 			text.classList.add("brumes-challenge--secret-text");
-			text.textContent = secret.text;
+			text.appendChild(renderProse(secret.text, doc));
 			item.appendChild(text);
 
 			list.appendChild(item);

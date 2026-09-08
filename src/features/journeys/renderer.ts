@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { renderTagSpan } from "../blocks/tagSpan";
 import { JourneyData } from "./parser";
 
@@ -28,7 +29,7 @@ function addLine(
 ): HTMLElement {
 	const line = doc.createElement("div");
 	line.classList.add(className);
-	line.textContent = text;
+	line.appendChild(renderProse(text, doc));
 	parent.appendChild(line);
 	return line;
 }
@@ -44,11 +45,44 @@ function addConsequences(
 	for (const consequence of consequences) {
 		const item = doc.createElement("li");
 		item.classList.add("brumes-journey--consequence");
-		item.textContent = consequence;
+		item.appendChild(renderProse(consequence, doc));
 		list.appendChild(item);
 	}
 
 	parent.appendChild(list);
+}
+
+function addWarnings(
+	container: HTMLElement,
+	doc: Document,
+	warnings: string[],
+): void {
+	if (warnings.length === 0) {
+		return;
+	}
+
+	const footer = doc.createElement("footer");
+	footer.classList.add("brumes-journey--warnings");
+
+	const title = doc.createElement("p");
+	title.classList.add("brumes-journey--warnings-title");
+	title.textContent =
+		warnings.length === 1
+			? "1 thing was not understood while parsing this journey:"
+			: `${warnings.length} things were not understood while parsing this journey:`;
+	footer.appendChild(title);
+
+	const list = doc.createElement("ul");
+	list.classList.add("brumes-journey--warnings-list");
+
+	for (const warning of warnings) {
+		const item = doc.createElement("li");
+		item.textContent = warning;
+		list.appendChild(item);
+	}
+
+	footer.appendChild(list);
+	container.appendChild(footer);
 }
 
 export function renderJourney(data: JourneyData, doc: Document): HTMLElement {
@@ -70,7 +104,7 @@ export function renderJourney(data: JourneyData, doc: Document): HTMLElement {
 
 		for (const paragraph of data.description) {
 			const p = doc.createElement("p");
-			p.textContent = paragraph;
+			p.appendChild(renderProse(paragraph, doc));
 			description.appendChild(p);
 		}
 
@@ -134,6 +168,8 @@ export function renderJourney(data: JourneyData, doc: Document): HTMLElement {
 
 		section.appendChild(list);
 	}
+
+	addWarnings(container, doc, data.warnings);
 
 	return container;
 }
