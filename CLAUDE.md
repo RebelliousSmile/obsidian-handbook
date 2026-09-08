@@ -6,7 +6,7 @@ Dépôt autonome depuis le **2026-09-07**. Objectif : développer le plugin comm
 
 - Plugin Obsidian **Handbook** (`id: obsidian-handbook`), thème + outils pour les JDR de Son of Oak : City of Mist, Legend in the Mist, :Otherscape.
 - Fork de **Brumes** (`4rtamis/obsidian-brumes`), MIT, détaché le 2026-09-07. Le copyright d'origine reste dans `LICENSE`, l'origine est créditée dans le README.
-- Version : `2.0.0-beta` héritée de l'amont — le versionnement est désormais notre affaire, un renumérotage propre reste à faire. `minAppVersion: 1.12.7`.
+- Version : `package.json` et `manifest.json` portent **`1.1.0-beta`**. Ce fichier annonçait `2.0.0-beta` : l'écart est constaté le 2026-09-08 et **non tranché** — le renumérotage propre reste à faire, et c'est désormais notre affaire. `minAppVersion: 1.12.7`.
 - Stack : TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), lint ESLint (dont `eslint-plugin-obsidianmd`).
 - Gestionnaire de paquets : **pnpm** (`pnpm-lock.yaml` fait foi ; `package-lock.json` traîne encore et devrait disparaître).
 
@@ -28,7 +28,7 @@ Renommé : `manifest.json` (`id`, `name`, `author`, `authorUrl`), `package.json`
 | `src/features/` | `blocks` (registre), `callouts`, `challenges`, `comDangers`, `comThemeCards`, `journeys`, `modes`, `tags`, `themeCards`, `themeKits` |
 | `src/games/` | un jeu = un pack de données : `registry.ts`, `types.ts`, `tokens.ts`, `assets.ts`, `overrides.ts`, `fromSchema.ts` + un fichier par jeu |
 | `src/views/` | `LanternView.ts`, `lanternLogo.ts` |
-| `src/settings/` | onglet de réglages, `borderPresets.ts` (réduit aux snippets Advanced Canvas), `canvasSnippets.ts`, types |
+| `src/settings/` | `index.ts` (onglet de réglages), `canvasSnippets.ts` (snippets Advanced Canvas), `types.ts` — et rien d'autre |
 | `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`) + `styles.scss`, `_neutralize.scss`, `_fallbacks.scss`, `settings.scss`, `lantern.scss` |
 | `src/contextMenu/`, `src/utils/` | menus contextuels, `logger.ts` |
 | `assets/` | illustrations source à déposer dans le coffre, un dossier par jeu |
@@ -109,7 +109,7 @@ Bancs de test, à la racine de chaque coffre : `Handbook - Test blocs *.md` pour
 
 Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspondant est présent **et activé** dans le coffre. Sans lui, Advanced Canvas ne connaît pas le style, ne pose aucun `data-iceberg-card` / `data-mountain-card`, et tout le SCSS est mort — un rendu « rien ne se passe » qui n'a rien à voir avec le CSS.
 
-- Fichiers : `<coffre>/.obsidian/snippets/iceberg.css` et `mountain.css`, noms imposés par le texte des réglages. Contenu = `ADVANCED_CANVAS_*_SNIPPET` de `src/settings/borderPresets.ts`.
+- Fichiers : `<coffre>/.obsidian/snippets/iceberg.css` et `mountain.css`, noms imposés par le texte des réglages. Contenu = `ADVANCED_CANVAS_*_SNIPPET` de `src/settings/canvasSnippets.ts` (`borderPresets.ts` n'existe plus).
 - L'activation se fait à la main dans `Settings → Appearance → CSS snippets` : Obsidian garde `appearance.json` en mémoire et réécrirait toute édition faite pendant qu'il tourne.
 - Si le dossier `snippets/` vient d'être créé, Obsidian ne le surveille pas encore : rafraîchir la liste ou recharger l'application.
 - Advanced Canvas passe la clé du snippet par `toCamelCase` : `key: iceberg-card` est stocké `"icebergCard"` dans le `.canvas` et ressort en `data-iceberg-card` dans le DOM. Un canvas écrit à la main doit utiliser la forme **camelCase**.
@@ -155,14 +155,19 @@ Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans u
 ## Conventions de travail
 
 - Ne pas commiter ni pousser sans demande explicite.
-- `rtk proxy pnpm build` doit passer et `./node_modules/.bin/eslint src --ext .ts` rester à zéro erreur avant tout merge dans `master`.
+- `rtk proxy pnpm build` doit passer et **les deux portées de lint** rester à zéro erreur avant tout merge : `./node_modules/.bin/eslint src --ext .ts` **et** `pnpm lint`.
 - Le versionnement, `versions.json` et les releases nous appartiennent désormais — ce n'est plus « la prérogative de l'amont ».
 
 ## Contraintes du code (constatées le 2026-09-06)
 
 ### Lint
 
-`./node_modules/.bin/eslint src --ext .ts` sort **à zéro erreur sur 42 fichiers** (mesuré le 2026-09-07). Les trois erreurs préexistantes que documentait ce fichier ont disparu : le critère est bien « lint vert », pas « pas de régression ».
+**Le lint a deux portées, et elles ne couvrent pas la même chose** (vérifié le 2026-09-08) :
+
+- `./node_modules/.bin/eslint src --ext .ts` — le seul `src/` ;
+- `pnpm lint` vaut **`eslint .`** : `eslint.config.mjs` porte `files: ["**/*.ts"]` et n'ignore que `node_modules`, `dist` et `demo`. Un outil posé dans `tools/` est donc linté.
+
+**Les deux doivent être vertes.** Aucune ne fait foi seule : la première ne voit pas `tools/`, la seconde ne prouve pas que `src/` est propre si un `ignores` change. Les deux sortent à zéro erreur.
 
 Trois pièges :
 
@@ -179,7 +184,7 @@ Trois pièges :
 
 Le dépôt n'a ni vitest ni jest. Pour prouver un parser/renderer : harnais jetable `src/__assert_*.ts` (classe `El` bouchon + faux `Document` avec `createElement`), bundlé par `esbuild.buildSync({platform:'node', format:'cjs', external:['obsidian','fs']})`, exécuté par `node`.
 
-⚠ `pnpm build` lance `tsc -noEmit` sur **tout `src/`** : `rm -f src/__assert_*.ts __assert_*.cjs` **avant** de builder, sinon le build casse sur le harnais.
+⚠ `pnpm build` lance `tsc -noEmit` sur **tout le dépôt**, pas sur `src/` : `tsconfig.json` porte `"include": ["**/*.ts"]`. C'est donc **l'extension d'un fichier qui le protège, pas son dossier** — un harnais en `.mts` échappe à `tsc`, un `.ts` posé n'importe où y passe. `rm -f src/__assert_*.ts __assert_*.cjs` **avant** de builder, sinon le build casse sur le harnais.
 
 Deux pièges qui coûtent un aller-retour chacun (constatés le 2026-09-08) :
 
@@ -192,12 +197,9 @@ Depuis le 2026-09-08 les illustrations sont sorties du bundle : `_theme-cards.sc
 
 ### Registre de blocs
 
-Depuis 2026-09, tout bloc fencé passe par `BrumesBlock<T>` (`src/features/blocks/`) : un format = **une entrée dans `BRUMES_BLOCKS`** + un booléen dans `BrumesFeatureSettings` + un `Setting` dans l'onglet + un partial SCSS. Blocs existants : `theme-card` (alias déprécié `story-theme`), `litm-challenge`, `litm-journey`, `litm-theme-kit`.
+Depuis 2026-09, tout bloc fencé passe par `BrumesBlock<T>` (`src/features/blocks/`) et une ligne dans `BRUMES_BLOCKS`. Blocs existants : `theme-card` (alias déprécié `story-theme`), `litm-challenge`, `litm-journey`, `litm-theme-kit`, `com-theme-card`, `com-danger`.
 
-Deux règles de compatibilité :
-
-- Renommer un bloc = garder l'ancien id dans `aliases` (le registre logue une dépréciation **une fois par session**, pas par rendu).
-- **Ne jamais renommer une clé de `features.*`** : elle est écrite dans le `data.json` de l'utilisateur. `theme-card` garde donc `flag: "storyThemeParser"`.
+**Ce qu'un format doit au schéma est écrit une seule fois** : [`aidd_docs/guidelines/schema-design.md`](aidd_docs/guidelines/schema-design.md). Checklist d'ajout, règle de zéro exemption, frontière valeurs / forme / pixels, polarités, langue, échappatoire SCSS, et les deux règles de compatibilité (`aliases`, clés de `features.*` jamais renommées). Ne pas redire ici ce qu'elle dit — y renvoyer.
 
 ### rtk
 
