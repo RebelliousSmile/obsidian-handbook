@@ -1,3 +1,4 @@
+import { metaSourceLine } from "../blocks/schemaValues";
 import { renderRatedLimit, renderTagSpan } from "../blocks/tagSpan";
 import { ChallengeData } from "./parser";
 
@@ -60,6 +61,15 @@ export function renderChallenge(
 		);
 	}
 
+	if (typeof data.rating === "number") {
+		addLine(
+			header,
+			doc,
+			"brumes-challenge--rating",
+			String(data.rating),
+		);
+	}
+
 	container.appendChild(header);
 
 	if (data.description.length > 0) {
@@ -85,6 +95,10 @@ export function renderChallenge(
 		for (const limit of data.limits) {
 			const item = doc.createElement("li");
 			item.classList.add("brumes-challenge--limit");
+
+			if (limit.progress) {
+				item.classList.add("brumes-challenge--limit--progress");
+			}
 			item.appendChild(renderRatedLimit(limit.name, limit.rating, doc));
 
 			if (limit.consequence) {
@@ -100,20 +114,31 @@ export function renderChallenge(
 		}
 	}
 
-	if (data.might) {
+	if (data.mights.length > 0) {
 		const section = addSection(container, doc, "might", "Might");
-		const aspect = addLine(
-			section,
-			doc,
-			"brumes-challenge--might-aspect",
-			data.might.aspect,
-		);
 
-		if (data.might.vulnerability) {
-			const vulnerability = doc.createElement("span");
-			vulnerability.classList.add("brumes-challenge--might-vulnerability");
-			vulnerability.textContent = data.might.vulnerability;
-			aspect.appendChild(vulnerability);
+		for (const might of data.mights) {
+			const aspect = addLine(
+				section,
+				doc,
+				"brumes-challenge--might-aspect",
+				might.aspect,
+			);
+
+			if (might.level) {
+				aspect.classList.add(
+					`brumes-challenge--might--${might.level}`,
+				);
+			}
+
+			if (might.vulnerability) {
+				const vulnerability = doc.createElement("span");
+				vulnerability.classList.add(
+					"brumes-challenge--might-vulnerability",
+				);
+				vulnerability.textContent = might.vulnerability;
+				aspect.appendChild(vulnerability);
+			}
 		}
 	}
 
@@ -193,6 +218,23 @@ export function renderChallenge(
 		}
 	}
 
+	if (data.generalConsequences.length > 0) {
+		const section = addSection(
+			container,
+			doc,
+			"general-consequences",
+			"General consequences",
+		);
+		const list = addList(section, doc, "consequence");
+
+		for (const consequence of data.generalConsequences) {
+			const item = doc.createElement("li");
+			item.classList.add("brumes-challenge--consequence");
+			item.textContent = consequence;
+			list.appendChild(item);
+		}
+	}
+
 	if (data.secrets.length > 0) {
 		const section = addSection(container, doc, "secrets", "Secrets");
 		const list = addList(section, doc, "secret");
@@ -214,6 +256,17 @@ export function renderChallenge(
 			item.appendChild(text);
 
 			list.appendChild(item);
+		}
+	}
+
+	if (data.meta) {
+		const source = metaSourceLine(data.meta);
+
+		if (source) {
+			const footer = doc.createElement("footer");
+			footer.classList.add("brumes-challenge--source");
+			footer.textContent = source;
+			container.appendChild(footer);
 		}
 	}
 

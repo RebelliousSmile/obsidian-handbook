@@ -96,8 +96,22 @@ options:
 		mask: radial-gradient(10px at 10px 10px, #0000 98%, #000) -10px -10px;
 	}
 
+	// Obsidian marks a chosen node by colouring the container's border and
+	// laying `--shadow-border-accent` over it. A mountain card has no border
+	// to colour, and the mask that notches its corner clips every shadow the
+	// container paints, so both signs of selection are lost. The ring is drawn
+	// by the node instead: the mask sits one level down and cannot reach it.
+	.canvas-node[data-mountain-card].is-selected::after,
+	.canvas-node[data-mountain-card].is-focused::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border: 2px solid var(--color-accent);
+		pointer-events: none;
+	}
+
 	.canvas-node[data-mountain-card] .markdown-preview-view,
-	.canvas-node-iframe-body[data-iceberg-card] .cm-scroller {
+	.canvas-node-iframe-body[data-mountain-card] .cm-scroller {
 		scrollbar-gutter: auto;
 	}
 
@@ -133,7 +147,11 @@ options:
 		background-size: contain;
 		background-repeat: no-repeat;
 		background-position: center;
-		vertical-align: top;
+		// The line is set in capitals, so its optical centre is the cap band
+		// rather than the line box: hanging the icon from the top left it
+		// floating above the letters. Sitting it 0.4em below the baseline
+		// centres a 1.5em icon on a 0.7em cap height.
+		vertical-align: -0.4em;
 		background-image: var(--might-icon);
 	}
 }

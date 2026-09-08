@@ -6,6 +6,7 @@ function comDangerTemplate(): string {
 	return [
 		"```com-danger",
 		"Danger name",
+		"rating: 3",
 		": What it is, in one line.",
 		"SPECTRUMS",
 		"hurt:3",

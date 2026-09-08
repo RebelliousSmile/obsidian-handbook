@@ -27,6 +27,7 @@ import {
 	mergeGameStyle,
 } from "./games/overrides";
 import { loadBrumesBlocks } from "./features/blocks/registry";
+import { loadTomlExportCommands } from "./features/blocks/tomlExports";
 import { registerBrumesContextMenu } from "./contextMenu";
 import {
 	LANTERN_ICON,
@@ -66,6 +67,7 @@ export default class BrumesPlugin extends Plugin {
 
 		loadTagFeature(this);
 		loadBrumesBlocks(this);
+		loadTomlExportCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
 
 		this.addCommand({

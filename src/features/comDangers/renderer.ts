@@ -1,3 +1,4 @@
+import { metaSourceLine } from "../blocks/schemaValues";
 import { renderRatedLimit } from "../blocks/tagSpan";
 import { ComDangerData, ComDangerMove, ComSpectrum } from "./parser";
 
@@ -101,6 +102,14 @@ export function renderComDanger(
 	name.classList.add("brumes-com-danger--name");
 	name.textContent = data.name;
 	header.appendChild(name);
+
+	if (typeof data.rating === "number") {
+		const rating = doc.createElement("div");
+		rating.classList.add("brumes-com-danger--rating");
+		rating.textContent = String(data.rating);
+		header.appendChild(rating);
+	}
+
 	container.appendChild(header);
 
 	if (data.description.length > 0) {
@@ -159,6 +168,17 @@ export function renderComDanger(
 
 		for (const move of data.moves) {
 			list.appendChild(renderMove(move, doc));
+		}
+	}
+
+	if (data.meta) {
+		const source = metaSourceLine(data.meta);
+
+		if (source) {
+			const footer = doc.createElement("footer");
+			footer.classList.add("brumes-com-danger--source");
+			footer.textContent = source;
+			container.appendChild(footer);
 		}
 	}
 

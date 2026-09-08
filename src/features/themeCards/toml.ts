@@ -1,18 +1,21 @@
 import { stringify } from "smol-toml";
 import { ThemeCardData } from "./parser";
 
-/** The levels the shared Story Theme schema accepts. */
+/** The levels a theme card can carry, named as schema-in-the-mist names
+ * the Might levels of a Legend in the Mist challenge. */
 const SCHEMA_LEVELS = ["origin", "adventure", "greatness"] as const;
 
 type SchemaLevel = (typeof SCHEMA_LEVELS)[number];
 
-/** The level the schema falls back to when a document leaves it unsaid. */
+/** The level the document falls back to when a card leaves it unsaid. */
 const DEFAULT_LEVEL: SchemaLevel = "origin";
 
 /**
- * A Story Theme as schema-in-the-mist describes it. The title tag and the
- * level are required there, so a theme card only chooses what to fill in the
- * fields around them.
+ * A theme card as a TOML document. schema-in-the-mist has no theme schema
+ * yet — it covers only the City of Mist danger and the Legend in the Mist
+ * challenge — so this shape is ours, written in that repository's idiom:
+ * snake_case keys, a required identity, optional lists left out when empty.
+ * If a theme schema lands upstream, this is the file that follows it.
  */
 export interface StoryThemeDocument {
 	title_tag: string;
@@ -32,7 +35,7 @@ function toSchemaLevel(level: ThemeCardData["level"]): SchemaLevel {
 }
 
 /**
- * Turn a parsed theme card into the shape the shared schema defines. A field
+ * Turn a parsed theme card into the document shape above. A field
  * the card leaves empty is left out of the document rather than exported as an
  * empty string or an empty list.
  */

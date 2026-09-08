@@ -1,11 +1,23 @@
+import { SchemaMeta } from "../blocks/schemaValues";
+import { parseChallengeDocument } from "./schema";
+
+/** The scale of a Might, as the shared schema names its three steps. */
+export const MIGHT_LEVELS = ["origin", "adventure", "greatness"] as const;
+
+export type MightLevel = (typeof MIGHT_LEVELS)[number];
+
 export interface ChallengeLimit {
 	name: string;
 	rating: string;
+	/** A limit that builds up toward its consequence instead of ending the
+	 * challenge when it maxes out. */
+	progress?: boolean;
 	consequence?: string;
 }
 
 export interface ChallengeMight {
 	aspect: string;
+	level?: MightLevel;
 	vulnerability?: string;
 }
 
@@ -29,15 +41,28 @@ export interface ChallengeData {
 	name: string;
 	roles: string[];
 	description: string[];
+	/** How dangerous the profile is overall, 1 to 5, when it says. */
+	rating?: number;
 	limits: ChallengeLimit[];
-	might?: ChallengeMight;
+	mights: ChallengeMight[];
 	tags: string[];
 	features: ChallengeFeature[];
 	threats: ChallengeThreat[];
+	/** What the challenge does on a consequence outside any threat. */
+	generalConsequences: string[];
 	secrets: ChallengeSecret[];
+	/** Where the profile comes from, when a document said. */
+	meta?: SchemaMeta;
 }
 
-type Section = "limits" | "might" | "tags" | "features" | "threats" | "secrets";
+type Section =
+	| "limits"
+	| "might"
+	| "tags"
+	| "features"
+	| "threats"
+	| "consequences"
+	| "secrets";
 
 /** Uppercase keywords opening a section, as printed in the challenge profiles. */
 const SECTIONS: Record<string, Section> = {
@@ -46,10 +71,13 @@ const SECTIONS: Record<string, Section> = {
 	TAGS: "tags",
 	FEATURES: "features",
 	THREATS: "threats",
+	CONSEQUENCES: "consequences",
+	"GENERAL CONSEQUENCES": "consequences",
 	SECRETS: "secrets",
 };
 
 const ROLES_PREFIX = "roles:";
+const RATING_PREFIX = "rating:";
 const CONSEQUENCE_SEPARATOR = " > ";
 const TRIGGER_SEPARATOR = " : ";
 const MIGHT_PATTERN = /^(.*?)\s*\(([^)]*)\)\s*$/;
@@ -68,6 +96,11 @@ function splitConsequence(line: string): [string, string | undefined] {
 		line.slice(0, index).trim(),
 		line.slice(index + CONSEQUENCE_SEPARATOR.length).trim(),
 	];
+}
+
+/** A general consequence may be written as a `>` bullet, like a threat's. */
+function stripBullet(line: string): string {
+	return line.charAt(0) === ">" ? line.slice(1).trim() : line;
 }
 
 /** A tag run mixes braced multi-word tags and bare single-word ones. */
@@ -96,28 +129,67 @@ function parseLimit(line: string): ChallengeLimit {
 		? { name: match[1].trim(), rating: match[2] }
 		: { name: subject, rating: "" };
 
+	// A limit that spells out what maxing it out does is a progress limit: the
+	// books give an `on_max` outcome to those and to no others.
 	if (consequence) {
+		limit.progress = true;
 		limit.consequence = consequence;
 	}
 
 	return limit;
 }
 
-function parseMight(line: string): ChallengeMight {
-	const match = MIGHT_PATTERN.exec(line);
+/** Read the optional `level:` opening a Might line, e.g. `greatness: Wings`. */
+function splitMightLevel(line: string): [MightLevel | undefined, string] {
+	const separator = line.indexOf(":");
 
-	if (!match) {
-		return { aspect: line };
+	if (separator === -1) {
+		return [undefined, line];
 	}
 
-	const vulnerability = match[2].trim();
+	const candidate = line.slice(0, separator).trim().toLowerCase();
 
-	return vulnerability
-		? { aspect: match[1].trim(), vulnerability }
-		: { aspect: match[1].trim() };
+	return MIGHT_LEVELS.indexOf(candidate as MightLevel) === -1
+		? [undefined, line]
+		: [candidate as MightLevel, line.slice(separator + 1).trim()];
 }
 
+function parseMight(line: string): ChallengeMight {
+	const [level, rest] = splitMightLevel(line);
+	const match = MIGHT_PATTERN.exec(rest);
+	const might: ChallengeMight = {
+		aspect: match ? match[1].trim() : rest,
+	};
+
+	if (level) {
+		might.level = level;
+	}
+
+	const vulnerability = match ? match[2].trim() : "";
+
+	if (vulnerability) {
+		might.vulnerability = vulnerability;
+	}
+
+	return might;
+}
+
+/**
+ * A challenge profile, read either as a schema-in-the-mist document or in the
+ * terse grammar. The document comes first because it announces itself: a TOML
+ * key or table opens it, which the grammar never does.
+ */
 export function parseChallenge(source: string): ChallengeData | null {
+	const document = parseChallengeDocument(source);
+
+	if (document !== null) {
+		return document;
+	}
+
+	return parseChallengeGrammar(source);
+}
+
+function parseChallengeGrammar(source: string): ChallengeData | null {
 	const lines = source
 		.split("\n")
 		.map((line) => line.trim())
@@ -132,9 +204,11 @@ export function parseChallenge(source: string): ChallengeData | null {
 		roles: [],
 		description: [],
 		limits: [],
+		mights: [],
 		tags: [],
 		features: [],
 		threats: [],
+		generalConsequences: [],
 		secrets: [],
 	};
 
@@ -157,6 +231,12 @@ export function parseChallenge(source: string): ChallengeData | null {
 					.split(",")
 					.map((role) => role.trim())
 					.filter((role) => role.length > 0);
+			} else if (line.toLowerCase().startsWith(RATING_PREFIX)) {
+				const rating = parseInt(line.slice(RATING_PREFIX.length).trim(), 10);
+
+				if (!isNaN(rating)) {
+					data.rating = rating;
+				}
 			} else if (line.startsWith(":")) {
 				data.description.push(line.slice(1).trim());
 			}
@@ -167,7 +247,7 @@ export function parseChallenge(source: string): ChallengeData | null {
 		if (section === "limits") {
 			data.limits.push(parseLimit(line));
 		} else if (section === "might") {
-			data.might = parseMight(line);
+			data.mights.push(parseMight(line));
 		} else if (section === "tags") {
 			data.tags.push(...parseTagRun(line));
 		} else if (section === "features") {
@@ -175,6 +255,8 @@ export function parseChallenge(source: string): ChallengeData | null {
 			data.features.push({ name, effect: effect ?? "" });
 		} else if (section === "threats") {
 			appendThreatLine(data.threats, line);
+		} else if (section === "consequences") {
+			data.generalConsequences.push(stripBullet(line));
 		} else if (section === "secrets") {
 			const separator = line.indexOf(":");
 

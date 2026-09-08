@@ -30,6 +30,21 @@
 		--brumes-com-danger-ink: #e8e2d4;
 	}
 
+	.brumes-com-danger--header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.6em;
+	}
+
+	// The toolkit prints the overall rating as a bare numeral beside the name.
+	.brumes-com-danger--rating {
+		font-family: "Bebas Neue", sans-serif;
+		font-size: 1.5em;
+		line-height: 1;
+		color: var(--brumes-com-danger-accent);
+	}
+
 	.brumes-com-danger--name {
 		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 900;
@@ -131,6 +146,15 @@
 	// is marked apart from the soft and hard moves.
 	.brumes-com-danger--move-custom .brumes-com-danger--move-label {
 		color: var(--brumes-com-danger-accent);
+	}
+
+	// Attribution, when a schema document carried some.
+	.brumes-com-danger--source {
+		margin-top: 0.8em;
+		font-family: "Courier Prime", monospace;
+		font-size: 0.8em;
+		text-align: right;
+		opacity: 0.6;
 	}
 
 	.brumes-com-danger--move-name {

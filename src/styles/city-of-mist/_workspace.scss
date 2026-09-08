@@ -107,9 +107,7 @@
 				color: var(--background-primary);
 			}
 
-			span.cm-hmd-internal-link span.cm-underline {
-				border-bottom: solid rgb(72, 67, 141) 2px;
-			}
+			--brumes-internal-link-line: rgb(72, 67, 141);
 		}
 
 		// Night: the Mist over the city.
@@ -148,13 +146,29 @@
 			--link-external-color-hover: #e6007e;
 			--link-external-decoration: none;
 
-			span.cm-hmd-internal-link span.cm-underline {
-				border-bottom: solid #5fc6f0 2px;
-			}
+			--brumes-internal-link-line: #5fc6f0;
 		}
 
-		span.cm-hmd-internal-link:hover span.cm-underline {
-			border-bottom: solid #e6007e 2px;
+		// The v1 theme drew the link line as a border. The plugin already
+		// underlines links in `_links.scss`, so a border here would print a
+		// second line under the first: only the colour is taken back.
+		.cm-hmd-internal-link,
+		.cm-hmd-internal-link .cm-underline,
+		a.internal-link {
+			text-decoration-color: var(--brumes-internal-link-line);
+		}
+
+		.cm-hmd-internal-link:hover,
+		.cm-hmd-internal-link:hover .cm-underline,
+		a.internal-link:hover {
+			text-decoration-color: #e6007e;
+		}
+
+		// External links answered to the same magenta on hover.
+		.cm-link:hover,
+		.cm-link:hover .cm-underline,
+		a.external-link:hover {
+			text-decoration-color: #e6007e;
 		}
 	}
 }

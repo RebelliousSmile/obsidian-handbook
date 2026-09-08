@@ -43,6 +43,39 @@ options:
 		border: none;
 	}
 
+	// A card is pinned to a board, never laid square on it. The v1 theme let
+	// the angle be picked by hand through a `rot*` class; Advanced Canvas
+	// stamps a single attribute per node, so the angle is dealt from the
+	// node's rank among its siblings instead — stable for a given canvas,
+	// and nothing more for the user to set up.
+	$iceberg-tilts: (1, -2.4deg), (2, 1.6deg), (3, -1deg), (4, 2.1deg),
+		(5, -1.7deg), (6, 0.8deg), (7, -0.4deg);
+
+	@each $slot, $angle in $iceberg-tilts {
+		.canvas-node[data-iceberg-card]:nth-child(7n+#{$slot})
+			.canvas-node-container {
+			transform: rotate($angle);
+		}
+	}
+
+	// The card has no border of its own, so without this a chosen card gives
+	// no sign that it is chosen. Both states are covered because a single
+	// click only marks the node selected, never focused.
+	.canvas-node[data-iceberg-card].is-selected .canvas-node-container,
+	.canvas-node[data-iceberg-card].is-focused .canvas-node-container {
+		border: 2px solid var(--color-accent);
+	}
+
+	// Text that overruns the card must not print a scrollbar across the art.
+	.canvas-node[data-iceberg-card] .canvas-node-content,
+	.canvas-node-iframe-body[data-iceberg-card] .cm-scroller {
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
 	.canvas-node[data-iceberg-card] .canvas-node-content {
 		padding: 1rem;
 		display: flex;
@@ -92,5 +125,11 @@ options:
 
 	.canvas-node[data-iceberg-card="group"] .canvas-node-content::before {
 		background-image: var(--brumes-image-iceberg-group);
+	}
+
+	// At night the plate behind the art should sink into the note rather
+	// than stay a lit grey rectangle, as it did in the v1 theme.
+	.theme-dark .canvas-node[data-iceberg-card] .canvas-node-content::before {
+		background-color: var(--background-secondary);
 	}
 }
