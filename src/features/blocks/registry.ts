@@ -1,5 +1,6 @@
 import { Editor, Menu, MenuItem } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import { gamePackClass } from "../../games/registry";
 import { BrumesSettings } from "../../settings/types";
 import { logScope } from "../../utils/logger";
 import { renderRawBlock } from "./fallback";
@@ -10,6 +11,7 @@ import { comThemeCardBlock } from "../comThemeCards/block";
 import { journeyBlock } from "../journeys/block";
 import { themeCardBlock } from "../themeCards/block";
 import { themeKitBlock } from "../themeKits/block";
+import { BLOCK_SCOPE_CLASS } from "../modes/domModeClass";
 
 const log = logScope("Blocks");
 
@@ -71,6 +73,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				}
 
 				log.debug(`Rendering ${id}:`, parsed);
+				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(block.mode));
 				el.appendChild(block.render(parsed, el.doc));
 			});
 		}
