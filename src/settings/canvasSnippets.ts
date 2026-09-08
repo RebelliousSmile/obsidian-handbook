@@ -1,7 +1,7 @@
 // Advanced Canvas node styles.
 //
 // The Style Settings presets that used to live here are gone: the plugin
-// writes its own variables now, from `src/features/modes/gameStyleValues.ts`.
+// writes its own variables now, from the game pack in `src/games/`.
 // What remains are the two snippets a vault must install for Advanced Canvas
 // to know the iceberg and mountain node styles at all — a genuine external
 // dependency, not a styling channel.

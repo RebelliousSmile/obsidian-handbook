@@ -4,7 +4,12 @@ Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mis
 
 It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
-Note: the **:Otherscape** declension is in progress. City of Mist and Legend in the Mist are complete.
+Note: the **:Otherscape** declension dresses a vault but does not furnish it. It
+carries its own colors, typography and theme-type colors, in light and dark, and
+every callout, tag and inline mark follows them. It has no art of its own yet, so
+the blocks written for another game keep that game's illustrations, and the theme
+card, challenge, journey and theme kit blocks remain Legend in the Mist's. City of
+Mist and Legend in the Mist are complete.
 
 ## Installation
 

@@ -35,6 +35,14 @@ export interface GameStyleValues {
 export interface GameAssets {
 	root?: string;
 	images?: Record<string, string>;
+	/**
+	 * The typefaces the pack asks for, by family name as the tokens spell it,
+	 * to the file that carries the face. Writing :Otherscape showed the gap:
+	 * a pack can name a family in `--font-text-theme` but nothing loads it,
+	 * so a new game silently borrows whatever face another game's partial
+	 * happened to emit. Read from phase 4 on, with the images.
+	 */
+	fonts?: Record<string, string>;
 }
 
 export interface GamePack {
