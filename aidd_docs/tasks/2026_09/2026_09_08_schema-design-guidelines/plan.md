@@ -1,6 +1,6 @@
 ---
 objective: "Une règle écrite dit ce qu'un bloc et un pack doivent au schéma, un harnais la fait respecter, les six blocs s'y conforment, et la forme comme la polarité deviennent des données plutôt que du SCSS."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Le schéma dépositaire du design
