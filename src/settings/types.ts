@@ -1,7 +1,18 @@
-export type BrumesMode =
-	| "city-of-mist"
-	| "otherscape"
-	| "legend-in-the-mist";
+import {
+	DEFAULT_GAME_PACK_ID,
+	findGamePack,
+} from "../games/registry";
+import { logScope } from "../utils/logger";
+
+/**
+ * The identifier of a game pack, and the value written in the user's
+ * `data.json`. It was a closed union of three; it is now open, so that adding
+ * a game is adding a pack and nothing else. `normalizeMode` stays the only
+ * door in: it is what guarantees a saved value still resolves.
+ */
+export type BrumesMode = string;
+
+const modeLog = logScope("Games");
 
 export type LogLevel = "none" | "error" | "warn" | "info" | "debug";
 
@@ -58,7 +69,7 @@ export const DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES: LegendInTheMistCalloutA
 	};
 
 export const DEFAULT_SETTINGS: BrumesSettings = {
-	mode: "city-of-mist",
+	mode: DEFAULT_GAME_PACK_ID,
 	logLevel: "error",
 	lanternUrl: "https://lantern.ravenloft.fr",
 	features: {
@@ -106,15 +117,17 @@ export function sanitizeAliases(aliases: string[]): string[] {
 }
 
 export function normalizeMode(mode: unknown): BrumesMode {
-	if (mode === ":otherscape" || mode === "otherscape") {
-		return "otherscape";
+	// The colon was dropped from the identifier, not from the name.
+	const id = mode === ":otherscape" ? "otherscape" : mode;
+
+	if (findGamePack(id)) {
+		return id as BrumesMode;
 	}
 
-	if (
-		mode === "city-of-mist" ||
-		mode === "legend-in-the-mist"
-	) {
-		return mode;
+	if (typeof mode === "string" && mode.length > 0) {
+		modeLog.warn(
+			`No game pack answers to "${mode}", falling back on "${DEFAULT_GAME_PACK_ID}".`,
+		);
 	}
 
 	return DEFAULT_SETTINGS.mode;
