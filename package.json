@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-handbook",
 	"version": "2.1.4",
-	"description": "Theme and tools for Son of Oak's TTRPGs: City of Mist, Legend in the Mist and :Otherscape.",
+	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs --watch",
@@ -20,6 +20,7 @@
 	"keywords": [
 		"city of mist",
 		"legend in the mist",
+		"adrenaline system",
 		"ttrpg",
 		"roleplaying",
 		"game"

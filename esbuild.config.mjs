@@ -5,7 +5,7 @@ import { sassPlugin } from "esbuild-sass-plugin";
 import fs from "fs";
 import path from "path";
 
-const banner = `/* Brumes, a plugin to bring theme and tools for Son of Oak's TTRPGs: City of Mist, Legend in the Mist and :Otherscape. */`;
+const banner = `/* Handbook, game-specific themes and tools for Obsidian tabletop roleplaying vaults. */`;
 const outdir = "dist";
 const prod =
 	process.argv.includes("production") ||
