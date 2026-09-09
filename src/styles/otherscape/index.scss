@@ -1,5 +1,7 @@
 @use "./themes";
+@use "./challenges";
 
 .brumes--otherscape {
 	@include themes.cards;
+	@include challenges.profiles;
 }

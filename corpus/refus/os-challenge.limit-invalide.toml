@@ -1,0 +1,5 @@
+# attend: dégradé
+name = "Valid profile"
+[[limits]]
+name = "Too much"
+level = 9

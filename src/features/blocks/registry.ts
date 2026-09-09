@@ -13,6 +13,7 @@ import { themeCardBlock } from "../themeCards/block";
 import { themeKitBlock } from "../themeKits/block";
 import { BLOCK_SCOPE_CLASS } from "../modes/domModeClass";
 import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
+import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 
 const log = logScope("Blocks");
 
@@ -26,6 +27,8 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	comDangerBlock,
 	osThemeBlock,
 	osThemeKitBlock,
+	osChallengeBlock,
+	osPowerSetBlock,
 ];
 
 /**

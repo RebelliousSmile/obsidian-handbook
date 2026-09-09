@@ -1,0 +1,29 @@
+@mixin profiles {
+	.brumes-os-profile {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.8rem;
+		max-width: 100%;
+		overflow-wrap: anywhere;
+		padding: 1rem;
+		border: 2px solid var(--color-accent);
+		background: var(--background-primary-alt);
+	}
+	.brumes-os-profile--header,
+	.brumes-os-profile--description,
+	.brumes-os-profile--threats,
+	.brumes-os-profile--general-consequences { grid-column: 1 / -1; }
+	.brumes-os-profile h3 { margin: 0; text-transform: uppercase; }
+	.brumes-os-profile header { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; }
+	.brumes-os-profile header small { margin-inline-start: auto; }
+	.brumes-os-profile section { min-width: 0; border-top: 1px solid var(--color-accent); }
+	.brumes-os-profile h4 { margin: 0.45rem 0; letter-spacing: 0.08em; text-transform: uppercase; }
+	.brumes-os-profile ul { margin-block: 0.3rem; }
+	.brumes-os-profile--threat { padding: 0.45rem; border-inline-start: 3px solid var(--color-accent); }
+	body.brumes--variant-cairo & .brumes-os-profile { border-width: 1px 4px; }
+	body.brumes--variant-tokyo & .brumes-os-profile { border-inline-start-width: 0.7rem; box-shadow: 0.35rem 0.2rem 0 color-mix(in srgb, var(--color-accent) 35%, transparent); }
+	@media (max-width: 520px) {
+		.brumes-os-profile { grid-template-columns: minmax(0, 1fr); }
+		.brumes-os-profile > * { grid-column: 1; }
+	}
+}

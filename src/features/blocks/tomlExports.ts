@@ -18,6 +18,8 @@ import {
 } from "./copyAsToml";
 import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
 import { osThemeToToml } from "../osThemes/schema";
+import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
+import { osProfileToToml } from "../osChallenges/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -109,6 +111,20 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: osThemeToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "title_tag et theme_type sont requis"),
+	},
+	{
+		block: osChallengeBlock,
+		commandId: "copy-os-challenge-as-toml",
+		noun: ":Otherscape challenge",
+		toToml: osProfileToToml,
+		describeFailure: (source) => describeMissingPart(source, "name est requis"),
+	},
+	{
+		block: osPowerSetBlock,
+		commandId: "copy-os-power-set-as-toml",
+		noun: ":Otherscape power set",
+		toToml: osProfileToToml,
+		describeFailure: (source) => describeMissingPart(source, "name et type sont requis"),
 	},
 ];
 

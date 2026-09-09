@@ -31,6 +31,8 @@ export interface BrumesFeatureSettings {
 	comDangerParser: boolean;
 	osThemeParser: boolean;
 	osThemeKitParser: boolean;
+	osChallengeParser: boolean;
+	osPowerSetParser: boolean;
 }
 
 export interface CityOfMistCalloutAliases {
@@ -93,6 +95,8 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		comDangerParser: true,
 		osThemeParser: true,
 		osThemeKitParser: true,
+		osChallengeParser: true,
+		osPowerSetParser: true,
 	},
 	calloutAliases: {
 		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,
