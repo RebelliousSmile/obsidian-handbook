@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { metaSourceLine } from "../blocks/schemaValues";
 import { BlockZone, renderZones } from "../blocks/shape";
 import { renderRatedLimit, renderTagSpan } from "../blocks/tagSpan";
@@ -39,7 +40,7 @@ function addLine(
 ): HTMLElement {
 	const line = doc.createElement("div");
 	line.classList.add(className);
-	line.textContent = text;
+	renderProse(line, text, doc);
 	parent.appendChild(line);
 	return line;
 }
@@ -75,7 +76,7 @@ export function renderChallenge(
 
 			for (const paragraph of data.description) {
 				const p = doc.createElement("p");
-				p.textContent = paragraph;
+				renderProse(p, paragraph, doc);
 				description.appendChild(p);
 			}
 
@@ -135,7 +136,7 @@ export function renderChallenge(
 				if (might.vulnerability) {
 					const vulnerability = doc.createElement("span");
 					vulnerability.classList.add("brumes-challenge--might-vulnerability");
-					vulnerability.textContent = might.vulnerability;
+					renderProse(vulnerability, might.vulnerability, doc);
 					aspect.appendChild(vulnerability);
 				}
 			}
@@ -178,7 +179,7 @@ export function renderChallenge(
 				if (feature.effect) {
 					const effect = doc.createElement("span");
 					effect.classList.add("brumes-challenge--feature-effect");
-					effect.textContent = feature.effect;
+					renderProse(effect, feature.effect, doc);
 					item.appendChild(effect);
 				}
 
@@ -216,7 +217,7 @@ export function renderChallenge(
 					for (const consequence of threat.consequences) {
 						const line = doc.createElement("li");
 						line.classList.add("brumes-challenge--consequence");
-						line.textContent = consequence;
+						renderProse(line, consequence, doc);
 						consequences.appendChild(line);
 					}
 
@@ -239,7 +240,7 @@ export function renderChallenge(
 			for (const consequence of data.generalConsequences) {
 				const item = doc.createElement("li");
 				item.classList.add("brumes-challenge--consequence");
-				item.textContent = consequence;
+				renderProse(item, consequence, doc);
 				list.appendChild(item);
 			}
 
@@ -266,7 +267,7 @@ export function renderChallenge(
 
 				const text = doc.createElement("span");
 				text.classList.add("brumes-challenge--secret-text");
-				text.textContent = secret.text;
+				renderProse(text, secret.text, doc);
 				item.appendChild(text);
 
 				list.appendChild(item);

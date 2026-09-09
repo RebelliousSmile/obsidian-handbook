@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { metaSourceLine } from "../blocks/schemaValues";
 import { BlockZone, renderZones } from "../blocks/shape";
 import { renderRatedLimit } from "../blocks/tagSpan";
@@ -54,7 +55,7 @@ function renderSpectrum(spectrum: ComSpectrum, doc: Document): HTMLElement {
 	if (spectrum.outcome) {
 		const outcome = doc.createElement("span");
 		outcome.classList.add("brumes-com-danger--outcome");
-		outcome.textContent = spectrum.outcome;
+		renderProse(outcome, spectrum.outcome, doc);
 		item.appendChild(outcome);
 	}
 
@@ -82,7 +83,7 @@ function renderMove(move: ComDangerMove, doc: Document): HTMLElement {
 
 	const text = doc.createElement("span");
 	text.classList.add("brumes-com-danger--move-text");
-	text.textContent = move.text;
+	renderProse(text, move.text, doc);
 	item.appendChild(text);
 
 	return item;
@@ -153,7 +154,7 @@ export function renderComDanger(
 
 			for (const paragraph of data.description) {
 				const p = doc.createElement("p");
-				p.textContent = paragraph;
+				renderProse(p, paragraph, doc);
 				description.appendChild(p);
 			}
 

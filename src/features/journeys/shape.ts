@@ -42,5 +42,10 @@ export const journeyShape: BlockShape = {
 			family: SECTION,
 			optional: true,
 		},
+		{
+			name: "warnings",
+			holds: "the lines the parser could not make sense of, or judged worth a second look",
+			optional: true,
+		},
 	],
 };

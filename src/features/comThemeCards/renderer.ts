@@ -1,3 +1,4 @@
+import { renderProse } from "../blocks/proseTags";
 import { renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import {
@@ -31,7 +32,7 @@ function addLine(
 ): HTMLElement {
 	const line = doc.createElement("div");
 	line.classList.add(className);
-	line.textContent = text;
+	renderProse(line, text, doc);
 	parent.appendChild(line);
 	return line;
 }
@@ -127,7 +128,7 @@ export function renderComThemeCard(
 
 			const text = doc.createElement("span");
 			text.classList.add("brumes-com-theme-card--drive-text");
-			text.textContent = data.drive.text;
+			renderProse(text, data.drive.text, doc);
 			drive.appendChild(text);
 
 			if (data.drive.mismatched) {
@@ -173,7 +174,7 @@ export function renderComThemeCard(
 				if (improvement.effect) {
 					const effect = doc.createElement("span");
 					effect.classList.add("brumes-com-theme-card--improvement-effect");
-					effect.textContent = improvement.effect;
+					renderProse(effect, improvement.effect, doc);
 					item.appendChild(effect);
 				}
 

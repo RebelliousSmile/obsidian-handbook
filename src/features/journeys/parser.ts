@@ -16,13 +16,16 @@ export interface JourneyData {
 	benefits?: string;
 	consequences: string[];
 	vignettes: JourneyVignette[];
+	/** Malformed or suspicious input, surfaced instead of dropped silently. */
+	warnings: string[];
 }
 
 const JOURNEY_TYPES: JourneyType[] = ["landscape", "occasion", "undertaking"];
 const TYPE_PREFIX = "journey - ";
 const TAGS_PREFIX = "tags:";
 const BENEFITS_PREFIX = "benefits:";
-const CONSEQUENCES_KEYWORD = "CONSEQUENCES";
+/** The books print `CONSEQUENCES`; some profiles print `GENERAL CONSEQUENCES`. */
+const CONSEQUENCES_KEYWORDS = ["CONSEQUENCES", "GENERAL CONSEQUENCES"];
 const VIGNETTE_PREFIX = "VIGNETTE ";
 const TRIGGER_SEPARATOR = " : ";
 
@@ -39,10 +42,19 @@ function readType(line: string): JourneyType | null {
 		: (candidate as JourneyType);
 }
 
+/** A brace-wrapped entry has no other legitimate meaning here: unwrap it. */
+function unwrapBraces(entry: string): string {
+	if (entry.length >= 2 && entry.startsWith("{") && entry.endsWith("}")) {
+		return entry.slice(1, -1).trim();
+	}
+
+	return entry;
+}
+
 function splitList(value: string): string[] {
 	return value
 		.split(",")
-		.map((entry) => entry.trim())
+		.map((entry) => unwrapBraces(entry.trim()))
 		.filter((entry) => entry.length > 0);
 }
 
@@ -70,7 +82,11 @@ export function parseJourney(source: string): JourneyData | null {
 
 	const name = lines[1];
 
-	if (!name || name === CONSEQUENCES_KEYWORD || name.startsWith(VIGNETTE_PREFIX)) {
+	if (
+		!name ||
+		CONSEQUENCES_KEYWORDS.indexOf(name) !== -1 ||
+		name.startsWith(VIGNETTE_PREFIX)
+	) {
 		return null;
 	}
 
@@ -81,10 +97,15 @@ export function parseJourney(source: string): JourneyData | null {
 		tags: [],
 		consequences: [],
 		vignettes: [],
+		warnings: [],
 	};
 
+	let sawConsequencesKeyword = false;
+	let warnedSharedConsequenceBeforeKeyword = false;
+
 	for (const line of lines.slice(2)) {
-		if (line === CONSEQUENCES_KEYWORD) {
+		if (CONSEQUENCES_KEYWORDS.indexOf(line) !== -1) {
+			sawConsequencesKeyword = true;
 			continue;
 		}
 
@@ -94,6 +115,9 @@ export function parseJourney(source: string): JourneyData | null {
 
 			if (index === -1) {
 				data.vignettes.push({ name: rest, consequences: [] });
+				data.warnings.push(
+					`Vignette "${rest}" has no trigger: is the " : " separator missing?`,
+				);
 			} else {
 				data.vignettes.push({
 					name: rest.slice(0, index).trim(),
@@ -119,6 +143,13 @@ export function parseJourney(source: string): JourneyData | null {
 			if (current) {
 				current.consequences.push(consequence);
 			} else {
+				if (!sawConsequencesKeyword && !warnedSharedConsequenceBeforeKeyword) {
+					warnedSharedConsequenceBeforeKeyword = true;
+					data.warnings.push(
+						'A consequence was written before any "CONSEQUENCES" (or "GENERAL CONSEQUENCES") heading.',
+					);
+				}
+
 				data.consequences.push(consequence);
 			}
 
@@ -131,8 +162,16 @@ export function parseJourney(source: string): JourneyData | null {
 			data.tags = splitList(line.slice(TAGS_PREFIX.length));
 		} else if (lowered.startsWith(BENEFITS_PREFIX)) {
 			data.benefits = line.slice(BENEFITS_PREFIX.length).trim();
+
+			if (data.type !== "undertaking") {
+				data.warnings.push(
+					`Benefits are only printed on Undertaking journeys, but this one is a ${data.type}.`,
+				);
+			}
 		} else if (line.startsWith(":")) {
 			data.description.push(line.slice(1).trim());
+		} else {
+			data.warnings.push(`Line not understood: "${line}"`);
 		}
 	}
 
