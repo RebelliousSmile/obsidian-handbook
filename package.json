@@ -12,6 +12,7 @@
 		"assert:override": "node tools/assert-override.mjs",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",
+		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",
 		"assert:adrenaline-documents": "node tools/assert-adrenaline-documents.mjs",
 		"assert:adrenaline-source": "node tools/assert-adrenaline-source.mjs",
 		"assert:adrenaline-theme": "node tools/assert-adrenaline-theme.mjs",
