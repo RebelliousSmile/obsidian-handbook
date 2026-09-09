@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-09-10
+
+### Added
+
+- Load personal game packs dropped in `<plugin folder>/packs/*.json` into the registry at startup, merged with the declared games; a faulty pack (invalid id, id collision with a declared or another custom pack, unreadable field) is dropped alone and logged once per session, named by its own filename.
+- Resolve a saved `mode` pointing at a vault-dropped pack on the very first render: custom-pack loading now runs in `onload()` ahead of `loadSettings()`, and `gamePackClasses()`/`gameVariantClasses()` no longer freeze their class lists at import time.
+- Add `pnpm assert:custom-packs`, a durable harness covering the missing-packs-folder case, a valid/invalid/colliding trio, a two-custom-packs id collision, and the full lifecycle order.
+
 ## [2.4.0] - 2026-09-09
 
 ### Added
