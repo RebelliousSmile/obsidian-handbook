@@ -1,0 +1,12 @@
+name = "Neon Exorcist"
+category = "MYSTICS & MEDIUMS"
+description = "The rites still work."
+loadout = [ "salt-line projector", "prayer deck" ]
+[[theme_kits]]
+title_tag = "Rites Of The Cold Signal"
+category = "RITUAL"
+[[choices]]
+title_tag = "Seminary Dropout"
+category = "PERSONALITY"
+[meta]
+publication_type = "homebrew"

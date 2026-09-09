@@ -1,0 +1,3 @@
+# attend: dégradé
+name = "Valid item"
+weakness_tag = [ "not", "a string" ]

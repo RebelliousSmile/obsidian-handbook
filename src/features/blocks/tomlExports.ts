@@ -20,6 +20,8 @@ import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
 import { osThemeToToml } from "../osThemes/schema";
 import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 import { osProfileToToml } from "../osChallenges/schema";
+import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreation/block";
+import { osCreationToToml } from "../osCharacterCreation/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -125,6 +127,20 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		noun: ":Otherscape power set",
 		toToml: osProfileToToml,
 		describeFailure: (source) => describeMissingPart(source, "name et type sont requis"),
+	},
+	{
+		block: osCharacterTropeBlock,
+		commandId: "copy-os-character-trope-as-toml",
+		noun: ":Otherscape character trope",
+		toToml: osCreationToToml,
+		describeFailure: (source) => describeMissingPart(source, "name est requis"),
+	},
+	{
+		block: osLoadoutItemBlock,
+		commandId: "copy-os-loadout-item-as-toml",
+		noun: ":Otherscape loadout item",
+		toToml: osCreationToToml,
+		describeFailure: (source) => describeMissingPart(source, "name est requis"),
 	},
 ];
 

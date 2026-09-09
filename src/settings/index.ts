@@ -717,13 +717,15 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.addOtherscapeToggle(section, "Kits de thème", "os-theme-kit", "osThemeKitParser", isActive);
 		this.addOtherscapeToggle(section, "Challenges", "os-challenge", "osChallengeParser", isActive);
 		this.addOtherscapeToggle(section, "Power Sets", "os-power-set", "osPowerSetParser", isActive);
+		this.addOtherscapeToggle(section, "Tropes de personnage", "os-character-trope", "osCharacterTropeParser", isActive);
+		this.addOtherscapeToggle(section, "Objets d'équipement", "os-loadout-item", "osLoadoutItemParser", isActive);
 	}
 
 	private addOtherscapeToggle(
 		section: SettingGroup,
 		name: string,
 		blockId: string,
-		flag: "osThemeParser" | "osThemeKitParser" | "osChallengeParser" | "osPowerSetParser",
+		flag: "osThemeParser" | "osThemeKitParser" | "osChallengeParser" | "osPowerSetParser" | "osCharacterTropeParser" | "osLoadoutItemParser",
 		isActive: boolean,
 	) {
 		section.addSetting((setting) => {
