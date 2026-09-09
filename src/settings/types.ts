@@ -29,6 +29,8 @@ export interface BrumesFeatureSettings {
 	themeKitParser: boolean;
 	comThemeCardParser: boolean;
 	comDangerParser: boolean;
+	osThemeParser: boolean;
+	osThemeKitParser: boolean;
 }
 
 export interface CityOfMistCalloutAliases {
@@ -89,6 +91,8 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		themeKitParser: true,
 		comThemeCardParser: true,
 		comDangerParser: true,
+		osThemeParser: true,
+		osThemeKitParser: true,
 	},
 	calloutAliases: {
 		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,

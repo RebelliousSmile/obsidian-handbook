@@ -1,0 +1,5 @@
+# attend: dégradé
+title_tag = "Still here"
+theme_type = "noise"
+upgrade = 7
+decay = "two"

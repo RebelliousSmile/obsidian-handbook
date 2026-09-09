@@ -1,0 +1,12 @@
+title_tag = "The Debt I Never Paid"
+theme_type = "self"
+category = "AFFILIATION"
+power_tags = [ "they still take my call", "~{knows what the favour was worth}" ]
+weakness_tags = [ "cannot refuse when they ask" ]
+quest = "Settle the debt on my own terms."
+upgrade = 2
+decay = 1
+
+[meta]
+publication_type = "homebrew"
+authors = [ "schema-in-the-mist contributors" ]

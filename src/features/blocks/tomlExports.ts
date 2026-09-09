@@ -16,6 +16,8 @@ import {
 	loadCopyAsTomlCommand,
 	TomlExport,
 } from "./copyAsToml";
+import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
+import { osThemeToToml } from "../osThemes/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -91,6 +93,22 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 				source,
 				"it must open with the name and hold at least one section",
 			),
+	},
+	{
+		block: osThemeBlock,
+		commandId: "copy-os-theme-as-toml",
+		noun: ":Otherscape theme",
+		toToml: osThemeToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "title_tag et theme_type sont requis"),
+	},
+	{
+		block: osThemeKitBlock,
+		commandId: "copy-os-theme-kit-as-toml",
+		noun: ":Otherscape theme kit",
+		toToml: osThemeToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "title_tag et theme_type sont requis"),
 	},
 ];
 

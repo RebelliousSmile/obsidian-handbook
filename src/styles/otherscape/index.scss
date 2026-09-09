@@ -1,0 +1,5 @@
+@use "./themes";
+
+.brumes--otherscape {
+	@include themes.cards;
+}

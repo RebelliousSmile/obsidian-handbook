@@ -1,0 +1,44 @@
+@mixin cards {
+	.brumes-os-theme {
+		--os-card-accent: var(--color-accent);
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 0.75rem 1rem;
+		max-width: 100%;
+		overflow: hidden;
+		padding: 1rem;
+		border: 2px solid var(--os-card-accent);
+		background: var(--background-primary-alt);
+		box-shadow: 0.35rem 0.35rem 0 color-mix(in srgb, var(--os-card-accent) 30%, transparent);
+	}
+
+	.brumes-os-theme--self { --os-card-accent: var(--brumes-theme-self, var(--color-red)); }
+	.brumes-os-theme--mythos { --os-card-accent: var(--brumes-theme-mythos, var(--color-purple)); }
+	.brumes-os-theme--noise { --os-card-accent: var(--brumes-theme-noise, var(--color-blue)); }
+	.brumes-os-theme--crew { --os-card-accent: var(--color-accent); }
+
+	.brumes-os-theme--header,
+	.brumes-os-theme--quest,
+	.brumes-os-theme--tracks { grid-column: 1 / -1; }
+	.brumes-os-theme--type {
+		font-weight: 800;
+		letter-spacing: 0.12em;
+		color: var(--os-card-accent);
+	}
+	.brumes-os-theme h3 { margin: 0.2rem 0; text-transform: uppercase; }
+	.brumes-os-theme ul { margin: 0; padding: 0; list-style: none; }
+	.brumes-os-theme li { margin-block: 0.35rem; }
+	.brumes-os-theme--weakness-tags { border-inline-start: 2px solid var(--os-card-accent); padding-inline-start: 0.75rem; }
+	.brumes-os-theme--tracks { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; border-top: 1px solid var(--os-card-accent); padding-top: 0.6rem; }
+	.brumes-os-theme--track { display: flex; gap: 0.35rem; align-items: center; font-weight: 700; }
+	.brumes-os-theme--track-mark { color: var(--os-card-accent); }
+
+	body.brumes--variant-cairo & .brumes-os-theme { border-width: 1px 3px; box-shadow: 0.25rem 0.25rem 0 var(--os-card-accent); }
+	body.brumes--variant-tokyo & .brumes-os-theme { border-inline-start-width: 0.6rem; box-shadow: 0.45rem 0.2rem 0 color-mix(in srgb, var(--os-card-accent) 35%, transparent); }
+
+	@media (max-width: 520px) {
+		.brumes-os-theme { grid-template-columns: minmax(0, 1fr); }
+		.brumes-os-theme > * { grid-column: 1; min-width: 0; }
+	}
+}

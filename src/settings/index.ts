@@ -712,10 +712,34 @@ export class BrumesSettingTab extends PluginSettingTab {
 	}
 
 	private renderOtherscapeSettings(section: SettingGroup) {
+		const isActive = this.plugin.settings.mode === "otherscape";
+		this.addOtherscapeToggle(section, "Thèmes", "os-theme", "osThemeParser", isActive);
+		this.addOtherscapeToggle(section, "Kits de thème", "os-theme-kit", "osThemeKitParser", isActive);
+	}
+
+	private addOtherscapeToggle(
+		section: SettingGroup,
+		name: string,
+		blockId: string,
+		flag: "osThemeParser" | "osThemeKitParser",
+		isActive: boolean,
+	) {
 		section.addSetting((setting) => {
-			setting.setName("Nothing yet!").setDesc(
-				":Otherscape support is planned but not implemented yet.", // eslint-disable-line obsidianmd/ui/sentence-case
-			);
+			setting
+				.setName(name)
+				.setDesc(`Active le bloc TOML ${blockId} et son insertion.`)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features[flag])
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(async () => {
+								this.plugin.settings.features[flag] = value;
+								await this.plugin.saveSettings({ refreshMarkdown: true });
+							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
+						}),
+				);
 		});
 	}
 
