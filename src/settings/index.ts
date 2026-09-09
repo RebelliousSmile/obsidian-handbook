@@ -1,7 +1,12 @@
 import { App, Notice, PluginSettingTab, SettingGroup } from "obsidian";
 import BrumesPlugin from "../BrumesPlugin";
 import { ColourScheme, LogLevel, sanitizeAliases } from "./types";
-import { GAME_PACKS, resolveGamePack } from "../games/registry";
+import {
+	GAME_PACKS,
+	resolveGamePack,
+	resolveGameRegistration,
+} from "../games/registry";
+import { resolveGameVariant } from "../games/variants";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
 import {
@@ -57,6 +62,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					);
 				});
 		});
+		this.renderGameVariant(generalSection);
 		this.renderPolarities(generalSection);
 		this.renderMigrationNotice(generalSection);
 		this.renderAssetSetup(generalSection);
@@ -88,6 +94,41 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAdvancedSection(advancedSection);
 	}
 
+	private renderGameVariant(section: SettingGroup) {
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const variants = registration.variants ?? [];
+		if (variants.length < 2) {
+			return;
+		}
+
+		const active = resolveGameVariant(
+			registration,
+			this.plugin.settings.gameVariants[registration.pack.id],
+		);
+		section.addSetting((setting) => {
+			setting
+				.setName("Univers")
+				.setDesc("Choisissez l'identité visuelle appliquée à tout le coffre.")
+				.addDropdown((drop) => {
+					for (const variant of variants) {
+						drop.addOption(variant.id, variant.label);
+					}
+					drop.setValue(active?.id ?? "").onChange((value) => {
+						this.runTask(
+							async () => {
+								this.plugin.settings.gameVariants[registration.pack.id] =
+									value;
+								await this.plugin.saveSettings({ refreshMarkdown: true });
+								this.display();
+							},
+							SETTINGS_SAVE_LOG_MESSAGE,
+							SETTINGS_SAVE_NOTICE,
+						);
+					});
+				});
+		});
+	}
+
 	/**
 	 * Say which colour schemes the active game actually has.
 	 *
@@ -97,11 +138,20 @@ export class BrumesSettingTab extends PluginSettingTab {
 	 * next to the game rather than in a changelog.
 	 */
 	private renderPolarities(section: SettingGroup) {
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const variant = resolveGameVariant(
+			registration,
+			this.plugin.settings.gameVariants[registration.pack.id],
+		);
+		const polarities = variant?.polarities ?? registration.pack.polarities ?? [];
+
 		section.addSetting((setting) => {
-			setting
+			const configured = setting
 				.setName("Colour scheme")
-				.setDesc(this.createPolarityDescription())
-				.addDropdown((drop) =>
+				.setDesc(this.createPolarityDescription());
+
+			if (polarities.length > 1) {
+				configured.addDropdown((drop) =>
 					drop
 						.addOption("obsidian", "Follow Obsidian")
 						.addOption("light", "Light")
@@ -119,12 +169,17 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
+			}
 		});
 	}
 
 	private createPolarityDescription(): string {
-		const pack = resolveGamePack(this.plugin.settings.mode);
-		const polarities = pack.polarities ?? [];
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const variant = resolveGameVariant(
+			registration,
+			this.plugin.settings.gameVariants[registration.pack.id],
+		);
+		const polarities = variant?.polarities ?? registration.pack.polarities ?? [];
 
 		if (polarities.length === 0) {
 			return "The active game brings no colour scheme of its own: it dresses your notes with its fonts and leaves the colours to the theme you are running.";

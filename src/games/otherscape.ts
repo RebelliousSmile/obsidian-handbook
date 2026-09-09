@@ -1,4 +1,5 @@
 import { GamePack } from "./types";
+import { GameVariant } from "./variants";
 import { accent, palette, tokens } from "./tokens";
 
 /**
@@ -207,3 +208,102 @@ export const otherscapePack: GamePack = {
 		images: {},
 	},
 };
+
+export const otherscapeVariants: GameVariant[] = [
+	{
+		id: "metro",
+		label: "Metro",
+		style: {},
+		polarities: ["light", "dark"],
+	},
+	{
+		id: "cairo",
+		label: "Cairo",
+		polarities: ["light", "dark"],
+		style: {
+			light: {
+				note: tokens(accent("#A82D51"), {
+					"--background-primary": "#F4F0E4",
+					"--background-primary-alt": "#E9E0C9",
+					"--text-normal": "#17342F",
+					"--text-muted": "#52655C",
+					"--text-highlight-bg": "#D2BB62",
+					"--h1-color": "#17342F",
+					"--h2-color": "#A82D51",
+					"--h3-color": "#7B682E",
+					"--link-color": "#8C2444",
+					"--tag-color": "#17342F",
+					"--tag-background": "#D2BB62",
+				}),
+				workspace: {
+					"--background-secondary": "#E9E0C9",
+					"--brumes-root-split-background": "#F0EADB",
+				},
+			},
+			dark: {
+				note: tokens(accent("#D54872"), {
+					"--background-primary": "#102B27",
+					"--background-primary-alt": "#193A33",
+					"--text-normal": "#F0E8D5",
+					"--text-muted": "#B5AD94",
+					"--text-highlight-bg": "#D2BB6238",
+					"--h1-color": "#D2BB62",
+					"--h2-color": "#E0527B",
+					"--h3-color": "#D2BB62",
+					"--link-color": "#E0527B",
+					"--tag-color": "#102B27",
+					"--tag-background": "#D2BB62",
+				}),
+				workspace: {
+					"--background-secondary": "#0C211E",
+					"--brumes-root-split-background": "#0A1B18",
+				},
+			},
+		},
+	},
+	{
+		id: "tokyo",
+		label: "Tokyo",
+		polarities: ["light", "dark"],
+		style: {
+			light: {
+				note: tokens(accent("#D32670"), {
+					"--background-primary": "#F5F5EF",
+					"--background-primary-alt": "#E9EBE8",
+					"--text-normal": "#111833",
+					"--text-muted": "#555C73",
+					"--text-highlight-bg": "#B8F53C",
+					"--h1-color": "#111833",
+					"--h2-color": "#D32670",
+					"--h3-color": "#3D6217",
+					"--link-color": "#B4145A",
+					"--tag-color": "#111833",
+					"--tag-background": "#B8F53C",
+				}),
+				workspace: {
+					"--background-secondary": "#E4E6E4",
+					"--brumes-root-split-background": "#EFF0EB",
+				},
+			},
+			dark: {
+				note: tokens(accent("#F02B79"), {
+					"--background-primary": "#090F2C",
+					"--background-primary-alt": "#11183D",
+					"--text-normal": "#EDF0F4",
+					"--text-muted": "#A1A8BD",
+					"--text-highlight-bg": "#B8FF1930",
+					"--h1-color": "#B8FF19",
+					"--h2-color": "#F02B79",
+					"--h3-color": "#B8FF19",
+					"--link-color": "#F02B79",
+					"--tag-color": "#090F2C",
+					"--tag-background": "#B8FF19",
+				}),
+				workspace: {
+					"--background-secondary": "#070B22",
+					"--brumes-root-split-background": "#05091D",
+				},
+			},
+		},
+	},
+];
