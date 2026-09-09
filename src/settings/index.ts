@@ -56,8 +56,8 @@ export class BrumesSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
-							// eslint-disable-next-line @typescript-eslint/no-deprecated
-							this.display();
+									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+									this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
@@ -93,6 +93,13 @@ export class BrumesSettingTab extends PluginSettingTab {
 		otherscapeSection.setHeading(":Otherscape");
 		this.renderOtherscapeSettings(otherscapeSection);
 
+		const adrenalineSection = this.createSection(
+			containerEl,
+			this.plugin.settings.mode !== "adrenaline",
+		);
+		adrenalineSection.setHeading("Adrenaline System");
+		this.renderAdrenalineSettings(adrenalineSection);
+
 		const advancedSection = this.createSection(containerEl);
 		advancedSection.setHeading("Advanced");
 		this.renderAdvancedSection(advancedSection);
@@ -123,7 +130,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 								this.plugin.settings.gameVariants[registration.pack.id] =
 									value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
-								// eslint-disable-next-line @typescript-eslint/no-deprecated
+								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 								this.display();
 							},
 							SETTINGS_SAVE_LOG_MESSAGE,
@@ -238,7 +245,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						this.runTask(
 							async () => {
 								await this.plugin.reloadStyleSources();
-								// eslint-disable-next-line @typescript-eslint/no-deprecated
+								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 								this.display();
 							},
 							"Failed to look for the illustration files",
@@ -365,7 +372,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									this.plugin.settings.features.lanternIntegration =
 										value;
 									await this.plugin.saveSettings();
-									// eslint-disable-next-line @typescript-eslint/no-deprecated
+									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 									this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
@@ -733,6 +740,39 @@ export class BrumesSettingTab extends PluginSettingTab {
 		name: string,
 		blockId: string,
 		flag: "osThemeParser" | "osThemeKitParser" | "osChallengeParser" | "osPowerSetParser" | "osCharacterTropeParser" | "osLoadoutItemParser",
+		isActive: boolean,
+	) {
+		section.addSetting((setting) => {
+			setting
+				.setName(name)
+				.setDesc(`Active le bloc TOML ${blockId} et son insertion.`)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features[flag])
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(async () => {
+								this.plugin.settings.features[flag] = value;
+								await this.plugin.saveSettings({ refreshMarkdown: true });
+							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
+						}),
+				);
+		});
+	}
+
+	private renderAdrenalineSettings(section: SettingGroup) {
+		const isActive = this.plugin.settings.mode === "adrenaline";
+		this.addAdrenalineToggle(section, "Fiche PJ", "adrenaline-pj", "adrenalinePjParser", isActive);
+		this.addAdrenalineToggle(section, "Fiche PNJ", "adrenaline-pnj", "adrenalinePnjParser", isActive);
+		this.addAdrenalineToggle(section, "Fiche monstre", "adrenaline-monstre", "adrenalineMonsterParser", isActive);
+	}
+
+	private addAdrenalineToggle(
+		section: SettingGroup,
+		name: string,
+		blockId: string,
+		flag: "adrenalinePjParser" | "adrenalinePnjParser" | "adrenalineMonsterParser",
 		isActive: boolean,
 	) {
 		section.addSetting((setting) => {

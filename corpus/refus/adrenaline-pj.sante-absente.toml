@@ -1,0 +1,11 @@
+# attend: null
+nom = "Sans santé"
+[caracteristiques]
+for = 30
+con = 30
+dex = 30
+rap = 30
+log = 30
+vol = 30
+per = 30
+cha = 30

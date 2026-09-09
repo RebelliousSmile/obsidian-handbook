@@ -3,7 +3,7 @@
 	"name": "Handbook",
 	"version": "2.1.4",
 	"minAppVersion": "1.12.7",
-	"description": "Theme and tools for Son of Oak's TTRPGs: City of Mist, Legend in the Mist and :Otherscape.",
+	"description": "Game-specific themes and tools for tabletop roleplaying vaults.",
 	"author": "François-Xavier Guillois",
 	"authorUrl": "https://github.com/RebelliousSmile/obsidian-handbook",
 	"isDesktopOnly": false

@@ -1,0 +1,9 @@
+@use "./pj";
+@use "./pnj";
+@use "./monstre";
+
+.brumes--adrenaline {
+	@include pj.sheet;
+	@include pnj.sheet;
+	@include monstre.sheet;
+}

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import type BrumesPlugin from "../src/BrumesPlugin";
 import { loadBrumesBlocks } from "../src/features/blocks/registry";
-import { buildGameStyle } from "../src/features/modes/styleElement";
 import {
-	DEFAULT_SETTINGS,
-	normalizeSettings,
-} from "../src/settings/types";
+	buildGameStyle,
+	GameStyleWriter,
+} from "../src/features/modes/styleElement";
+import { adrenalinePack } from "../src/games/adrenaline";
+import { resolveGamePack } from "../src/games/registry";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../src/settings/types";
 
 const MODE_CLASS = "brumes--legend-in-the-mist";
 const BLOCK_SCOPE_CLASS = "brumes-block-scope";
@@ -83,8 +85,68 @@ assert.match(forcedDarkCss, /--forced-dark: dark/);
 assert.doesNotMatch(forcedDarkCss, /\.theme-dark/);
 assert.doesNotMatch(forcedDarkCss, /--forced-light/);
 
+assert.equal(resolveGamePack("adrenaline"), adrenalinePack);
+assert.deepEqual(adrenalinePack.polarities, ["light", "dark"]);
+
+const adrenalineLightCss = buildGameStyle(
+	adrenalinePack.id,
+	adrenalinePack.style,
+	true,
+	adrenalinePack.polarities,
+	"light",
+);
+const adrenalineDarkCss = buildGameStyle(
+	adrenalinePack.id,
+	adrenalinePack.style,
+	true,
+	adrenalinePack.polarities,
+	"dark",
+);
+
+assert.match(adrenalineLightCss, /\.brumes--colour-light/);
+assert.match(adrenalineLightCss, /--background-primary: #F0EAE1/);
+assert.doesNotMatch(adrenalineLightCss, /--background-primary: #160D0B/);
+assert.match(adrenalineDarkCss, /\.brumes--colour-dark/);
+assert.match(adrenalineDarkCss, /--background-primary: #160D0B/);
+assert.doesNotMatch(adrenalineDarkCss, /--background-primary: #F0EAE1/);
+assert.doesNotMatch(adrenalineLightCss, /body\.theme-light/);
+assert.doesNotMatch(adrenalineDarkCss, /body\.theme-dark/);
+
+class StyleElement {
+	id = "";
+	textContent = "";
+	remove(): void {
+		styleElement = null;
+	}
+}
+
+let styleElement: StyleElement | null = null;
+(globalThis as { HTMLStyleElement?: unknown }).HTMLStyleElement = StyleElement;
+const styleDocument = {
+	getElementById: () => styleElement,
+	createElement: () => new StyleElement(),
+	head: {
+		appendChild: (element: StyleElement) => {
+			styleElement = element;
+		},
+	},
+};
+const writer = new GameStyleWriter();
+writer.addDocument(styleDocument as unknown as Document);
+writer.applyGameStyle(adrenalineLightCss);
+assert.equal(styleElement?.textContent, adrenalineLightCss);
+writer.applyGameStyle(".brumes--city-of-mist { --city-only: true; }");
+assert.equal(
+	styleElement?.textContent,
+	".brumes--city-of-mist { --city-only: true; }",
+);
+assert.doesNotMatch(styleElement?.textContent ?? "", /adrenaline/);
+
 assert.equal(normalizeSettings(undefined).colourScheme, "obsidian");
-assert.equal(normalizeSettings({ colourScheme: "light" }).colourScheme, "light");
+assert.equal(
+	normalizeSettings({ colourScheme: "light" }).colourScheme,
+	"light",
+);
 assert.equal(normalizeSettings({ colourScheme: "dark" }).colourScheme, "dark");
 assert.equal(normalizeSettings(undefined).gameVariants.otherscape, "metro");
 assert.equal(
@@ -109,7 +171,8 @@ class El {
 	title = "";
 	private classes = new Set<string>();
 	classList = {
-		add: (...names: string[]) => names.forEach((name) => this.classes.add(name)),
+		add: (...names: string[]) =>
+			names.forEach((name) => this.classes.add(name)),
 		contains: (name: string) => this.classes.has(name),
 	};
 
@@ -123,11 +186,7 @@ const documentStub = {
 	createElement: () => new El(),
 };
 
-type Processor = (
-	source: string,
-	el: El,
-	ctx: { sourcePath: string },
-) => void;
+type Processor = (source: string, el: El, ctx: { sourcePath: string }) => void;
 const processors = new Map<string, Processor>();
 const plugin = {
 	settings: {

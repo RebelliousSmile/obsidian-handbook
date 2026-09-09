@@ -1,0 +1,69 @@
+nom = "Le mécanicien du dépôt"
+niveauDeDanger = 4
+description = "Massif, les mains noires jusqu'aux poignets."
+[identite]
+nationalite = "Portugaise"
+genre = "Homme"
+age = 52
+[caracteristiques]
+for = 30
+con = 40
+dex = 40
+rap = 30
+log = 20
+vol = 40
+per = 30
+cha = 20
+[sante.physique.superficiel]
+base = 6
+[sante.physique.leger]
+base = 13
+[sante.physique.grave]
+base = 18
+[sante.physique.profond]
+base = 23
+[sante.mental.superficiel]
+base = 6
+[sante.mental.leger]
+base = 12
+[sante.mental.grave]
+base = 17
+[sante.mental.profond]
+base = 22
+[protections.physiques]
+solidite = 6
+[protections.mentales]
+solidite = 6
+[equipement]
+possessions = ["Caisse à outils", "Thermos"]
+[[equipement.armesPhysiques]]
+nom = "Clé à molette"
+pourcentage = 50
+desDeDegats = 2
+type = "Contact"
+[[formations]]
+type = "professionnelle"
+nom = "Mécanique lourde"
+pourcentage = 25
+[[competences]]
+nom = "Bricolage"
+specialite = "Mécanique"
+pourcentage = 45
+caracteristique = "dex"
+total = 85
+avantages = ["Équipement favori"]
+[narratif]
+role = "Ressource et obstacle"
+attitude = "Méfiant, puis loyal."
+personnalite = ["Taiseux", "Fiable"]
+historique = "Il entretient le dernier moteur du secteur."
+evolutionPossible = "Suit le groupe s'il perd son dépôt."
+interpretation = ["Ne lève jamais les yeux de son travail."]
+repliques = ["Vous le rendez plein."]
+notesMj = ["Cache sa sœur dans l'arrière-boutique."]
+[meta]
+typeDePublication = "officiel"
+source = "Zombiology — Contamination"
+auteurs = ["Damien Coltice"]
+page = 190
+licence = "Tous droits réservés"

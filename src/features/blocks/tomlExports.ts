@@ -22,6 +22,12 @@ import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 import { osProfileToToml } from "../osChallenges/schema";
 import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreation/block";
 import { osCreationToToml } from "../osCharacterCreation/schema";
+import { adrenalinePjBlock } from "../adrenalinePj/block";
+import { pjToToml } from "../adrenalinePj/schema";
+import { adrenalinePnjBlock } from "../adrenalinePnj/block";
+import { pnjToToml } from "../adrenalinePnj/schema";
+import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
+import { monsterToToml } from "../adrenalineMonstre/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -141,6 +147,32 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		noun: ":Otherscape loadout item",
 		toToml: osCreationToToml,
 		describeFailure: (source) => describeMissingPart(source, "name est requis"),
+	},
+	{
+		block: adrenalinePjBlock,
+		commandId: "copy-adrenaline-pj-as-toml",
+		noun: "Adrenaline player character",
+		toToml: pjToToml,
+		describeFailure: (source) =>
+			describeMissingPart(
+				source,
+				"nom, caracteristiques, sante and protections are required",
+			),
+	},
+	{
+		block: adrenalinePnjBlock,
+		commandId: "copy-adrenaline-pnj-as-toml",
+		noun: "Adrenaline non-player character",
+		toToml: pnjToToml,
+		describeFailure: (source) => describeMissingPart(source, "nom is required"),
+	},
+	{
+		block: adrenalineMonsterBlock,
+		commandId: "copy-adrenaline-monstre-as-toml",
+		noun: "Adrenaline monster",
+		toToml: monsterToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "nom and four physical characteristics are required"),
 	},
 ];
 

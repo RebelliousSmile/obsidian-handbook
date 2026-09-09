@@ -1,6 +1,6 @@
 # Handbook
 
-Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mist** and **:Otherscape** vaults with game-specific styling, custom inline syntax, themed callouts, theme cards, challenge and danger profiles, and optional canvas helpers.
+Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mist**, **:Otherscape** and **Adrenaline System** vaults with game-specific styling, custom inline syntax, themed callouts, character sheets, challenge and danger profiles, and optional canvas helpers.
 
 It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
@@ -377,11 +377,91 @@ Available Mountain variants:
 - `greatness`
 - `standard`
 
-### 8. Mode switching
+### 8. Adrenaline System sheets
+
+Choose `Adrenaline System` as the game mode, then keep `Colour scheme` on
+`Follow Obsidian` or force the sourced light or dark scheme. The Adrenaline
+section in the settings enables the three TOML parsers independently.
+
+The document shapes come from the published
+[`schema-adrenaline`](https://github.com/RebelliousSmile/schema-adrenaline)
+schemas. Zombiology's core book was used as the visual reference because it
+currently publishes the system and its first setting together; Handbook's
+pack and block IDs remain generic Adrenaline ones.
+
+A minimal player character requires a name, eight characteristics, both health
+tracks and both solidities:
+
+````md
+```adrenaline-pj
+nom = "Claire"
+[caracteristiques]
+for = 30
+con = 40
+dex = 40
+rap = 30
+log = 40
+vol = 40
+per = 50
+cha = 30
+[sante.physique.superficiel]
+base = 6
+[sante.physique.leger]
+base = 13
+[sante.physique.grave]
+base = 18
+[sante.physique.profond]
+base = 23
+[sante.mental.superficiel]
+base = 5
+[sante.mental.leger]
+base = 12
+[sante.mental.grave]
+base = 17
+[sante.mental.profond]
+base = 22
+[protections.physiques]
+solidite = 6
+[protections.mentales]
+solidite = 5
+```
+````
+
+A non-player character may be as short as one named role:
+
+````md
+```adrenaline-pnj
+nom = "Le gardien"
+[narratif]
+role = "Contrôle l'accès au refuge"
+```
+````
+
+A monster requires its name and four physical characteristics; mental
+characteristics, health, equipment, alternate state and contagion are optional:
+
+````md
+```adrenaline-monstre
+nom = "Rôdeur"
+[caracteristiques]
+for = 45
+con = 60
+dex = 25
+rap = 30
+```
+````
+
+Use the command palette actions `Copy Adrenaline player character as TOML`,
+`Copy Adrenaline non-player character as TOML`, or `Copy Adrenaline monster as
+TOML` while the cursor is inside the matching fence. Optional `[meta]`
+provenance accepts `typeDePublication`, `source`, `auteurs`, `page` and
+`licence`.
+
+### 9. Mode switching
 
 The selected game mode changes more than colors. It also switches which callouts, block formats, context-menu actions, and special renderers are active in the vault. Switching rewrites the whole style block, so nothing of the previous game survives the change.
 
-### 9. Lantern in the Mist integration
+### 10. Lantern in the Mist integration
 
 Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` view inside Obsidian. The target URL is configurable from plugin settings.
 

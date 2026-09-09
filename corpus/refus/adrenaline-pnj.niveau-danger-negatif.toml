@@ -1,0 +1,5 @@
+# attend: dégradé
+nom = "Messager"
+niveauDeDanger = -2
+[narratif]
+role = "Porte une nouvelle"

@@ -23,6 +23,20 @@ if (!source.includes('.setName("Univers")')) {
 	failures.push("The game variant selector has no French-first visible label.");
 }
 
+if (!source.includes('setHeading("Adrenaline System")')) {
+	failures.push("The settings tab has no Adrenaline System section.");
+}
+
+for (const flag of [
+	"adrenalinePjParser",
+	"adrenalinePnjParser",
+	"adrenalineMonsterParser",
+]) {
+	if (!source.includes(flag)) {
+		failures.push(`The settings tab does not expose ${flag}.`);
+	}
+}
+
 for (const factory of richDescriptions) {
 	const unsafe = new RegExp(
 		`\\.setDesc\\(\\s*this\\.${factory}\\(\\)\\s*\\)`,
