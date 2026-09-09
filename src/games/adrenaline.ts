@@ -51,19 +51,21 @@ export const adrenalinePack: GamePack = {
 			note: tokens(
 				accent("#9D2416"),
 				{
-					"--background-primary": "#F0EAE1",
-					"--background-primary-alt": "#E8DED3",
-					"--background-secondary": "#E2D7CB",
+					"--background-primary": "#F4F0E8",
+					"--background-primary-alt": "#ECE7DE",
+					"--background-secondary": "#DDD8CF",
 					"--text-normal": "#211A18",
 					"--text-muted": "#655A55",
 					"--text-faint": "#95877F",
 					"--h1-color": "#71170F",
 					"--h2-color": "#8B2115",
 					"--h3-color": "#9D2416",
-					"--code-background": "#E2D7CB",
+					"--code-background": "#ECE7DE",
 					"--blockquote-border-color": "#9D2416",
 					"--text-highlight-bg": "#E46B463D",
-					"--adrenaline-panel": "#E2D7CB",
+					"--adrenaline-panel": "#F8F5EF",
+					"--adrenaline-section-band": "#CBC6BC",
+					"--adrenaline-section-band-ink": "#3A211C",
 					"--adrenaline-band": "#71170F",
 					"--adrenaline-band-ink": "#FFF8F0",
 					"--adrenaline-rule": "#9D2416",
@@ -90,12 +92,12 @@ export const adrenalinePack: GamePack = {
 				},
 			),
 			workspace: {
-				"--background-secondary": "#E2D7CB",
+				"--background-secondary": "#DDD8CF",
 				"--background-secondary-alt": "#71170F",
-				"--brumes-root-split-background": "#E8DED3",
+				"--brumes-root-split-background": "#ECE7DE",
 			},
 		},
-		dark: {
+			dark: {
 			note: tokens(
 				accent("#F05A32"),
 				{
@@ -112,6 +114,8 @@ export const adrenalinePack: GamePack = {
 					"--blockquote-border-color": "#F05A32",
 					"--text-highlight-bg": "#F05A323D",
 					"--adrenaline-panel": "#2B1210",
+					"--adrenaline-section-band": "#51302A",
+					"--adrenaline-section-band-ink": "#FFF4E9",
 					"--adrenaline-band": "#71170F",
 					"--adrenaline-band-ink": "#FFF4E9",
 					"--adrenaline-rule": "#F05A32",

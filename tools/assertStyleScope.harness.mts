@@ -104,11 +104,11 @@ const adrenalineDarkCss = buildGameStyle(
 );
 
 assert.match(adrenalineLightCss, /\.brumes--colour-light/);
-assert.match(adrenalineLightCss, /--background-primary: #F0EAE1/);
+assert.match(adrenalineLightCss, /--background-primary: #F4F0E8/);
 assert.doesNotMatch(adrenalineLightCss, /--background-primary: #160D0B/);
 assert.match(adrenalineDarkCss, /\.brumes--colour-dark/);
 assert.match(adrenalineDarkCss, /--background-primary: #160D0B/);
-assert.doesNotMatch(adrenalineDarkCss, /--background-primary: #F0EAE1/);
+assert.doesNotMatch(adrenalineDarkCss, /--background-primary: #F4F0E8/);
 assert.doesNotMatch(adrenalineLightCss, /body\.theme-light/);
 assert.doesNotMatch(adrenalineDarkCss, /body\.theme-dark/);
 

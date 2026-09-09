@@ -19,13 +19,29 @@ class El {
 }
 
 const doc = { createElement: (tagName: string) => new El(tagName) } as unknown as Document;
+const expectedZones = new Map([
+	[adrenalinePjBlock.id, ["header", "formations", "competences", "characteristics", "equipment", "health"]],
+	[adrenalinePnjBlock.id, ["header", "narrative", "characteristics", "health", "competences", "equipment"]],
+	[adrenalineMonsterBlock.id, ["header", "mobility", "behaviour", "characteristics", "health", "capabilities"]],
+]);
+
 for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlock]) {
 	const file = join("corpus", "temoins", `${block.id}.toml`);
 	const parsed = block.parse(readFileSync(file, "utf8"));
 	assert.ok(parsed, `${block.id} witness must parse`);
+	assert.deepEqual(
+		block.shape.zones.map((zone) => zone.name),
+		expectedZones.get(block.id),
+		`${block.id} must keep the layout order sourced from the published sheet`,
+	);
 	const rendered = block.render(parsed, doc) as unknown as El;
 	assert.equal(rendered.classes.includes(block.shape.root), true);
-	assert.equal(rendered.children.length, 7, `${block.id} must render its seven complete regions`);
+	assert.equal(rendered.children.length, 6, `${block.id} must render its six Handbook regions`);
+	assert.doesNotMatch(
+		JSON.stringify(rendered),
+		/Zombiology|Tous droits réservés/,
+		`${block.id} must preserve Lantern metadata without printing it in Handbook`,
+	);
 }
 
 const minimal = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);

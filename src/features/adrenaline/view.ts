@@ -1,5 +1,4 @@
 import {
-	AdrenalineMeta,
 	CHARACTERISTIC_KEYS,
 	Characteristics,
 	Health,
@@ -60,6 +59,9 @@ export function renderHealth(doc: Document, health: Health): HTMLElement {
 		if (!side) continue;
 		const sideElement = doc.createElement("div");
 		sideElement.classList.add(`brumes-adrenaline--health-${sideName}`);
+		const sideLabel = doc.createElement("strong");
+		sideLabel.textContent = sideName === "physique" ? "Seuils physiques" : "Seuils mentaux";
+		sideElement.appendChild(sideLabel);
 		for (const thresholdName of ["superficiel", "leger", "grave", "profond"] as const) {
 			const threshold = side[thresholdName];
 			if (!threshold) continue;
@@ -72,17 +74,4 @@ export function renderHealth(doc: Document, health: Health): HTMLElement {
 		grid.appendChild(sideElement);
 	}
 	return grid;
-}
-
-export function renderProvenance(doc: Document, meta: AdrenalineMeta): HTMLElement {
-	const footer = doc.createElement("footer");
-	footer.classList.add("brumes-adrenaline--provenance");
-	const parts: string[] = [];
-	if (meta.typeDePublication) parts.push(meta.typeDePublication);
-	if (meta.source) parts.push(meta.source);
-	if (meta.auteurs) parts.push(meta.auteurs.join(", "));
-	if (meta.page !== undefined) parts.push(`p. ${meta.page}`);
-	if (meta.licence) parts.push(meta.licence);
-	footer.textContent = parts.join(" · ");
-	return footer;
 }

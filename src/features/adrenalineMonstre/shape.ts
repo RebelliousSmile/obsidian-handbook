@@ -10,6 +10,5 @@ export const adrenalineMonsterShape: BlockShape = {
 		{ name: "characteristics", holds: "physical and optional mental characteristics", heading: "Caractéristiques" },
 		{ name: "health", holds: "health and protections", heading: "Santé et protections", optional: true },
 		{ name: "capabilities", holds: "traits, alternate state, competences, equipment, contagion and narrative", heading: "Capacités", optional: true },
-		{ name: "provenance", holds: "publication provenance", optional: true },
 	],
 };

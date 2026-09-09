@@ -10,6 +10,5 @@ export const adrenalinePnjShape: BlockShape = {
 		{ name: "health", holds: "health and protections", heading: "Santé et protections", optional: true },
 		{ name: "competences", holds: "formations and competences", heading: "Formations et compétences", optional: true },
 		{ name: "equipment", holds: "possessions and weapons", heading: "Équipement", optional: true },
-		{ name: "provenance", holds: "publication provenance", optional: true },
 	],
 };

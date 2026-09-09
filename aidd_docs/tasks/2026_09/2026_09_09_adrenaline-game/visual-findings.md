@@ -59,14 +59,33 @@ captures temporaires n'embarquent aucun actif extrait du livre.
 | Témoin | Largeur | Polarité | Résultat observable | Correction |
 | ------ | ------- | -------- | ------------------- | ---------- |
 | PJ | desktop | light | Les cinq régions restent hiérarchisées, la grille de caractéristiques tient sur une ligne. | aucune |
-| PJ | desktop | dark | Bandeau, panneaux et provenance restent contrastés sans modifier la géométrie. | aucune |
+| PJ | desktop | dark | Bandeau et panneaux restent contrastés sans modifier la géométrie. | aucune |
 | PJ | étroite | light | Les régions passent en une colonne et les huit caractéristiques restent lisibles sur deux colonnes. | aucune |
 | PJ | étroite | dark | Aucun texte ni filet ne déborde du cadre à 234 px. | aucune |
 | PNJ | desktop | light | Présentation, statistiques, santé, compétences et équipement gardent leur ordre de lecture. | aucune |
 | PNJ | desktop | dark | Le rôle et le danger restent visibles dans le bandeau, les panneaux conservent leur contraste. | aucune |
 | PNJ | étroite | light | La grille se replie en une colonne sans zone vide ni chevauchement. | aucune |
-| PNJ | étroite | dark | Les libellés et la provenance restent lisibles sans défilement horizontal. | aucune |
+| PNJ | étroite | dark | Les libellés restent lisibles sans défilement horizontal. | aucune |
 | Monstre | desktop | light | Détection et comportement précèdent statistiques, santé et capacités comme prévu au wireframe. | aucune |
 | Monstre | desktop | dark | Le niveau de danger et les informations de confrontation restent immédiatement repérables. | aucune |
 | Monstre | étroite | light | Les deux colonnes deviennent une pile continue, sans rupture de bordure ni débordement. | aucune |
 | Monstre | étroite | dark | Toutes les régions visibles gardent contraste et rythme à 234 px. | aucune |
+
+## Correction de fidélité — fiches publiées
+
+Références ajoutées le 2026-09-09 :
+
+- `Zombiology_Feuille_de_personnage_pretires_v1.pdf`, six feuilles PJ ;
+- `Z1L05_Livret PNJ et animaux.pdf`, vingt pages de profils PNJ et animaux.
+
+Ces références imposent plus que la palette initiale. La fiche PJ suit l'ordre
+compétences, identité/caractéristiques, équipement, santé, avec des sections
+pleine largeur et une densité tabulaire. Les PNJ et monstres suivent une carte
+verticale étroite, sans gouttières entre sections, ouverte par le nom et le
+niveau de danger. Le bloc `[meta]` appartient au transport Lantern : il reste
+lu et copié, mais son contenu n'est plus imprimé par Handbook.
+
+Les couples de couleurs retenus dépassent WCAG AA : ivoire sur bordeaux
+(`10.89:1`), encre sur panneau clair (`15.75:1`), encre brune sur bandeau taupe
+(`8.73:1`), ivoire sur bandeau taupe sombre (`10.72:1`) et ivoire sur panneau
+sombre (`14.68:1`).
