@@ -1,6 +1,7 @@
 @use "./pj";
 @use "./pnj";
 @use "./monstre";
+@use "./callouts";
 
 .brumes--adrenaline {
 	.brumes-adrenaline--section > h4 {
@@ -34,4 +35,7 @@
 	@include pj.sheet;
 	@include pnj.sheet;
 	@include monstre.sheet;
+
+	// Callouts
+	@include callouts.global;
 }

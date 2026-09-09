@@ -20,7 +20,8 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 		(menu: Menu, editor: Editor) => {
 			const hasAnyItems =
 				hasTagInsertion(plugin.settings) ||
-				getAvailableCalloutInsertions(plugin.settings).length > 0 ||
+				getAvailableCalloutInsertions(plugin.settings, plugin.settings.mode)
+					.length > 0 ||
 				hasBlockInsertions(plugin.settings);
 
 			if (!hasAnyItems) {
@@ -37,13 +38,18 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			);
 			hasItems = tagItems > 0;
 
-			if (getAvailableCalloutInsertions(plugin.settings).length > 0 && hasItems) {
+			if (
+				getAvailableCalloutInsertions(plugin.settings, plugin.settings.mode)
+					.length > 0 &&
+				hasItems
+			) {
 				submenu.addSeparator();
 			}
 			const calloutItems = contributeCalloutInsertions(
 				submenu,
 				editor,
 				plugin.settings,
+				plugin.settings.mode,
 			);
 			hasItems = hasItems || calloutItems > 0;
 

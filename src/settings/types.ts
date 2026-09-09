@@ -1,3 +1,10 @@
+import { CalloutDefinition } from "../features/callouts/types";
+import { NATIVE_CALLOUTS } from "../features/callouts/nativeCallouts";
+import { normalizeCallouts } from "../features/callouts/migrateAliases";
+import {
+	sanitizeAlias,
+	sanitizeAliases,
+} from "../features/callouts/sanitizeAlias";
 import {
 	DEFAULT_GAME_PACK_ID,
 	GAME_REGISTRATIONS,
@@ -5,6 +12,8 @@ import {
 	normalizeGameVariantId,
 } from "../games/registry";
 import { logScope } from "../utils/logger";
+
+export { sanitizeAlias, sanitizeAliases };
 
 /**
  * The identifier of a game pack, and the value written in the user's
@@ -65,22 +74,8 @@ export interface BrumesSettings {
 	logLevel: LogLevel;
 	lanternUrl: string;
 	features: BrumesFeatureSettings;
-	calloutAliases: BrumesCalloutAliasesSettings;
+	callouts: CalloutDefinition[];
 }
-
-export const DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES: CityOfMistCalloutAliases = {
-	note: ["note", "aside"],
-	move: ["move"],
-	description: ["description", "read-aloud"],
-	clue: ["clue"],
-	redClue: ["red-clue"],
-};
-
-export const DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES: LegendInTheMistCalloutAliases =
-	{
-		note: ["note"],
-		readAloud: ["read-aloud"],
-	};
 
 export const DEFAULT_SETTINGS: BrumesSettings = {
 	mode: DEFAULT_GAME_PACK_ID,
@@ -108,39 +103,11 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		adrenalinePnjParser: true,
 		adrenalineMonsterParser: true,
 	},
-	calloutAliases: {
-		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,
-		legendInTheMist: DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES,
-	},
+	callouts: NATIVE_CALLOUTS,
 };
 
 const LOG_LEVELS: LogLevel[] = ["none", "error", "warn", "info", "debug"];
 const COLOUR_SCHEMES: ColourScheme[] = ["obsidian", "light", "dark"];
-
-export function sanitizeAlias(alias: string): string {
-	return alias
-		.trim()
-		.toLowerCase()
-		.replace(/^\[!?\s*/, "")
-		.replace(/\]\s*$/, "")
-		.replace(/^!\s*/, "")
-		.replace(/\s+/g, "-");
-}
-
-export function sanitizeAliases(aliases: string[]): string[] {
-	const unique = new Set<string>();
-
-	for (const alias of aliases) {
-		const sanitized = sanitizeAlias(alias);
-		if (!sanitized) {
-			continue;
-		}
-
-		unique.add(sanitized);
-	}
-
-	return Array.from(unique);
-}
 
 export function normalizeMode(mode: unknown): BrumesMode {
 	// The colon was dropped from the identifier, not from the name.
@@ -176,17 +143,6 @@ function normalizeColourScheme(value: unknown): ColourScheme {
 	}
 
 	return DEFAULT_SETTINGS.colourScheme;
-}
-
-function normalizeAliasList(
-	value: unknown,
-	fallback: string[],
-): string[] {
-	if (!Array.isArray(value)) {
-		return [...fallback];
-	}
-
-	return sanitizeAliases(value.map(String));
 }
 
 function normalizeGameVariants(value: unknown): Record<string, string> {
@@ -230,17 +186,20 @@ function normalizeFeatures(
 	return normalized;
 }
 
+/**
+ * The stored data may still be the pre-migration shape (`calloutAliases`,
+ * no `callouts`): kept here only so `normalizeCallouts` can read it once,
+ * not as a `BrumesSettings` field any more.
+ */
+type LegacyCalloutAliasesData = {
+	calloutAliases?: Partial<BrumesCalloutAliasesSettings>;
+};
+
 export function normalizeSettings(
-	data: Partial<BrumesSettings> | null | undefined,
+	data: (Partial<BrumesSettings> & LegacyCalloutAliasesData) | null | undefined,
 ): BrumesSettings {
 	const source = data ?? {};
 	const features: Partial<BrumesFeatureSettings> = source.features ?? {};
-	const calloutAliases: Partial<BrumesCalloutAliasesSettings> =
-		source.calloutAliases ?? {};
-	const cityOfMist: Partial<CityOfMistCalloutAliases> =
-		calloutAliases.cityOfMist ?? {};
-	const legendInTheMist: Partial<LegendInTheMistCalloutAliases> =
-		calloutAliases.legendInTheMist ?? {};
 
 	return {
 		mode: normalizeMode(source.mode),
@@ -252,39 +211,6 @@ export function normalizeSettings(
 				? source.lanternUrl.trim() || DEFAULT_SETTINGS.lanternUrl
 				: DEFAULT_SETTINGS.lanternUrl,
 		features: normalizeFeatures(features),
-		calloutAliases: {
-			cityOfMist: {
-				note: normalizeAliasList(
-					cityOfMist.note,
-					DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES.note,
-				),
-				move: normalizeAliasList(
-					cityOfMist.move,
-					DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES.move,
-				),
-				description: normalizeAliasList(
-					cityOfMist.description,
-					DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES.description,
-				),
-				clue: normalizeAliasList(
-					cityOfMist.clue,
-					DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES.clue,
-				),
-				redClue: normalizeAliasList(
-					cityOfMist.redClue,
-					DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES.redClue,
-				),
-			},
-			legendInTheMist: {
-				note: normalizeAliasList(
-					legendInTheMist.note,
-					DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES.note,
-				),
-				readAloud: normalizeAliasList(
-					legendInTheMist.readAloud,
-					DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES.readAloud,
-				),
-			},
-		},
+		callouts: normalizeCallouts(source.callouts, source.calloutAliases),
 	};
 }
