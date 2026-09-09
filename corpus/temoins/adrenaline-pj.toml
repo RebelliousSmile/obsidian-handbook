@@ -1,0 +1,90 @@
+nom = "Naïma Berthier"
+
+[identite]
+nationalite = "Française"
+genre = "Femme"
+age = 34
+signesParticuliers = ["Cicatrice à l'avant-bras gauche"]
+
+[caracteristiques]
+for = 30
+con = 40
+dex = 50
+rap = 40
+log = 30
+vol = 40
+per = 50
+cha = 30
+
+[sante.physique.superficiel]
+base = 6
+couvert = 9
+[sante.physique.leger]
+base = 13
+couvert = 16
+[sante.physique.grave]
+base = 18
+couvert = 21
+[sante.physique.profond]
+base = 23
+couvert = 26
+[sante.mental.superficiel]
+base = 5
+couvert = 7
+[sante.mental.leger]
+base = 12
+couvert = 14
+[sante.mental.grave]
+base = 17
+couvert = 19
+[sante.mental.profond]
+base = 22
+couvert = 24
+
+[protections.physiques]
+solidite = 6
+[protections.physiques.armure]
+nom = "Veste renforcée"
+points = 3
+localisations = ["torse", "bras-fort"]
+[protections.mentales]
+solidite = 5
+[protections.mentales.caractere]
+trait = "Obstinée"
+points = 2
+localisations = ["anxiete", "peur"]
+
+[parametresDuJeu]
+joueur = "Camille"
+typeDeCreation = "equitable"
+typeDeScenario = "campagne"
+declinaisonDeCampagne = "storyline"
+px = 12
+
+[equipement]
+possessions = ["Trousse de secours", "Radio"]
+equipementFavori = "Multitool"
+[[equipement.armesPhysiques]]
+nom = "Pied-de-biche"
+pourcentage = 55
+desDeDegats = 2
+type = "Contact"
+
+[[formations]]
+type = "professionnelle"
+nom = "Secours et logistique"
+pourcentage = 25
+[[formations.competences]]
+nom = "Survie"
+specialite = "Premiers secours"
+pourcentage = 40
+caracteristique = "per"
+total = 90
+avantages = ["Gestion du stress"]
+
+[meta]
+typeDePublication = "officiel"
+source = "Zombiology — Contamination"
+auteurs = ["Damien Coltice"]
+page = 254
+licence = "Tous droits réservés"

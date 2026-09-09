@@ -20,6 +20,8 @@ import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
 import { osThemeToToml } from "../osThemes/schema";
 import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 import { osProfileToToml } from "../osChallenges/schema";
+import { adrenalinePjBlock } from "../adrenalinePj/block";
+import { pjToToml } from "../adrenalinePj/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -125,6 +127,17 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		noun: ":Otherscape power set",
 		toToml: osProfileToToml,
 		describeFailure: (source) => describeMissingPart(source, "name et type sont requis"),
+	},
+	{
+		block: adrenalinePjBlock,
+		commandId: "copy-adrenaline-pj-as-toml",
+		noun: "Adrenaline player character",
+		toToml: pjToToml,
+		describeFailure: (source) =>
+			describeMissingPart(
+				source,
+				"nom, caracteristiques, sante and protections are required",
+			),
 	},
 ];
 

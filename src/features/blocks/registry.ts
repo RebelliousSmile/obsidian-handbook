@@ -14,6 +14,7 @@ import { themeKitBlock } from "../themeKits/block";
 import { BLOCK_SCOPE_CLASS } from "../modes/domModeClass";
 import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
 import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
+import { adrenalinePjBlock } from "../adrenalinePj/block";
 
 const log = logScope("Blocks");
 
@@ -29,6 +30,7 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	osThemeKitBlock,
 	osChallengeBlock,
 	osPowerSetBlock,
+	adrenalinePjBlock,
 ];
 
 /**

@@ -89,6 +89,13 @@ export class BrumesSettingTab extends PluginSettingTab {
 		otherscapeSection.setHeading(":Otherscape");
 		this.renderOtherscapeSettings(otherscapeSection);
 
+		const adrenalineSection = this.createSection(
+			containerEl,
+			this.plugin.settings.mode !== "adrenaline",
+		);
+		adrenalineSection.setHeading("Adrenaline System");
+		this.renderAdrenalineSettings(adrenalineSection);
+
 		const advancedSection = this.createSection(containerEl);
 		advancedSection.setHeading("Advanced");
 		this.renderAdvancedSection(advancedSection);
@@ -738,6 +745,27 @@ export class BrumesSettingTab extends PluginSettingTab {
 						.onChange((value) => {
 							this.runTask(async () => {
 								this.plugin.settings.features[flag] = value;
+								await this.plugin.saveSettings({ refreshMarkdown: true });
+							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
+						}),
+				);
+		});
+	}
+
+	private renderAdrenalineSettings(section: SettingGroup) {
+		const isActive = this.plugin.settings.mode === "adrenaline";
+		section.addSetting((setting) => {
+			setting
+				.setName("Fiche PJ")
+				.setDesc("Active le bloc TOML adrenaline-pj et son insertion.")
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.adrenalinePjParser)
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(async () => {
+								this.plugin.settings.features.adrenalinePjParser = value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
 							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
 						}),

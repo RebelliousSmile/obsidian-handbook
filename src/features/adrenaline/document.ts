@@ -41,9 +41,9 @@ export interface Health {
 
 export interface ProtectionSide {
 	solidite?: number;
-	armure?: Record<string, unknown>;
-	caractere?: Record<string, unknown>;
-	bouclier?: Record<string, unknown>;
+	armure?: { nom?: string; points: number; localisations: string[] };
+	caractere?: { trait: string; points: number; localisations: string[] };
+	bouclier?: { nom: string; proprietes?: string[] };
 }
 
 export interface Protections {
@@ -199,15 +199,14 @@ export function readHealth(value: unknown): Health | undefined {
 	return physique || mental ? { physique, mental } : undefined;
 }
 
-function cleanFreeRecord(value: unknown, allowed: string[], scope: string): AdrenalineDocument | undefined {
+function readShield(value: unknown, scope: string): ProtectionSide["bouclier"] {
 	const record = asRecord(value);
 	if (!record) return undefined;
-	warnUnknownKeys(record, allowed, scope);
-	const clean: AdrenalineDocument = {};
-	for (const key of allowed) {
-		if (record[key] !== undefined) clean[key] = record[key];
-	}
-	return Object.keys(clean).length > 0 ? clean : undefined;
+	warnUnknownKeys(record, ["nom", "proprietes"], scope);
+	const nom = asString(record.nom);
+	if (!nom) return undefined;
+	const proprietes = asStringList(record.proprietes);
+	return proprietes.length > 0 ? { nom, proprietes } : { nom };
 }
 
 function readProtectionSide(value: unknown, mental: boolean): ProtectionSide | undefined {
@@ -221,21 +220,28 @@ function readProtectionSide(value: unknown, mental: boolean): ProtectionSide | u
 	const solidite = asInteger(record.solidite, 0, 100);
 	if (solidite !== undefined) result.solidite = solidite;
 	if (mental) {
-		result.caractere = cleanFreeRecord(
-			record.caractere,
-			["trait", "points", "localisations"],
-			"protections.mentales.caractere",
-		);
+		const character = asRecord(record.caractere);
+		if (character) {
+			const trait = asString(character.trait);
+			const points = asInteger(character.points, 0, 100);
+			const localisations = asStringList(character.localisations);
+			if (trait && points !== undefined && localisations.length > 0) {
+				result.caractere = { trait, points, localisations };
+			}
+		}
 	} else {
-		result.armure = cleanFreeRecord(
-			record.armure,
-			["nom", "points", "localisations"],
-			"protections.physiques.armure",
-		);
+		const armour = asRecord(record.armure);
+		if (armour) {
+			const nom = asString(armour.nom);
+			const points = asInteger(armour.points, 0, 100);
+			const localisations = asStringList(armour.localisations);
+			if (points !== undefined && localisations.length > 0) {
+				result.armure = { ...(nom ? { nom } : {}), points, localisations };
+			}
+		}
 	}
-	result.bouclier = cleanFreeRecord(
+	result.bouclier = readShield(
 		record.bouclier,
-		["nom", "proprietes"],
 		mental ? "protections.mentales.bouclier" : "protections.physiques.bouclier",
 	);
 	return Object.keys(result).some((key) => result[key as keyof ProtectionSide] !== undefined)
