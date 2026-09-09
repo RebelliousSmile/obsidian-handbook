@@ -1,24 +1,31 @@
 import type BrumesPlugin from "../../BrumesPlugin";
 import { BrumesSettings } from "../../settings/types";
+import { logScope } from "../../utils/logger";
 
 const BRUMES_CALLOUT_STYLE_ATTR = "data-brumes-callout-style";
 
+const calloutsLog = logScope("Callouts");
+
+/** Inter-scope alias collisions already reported, so each warns once per session. */
+const warnedAliasCollisions = new Set<string>();
+
 export function loadCalloutAliasFeature(plugin: BrumesPlugin): () => void {
 	const workspaceBody = plugin.app.workspace.containerEl.doc.body;
-	const syncAliases = () => syncCalloutAliases(workspaceBody, plugin.settings);
+	const syncAliases = () =>
+		syncCalloutAliases(workspaceBody, plugin.settings, plugin.settings.mode);
 	const observer = new MutationObserver((mutations) => {
 		for (const mutation of mutations) {
 			if (
 				mutation.type === "attributes" &&
 				mutation.target.instanceOf(HTMLElement)
 			) {
-				syncCalloutAliases(mutation.target, plugin.settings);
+				syncCalloutAliases(mutation.target, plugin.settings, plugin.settings.mode);
 				continue;
 			}
 
 			for (const node of Array.from(mutation.addedNodes)) {
 				if (node.instanceOf(HTMLElement)) {
-					syncCalloutAliases(node, plugin.settings);
+					syncCalloutAliases(node, plugin.settings, plugin.settings.mode);
 				}
 			}
 		}
@@ -37,8 +44,12 @@ export function loadCalloutAliasFeature(plugin: BrumesPlugin): () => void {
 	return syncAliases;
 }
 
-function syncCalloutAliases(root: ParentNode & Node, settings: BrumesSettings) {
-	const aliasMap = buildAliasMap(settings);
+function syncCalloutAliases(
+	root: ParentNode & Node,
+	settings: BrumesSettings,
+	activePackId: string,
+) {
+	const aliasMap = buildAliasMap(settings, activePackId);
 
 	for (const calloutEl of getCalloutElements(root)) {
 		const currentCallout = calloutEl.dataset.callout;
@@ -77,38 +88,34 @@ function getCalloutElements(root: ParentNode & Node): HTMLElement[] {
 	return elements;
 }
 
-function buildAliasMap(settings: BrumesSettings): Map<string, string> {
+/**
+ * One alias -> styleKey entry per kept `callouts` definition, filtered to
+ * the entries visible from `activePackId` (scope "all", or that same pack).
+ * Phase 1 already rejects a scope-overlapping duplicate at save time; a
+ * duplicate that slips through anyway keeps the first entry in list order
+ * and warns once per session rather than silently overwriting it.
+ */
+function buildAliasMap(settings: BrumesSettings, activePackId: string): Map<string, string> {
 	const aliasMap = new Map<string, string>();
 
-	if (settings.mode === "city-of-mist") {
-		for (const alias of settings.calloutAliases.cityOfMist.note) {
-			aliasMap.set(alias, "note");
+	for (const entry of settings.callouts) {
+		if (entry.scope !== "all" && entry.scope !== activePackId) {
+			continue;
 		}
 
-		for (const alias of settings.calloutAliases.cityOfMist.move) {
-			aliasMap.set(alias, "move");
-		}
+		for (const alias of entry.aliases) {
+			if (aliasMap.has(alias)) {
+				const key = `${activePackId}:${alias}`;
+				if (!warnedAliasCollisions.has(key)) {
+					warnedAliasCollisions.add(key);
+					calloutsLog.warn(
+						`Alias "${alias}" is claimed by more than one callout visible in this game; keeping the first one declared.`,
+					);
+				}
+				continue;
+			}
 
-		for (const alias of settings.calloutAliases.cityOfMist.description) {
-			aliasMap.set(alias, "description");
-		}
-
-		for (const alias of settings.calloutAliases.cityOfMist.clue) {
-			aliasMap.set(alias, "clue");
-		}
-
-		for (const alias of settings.calloutAliases.cityOfMist.redClue) {
-			aliasMap.set(alias, "red-clue");
-		}
-	}
-
-	if (settings.mode === "legend-in-the-mist") {
-		for (const alias of settings.calloutAliases.legendInTheMist.note) {
-			aliasMap.set(alias, "note");
-		}
-
-		for (const alias of settings.calloutAliases.legendInTheMist.readAloud) {
-			aliasMap.set(alias, "read-aloud");
+			aliasMap.set(alias, entry.styleKey);
 		}
 	}
 

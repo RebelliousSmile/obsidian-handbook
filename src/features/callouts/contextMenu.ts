@@ -1,112 +1,49 @@
 import { Editor, Menu } from "obsidian";
 import { BrumesSettings } from "../../settings/types";
-
-type CalloutTemplate =
-	| {
-			type: "title-body";
-			title: string;
-			body: string;
-	  }
-	| {
-			type: "body-only";
-			body: string;
-	  };
+import { CalloutDefinition } from "./types";
 
 interface CalloutInsertion {
 	title: string;
 	icon: string;
 	alias: string;
-	template: CalloutTemplate;
+	template: CalloutDefinition["template"];
 }
 
+/** Callouts visible from `activePackId`: scope "all", or that same pack — same filter as `buildAliasMap`. */
 export function getAvailableCalloutInsertions(
 	settings: BrumesSettings,
+	activePackId: string,
 ): CalloutInsertion[] {
-	if (settings.mode === "city-of-mist") {
-		return [
-			buildCalloutInsertion(
-				"Note callout",
-				"sticky-note",
-				settings.calloutAliases.cityOfMist.note[0],
-				{
-					type: "title-body",
-					title: "Title of the note",
-					body: "Content of the note",
-				},
-			),
-			buildCalloutInsertion(
-				"Move callout",
-				"swords",
-				settings.calloutAliases.cityOfMist.move[0],
-				{
-					type: "title-body",
-					title: "Name of the move",
-					body: "Describe the move",
-				},
-			),
-			buildCalloutInsertion(
-				"Description callout",
-				"scroll-text",
-				settings.calloutAliases.cityOfMist.description[0],
-				{
-					type: "body-only",
-					body: "Text to read aloud",
-				},
-			),
-			buildCalloutInsertion(
-				"Clue callout",
-				"search",
-				settings.calloutAliases.cityOfMist.clue[0],
-				{
-					type: "body-only",
-					body: "Clue text",
-				},
-			),
-			buildCalloutInsertion(
-				"Red clue callout",
-				"badge-alert",
-				settings.calloutAliases.cityOfMist.redClue[0],
-				{
-					type: "body-only",
-					body: "A very mysterious clue",
-				},
-			),
-		].filter((item): item is CalloutInsertion => item !== null);
+	const insertions: CalloutInsertion[] = [];
+
+	for (const entry of settings.callouts) {
+		if (entry.scope !== "all" && entry.scope !== activePackId) {
+			continue;
+		}
+
+		const alias = entry.aliases[0];
+		if (!alias) {
+			continue;
+		}
+
+		insertions.push({
+			title: `${entry.name} callout`,
+			icon: entry.icon ?? "message-square",
+			alias,
+			template: entry.template,
+		});
 	}
 
-	if (settings.mode === "legend-in-the-mist") {
-		return [
-			buildCalloutInsertion(
-				"Note callout",
-				"sticky-note",
-				settings.calloutAliases.legendInTheMist.note[0],
-				{
-					type: "title-body",
-					title: "Title of the note",
-					body: "Content of the note",
-				},
-			),
-			buildCalloutInsertion(
-				"Read-aloud callout",
-				"mic",
-				settings.calloutAliases.legendInTheMist.readAloud[0],
-				{
-					type: "body-only",
-					body: "Text to read aloud",
-				},
-			),
-		].filter((item): item is CalloutInsertion => item !== null);
-	}
-
-	return [];
+	return insertions;
 }
 
 export function contributeCalloutInsertions(
 	menu: Menu,
 	editor: Editor,
 	settings: BrumesSettings,
+	activePackId: string,
 ): number {
-	const callouts = getAvailableCalloutInsertions(settings);
+	const callouts = getAvailableCalloutInsertions(settings, activePackId);
 
 	for (const callout of callouts) {
 		menu.addItem((item) =>
@@ -120,45 +57,29 @@ export function contributeCalloutInsertions(
 	return callouts.length;
 }
 
-function buildCalloutInsertion(
-	title: string,
-	icon: string,
-	alias: string | undefined,
-	template: CalloutTemplate,
-): CalloutInsertion | null {
-	if (!alias) {
-		return null;
-	}
-
-	return {
-		title,
-		icon,
-		alias,
-		template,
-	};
-}
-
 function insertCallout(editor: Editor, callout: CalloutInsertion) {
 	const cursor = editor.getCursor();
 
-	if (callout.template.type === "title-body") {
-		const line1 = `> [!${callout.alias.toUpperCase()}] ${callout.template.title}`;
-		const line2 = `> ${callout.template.body}`;
+	if (callout.template === "title-body") {
+		const title = "Title of the note";
+		const line1 = `> [!${callout.alias.toUpperCase()}] ${title}`;
+		const line2 = "> Content of the note";
 		editor.replaceRange(`${line1}\n${line2}`, cursor);
 
 		const line = cursor.line;
-		const startCh = line1.indexOf(callout.template.title);
-		const endCh = startCh + callout.template.title.length;
+		const startCh = line1.indexOf(title);
+		const endCh = startCh + title.length;
 		editor.setSelection({ line, ch: startCh }, { line, ch: endCh });
 		return;
 	}
 
+	const body = "Text to read aloud";
 	const line1 = `> [!${callout.alias.toUpperCase()}]`;
-	const line2 = `> ${callout.template.body}`;
+	const line2 = `> ${body}`;
 	editor.replaceRange(`${line1}\n${line2}`, cursor);
 
 	const line = cursor.line + 1;
-	const startCh = line2.indexOf(callout.template.body);
-	const endCh = startCh + callout.template.body.length;
+	const startCh = line2.indexOf(body);
+	const endCh = startCh + body.length;
 	editor.setSelection({ line, ch: startCh }, { line, ch: endCh });
 }

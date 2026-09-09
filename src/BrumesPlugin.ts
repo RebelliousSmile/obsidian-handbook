@@ -50,6 +50,7 @@ import {
 } from "./views/LanternView";
 import { LANTERN_LOGO_SVG } from "./views/lanternLogo";
 import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
+import { buildCalloutStyleCss } from "./features/callouts/styleWriter";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -228,8 +229,11 @@ export default class BrumesPlugin extends Plugin {
 			this.settings.colourScheme,
 		);
 
+		const calloutCss = buildCalloutStyleCss(this.settings.callouts);
+		const withCallouts = calloutCss ? `${block}\n\n${calloutCss}` : block;
+
 		this.gameStyle.applyGameStyle(
-			fontCss ? `${fontCss}\n\n${block}` : block,
+			fontCss ? `${fontCss}\n\n${withCallouts}` : withCallouts,
 		);
 
 		for (const doc of this.collectDocuments()) {
