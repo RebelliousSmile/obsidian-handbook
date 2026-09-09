@@ -22,6 +22,8 @@ import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 import { osProfileToToml } from "../osChallenges/schema";
 import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { pjToToml } from "../adrenalinePj/schema";
+import { adrenalinePnjBlock } from "../adrenalinePnj/block";
+import { pnjToToml } from "../adrenalinePnj/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -138,6 +140,13 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 				source,
 				"nom, caracteristiques, sante and protections are required",
 			),
+	},
+	{
+		block: adrenalinePnjBlock,
+		commandId: "copy-adrenaline-pnj-as-toml",
+		noun: "Adrenaline non-player character",
+		toToml: pnjToToml,
+		describeFailure: (source) => describeMissingPart(source, "nom is required"),
 	},
 ];
 

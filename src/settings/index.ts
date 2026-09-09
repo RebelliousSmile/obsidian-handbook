@@ -754,18 +754,29 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	private renderAdrenalineSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "adrenaline";
+		this.addAdrenalineToggle(section, "Fiche PJ", "adrenaline-pj", "adrenalinePjParser", isActive);
+		this.addAdrenalineToggle(section, "Fiche PNJ", "adrenaline-pnj", "adrenalinePnjParser", isActive);
+	}
+
+	private addAdrenalineToggle(
+		section: SettingGroup,
+		name: string,
+		blockId: string,
+		flag: "adrenalinePjParser" | "adrenalinePnjParser",
+		isActive: boolean,
+	) {
 		section.addSetting((setting) => {
 			setting
-				.setName("Fiche PJ")
-				.setDesc("Active le bloc TOML adrenaline-pj et son insertion.")
+				.setName(name)
+				.setDesc(`Active le bloc TOML ${blockId} et son insertion.`)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
 					toggle
-						.setValue(this.plugin.settings.features.adrenalinePjParser)
+						.setValue(this.plugin.settings.features[flag])
 						.setDisabled(!isActive)
 						.onChange((value) => {
 							this.runTask(async () => {
-								this.plugin.settings.features.adrenalinePjParser = value;
+								this.plugin.settings.features[flag] = value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
 							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
 						}),

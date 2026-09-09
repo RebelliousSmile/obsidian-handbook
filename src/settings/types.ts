@@ -34,6 +34,7 @@ export interface BrumesFeatureSettings {
 	osChallengeParser: boolean;
 	osPowerSetParser: boolean;
 	adrenalinePjParser: boolean;
+	adrenalinePnjParser: boolean;
 }
 
 export interface CityOfMistCalloutAliases {
@@ -99,6 +100,7 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		osChallengeParser: true,
 		osPowerSetParser: true,
 		adrenalinePjParser: true,
+		adrenalinePnjParser: true,
 	},
 	calloutAliases: {
 		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,
