@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.1.4",
+	"version": "2.2.1",
 	"description": "Theme and tools for Son of Oak's TTRPGs: City of Mist, Legend in the Mist and :Otherscape.",
 	"main": "dist/main.js",
 	"scripts": {
