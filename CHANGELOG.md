@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-09-09
+
+### Fixed
+
+- Align the Adrenaline PJ sheet and PNJ/monster cards with their published layouts: denser section bands, explicit physical and mental health labels, and source-specific placement order.
+- Preserve `[meta]` for Lantern and TOML exports without printing Lantern provenance as a Handbook card footer.
+- Realign package, manifest and compatibility metadata after the `2.3.0` tag.
+
 ## [2.3.0] - 2026-09-09
 
 ### Added
