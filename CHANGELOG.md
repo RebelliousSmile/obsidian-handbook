@@ -5,13 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-09-09
+
+### Added
+
+- Add a vault-wide Metro, Cairo or Tokyo universe selector for :Otherscape, with sourced light and dark palettes, live repainting and per-game persistence.
+- Add the shared tolerant TOML primitives for the six canonical :Otherscape schemas.
+- Render `os-theme` and `os-theme-kit`, including Self, Mythos, Noise and Crew identity, burnt tags, quests and played-theme tracks.
+- Render `os-challenge` and `os-power-set`, preserving Limits, Specials, standalone Threats and local or general Consequences.
+- Render `os-character-trope` and `os-loadout-item`, preserving paired Theme Kit references, free-form loadout suggestions and the catalog's single optional weakness tag.
+- Credit Mist HUD's MIT-licensed Metro visual vocabulary without redistributing its artwork or Foundry-specific assets.
+
 ## [2.1.4] - 2026-09-09
 
 ### Added
 
-- Add the six canonical :Otherscape TOML blocks and their copy commands: Theme, Theme Kit, Challenge, Power Set, Character Trope and Loadout Item.
-- Add a vault-wide Metro, Cairo or Tokyo universe selector, with sourced light and dark palettes, live repainting and per-game persistence.
-- Credit Mist HUD's MIT-licensed Metro visual vocabulary without redistributing its artwork or Foundry-specific assets.
 - Render an inline `{name-2}` status as the same tag pill an isolated field gets, wherever it is written inside a description, a consequence, a trigger, an effect or an outcome, across every block (367eef3).
 - Surface malformed `litm-journey` input in a muted footer instead of dropping it silently: an unrecognised line, a `benefits:` on a non-`Undertaking` journey, a vignette missing its trigger, or a consequence written before any `CONSEQUENCES` heading (367eef3).
 
