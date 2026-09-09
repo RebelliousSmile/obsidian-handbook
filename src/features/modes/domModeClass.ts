@@ -1,9 +1,11 @@
 import { missingAssetClass } from "../../games/assets";
 import { gamePackClass, gamePackClasses } from "../../games/registry";
-import { BrumesMode } from "../../settings/types";
+import { BrumesMode, ColourScheme } from "../../settings/types";
 
 export const WORKSPACE_THEME_CLASS = "brumes--workspace-theme";
 export const BLOCK_SCOPE_CLASS = "brumes-block-scope";
+export const COLOUR_SCHEME_LIGHT_CLASS = "brumes--colour-light";
+export const COLOUR_SCHEME_DARK_CLASS = "brumes--colour-dark";
 const MISSING_ASSET_PREFIX = missingAssetClass("");
 
 /** One class per declared pack, so a new game needs no edit here. */
@@ -43,6 +45,21 @@ export function setBrumesWorkspaceThemeClass(enabled: boolean, doc: Document) {
 	body.classList.remove(WORKSPACE_THEME_CLASS);
 }
 
+/** Apply a Handbook-only polarity without changing Obsidian's own theme. */
+export function setBrumesColourSchemeClass(
+	colourScheme: ColourScheme,
+	doc: Document,
+) {
+	const body = doc.body;
+	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);
+
+	if (colourScheme === "light") {
+		body.classList.add(COLOUR_SCHEME_LIGHT_CLASS);
+	} else if (colourScheme === "dark") {
+		body.classList.add(COLOUR_SCHEME_DARK_CLASS);
+	}
+}
+
 /**
  * Say which illustrations the vault does not have, so the fallback rules can
  * key off a class rather than guess from a missing value. Dropping an image
@@ -78,5 +95,6 @@ export function clearBrumesModeClasses(doc: Document) {
 	}
 
 	body.classList.remove(WORKSPACE_THEME_CLASS);
+	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);
 	setBrumesMissingAssetClasses([], doc);
 }

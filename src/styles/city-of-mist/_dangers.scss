@@ -33,7 +33,8 @@
 	}
 
 	// The Mist does not lighten the page at night.
-	&.theme-dark .brumes-com-danger {
+	&.theme-dark:not(.brumes--colour-light) .brumes-com-danger,
+	&.brumes--colour-dark .brumes-com-danger {
 		--brumes-com-danger-s: 45%;
 		--brumes-com-danger-l: 14%;
 		--brumes-com-danger-accent: #d9737f;

@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import type BrumesPlugin from "../src/BrumesPlugin";
 import { loadBrumesBlocks } from "../src/features/blocks/registry";
 import { buildGameStyle } from "../src/features/modes/styleElement";
-import { DEFAULT_SETTINGS } from "../src/settings/types";
+import {
+	DEFAULT_SETTINGS,
+	normalizeSettings,
+} from "../src/settings/types";
 
 const MODE_CLASS = "brumes--legend-in-the-mist";
 const BLOCK_SCOPE_CLASS = "brumes-block-scope";
@@ -55,6 +58,37 @@ const workspaceCss = buildGameStyle(
 assert.match(
 	workspaceCss,
 	/body\.brumes--legend-in-the-mist\.brumes--workspace-theme\s*\{[^}]*--test-workspace-base: workspace-base/,
+);
+
+const forcedDarkCss = buildGameStyle(
+	"legend-in-the-mist",
+	{
+		base: { note: {}, workspace: {} },
+		light: {
+			note: { "--forced-light": "light" },
+			workspace: {},
+		},
+		dark: {
+			note: { "--forced-dark": "dark" },
+			workspace: {},
+		},
+	},
+	false,
+	["light", "dark"],
+	"dark",
+);
+
+assert.match(forcedDarkCss, /\.brumes--colour-dark/);
+assert.match(forcedDarkCss, /--forced-dark: dark/);
+assert.doesNotMatch(forcedDarkCss, /\.theme-dark/);
+assert.doesNotMatch(forcedDarkCss, /--forced-light/);
+
+assert.equal(normalizeSettings(undefined).colourScheme, "obsidian");
+assert.equal(normalizeSettings({ colourScheme: "light" }).colourScheme, "light");
+assert.equal(normalizeSettings({ colourScheme: "dark" }).colourScheme, "dark");
+assert.equal(
+	normalizeSettings({ colourScheme: "sepia" as "dark" }).colourScheme,
+	"obsidian",
 );
 assert.match(
 	workspaceCss,

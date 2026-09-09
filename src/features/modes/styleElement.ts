@@ -1,4 +1,4 @@
-import { BrumesMode } from "../../settings/types";
+import { BrumesMode, ColourScheme } from "../../settings/types";
 import {
 	GamePolarity,
 	GameStyleLayer,
@@ -7,6 +7,8 @@ import {
 } from "../../games/types";
 import {
 	BLOCK_SCOPE_CLASS,
+	COLOUR_SCHEME_DARK_CLASS,
+	COLOUR_SCHEME_LIGHT_CLASS,
 	WORKSPACE_THEME_CLASS,
 } from "./domModeClass";
 
@@ -61,23 +63,47 @@ function renderLayer(
 	return blocks.filter((block) => block.length > 0).join("\n\n");
 }
 
-function noteSelector(mode: BrumesMode, polarity?: GamePolarity): string {
+function polarityClass(
+	polarity: GamePolarity,
+	colourScheme: ColourScheme,
+): string {
+	if (colourScheme === polarity) {
+		return `.${
+			polarity === "light"
+				? COLOUR_SCHEME_LIGHT_CLASS
+				: COLOUR_SCHEME_DARK_CLASS
+		}`;
+	}
+
+	return `.theme-${polarity}`;
+}
+
+function noteSelector(
+	mode: BrumesMode,
+	polarity?: GamePolarity,
+	colourScheme: ColourScheme = "obsidian",
+): string {
 	const modeClass = `brumes--${mode}`;
-	const themeClass = polarity ? `.theme-${polarity}` : "";
+	const themeClass = polarity
+		? polarityClass(polarity, colourScheme)
+		: "";
 	const localScope = `.${BLOCK_SCOPE_CLASS}.${modeClass}`;
 
 	return [
 		`body.${modeClass}${themeClass} .markdown-source-view`,
 		`body.${modeClass}${themeClass} .markdown-reading-view`,
-		polarity ? `body.theme-${polarity} ${localScope}` : localScope,
+		polarity ? `body${themeClass} ${localScope}` : localScope,
 	].join(",\n");
 }
 
 function workspaceSelector(
 	mode: BrumesMode,
 	polarity?: GamePolarity,
+	colourScheme: ColourScheme = "obsidian",
 ): string {
-	const themeClass = polarity ? `.theme-${polarity}` : "";
+	const themeClass = polarity
+		? polarityClass(polarity, colourScheme)
+		: "";
 	return `body.brumes--${mode}.${WORKSPACE_THEME_CLASS}${themeClass}`;
 }
 
@@ -111,6 +137,7 @@ export function buildGameStyle(
 	values: GameStyleValues,
 	workspaceTheme: boolean,
 	polarities: GamePolarity[] = [],
+	colourScheme: ColourScheme = "obsidian",
 ): string {
 	const blocks = [
 		renderLayer(
@@ -132,17 +159,26 @@ export function buildGameStyle(
 				workspaceTheme,
 			),
 		);
-	} else {
+	} else if (colourScheme === "obsidian") {
 		for (const polarity of polarities) {
 			blocks.push(
 				renderLayer(
-					noteSelector(mode, polarity),
-					workspaceSelector(mode, polarity),
+					noteSelector(mode, polarity, colourScheme),
+					workspaceSelector(mode, polarity, colourScheme),
 					values[polarity],
 					workspaceTheme,
 				),
 			);
 		}
+	} else if (polarities.includes(colourScheme)) {
+		blocks.push(
+			renderLayer(
+				noteSelector(mode, colourScheme, colourScheme),
+				workspaceSelector(mode, colourScheme, colourScheme),
+				values[colourScheme],
+				workspaceTheme,
+			),
+		);
 	}
 
 	return blocks.filter((block) => block.length > 0).join("\n\n");

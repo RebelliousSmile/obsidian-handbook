@@ -1,6 +1,6 @@
 import { App, Notice, PluginSettingTab, SettingGroup } from "obsidian";
 import BrumesPlugin from "../BrumesPlugin";
-import { LogLevel, sanitizeAliases } from "./types";
+import { ColourScheme, LogLevel, sanitizeAliases } from "./types";
 import { GAME_PACKS, resolveGamePack } from "../games/registry";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
@@ -100,7 +100,25 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName("Colour scheme")
-				.setDesc(this.createPolarityDescription());
+				.setDesc(this.createPolarityDescription())
+				.addDropdown((drop) =>
+					drop
+						.addOption("obsidian", "Follow Obsidian")
+						.addOption("light", "Light")
+						.addOption("dark", "Dark")
+						.setValue(this.plugin.settings.colourScheme)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.colourScheme =
+										value as ColourScheme;
+									await this.plugin.saveSettings();
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
 		});
 	}
 
@@ -117,7 +135,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 			return `The active game has one scheme, the ${only} one its books are printed in, and it holds whichever theme the vault is set to. Toggling the theme is meant to leave your notes as they are.`;
 		}
 
-		return "The active game has both a light and a dark scheme, and follows the theme the vault is set to.";
+		return "The active game has both a light and a dark scheme. Follow Obsidian to keep them aligned, or choose one scheme for Handbook.";
 	}
 
 	private renderMigrationNotice(section: SettingGroup) {

@@ -94,7 +94,8 @@
 
 		// Daylight: a case file on off-white paper, with the ribbon in the
 		// same ink as the night.
-		&.theme-light {
+		&.theme-light:not(.brumes--colour-dark),
+		&.brumes--colour-light {
 			--background-primary: #f2f2f0;
 			--background-secondary: #f2f0eb;
 			--ribbon-background: #382859;
@@ -124,7 +125,8 @@
 		}
 
 		// Night: the Mist over the city.
-		&.theme-dark {
+		&.theme-dark:not(.brumes--colour-light),
+		&.brumes--colour-dark {
 			--background-primary: #2d2040;
 			--background-secondary: #382859;
 			--ribbon-background: rgb(34, 22, 46);

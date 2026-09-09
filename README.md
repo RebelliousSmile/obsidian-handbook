@@ -66,6 +66,8 @@ Suggested vault setup:
 1. Open `Settings -> Handbook`.
 2. Pick your `Game mode`. The rendering follows immediately, with no reload
    and no preset to import.
+3. Leave `Colour scheme` on `Follow Obsidian`, or force Handbook's light or
+   dark scheme independently of the vault theme.
 
 ### 4. Add the illustrations
 

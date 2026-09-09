@@ -5,6 +5,7 @@ import { BrumesSettings, normalizeSettings } from "./settings/types";
 import { log } from "./utils/logger";
 import {
 	clearBrumesModeClasses,
+	setBrumesColourSchemeClass,
 	setBrumesMissingAssetClasses,
 	setBrumesModeClass,
 	setBrumesWorkspaceThemeClass,
@@ -206,6 +207,7 @@ export default class BrumesPlugin extends Plugin {
 			// The game says which polarities it has, and the user's file may
 			// claim others; nothing here supplies one neither of them named.
 			this.overrides.polarities ?? pack.polarities,
+			this.settings.colourScheme,
 		);
 
 		this.gameStyle.applyGameStyle(
@@ -250,6 +252,7 @@ export default class BrumesPlugin extends Plugin {
 
 	private dressDocument(doc: Document) {
 		setBrumesModeClass(this.settings.mode, doc);
+		setBrumesColourSchemeClass(this.settings.colourScheme, doc);
 		setBrumesMissingAssetClasses(
 			missingAssetRoles(this.assets, GAME_PACKS),
 			doc,

@@ -15,6 +15,7 @@ export type BrumesMode = string;
 const modeLog = logScope("Games");
 
 export type LogLevel = "none" | "error" | "warn" | "info" | "debug";
+export type ColourScheme = "obsidian" | "light" | "dark";
 
 export interface BrumesFeatureSettings {
 	tagsSyntax: boolean;
@@ -48,6 +49,7 @@ export interface BrumesCalloutAliasesSettings {
 
 export interface BrumesSettings {
 	mode: BrumesMode;
+	colourScheme: ColourScheme;
 	logLevel: LogLevel;
 	lanternUrl: string;
 	features: BrumesFeatureSettings;
@@ -70,6 +72,7 @@ export const DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES: LegendInTheMistCalloutA
 
 export const DEFAULT_SETTINGS: BrumesSettings = {
 	mode: DEFAULT_GAME_PACK_ID,
+	colourScheme: "obsidian",
 	logLevel: "error",
 	lanternUrl: "https://lantern.ravenloft.fr",
 	features: {
@@ -90,6 +93,7 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 };
 
 const LOG_LEVELS: LogLevel[] = ["none", "error", "warn", "info", "debug"];
+const COLOUR_SCHEMES: ColourScheme[] = ["obsidian", "light", "dark"];
 
 export function sanitizeAlias(alias: string): string {
 	return alias
@@ -141,6 +145,17 @@ function normalizeLogLevel(level: unknown): LogLevel {
 	return DEFAULT_SETTINGS.logLevel;
 }
 
+function normalizeColourScheme(value: unknown): ColourScheme {
+	if (
+		typeof value === "string" &&
+		COLOUR_SCHEMES.includes(value as ColourScheme)
+	) {
+		return value as ColourScheme;
+	}
+
+	return DEFAULT_SETTINGS.colourScheme;
+}
+
 function normalizeAliasList(
 	value: unknown,
 	fallback: string[],
@@ -187,6 +202,7 @@ export function normalizeSettings(
 
 	return {
 		mode: normalizeMode(source.mode),
+		colourScheme: normalizeColourScheme(source.colourScheme),
 		logLevel: normalizeLogLevel(source.logLevel),
 		lanternUrl:
 			typeof source.lanternUrl === "string"
