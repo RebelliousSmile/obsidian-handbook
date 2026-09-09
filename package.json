@@ -16,6 +16,7 @@
 		"assert:adrenaline-source": "node tools/assert-adrenaline-source.mjs",
 		"assert:adrenaline-theme": "node tools/assert-adrenaline-theme.mjs",
 		"assert:settings-ui": "node tools/assert-settings-ui.mjs",
+		"assert:reload-styles": "node tools/assert-reload-styles.mjs",
 		"assert:style-scope": "node tools/assert-style-scope.mjs",
 		"assert:tag-widget": "node tools/assert-tag-widget.mjs",
 		"assert:city-v1-theme": "node tools/assert-city-v1-theme.mjs",
