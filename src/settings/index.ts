@@ -53,6 +53,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
+									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 									this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
@@ -126,6 +127,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 								this.plugin.settings.gameVariants[registration.pack.id] =
 									value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
+								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 								this.display();
 							},
 							SETTINGS_SAVE_LOG_MESSAGE,
@@ -240,6 +242,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						this.runTask(
 							async () => {
 								await this.plugin.reloadStyleSources();
+								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 								this.display();
 							},
 							"Failed to look for the illustration files",
@@ -366,6 +369,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									this.plugin.settings.features.lanternIntegration =
 										value;
 									await this.plugin.saveSettings();
+									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 									this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
@@ -756,13 +760,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 		const isActive = this.plugin.settings.mode === "adrenaline";
 		this.addAdrenalineToggle(section, "Fiche PJ", "adrenaline-pj", "adrenalinePjParser", isActive);
 		this.addAdrenalineToggle(section, "Fiche PNJ", "adrenaline-pnj", "adrenalinePnjParser", isActive);
+		this.addAdrenalineToggle(section, "Fiche monstre", "adrenaline-monstre", "adrenalineMonsterParser", isActive);
 	}
 
 	private addAdrenalineToggle(
 		section: SettingGroup,
 		name: string,
 		blockId: string,
-		flag: "adrenalinePjParser" | "adrenalinePnjParser",
+		flag: "adrenalinePjParser" | "adrenalinePnjParser" | "adrenalineMonsterParser",
 		isActive: boolean,
 	) {
 		section.addSetting((setting) => {

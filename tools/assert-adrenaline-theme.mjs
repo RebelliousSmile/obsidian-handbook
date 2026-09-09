@@ -1,0 +1,37 @@
+import { buildSync } from "esbuild";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+
+const work = mkdtempSync(join(tmpdir(), "handbook-adrenaline-theme-"));
+const stub = join(work, "obsidian-stub.mjs");
+const bundle = join(work, "assert.cjs");
+writeFileSync(stub, `export class Notice {}
+export class Menu {}
+export class MenuItem {}
+export class Editor {}
+export class Plugin {}
+export class PluginSettingTab {}
+export class Setting {}
+export class Modal {}
+export class ItemView {}
+export function setIcon() {}
+`);
+
+try {
+	buildSync({
+		entryPoints: ["tools/assertAdrenalineTheme.harness.mts"],
+		outfile: bundle,
+		bundle: true,
+		platform: "node",
+		format: "cjs",
+		target: "node16",
+		alias: { obsidian: stub },
+		logLevel: "warning",
+	});
+	const run = spawnSync(process.execPath, [bundle], { stdio: "inherit" });
+	process.exit(run.status ?? 1);
+} finally {
+	rmSync(work, { recursive: true, force: true });
+}

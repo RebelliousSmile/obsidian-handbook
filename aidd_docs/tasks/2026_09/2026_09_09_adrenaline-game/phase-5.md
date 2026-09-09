@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Monstre, cohérence et livraison
@@ -157,3 +157,18 @@ journey
 | 4 | La correction de baseline n'altère ni le contenu des réglages ni le rendu des tags et chaque suppression de déprécation est limitée à l'API `display()` requise par Obsidian 1.12.7. |
 | 4 | Le rapport de livraison distingue les erreurs observées dans la baseline des régressions introduites par Adrenaline ; aucune baseline rouge n'est présentée comme une livraison verte. |
 | 4 | `visual-findings.md` atteste les trois fiches en desktop et en largeur étroite dans les deux polarités, avec le résultat observable de chacun des douze contrôles. |
+
+## Delivery evidence
+
+- Les cinq erreurs de la baseline lint du snapshot ont été ramenées à zéro : le
+  helper DOM des tags et les quatre appels `display()` compatibles Obsidian
+  1.12.7 ont été traités localement. Les deux portées conservent quatre warnings
+  préexistants sans erreur.
+- La comparaison du dump DOM avec `badea2f` retrouve les 38 sorties historiques
+  à l'identique, sans sortie manquante ; 13 cas Adrenaline sont ajoutés, dont les
+  trois témoins PJ, PNJ et monstre.
+- Les douze contrôles PJ/PNJ/monstre, desktop/étroit et light/dark sont consignés
+  dans `visual-findings.md`, sans débordement observé.
+- Build, corpus, documents Adrenaline, schémas Zod du dépôt frère, variantes,
+  overrides, réglages, portée des styles, thème Adrenaline, thème City of Mist
+  v1 et primitives :Otherscape terminent tous avec un code nul.

@@ -1,0 +1,89 @@
+nom = "Le Guetteur du silo"
+typeDeCorps = "adulte athlétique"
+instinct = "embuscade"
+typeInfecte = "conscience résiduelle"
+description = "Attend en hauteur et choisit sa proie."
+niveauDeDanger = 6
+zoneDeDetection = "50 m à vue"
+deplacement = "10 m par action"
+actionsParRound = 2
+comportement = ["Observe avant d'attaquer.", "Rompt le contact s'il est blessé."]
+traitsSpeciaux = ["Escalade toute surface.", "Reste immobile des heures."]
+[caracteristiques]
+for = 70
+con = 65
+dex = 60
+rap = 55
+log = 40
+vol = 50
+per = 75
+cha = 20
+[sante.physique.superficiel]
+base = 9
+[sante.physique.leger]
+base = 22
+[sante.physique.grave]
+base = 27
+[sante.physique.profond]
+base = 32
+[sante.mental.superficiel]
+base = 4
+[sante.mental.leger]
+base = 12
+[sante.mental.grave]
+base = 17
+[sante.mental.profond]
+base = 22
+[protections.physiques]
+solidite = 9
+[protections.mentales]
+solidite = 4
+[etatAlternatif]
+nom = "Stimulé"
+declencheurs = ["Odeur de sang frais"]
+zoneDeDetection = "80 m"
+deplacement = "15 m par action"
+actionsParRound = 3
+notes = "Revient au calme après deux rounds."
+[etatAlternatif.caracteristiques]
+rap = 70
+per = 90
+[[competences]]
+nom = "Discrétion"
+pourcentage = 70
+caracteristique = "dex"
+total = 130
+[equipement]
+possessions = ["Harnais de grimpe"]
+[[equipement.armesPhysiques]]
+nom = "Griffes"
+pourcentage = 80
+desDeDegats = 3
+type = "Contact"
+[contagion]
+agent = "Souche R-7"
+delaiAvantEffet = "6 à 12 heures"
+issue = "La victime devient un rôdeur."
+[[contagion.vecteurs]]
+nom = "Morsure"
+probabilite = 80
+notes = "Une plaie suffit."
+[[contagion.modulations]]
+profil = "Enfant"
+delaiAvantEffet = "2 à 4 heures"
+issue = "Transformation rapide."
+[narratif]
+role = "Verrouille l'accès au silo."
+attitude = "Hostile mais territorial."
+personnalite = ["Patient"]
+historique = "Ancien gardien du silo."
+evolutionPossible = "Abandonne le site s'il brûle."
+interpretation = ["Choisit toujours une cible isolée."]
+repliques = ["Un souffle rauque dans les hauteurs."]
+notesMj = ["Fuit le feu."]
+[meta]
+typeDePublication = "officiel"
+source = "Zombiology — Contamination"
+auteurs = ["Damien Coltice"]
+page = 207
+licence = "Tous droits réservés"

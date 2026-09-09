@@ -58,11 +58,12 @@ ou
 La ligne suivante dit en clair de quoi il s'agit. Un refus se lit sans ouvrir le
 harnais.
 
-## Les six blocs
+## Les formats couverts
 
-Le corpus couvre les **six** blocs fencés : `theme-card`, `litm-challenge`,
-`litm-journey`, `litm-theme-kit`, `com-theme-card`, `com-danger`. Chacun a son
-témoin et ses refus, et aucun n'est en dette.
+Le corpus couvre chaque bloc inscrit dans `BRUMES_BLOCKS`. Il comprend notamment
+les trois documents Adrenaline publiés : `adrenaline-pj`, `adrenaline-pnj` et
+`adrenaline-monstre`. Chacun a son témoin, ses refus pertinents et sa commande
+de copie ; aucun total fragile n'est recopié ici.
 
 Le harnais garde la liste des blocs en dette **vide**. Un bloc neuf qui n'y
 figure pas et n'a ni témoin ni commande de copie fait échouer

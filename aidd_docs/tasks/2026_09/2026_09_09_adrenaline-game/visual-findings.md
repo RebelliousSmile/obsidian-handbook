@@ -52,6 +52,21 @@ contraste à l'écran ; elles ne prétendent pas être les encres d'impression.
 
 ## Vérification finale
 
-À compléter en phase 5 avec les douze combinaisons PJ/PNJ/monstre ×
-desktop/étroit × light/dark. Une ligne doit nommer le témoin, la largeur, la
-polarité, le résultat visible et la correction éventuelle.
+Les témoins rendus ont été réunis sur une planche HTML utilisant les classes DOM
+et les règles CSS du plugin, puis capturés avec Chromium à 984 px et 234 px. Les
+captures temporaires n'embarquent aucun actif extrait du livre.
+
+| Témoin | Largeur | Polarité | Résultat observable | Correction |
+| ------ | ------- | -------- | ------------------- | ---------- |
+| PJ | desktop | light | Les cinq régions restent hiérarchisées, la grille de caractéristiques tient sur une ligne. | aucune |
+| PJ | desktop | dark | Bandeau, panneaux et provenance restent contrastés sans modifier la géométrie. | aucune |
+| PJ | étroite | light | Les régions passent en une colonne et les huit caractéristiques restent lisibles sur deux colonnes. | aucune |
+| PJ | étroite | dark | Aucun texte ni filet ne déborde du cadre à 234 px. | aucune |
+| PNJ | desktop | light | Présentation, statistiques, santé, compétences et équipement gardent leur ordre de lecture. | aucune |
+| PNJ | desktop | dark | Le rôle et le danger restent visibles dans le bandeau, les panneaux conservent leur contraste. | aucune |
+| PNJ | étroite | light | La grille se replie en une colonne sans zone vide ni chevauchement. | aucune |
+| PNJ | étroite | dark | Les libellés et la provenance restent lisibles sans défilement horizontal. | aucune |
+| Monstre | desktop | light | Détection et comportement précèdent statistiques, santé et capacités comme prévu au wireframe. | aucune |
+| Monstre | desktop | dark | Le niveau de danger et les informations de confrontation restent immédiatement repérables. | aucune |
+| Monstre | étroite | light | Les deux colonnes deviennent une pile continue, sans rupture de bordure ni débordement. | aucune |
+| Monstre | étroite | dark | Toutes les régions visibles gardent contraste et rythme à 234 px. | aucune |

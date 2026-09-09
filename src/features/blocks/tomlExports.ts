@@ -24,6 +24,8 @@ import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { pjToToml } from "../adrenalinePj/schema";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { pnjToToml } from "../adrenalinePnj/schema";
+import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
+import { monsterToToml } from "../adrenalineMonstre/schema";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -147,6 +149,14 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		noun: "Adrenaline non-player character",
 		toToml: pnjToToml,
 		describeFailure: (source) => describeMissingPart(source, "nom is required"),
+	},
+	{
+		block: adrenalineMonsterBlock,
+		commandId: "copy-adrenaline-monstre-as-toml",
+		noun: "Adrenaline monster",
+		toToml: monsterToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "nom and four physical characteristics are required"),
 	},
 ];
 

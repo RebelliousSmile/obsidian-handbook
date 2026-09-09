@@ -4,7 +4,7 @@ Dépôt autonome depuis le **2026-09-07**. Objectif : développer le plugin comm
 
 ## Identité du projet
 
-- Plugin Obsidian **Handbook** (`id: obsidian-handbook`), thème + outils pour les JDR de Son of Oak : City of Mist, Legend in the Mist, :Otherscape.
+- Plugin Obsidian **Handbook** (`id: obsidian-handbook`), thèmes + outils pour quatre lignes : City of Mist, Legend in the Mist, :Otherscape et Adrenaline System.
 - Fork de **Brumes** (`4rtamis/obsidian-brumes`), MIT, détaché le 2026-09-07. Le copyright d'origine reste dans `LICENSE`, l'origine est créditée dans le README.
 - Version : `package.json` et `manifest.json` portent **`2.1.4`**. `minAppVersion: 1.12.7`.
 - Stack : TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), lint ESLint (dont `eslint-plugin-obsidianmd`).
@@ -25,11 +25,11 @@ Renommé : `manifest.json` (`id`, `name`, `author`, `authorUrl`), `package.json`
 | Chemin | Rôle |
 | --- | --- |
 | `src/main.ts`, `src/BrumesPlugin.ts` | entrée et classe du plugin |
-| `src/features/` | `blocks` (registre), `callouts`, `challenges`, `comDangers`, `comThemeCards`, `journeys`, `modes`, `tags`, `themeCards`, `themeKits` |
+| `src/features/` | `blocks` (registre), familles historiques, profils :Otherscape, socle `adrenaline` et fiches `adrenalinePj`, `adrenalinePnj`, `adrenalineMonstre` |
 | `src/games/` | un jeu = un pack de données : `registry.ts`, `types.ts`, `tokens.ts`, `assets.ts`, `overrides.ts`, `fromSchema.ts` + un fichier par jeu |
 | `src/views/` | `LanternView.ts`, `lanternLogo.ts` |
 | `src/settings/` | `index.ts` (onglet de réglages), `canvasSnippets.ts` (snippets Advanced Canvas), `types.ts` — et rien d'autre |
-| `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`) + `styles.scss`, `_neutralize.scss`, `_fallbacks.scss`, `settings.scss`, `lantern.scss` |
+| `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`, `adrenaline/`) + styles transversaux |
 | `src/contextMenu/`, `src/utils/` | menus contextuels, `logger.ts` |
 | `assets/` | illustrations source à déposer dans le coffre, un dossier par jeu |
 | `corpus/` | les documents qui prouvent : `temoins/` (doivent passer), `refus/` (doivent être rejetés) |
@@ -44,6 +44,9 @@ pnpm build            # tsc -noEmit -skipLibCheck && esbuild production
 pnpm dev              # esbuild --watch
 pnpm lint             # eslint . — pas seulement src/
 pnpm assert:corpus    # chaque bloc lit un témoin, dégrade un refus, et a sa commande de copie
+pnpm assert:adrenaline-documents # lecteurs communs et aller-retour TOML
+pnpm assert:adrenaline-source    # six exemples et témoins réémis contre les cibles Zod
+pnpm assert:adrenaline-theme     # trois racines, deux polarités et responsive
 pnpm assert:override  # overrides.json : surcharger une zone, la retirer, retrouver le rendu d'origine
 pnpm dump:dom         # le DOM rendu des six blocs, à comparer d'une phase à l'autre
 ```
@@ -136,7 +139,7 @@ Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'i
 Ajouter un jeu :
 
 1. un fichier `src/games/<jeu>.ts` exportant un `GamePack` ;
-2. une ligne dans `DECLARED_PACKS` de `src/games/registry.ts` ;
+2. une registration dans `DECLARED_GAMES` de `src/games/registry.ts` ;
 3. rien d'autre. La liste déroulante des réglages, la classe de body et le style suivent.
 
 Trois règles qui mordent :
