@@ -48,6 +48,7 @@ pnpm assert:adrenaline-documents # lecteurs communs et aller-retour TOML
 pnpm assert:adrenaline-source    # six exemples et témoins réémis contre les cibles Zod
 pnpm assert:adrenaline-theme     # trois racines, deux polarités et responsive
 pnpm assert:override  # overrides.json : surcharger une zone, la retirer, retrouver le rendu d'origine
+pnpm assert:custom-packs # packs/*.json : pack valide, fichier fautif écarté seul, collision d'id, ordre du cycle de vie
 pnpm dump:dom         # le DOM rendu des six blocs, à comparer d'une phase à l'autre
 ```
 
@@ -146,7 +147,7 @@ Trois règles qui mordent :
 
 - **Les variantes s'écrivent en sélecteur composé** : `.brumes--<jeu>.theme-dark`, jamais `.theme-dark` seul. Les deux classes sont sur le même `body` — à spécificité égale seul l'ordre des feuilles trancherait, et rien ne garantit que la nôtre passe après celle du thème actif.
 - **L'identifiant d'un pack est un suffixe de classe CSS et une clé du `data.json` de l'utilisateur** : minuscules, chiffres, traits d'union simples (`isValidGamePackId`). Un pack qui échoue au contrôle est écarté seul, les autres chargent.
-- **Le registre est statique par choix.** `domModeClass.ts` calcule `MODE_CLASSES = gamePackClasses()` au chargement du module, et l'onglet de réglages comme `settings/types.ts` consultent le registre chacun de leur côté. Charger des packs depuis le coffre suppose de rendre ces trois points dynamiques — c'est un refactor, pas un ajout. Motif consigné dans `aidd_docs/tasks/2026_09/2026_09_08_game-packs-owned-rendering/schema-boundary.md`.
+- **Le registre accueille aussi des packs personnels, lus au démarrage.** Un fichier déposé dans `<dossier du plugin>/packs/*.json` (`src/games/customPacks.ts`) rejoint `DECLARED_GAMES` avant le premier rendu : `BrumesPlugin.ts::onload()` appelle `loadCustomGamePacks` puis `initGameRegistry` avant `loadSettings()`. Un id en collision avec un jeu déclaré perd, journalisé une fois ; deux packs personnels partageant un id, le fichier qui trie premier gagne. `domModeClass.ts` ne fige plus `gamePackClasses()`/`gameVariantClasses()` à l'import — les deux se relisent à chaque appel, comme l'onglet de réglages et `settings/types.ts` le faisaient déjà chacun de leur côté.
 
 ### Le réglage fin passe par un fichier, pas par des curseurs
 

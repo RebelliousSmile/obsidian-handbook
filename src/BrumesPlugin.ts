@@ -23,9 +23,11 @@ import {
 } from "./games/assets";
 import {
 	GAME_PACKS,
+	initGameRegistry,
 	resolveGamePack,
 	resolveGameRegistration,
 } from "./games/registry";
+import { loadCustomGamePacks } from "./games/customPacks";
 import { GamePack } from "./games/types";
 import {
 	EMPTY_OVERRIDE,
@@ -68,6 +70,9 @@ export default class BrumesPlugin extends Plugin {
 	private assets: GameAssetState = emptyAssetState("");
 
 	async onload() {
+		const customPacks = await loadCustomGamePacks(this);
+		initGameRegistry(customPacks);
+
 		await this.loadSettings();
 
 		log.setLevel(this.settings.logLevel);

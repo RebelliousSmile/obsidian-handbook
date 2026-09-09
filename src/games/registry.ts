@@ -13,6 +13,22 @@ import {
 
 const log = logScope("Games");
 
+/**
+ * A pack id already reported as colliding this session stays silent on a
+ * later call — `initGameRegistry` may run more than once (a harness replaying
+ * `onload`), and a collision is worth a warning, not one per replay.
+ */
+const reportedConflicts: string[] = [];
+
+function reportConflictOnce(id: string, message: string): void {
+	if (reportedConflicts.indexOf(id) !== -1) {
+		return;
+	}
+
+	reportedConflicts.push(id);
+	log.error(message);
+}
+
 /** Every game Handbook knows. Adding a game means adding a line here. */
 const DECLARED_GAMES: GameRegistration[] = [
 	{ pack: cityOfMistPack },
@@ -48,7 +64,10 @@ function acceptRegistrations(
 		}
 
 		if (seen.indexOf(pack.id) !== -1) {
-			log.error(`Ignoring a second game pack declared as "${pack.id}".`);
+			reportConflictOnce(
+				pack.id,
+				`Ignoring a second game pack declared as "${pack.id}".`,
+			);
 			continue;
 		}
 
@@ -84,6 +103,33 @@ export const GAME_REGISTRATIONS: GameRegistration[] =
 export const GAME_PACKS: GamePack[] = GAME_REGISTRATIONS.map(
 	(registration) => registration.pack,
 );
+
+/**
+ * Merges `DECLARED_GAMES` with packs read from the vault, and refills
+ * `GAME_REGISTRATIONS`/`GAME_PACKS` in place — never reassigned, since several
+ * files hold a direct reference to these arrays taken at import time.
+ *
+ * A custom pack never carries variants. One whose id collides with a declared
+ * game loses to it, logged once; two custom packs sharing an id keep only the
+ * first — callers sort their files before calling, so that first claim is
+ * deterministic.
+ */
+export function initGameRegistry(customPacks: GamePack[]): void {
+	const customRegistrations: GameRegistration[] = customPacks.map((pack) => ({
+		pack,
+	}));
+
+	const accepted = acceptRegistrations([
+		...DECLARED_GAMES,
+		...customRegistrations,
+	]);
+
+	GAME_REGISTRATIONS.length = 0;
+	GAME_REGISTRATIONS.push(...accepted);
+
+	GAME_PACKS.length = 0;
+	GAME_PACKS.push(...GAME_REGISTRATIONS.map((registration) => registration.pack));
+}
 
 export const DEFAULT_GAME_PACK_ID = "city-of-mist";
 
