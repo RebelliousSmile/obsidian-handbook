@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-09-09
+
+### Added
+
+- Replace the two hardcoded per-game callout-alias blocks with a single, extensible `settings.callouts` list scoped to a single game or to all four, editable through a closed-vocabulary constructor in the settings screen (name, aliases, scope, template, icon, font and colour).
+- Migrate the 7 historical callout styles (City of Mist's `clue`, `red-clue`, `move`, `description`, `note`; Legend in the Mist's `note`, `read-aloud`) into locked native entries automatically, preserving their existing render.
+- Apply user-defined callout styling live through the plugin's own `<style>` element, without reloading, via a new `styleWriter`.
+- Register a dynamic Obsidian command per callout entry (added, removed or renamed on every settings save, cleared on unload), so a shortcut can be bound from Settings → Hotkeys; scoped entries carry the game name to disambiguate and stay hidden from the palette when another game is active.
+- Give :Otherscape and Adrenaline System their own `_callouts.scss`, so a common-scope callout and native Obsidian callouts (`> [!info]`) render tinted on all four games, not just City of Mist and Legend in the Mist.
+
+### Fixed
+
+- Theme City of Mist's `--code-normal`/`--code-background` so inline code (for example a backtick-wrapped block id in a heading) follows the game palette instead of Obsidian's default colour.
+
 ## [2.3.3] - 2026-09-09
 
 ### Fixed
