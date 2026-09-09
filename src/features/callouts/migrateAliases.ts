@@ -158,7 +158,7 @@ for (const entry of NATIVE_CALLOUTS) {
 	NATIVE_TAKEN_IDS.add(entry.styleKey);
 }
 
-function generateCalloutId(name: string, takenIds: Set<string>): string {
+export function generateCalloutId(name: string, takenIds: Set<string>): string {
 	const base =
 		name
 			.toLowerCase()

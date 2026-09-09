@@ -9,6 +9,8 @@ import {
 import { resolveGameVariant } from "../games/variants";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
+import { CalloutDefinition } from "../features/callouts/types";
+import { CalloutsModal } from "./calloutsModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
@@ -99,6 +101,10 @@ export class BrumesSettingTab extends PluginSettingTab {
 		);
 		adrenalineSection.setHeading("Adrenaline System");
 		this.renderAdrenalineSettings(adrenalineSection);
+
+		const calloutsSection = this.createSection(containerEl);
+		calloutsSection.setHeading("Callouts");
+		this.renderCalloutsSection(calloutsSection);
 
 		const advancedSection = this.createSection(containerEl);
 		advancedSection.setHeading("Advanced");
@@ -414,68 +420,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 	private renderCityOfMistSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "city-of-mist";
 
-		this.addAliasSetting(
-			section,
-			"Note aliases",
-			this.plugin.settings.calloutAliases.cityOfMist.note,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.cityOfMist.note = aliases;
-				await this.plugin.saveSettings();
-			},
-		);
-
-		this.addAliasSetting(
-			section,
-			"Move aliases",
-			this.plugin.settings.calloutAliases.cityOfMist.move,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.cityOfMist.move = aliases;
-				await this.plugin.saveSettings();
-			},
-		);
-
-		this.addAliasSetting(
-			section,
-			"Description aliases",
-			this.plugin.settings.calloutAliases.cityOfMist.description,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.cityOfMist.description =
-					aliases;
-				await this.plugin.saveSettings();
-			},
-		);
-
-		this.addAliasSetting(
-			section,
-			"Clue aliases",
-			this.plugin.settings.calloutAliases.cityOfMist.clue,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.cityOfMist.clue = aliases;
-				await this.plugin.saveSettings();
-			},
-		);
-
-		this.addAliasSetting(
-			section,
-			"Red clue aliases",
-			this.plugin.settings.calloutAliases.cityOfMist.redClue,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.cityOfMist.redClue =
-					aliases;
-				await this.plugin.saveSettings();
-			},
-		);
-
 		section.addSetting((setting) => {
 			setting
 				.setName("Theme card parser")
@@ -561,32 +505,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	private renderLegendInTheMistSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "legend-in-the-mist";
-
-		this.addAliasSetting(
-			section,
-			"Note aliases",
-			this.plugin.settings.calloutAliases.legendInTheMist.note,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.legendInTheMist.note =
-					aliases;
-				await this.plugin.saveSettings();
-			},
-		);
-
-		this.addAliasSetting(
-			section,
-			"Read-aloud aliases",
-			this.plugin.settings.calloutAliases.legendInTheMist.readAloud,
-			"One alias per line. The first alias is inserted from the context menu.",
-			!isActive,
-			async (aliases) => {
-				this.plugin.settings.calloutAliases.legendInTheMist.readAloud =
-					aliases;
-				await this.plugin.saveSettings();
-			},
-		);
 
 		section.addSetting((setting) => {
 			setting
@@ -825,6 +743,103 @@ export class BrumesSettingTab extends PluginSettingTab {
 						}),
 				);
 		});
+	}
+
+	private renderCalloutsSection(section: SettingGroup) {
+		for (const entry of this.plugin.settings.callouts) {
+			if (entry.native) {
+				this.addCalloutAliasSetting(section, entry);
+				continue;
+			}
+
+			section.addSetting((setting) => {
+				setting
+					.setName(entry.name)
+					.setDesc(
+						`Portée : ${this.calloutScopeLabel(entry.scope)} · alias : ${
+							entry.aliases.join(", ") || "aucun"
+						}`,
+					)
+					.addExtraButton((button) =>
+						button
+							.setIcon("pencil")
+							.setTooltip("Modifier")
+							.onClick(() => {
+								new CalloutsModal(this.app, this.plugin, entry, () => {
+									this.display();
+								}).open();
+							}),
+					)
+					.addExtraButton((button) =>
+						button
+							.setIcon("trash")
+							.setTooltip("Supprimer")
+							.onClick(() => {
+								if (!activeWindow.confirm(`Supprimer le callout "${entry.name}" ?`)) {
+									return;
+								}
+								this.runTask(
+									async () => {
+										this.plugin.settings.callouts =
+											this.plugin.settings.callouts.filter(
+												(c) => c.id !== entry.id,
+											);
+										await this.plugin.saveSettings();
+										this.display();
+									},
+									SETTINGS_SAVE_LOG_MESSAGE,
+									SETTINGS_SAVE_NOTICE,
+								);
+							}),
+					);
+			});
+		}
+
+		section.addSetting((setting) => {
+			setting.addButton((button) =>
+				button.setButtonText("+ nouveau callout").onClick(() => {
+					new CalloutsModal(this.app, this.plugin, null, () => {
+						this.display();
+					}).open();
+				}),
+			);
+		});
+	}
+
+	private addCalloutAliasSetting(section: SettingGroup, entry: CalloutDefinition) {
+		section.addSetting((setting) => {
+			setting
+				.setName(`🔒 ${entry.name}`)
+				.setDesc(
+					`Portée : ${this.calloutScopeLabel(entry.scope)}. Seuls les alias sont modifiables ici, un par ligne.`,
+				)
+				.addTextArea((text) => {
+					text.setValue(entry.aliases.join("\n"));
+					text.inputEl.rows = Math.max(3, entry.aliases.length || 1);
+					text.inputEl.addEventListener("change", () => {
+						const sanitizedAliases = sanitizeAliases(
+							text.getValue().split(/\r?\n/g),
+						);
+						text.setValue(sanitizedAliases.join("\n"));
+						this.runTask(
+							async () => {
+								entry.aliases = sanitizedAliases;
+								await this.plugin.saveSettings();
+							},
+							SETTINGS_SAVE_LOG_MESSAGE,
+							SETTINGS_SAVE_NOTICE,
+						);
+					});
+				});
+		});
+	}
+
+	private calloutScopeLabel(scope: string): string {
+		if (scope === "all") {
+			return "Tous les jeux";
+		}
+		const pack = GAME_PACKS.find((p) => p.id === scope);
+		return pack?.label ?? scope;
 	}
 
 	private addAliasSetting(
