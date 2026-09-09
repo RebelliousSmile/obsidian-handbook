@@ -13,10 +13,6 @@ export const COLOUR_SCHEME_LIGHT_CLASS = "brumes--colour-light";
 export const COLOUR_SCHEME_DARK_CLASS = "brumes--colour-dark";
 const MISSING_ASSET_PREFIX = missingAssetClass("");
 
-/** One class per declared pack, so a new game needs no edit here. */
-const MODE_CLASSES = gamePackClasses();
-const VARIANT_CLASSES = gameVariantClasses();
-
 /**
  * Every function here takes the document to act on. Obsidian opens detached
  * windows with a document of their own, and the mode class has to reach each
@@ -27,7 +23,7 @@ export function setBrumesModeClass(mode: BrumesMode, doc: Document) {
 	const body = doc.body;
 
 	// Remove existing mode classes
-	for (const cls of MODE_CLASSES) {
+	for (const cls of gamePackClasses()) {
 		body.classList.remove(cls);
 	}
 
@@ -37,7 +33,7 @@ export function setBrumesModeClass(mode: BrumesMode, doc: Document) {
 
 export function setBrumesVariantClass(variantId: string | null, doc: Document) {
 	const body = doc.body;
-	for (const cls of VARIANT_CLASSES) {
+	for (const cls of gameVariantClasses()) {
 		body.classList.remove(cls);
 	}
 	if (variantId) {
@@ -106,10 +102,10 @@ export function setBrumesMissingAssetClasses(roles: string[], doc: Document) {
 export function clearBrumesModeClasses(doc: Document) {
 	const body = doc.body;
 
-	for (const cls of MODE_CLASSES) {
+	for (const cls of gamePackClasses()) {
 		body.classList.remove(cls);
 	}
-	for (const cls of VARIANT_CLASSES) {
+	for (const cls of gameVariantClasses()) {
 		body.classList.remove(cls);
 	}
 
