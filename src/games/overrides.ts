@@ -75,9 +75,15 @@ export function parseGameOverride(raw: string): GameOverride {
 		return EMPTY_OVERRIDE;
 	}
 
-	// A file may be written as a whole pack, `{ "style": { … } }`, or as the
-	// style alone. Both read the same.
-	const style = isRecord(parsed.style) ? parsed.style : parsed;
+	// A file may be written as a whole pack — `{ "style": { … } }`, with
+	// "shapes" and "polarities" beside it, or all three nested one level
+	// deeper under "pack" — or as the style alone, with nothing wrapped at
+	// all. All three read the same, `style` included: it used to stop at
+	// `parsed.style`, so a file wrapped under "pack" lost its style silently
+	// while its shapes and polarities kept reading, because only they walked
+	// into "pack" first.
+	const declared = isRecord(parsed.pack) ? parsed.pack : parsed;
+	const style = isRecord(declared.style) ? declared.style : declared;
 	const override: GameStyleOverride = {};
 
 	for (const layerName of LAYER_NAMES) {
@@ -112,11 +118,6 @@ export function parseGameOverride(raw: string): GameOverride {
 
 		override[layerName] = slots;
 	}
-
-	// The shapes sit beside the style, at either level: a file written as a
-	// whole pack carries them under "pack", one written as the style alone
-	// still carries them at its root.
-	const declared = isRecord(parsed.pack) ? parsed.pack : parsed;
 
 	return {
 		style: override,

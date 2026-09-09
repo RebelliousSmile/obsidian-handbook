@@ -181,6 +181,36 @@ check(
 );
 
 /* ------------------------------------------------------------------ *
+ * 2b. A file wrapped under "pack" — style, shapes and polarities all one
+ * level deeper. Shapes and polarities always walked into "pack" first;
+ * style used to stop at the top level and come back empty.
+ * ------------------------------------------------------------------ */
+
+const wrapped = parseGameOverride(
+	JSON.stringify({
+		pack: {
+			style: {
+				base: { note: { "--wrapped-token": "wrapped" } },
+			},
+			shapes: {
+				"litm-challenge": {
+					threats: { heading: "Sous pack" },
+				},
+			},
+		},
+	}),
+);
+
+check(
+	"a style wrapped under \"pack\" is still read",
+	wrapped.style.base?.note?.["--wrapped-token"] === "wrapped",
+);
+check(
+	"shapes wrapped under \"pack\" are still read alongside it",
+	wrapped.shapes["litm-challenge"]?.threats?.heading === "Sous pack",
+);
+
+/* ------------------------------------------------------------------ *
  * 3. The file removed. This is the promise worth measuring.
  * ------------------------------------------------------------------ */
 

@@ -119,6 +119,17 @@ function unknownFields(
  * Exported because the override file a user writes by hand is a pack document
  * with most of it left out, and reads its tokens the same way.
  */
+/**
+ * A custom property name, and nothing a name could smuggle in. `sanitizeValue`
+ * in `styleElement.ts` already drops the characters that would let a *value*
+ * close its declaration early; a *name* had no such guard, and the write
+ * point trusts it verbatim once it gets there. Rejecting it here, at the
+ * boundary every pack document and every hand-written override already cross,
+ * keeps that trust honoured instead of adding a second, divergent filter at
+ * the write point.
+ */
+const SAFE_TOKEN_NAME = /^--[a-zA-Z0-9-]+$/;
+
 export function readPackTokens(value: unknown, where: string): GameStyleTokens {
 	if (!isRecord(value)) {
 		if (value !== undefined) {
@@ -134,7 +145,7 @@ export function readPackTokens(value: unknown, where: string): GameStyleTokens {
 	for (const name of Object.keys(value)) {
 		const token = value[name];
 
-		if (name.indexOf("--") !== 0 || typeof token !== "string") {
+		if (!SAFE_TOKEN_NAME.test(name) || typeof token !== "string") {
 			rejected.push(name);
 			continue;
 		}

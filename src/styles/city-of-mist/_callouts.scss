@@ -14,6 +14,7 @@
 @mixin global {
 	.callout {
 		background-color: #e0d0d0;
+		color: black;
 
 		.callout-title {
 			font-family: "Fira Sans Extra Condensed", sans-serif;
@@ -24,6 +25,10 @@
 		}
 
 		.callout-icon .svg-icon {
+			color: black;
+		}
+
+		.callout-content {
 			color: black;
 		}
 	}

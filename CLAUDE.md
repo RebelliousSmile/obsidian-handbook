@@ -182,6 +182,8 @@ Les six schémas de contenu :Otherscape vivent dans le dépôt frère `schema-in
 
 Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans un chemin de lecture de l'ancienne forme. Un champ inconnu laisse un avertissement **une fois par session**, pas un par rendu.
 
+**Le nom d'un jeton est validé à la lecture, pas seulement sa valeur** (constaté le 2026-09-09, refactor du contrat `GamePack`). `readPackTokens` (`fromSchema.ts`) n'exigeait que le préfixe `--` sur un nom, sans restreindre les autres caractères, alors que `renderTokens` (`styleElement.ts`) n'assainit que la *valeur* avant d'écrire dans l'élément `<style>` que le plugin possède — un nom contenant `{`, `}` ou `;` pouvait donc fermer sa propre déclaration CSS et injecter des règles dans la feuille de style de confiance. `readPackTokens` exige désormais `/^--[a-zA-Z0-9-]+$/` ; un nom refusé se journalise comme tout champ inconnu, une fois par session. Sans effet observable tant que seul du code ou l'`overrides.json` de l'utilisateur fournissent des noms, mais c'est la frontière exacte qu'un dépôt de schéma tiers traverserait un jour (voir `aidd_docs/tasks/2026_09/2026_09_09_game-schema-repos/discovery-brief.md`).
+
 ## Conventions de travail
 
 - Ne pas commiter ni pousser sans demande explicite.
