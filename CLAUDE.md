@@ -131,7 +131,7 @@ Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspond
 
 Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en couches `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. Une enveloppe interne `GameRegistration` peut ajouter des variantes visuelles sans modifier le `GamePack` sérialisable. :Otherscape emploie ce mécanisme pour Metro, Cairo et Tokyo, avec la priorité `pack → variante → overrides utilisateur`.
 
-**Un pack déclare ses polarités, il n'en dérive aucune** (`GamePolarity`, `src/games/types.ts`). Une couche non déclarée n'est **pas écrite**, plutôt qu'écrite en copie de `base` — un pack dont le `base` est fortement clair casserait un coffre en thème sombre. Une polarité unique s'écrit sur le sélecteur de mode nu, après `base`, donc elle gagne à spécificité égale quel que soit le réglage du thème ; deux polarités s'écrivent en sélecteurs composés. État au 2026-09-08 : City of Mist et :Otherscape déclarent `["light", "dark"]`, Legend in the Mist `["light"]` — le jeu n'imprime que du parchemin, et le schéma sombre qui existait avait été inventé.
+**Un pack ou sa variante active déclare ses polarités, il n'en dérive aucune** (`GamePolarity`, `src/games/types.ts`). Une couche non déclarée n'est **pas écrite**, plutôt qu'écrite en copie de `base` — un pack dont le `base` est fortement clair casserait un coffre en thème sombre. Une polarité unique s'écrit sur le sélecteur de mode nu, après `base`, donc elle gagne à spécificité égale quel que soit le réglage du thème ; deux polarités s'écrivent en sélecteurs composés. City of Mist et chacune des variantes Metro/Cairo/Tokyo déclarent `["light", "dark"]`; Legend in the Mist déclare `["light"]` — le jeu n'imprime que du parchemin, et le schéma sombre qui existait avait été inventé.
 
 Ajouter un jeu sans variante :
 
@@ -197,7 +197,7 @@ Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans u
 
 Trois pièges :
 
-- `@typescript-eslint/parser` est importé par `eslint.config.mjs` mais **absent de `package.json`** ; si eslint casse sur `Cannot find module '@typescript-eslint/scope-manager'`, la résolution locale est à réparer dans `node_modules`, pas dans un fichier suivi.
+- `@typescript-eslint/parser` est une dépendance de développement explicite parce que `eslint.config.mjs` l'importe directement. Après un clone, installer le lockfile avant de conclure à une panne du lint.
 - `pnpm lint` via le runner échoue parfois : appeler `./node_modules/.bin/eslint src --ext .ts` directement.
 - `@typescript-eslint/restrict-template-expressions` : **une garde de type `x is string` réduit `x` à `never` dans la branche négative**, et `never` ne s'interpole pas. Capturer la valeur brute avant la garde (`const declared = String(value);`) pour pouvoir la nommer dans le message d'erreur.
 - `eslint-plugin-obsidianmd` impose la **sentence case** sur les chaînes d'UI, considère `id` comme un sigle (« The older story-theme ID keeps working. ») et **veut abaisser les noms propres** : écrire une description de réglage sans y mettre « City of Mist » plutôt que de désactiver la règle.
