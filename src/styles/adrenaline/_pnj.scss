@@ -1,38 +1,34 @@
 @mixin sheet {
 	.brumes-adrenaline-pnj {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.8rem;
-		max-width: 100%;
+		display: flex;
+		flex-direction: column;
+		max-width: 34rem;
+		margin-inline: auto;
 		overflow-wrap: anywhere;
-		padding: 1rem;
-		border: 2px solid var(--adrenaline-rule);
+		border: 1px solid var(--adrenaline-rule);
+		font-size: 0.84em;
+		line-height: 1.25;
 		background: var(--background-primary);
-	}
-
-	.brumes-adrenaline-pnj--header,
-	.brumes-adrenaline-pnj--narrative,
-	.brumes-adrenaline-pnj--provenance {
-		grid-column: 1 / -1;
 	}
 
 	.brumes-adrenaline-pnj header {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.4rem 1rem;
+		gap: 0.2rem 0.65rem;
 		align-items: baseline;
-		padding: 0.65rem;
+		padding: 0.32rem 0.48rem;
 		color: var(--adrenaline-band-ink);
 		background: var(--adrenaline-band);
 	}
 
 	.brumes-adrenaline-pnj h3,
 	.brumes-adrenaline-pnj h4 { margin: 0; text-transform: uppercase; }
-	.brumes-adrenaline-pnj--panel { min-width: 0; padding: 0.6rem; border-top: 1px solid var(--adrenaline-rule); background: var(--adrenaline-panel); }
-	.brumes-adrenaline-pnj ul { margin-block: 0.4rem 0; padding-inline-start: 1.2rem; }
+	.brumes-adrenaline-pnj--panel { min-width: 0; padding: 0.42rem 0.5rem; border-top: 1px solid var(--adrenaline-rule); background: var(--adrenaline-panel); }
+	.brumes-adrenaline-pnj--narrative { font-style: italic; }
+	.brumes-adrenaline-pnj ul { margin-block: 0.22rem 0; padding-inline-start: 1.1rem; }
 
 	@media (max-width: 520px) {
-		.brumes-adrenaline-pnj { grid-template-columns: minmax(0, 1fr); }
-		.brumes-adrenaline-pnj > * { grid-column: 1; min-width: 0; }
+		.brumes-adrenaline-pnj { max-width: 100%; }
+		.brumes-adrenaline--health { grid-template-columns: minmax(0, 1fr); }
 	}
 }

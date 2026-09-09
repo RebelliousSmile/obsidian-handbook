@@ -3,7 +3,6 @@ import {
 	adrenalineSection,
 	renderCharacteristics,
 	renderHealth,
-	renderProvenance,
 } from "../adrenaline/view";
 import { displayedCompetenceTotal } from "../adrenaline/document";
 import { BlockZone, renderZones } from "../blocks/shape";
@@ -95,7 +94,6 @@ export function renderAdrenalinePnj(data: AdrenalinePnjData, doc: Document): HTM
 			element.appendChild(adrenalineList(doc, values, "brumes-adrenaline-pnj--equipment-list"));
 			return element;
 		},
-		provenance: () => data.meta ? renderProvenance(doc, data.meta) : null,
 	});
 	return root;
 }

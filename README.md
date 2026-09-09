@@ -455,7 +455,8 @@ Use the command palette actions `Copy Adrenaline player character as TOML`,
 `Copy Adrenaline non-player character as TOML`, or `Copy Adrenaline monster as
 TOML` while the cursor is inside the matching fence. Optional `[meta]`
 provenance accepts `typeDePublication`, `source`, `auteurs`, `page` and
-`licence`.
+`licence`. Handbook preserves those Lantern metadata when copying TOML but
+does not print them inside the rendered sheet.
 
 ### 9. Mode switching
 

@@ -10,7 +10,6 @@ import {
 	adrenalineSection,
 	renderCharacteristics,
 	renderHealth,
-	renderProvenance,
 } from "../adrenaline/view";
 import { displayedCompetenceTotal } from "../adrenaline/document";
 import { BlockZone, renderZones } from "../blocks/shape";
@@ -160,7 +159,6 @@ export function renderAdrenalineMonster(data: AdrenalineMonsterData, doc: Docume
 			element.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-monstre--capability-list"));
 			return element;
 		},
-		provenance: () => data.meta ? renderProvenance(doc, data.meta) : null,
 	});
 	return root;
 }

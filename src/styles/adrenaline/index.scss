@@ -3,6 +3,34 @@
 @use "./monstre";
 
 .brumes--adrenaline {
+	.brumes-adrenaline--section > h4 {
+		margin: -0.42rem -0.5rem 0.38rem;
+		padding: 0.18rem 0.5rem;
+		color: var(--adrenaline-section-band-ink);
+		font-family: var(--font-header-theme);
+		font-size: 0.9em;
+		line-height: 1.15;
+		background: var(--adrenaline-section-band);
+	}
+
+	.brumes-adrenaline--health {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.35rem 0.75rem;
+	}
+
+	.brumes-adrenaline--health > div {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.12rem 0.45rem;
+	}
+
+	.brumes-adrenaline--health strong {
+		grid-column: 1 / -1;
+		font-family: var(--font-header-theme);
+		text-transform: uppercase;
+	}
+
 	@include pj.sheet;
 	@include pnj.sheet;
 	@include monstre.sheet;
