@@ -1,0 +1,6 @@
+title_tag = "Back-Alley Ripperdoc"
+theme_type = "self"
+category = "STREET TRADE"
+power_tags = [ "steady hands", "knows what the chrome costs" ]
+weakness_tags = [ "owes the wrong people" ]
+quest = "Keep the clinic open."

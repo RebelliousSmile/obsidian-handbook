@@ -9,7 +9,7 @@ export class HiddenBracketWidget extends WidgetType {
 		super();
 	}
 	toDOM(): HTMLElement {
-		const span = activeDocument.createElement("span");
+		const span = activeDocument.createSpan();
 		span.hidden = true;
 		span.textContent = this.text;
 		return span;

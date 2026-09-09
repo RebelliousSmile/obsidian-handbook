@@ -12,6 +12,9 @@ import { journeyBlock } from "../journeys/block";
 import { themeCardBlock } from "../themeCards/block";
 import { themeKitBlock } from "../themeKits/block";
 import { BLOCK_SCOPE_CLASS } from "../modes/domModeClass";
+import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
+import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
+import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreation/block";
 
 const log = logScope("Blocks");
 
@@ -23,6 +26,12 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	themeKitBlock,
 	comThemeCardBlock,
 	comDangerBlock,
+	osThemeBlock,
+	osThemeKitBlock,
+	osChallengeBlock,
+	osPowerSetBlock,
+	osCharacterTropeBlock,
+	osLoadoutItemBlock,
 ];
 
 /**

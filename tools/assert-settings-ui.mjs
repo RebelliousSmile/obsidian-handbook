@@ -11,6 +11,18 @@ const richDescriptions = [
 
 const failures = [];
 
+if (!source.includes("this.renderGameVariant(generalSection)")) {
+	failures.push("The general settings do not render the conditional game variant selector.");
+}
+
+if (!source.includes('variants.length < 2')) {
+	failures.push("The game variant selector is not hidden for packs without choices.");
+}
+
+if (!source.includes('.setName("Univers")')) {
+	failures.push("The game variant selector has no French-first visible label.");
+}
+
 for (const factory of richDescriptions) {
 	const unsafe = new RegExp(
 		`\\.setDesc\\(\\s*this\\.${factory}\\(\\)\\s*\\)`,

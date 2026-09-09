@@ -8,6 +8,7 @@ import {
 	setBrumesColourSchemeClass,
 	setBrumesMissingAssetClasses,
 	setBrumesModeClass,
+	setBrumesVariantClass,
 	setBrumesWorkspaceThemeClass,
 } from "./features/modes/domModeClass";
 import {
@@ -20,14 +21,21 @@ import {
 	missingAssetRoles,
 	resolveGameAssets,
 } from "./games/assets";
-import { GAME_PACKS, resolveGamePack } from "./games/registry";
+import {
+	GAME_PACKS,
+	resolveGamePack,
+	resolveGameRegistration,
+} from "./games/registry";
 import { GamePack } from "./games/types";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
 	loadGameOverride,
-	mergeGameStyle,
 } from "./games/overrides";
+import {
+	effectiveColourScheme,
+	resolveGameAppearance,
+} from "./games/variants";
 import {
 	mergeShapeOverrides,
 	setShapeOverrides,
@@ -165,8 +173,14 @@ export default class BrumesPlugin extends Plugin {
 	 * replaces that block whole, so nothing of the previous one survives.
 	 */
 	private applyGameStyle() {
-		const pack = resolveGamePack(this.settings.mode);
-		const style = mergeGameStyle(pack.style, this.overrides.style);
+		const registration = resolveGameRegistration(this.settings.mode);
+		const appearance = resolveGameAppearance(
+			registration,
+			this.settings.gameVariants[registration.pack.id],
+			this.overrides.style,
+		);
+		const pack = appearance.pack;
+		const style = appearance.style;
 
 		// The blocks are drawn with the game's shapes, the user's file over
 		// them. It is set before the style so that a document repainted below
@@ -206,7 +220,7 @@ export default class BrumesPlugin extends Plugin {
 			this.settings.features.workspaceTheme,
 			// The game says which polarities it has, and the user's file may
 			// claim others; nothing here supplies one neither of them named.
-			this.overrides.polarities ?? pack.polarities,
+			this.overrides.polarities ?? appearance.polarities,
 			this.settings.colourScheme,
 		);
 
@@ -251,8 +265,20 @@ export default class BrumesPlugin extends Plugin {
 	}
 
 	private dressDocument(doc: Document) {
-		setBrumesModeClass(this.settings.mode, doc);
-		setBrumesColourSchemeClass(this.settings.colourScheme, doc);
+		const registration = resolveGameRegistration(this.settings.mode);
+		const appearance = resolveGameAppearance(
+			registration,
+			this.settings.gameVariants[registration.pack.id],
+		);
+		setBrumesModeClass(registration.pack.id, doc);
+		setBrumesVariantClass(appearance.variant?.id ?? null, doc);
+		setBrumesColourSchemeClass(
+			effectiveColourScheme(
+				appearance.polarities,
+				this.settings.colourScheme,
+			),
+			doc,
+		);
 		setBrumesMissingAssetClasses(
 			missingAssetRoles(this.assets, GAME_PACKS),
 			doc,

@@ -1,5 +1,6 @@
 /**
- * Dump the DOM every corpus witness renders to, as text.
+ * Dump the DOM every corpus witness renders to, as text. The dynamic registry
+ * now stabilises all twelve block families, including the six :Otherscape ones.
  *
  * A change that claims to leave the screen alone is worth nothing until the
  * two sides are compared. This prints the tree — tag, classes, own text — for

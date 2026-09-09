@@ -1,6 +1,8 @@
 import {
 	DEFAULT_GAME_PACK_ID,
+	GAME_REGISTRATIONS,
 	findGamePack,
+	normalizeGameVariantId,
 } from "../games/registry";
 import { logScope } from "../utils/logger";
 
@@ -27,6 +29,12 @@ export interface BrumesFeatureSettings {
 	themeKitParser: boolean;
 	comThemeCardParser: boolean;
 	comDangerParser: boolean;
+	osThemeParser: boolean;
+	osThemeKitParser: boolean;
+	osChallengeParser: boolean;
+	osPowerSetParser: boolean;
+	osCharacterTropeParser: boolean;
+	osLoadoutItemParser: boolean;
 }
 
 export interface CityOfMistCalloutAliases {
@@ -49,6 +57,7 @@ export interface BrumesCalloutAliasesSettings {
 
 export interface BrumesSettings {
 	mode: BrumesMode;
+	gameVariants: Record<string, string>;
 	colourScheme: ColourScheme;
 	logLevel: LogLevel;
 	lanternUrl: string;
@@ -72,6 +81,7 @@ export const DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES: LegendInTheMistCalloutA
 
 export const DEFAULT_SETTINGS: BrumesSettings = {
 	mode: DEFAULT_GAME_PACK_ID,
+	gameVariants: { otherscape: "metro" },
 	colourScheme: "obsidian",
 	logLevel: "error",
 	lanternUrl: "https://lantern.ravenloft.fr",
@@ -85,6 +95,12 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		themeKitParser: true,
 		comThemeCardParser: true,
 		comDangerParser: true,
+		osThemeParser: true,
+		osThemeKitParser: true,
+		osChallengeParser: true,
+		osPowerSetParser: true,
+		osCharacterTropeParser: true,
+		osLoadoutItemParser: true,
 	},
 	calloutAliases: {
 		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,
@@ -167,6 +183,26 @@ function normalizeAliasList(
 	return sanitizeAliases(value.map(String));
 }
 
+function normalizeGameVariants(value: unknown): Record<string, string> {
+	const source =
+		typeof value === "object" && value !== null
+			? (value as Record<string, unknown>)
+			: {};
+	const normalized: Record<string, string> = {};
+
+	for (const registration of GAME_REGISTRATIONS) {
+		const id = normalizeGameVariantId(
+			registration.pack.id,
+			source[registration.pack.id],
+		);
+		if (id) {
+			normalized[registration.pack.id] = id;
+		}
+	}
+
+	return normalized;
+}
+
 /**
  * Keep every declared feature flag, defaulting the ones the saved data misses.
  * Adding a flag to `BrumesFeatureSettings` and `DEFAULT_SETTINGS` is enough.
@@ -202,6 +238,7 @@ export function normalizeSettings(
 
 	return {
 		mode: normalizeMode(source.mode),
+		gameVariants: normalizeGameVariants(source.gameVariants),
 		colourScheme: normalizeColourScheme(source.colourScheme),
 		logLevel: normalizeLogLevel(source.logLevel),
 		lanternUrl:

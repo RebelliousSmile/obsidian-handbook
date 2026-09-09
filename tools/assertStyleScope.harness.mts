@@ -86,6 +86,12 @@ assert.doesNotMatch(forcedDarkCss, /--forced-light/);
 assert.equal(normalizeSettings(undefined).colourScheme, "obsidian");
 assert.equal(normalizeSettings({ colourScheme: "light" }).colourScheme, "light");
 assert.equal(normalizeSettings({ colourScheme: "dark" }).colourScheme, "dark");
+assert.equal(normalizeSettings(undefined).gameVariants.otherscape, "metro");
+assert.equal(
+	normalizeSettings({ gameVariants: { otherscape: "retired" } }).gameVariants
+		.otherscape,
+	"metro",
+);
 assert.equal(
 	normalizeSettings({ colourScheme: "sepia" as "dark" }).colourScheme,
 	"obsidian",

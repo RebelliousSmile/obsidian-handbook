@@ -1,5 +1,10 @@
 import { missingAssetClass } from "../../games/assets";
-import { gamePackClass, gamePackClasses } from "../../games/registry";
+import {
+	gamePackClass,
+	gamePackClasses,
+	gameVariantClasses,
+} from "../../games/registry";
+import { gameVariantClass } from "../../games/variants";
 import { BrumesMode, ColourScheme } from "../../settings/types";
 
 export const WORKSPACE_THEME_CLASS = "brumes--workspace-theme";
@@ -10,6 +15,7 @@ const MISSING_ASSET_PREFIX = missingAssetClass("");
 
 /** One class per declared pack, so a new game needs no edit here. */
 const MODE_CLASSES = gamePackClasses();
+const VARIANT_CLASSES = gameVariantClasses();
 
 /**
  * Every function here takes the document to act on. Obsidian opens detached
@@ -27,6 +33,16 @@ export function setBrumesModeClass(mode: BrumesMode, doc: Document) {
 
 	// Add the new class
 	body.classList.add(gamePackClass(mode));
+}
+
+export function setBrumesVariantClass(variantId: string | null, doc: Document) {
+	const body = doc.body;
+	for (const cls of VARIANT_CLASSES) {
+		body.classList.remove(cls);
+	}
+	if (variantId) {
+		body.classList.add(gameVariantClass(variantId));
+	}
 }
 
 /**
@@ -91,6 +107,9 @@ export function clearBrumesModeClasses(doc: Document) {
 	const body = doc.body;
 
 	for (const cls of MODE_CLASSES) {
+		body.classList.remove(cls);
+	}
+	for (const cls of VARIANT_CLASSES) {
 		body.classList.remove(cls);
 	}
 

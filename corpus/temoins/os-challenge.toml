@@ -1,0 +1,18 @@
+name = "Chrome Vulture Runner"
+description = "A courier on borrowed legs."
+scale = 1
+tags_and_statuses = [ "{wall-running legs}", "{alert-2}" ]
+general_consequences = [ "Give {made-2} to whoever spoke last." ]
+[[limits]]
+name = "catch/outrun"
+level = 3
+is_polar = true
+is_progress = false
+[[specials]]
+name = "Chrome Reflexes"
+description = "Remove one tier from {tracked-2}."
+[[threats]]
+name = "Call it in"
+description = "Thumbs a panic stud."
+[meta]
+publication_type = "homebrew"

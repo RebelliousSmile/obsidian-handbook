@@ -1,0 +1,7 @@
+name = "Kestrel Whisperlink"
+category = "Weapons"
+description = "A throat-mounted relay."
+feature_tags = [ "Kestrel Whisperlink", "hard to jam" ]
+weakness_tag = "factory handshake"
+[meta]
+publication_type = "homebrew"

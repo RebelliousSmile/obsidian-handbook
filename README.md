@@ -4,12 +4,30 @@ Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mis
 
 It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
-Note: the **:Otherscape** declension dresses a vault but does not furnish it. It
-carries its own colors, typography and theme-type colors, in light and dark, and
-every callout, tag and inline mark follows them. It has no art of its own yet, so
-the blocks written for another game keep that game's illustrations, and the theme
-card, challenge, journey and theme kit blocks remain Legend in the Mist's. City of
-Mist and Legend in the Mist are complete.
+**:Otherscape** fournit trois univers visuels globaux — Metro, Cairo et Tokyo —
+chacun dans les registres clair et sombre attestés par ses maquettes. Les notes
+restent portables : l'univers est un réglage du coffre, jamais une donnée ajoutée
+à leur TOML.
+
+Les six formats publiés par `schema-in-the-mist` v0.4.0 sont pris en charge :
+`os-theme`, `os-theme-kit`, `os-challenge`, `os-power-set`,
+`os-character-trope` et `os-loadout-item`. Exemple minimal :
+
+````markdown
+```os-theme
+title_tag = "The Debt I Never Paid"
+theme_type = "self"
+power_tags = [ "they still take my call" ]
+weakness_tags = [ "cannot refuse when they ask" ]
+quest = "Settle the debt on my own terms."
+upgrade = 2
+decay = 1
+```
+````
+
+Le vocabulaire de cartes Metro s'inspire de
+[Mist HUD](https://github.com/mordachai/mist-hud), distribué sous licence MIT.
+Handbook ne redistribue aucun de ses assets ni aucune image extraite des livres.
 
 ## Installation
 
@@ -66,6 +84,8 @@ Suggested vault setup:
 1. Open `Settings -> Handbook`.
 2. Pick your `Game mode`. The rendering follows immediately, with no reload
    and no preset to import.
+   Avec :Otherscape, choisissez ensuite l'`Univers` Metro, Cairo ou Tokyo ; ce
+   choix repeint toutes les notes ouvertes.
 3. Leave `Colour scheme` on `Follow Obsidian`, or force Handbook's light or
    dark scheme independently of the vault theme.
 

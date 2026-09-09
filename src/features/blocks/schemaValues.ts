@@ -54,6 +54,35 @@ export function asRecordList(value: unknown): Record<string, unknown>[] {
 	return list;
 }
 
+export function asBoolean(value: unknown): boolean | undefined {
+	return typeof value === "boolean" ? value : undefined;
+}
+
+export function asInteger(
+	value: unknown,
+	minimum?: number,
+	maximum?: number,
+): number | undefined {
+	if (!Number.isInteger(value)) {
+		return undefined;
+	}
+	const number = value as number;
+	if (minimum !== undefined && number < minimum) {
+		return undefined;
+	}
+	if (maximum !== undefined && number > maximum) {
+		return undefined;
+	}
+	return number;
+}
+
+export function asNonNegativeInteger(
+	value: unknown,
+	maximum?: number,
+): number | undefined {
+	return asInteger(value, 0, maximum);
+}
+
 /**
  * Attribution is read and written back untouched. The plugin shows a source
  * line from it and does nothing else with it: a profile that arrives credited

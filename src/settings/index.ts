@@ -1,7 +1,12 @@
 import { App, Notice, PluginSettingTab, SettingGroup } from "obsidian";
 import BrumesPlugin from "../BrumesPlugin";
 import { ColourScheme, LogLevel, sanitizeAliases } from "./types";
-import { GAME_PACKS, resolveGamePack } from "../games/registry";
+import {
+	GAME_PACKS,
+	resolveGamePack,
+	resolveGameRegistration,
+} from "../games/registry";
+import { resolveGameVariant } from "../games/variants";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
 import {
@@ -21,6 +26,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	// Obsidian still invokes this lifecycle method; the replacement API is not
+	// available across Handbook's supported Obsidian range yet.
+	// eslint-disable-next-line @typescript-eslint/no-deprecated
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -48,7 +56,8 @@ export class BrumesSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
-									this.display();
+							// eslint-disable-next-line @typescript-eslint/no-deprecated
+							this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
@@ -57,6 +66,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					);
 				});
 		});
+		this.renderGameVariant(generalSection);
 		this.renderPolarities(generalSection);
 		this.renderMigrationNotice(generalSection);
 		this.renderAssetSetup(generalSection);
@@ -88,6 +98,42 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAdvancedSection(advancedSection);
 	}
 
+	private renderGameVariant(section: SettingGroup) {
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const variants = registration.variants ?? [];
+		if (variants.length < 2) {
+			return;
+		}
+
+		const active = resolveGameVariant(
+			registration,
+			this.plugin.settings.gameVariants[registration.pack.id],
+		);
+		section.addSetting((setting) => {
+			setting
+				.setName("Univers")
+				.setDesc("Choisissez l'identité visuelle appliquée à tout le coffre.")
+				.addDropdown((drop) => {
+					for (const variant of variants) {
+						drop.addOption(variant.id, variant.label);
+					}
+					drop.setValue(active?.id ?? "").onChange((value) => {
+						this.runTask(
+							async () => {
+								this.plugin.settings.gameVariants[registration.pack.id] =
+									value;
+								await this.plugin.saveSettings({ refreshMarkdown: true });
+								// eslint-disable-next-line @typescript-eslint/no-deprecated
+								this.display();
+							},
+							SETTINGS_SAVE_LOG_MESSAGE,
+							SETTINGS_SAVE_NOTICE,
+						);
+					});
+				});
+		});
+	}
+
 	/**
 	 * Say which colour schemes the active game actually has.
 	 *
@@ -97,11 +143,20 @@ export class BrumesSettingTab extends PluginSettingTab {
 	 * next to the game rather than in a changelog.
 	 */
 	private renderPolarities(section: SettingGroup) {
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const variant = resolveGameVariant(
+			registration,
+			this.plugin.settings.gameVariants[registration.pack.id],
+		);
+		const polarities = variant?.polarities ?? registration.pack.polarities ?? [];
+
 		section.addSetting((setting) => {
-			setting
+			const configured = setting
 				.setName("Colour scheme")
-				.setDesc(this.createPolarityDescription())
-				.addDropdown((drop) =>
+				.setDesc(this.createPolarityDescription());
+
+			if (polarities.length > 1) {
+				configured.addDropdown((drop) =>
 					drop
 						.addOption("obsidian", "Follow Obsidian")
 						.addOption("light", "Light")
@@ -119,12 +174,17 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
+			}
 		});
 	}
 
 	private createPolarityDescription(): string {
-		const pack = resolveGamePack(this.plugin.settings.mode);
-		const polarities = pack.polarities ?? [];
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const variant = resolveGameVariant(
+			registration,
+			this.plugin.settings.gameVariants[registration.pack.id],
+		);
+		const polarities = variant?.polarities ?? registration.pack.polarities ?? [];
 
 		if (polarities.length === 0) {
 			return "The active game brings no colour scheme of its own: it dresses your notes with its fonts and leaves the colours to the theme you are running.";
@@ -178,6 +238,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						this.runTask(
 							async () => {
 								await this.plugin.reloadStyleSources();
+								// eslint-disable-next-line @typescript-eslint/no-deprecated
 								this.display();
 							},
 							"Failed to look for the illustration files",
@@ -304,6 +365,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									this.plugin.settings.features.lanternIntegration =
 										value;
 									await this.plugin.saveSettings();
+									// eslint-disable-next-line @typescript-eslint/no-deprecated
 									this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
@@ -657,10 +719,38 @@ export class BrumesSettingTab extends PluginSettingTab {
 	}
 
 	private renderOtherscapeSettings(section: SettingGroup) {
+		const isActive = this.plugin.settings.mode === "otherscape";
+		this.addOtherscapeToggle(section, "Thèmes", "os-theme", "osThemeParser", isActive);
+		this.addOtherscapeToggle(section, "Kits de thème", "os-theme-kit", "osThemeKitParser", isActive);
+		this.addOtherscapeToggle(section, "Challenges", "os-challenge", "osChallengeParser", isActive);
+		this.addOtherscapeToggle(section, "Power Sets", "os-power-set", "osPowerSetParser", isActive);
+		this.addOtherscapeToggle(section, "Tropes de personnage", "os-character-trope", "osCharacterTropeParser", isActive);
+		this.addOtherscapeToggle(section, "Objets d'équipement", "os-loadout-item", "osLoadoutItemParser", isActive);
+	}
+
+	private addOtherscapeToggle(
+		section: SettingGroup,
+		name: string,
+		blockId: string,
+		flag: "osThemeParser" | "osThemeKitParser" | "osChallengeParser" | "osPowerSetParser" | "osCharacterTropeParser" | "osLoadoutItemParser",
+		isActive: boolean,
+	) {
 		section.addSetting((setting) => {
-			setting.setName("Nothing yet!").setDesc(
-				":Otherscape support is planned but not implemented yet.", // eslint-disable-line obsidianmd/ui/sentence-case
-			);
+			setting
+				.setName(name)
+				.setDesc(`Active le bloc TOML ${blockId} et son insertion.`)
+				.setDisabled(!isActive)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features[flag])
+						.setDisabled(!isActive)
+						.onChange((value) => {
+							this.runTask(async () => {
+								this.plugin.settings.features[flag] = value;
+								await this.plugin.saveSettings({ refreshMarkdown: true });
+							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
+						}),
+				);
 		});
 	}
 

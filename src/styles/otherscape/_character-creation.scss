@@ -1,0 +1,27 @@
+@mixin cards {
+	.brumes-os-creation {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+		max-width: 100%;
+		overflow-wrap: anywhere;
+		padding: 1rem;
+		border: 2px solid var(--color-accent);
+		background: var(--background-primary-alt);
+	}
+	.brumes-os-creation--header,
+	.brumes-os-creation--description,
+	.brumes-os-creation--loadout { grid-column: 1 / -1; }
+	.brumes-os-creation header { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; }
+	.brumes-os-creation header small { margin-inline-start: auto; }
+	.brumes-os-creation h3 { margin: 0; text-transform: uppercase; }
+	.brumes-os-creation h4 { margin: 0.4rem 0; text-transform: uppercase; letter-spacing: 0.08em; }
+	.brumes-os-creation section { min-width: 0; border-top: 1px solid var(--color-accent); }
+	.brumes-os-creation ul { margin-block: 0.3rem; padding-inline-start: 1.25rem; }
+	body.brumes--variant-cairo & .brumes-os-creation { border-width: 1px 4px; }
+	body.brumes--variant-tokyo & .brumes-os-creation { border-inline-start-width: 0.7rem; box-shadow: 0.3rem 0.2rem 0 color-mix(in srgb, var(--color-accent) 35%, transparent); }
+	@media (max-width: 520px) {
+		.brumes-os-creation { grid-template-columns: minmax(0, 1fr); }
+		.brumes-os-creation > * { grid-column: 1; }
+	}
+}

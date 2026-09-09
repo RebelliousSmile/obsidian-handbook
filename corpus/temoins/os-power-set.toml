@@ -1,0 +1,11 @@
+name = "Source-Touched Berserk"
+type = "mythos"
+description = "Something older got a grip."
+general_consequences = [ "Give {rattled-1} to whoever saw it." ]
+[[specials]]
+name = "Feels No Wound"
+description = "It ignores the first tier."
+[[threats]]
+name = "Go through it"
+description = "Takes the shortest line."
+consequences = [ "Give {thrown-2}." ]
