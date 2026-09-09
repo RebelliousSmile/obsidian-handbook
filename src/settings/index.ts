@@ -854,38 +854,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		)}".`;
 	}
 
-	private addAliasSetting(
-		section: SettingGroup,
-		name: string,
-		aliases: string[],
-		description: string,
-		disabled: boolean,
-		onSave: (aliases: string[]) => Promise<void>,
-	) {
-		section.addSetting((setting) => {
-			setting
-				.setName(name)
-				.setDesc(description)
-				.setDisabled(disabled)
-				.addTextArea((text) => {
-					text.setValue(aliases.join("\n"));
-					text.inputEl.rows = Math.max(3, aliases.length || 1);
-					text.inputEl.placeholder = "One-alias-per-line";
-					text.setDisabled(disabled);
-					text.inputEl.addEventListener("change", () => {
-						const sanitizedAliases = sanitizeAliases(
-							text.getValue().split(/\r?\n/g),
-						);
-						text.setValue(sanitizedAliases.join("\n"));
-						this.runTask(
-							() => onSave(sanitizedAliases),
-							SETTINGS_SAVE_LOG_MESSAGE,
-							SETTINGS_SAVE_NOTICE,
-						);
-					});
-				});
-		});
-	}
 
 	/**
 	 * What replaces the sliders of the preset: a file the user writes, that
