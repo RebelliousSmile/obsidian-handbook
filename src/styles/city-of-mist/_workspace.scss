@@ -97,7 +97,35 @@
 		&.theme-light:not(.brumes--colour-dark),
 		&.brumes--colour-light {
 			--background-primary: #f2f2f0;
+			--background-primary-alt: #ebe8e1;
 			--background-secondary: #f2f0eb;
+			--background-secondary-alt: #e3ded5;
+			--background-tertiary: #e3ded5;
+			--modal-background: var(--background-primary);
+			--settings-background: var(--background-primary);
+
+			--background-modifier-hover: #38285914;
+			--background-modifier-active-hover: #38285920;
+			--background-modifier-border: #d4cdc4;
+			--background-modifier-border-hover: #bdb5ac;
+			--background-modifier-border-focus: #e6007e;
+			--background-modifier-form-field: #ebe8e1;
+			--divider-color: #d4cdc4;
+
+			--text-normal: #1c1917;
+			--text-muted: #5f5852;
+			--text-faint: #918981;
+			--text-on-accent: #fff;
+			--text-on-accent-inverted: #1c1917;
+			--text-accent: #c4006b;
+			--text-accent-hover: #e6007e;
+
+			--color-accent: #e6007e;
+			--interactive-accent: #e6007e;
+			--interactive-accent-hover: #c4006b;
+			--interactive-normal: #ebe8e1;
+			--interactive-hover: #e3ded5;
+			--dropdown-background: var(--interactive-normal);
 			--ribbon-background: #382859;
 
 			--list-marker-color: #000;
@@ -128,19 +156,41 @@
 		&.theme-dark:not(.brumes--colour-light),
 		&.brumes--colour-dark {
 			--background-primary: #2d2040;
+			--background-primary-alt: #322448;
 			--background-secondary: #382859;
+			--background-secondary-alt: #432f5e;
+			--background-tertiary: #432f5e;
+			--modal-background: var(--background-primary);
+			--settings-background: var(--background-primary);
 			--ribbon-background: rgb(34, 22, 46);
 
 			--titlebar-background-focused: hsl(260, 38%, 24%);
 
 			--interactive-normal: rgb(64, 45, 94);
 			--interactive-hover: rgb(60, 43, 88);
+			--interactive-accent: #e6007e;
+			--interactive-accent-hover: #ff198f;
+			--dropdown-background: var(--interactive-normal);
 
 			--background-modifier-hover: rgb(60, 43, 88);
+			--background-modifier-active-hover: #4b356a;
+			--background-modifier-border: #51406c;
 			--background-modifier-border-hover: rgb(60, 43, 88);
+			--background-modifier-border-focus: #e6007e;
 			--background-modifier-form-field: rgb(64, 45, 94);
+			--background-modifier-cover: #120b1db8;
+			--divider-color: #51406c;
 
 			--slider-track-background: rgb(68, 51, 95);
+
+			--text-normal: #f2f2f0;
+			--text-muted: #c2b8cf;
+			--text-faint: #827390;
+			--text-on-accent: #fff;
+			--text-on-accent-inverted: #2d2040;
+			--text-accent: #ff55ae;
+			--text-accent-hover: #ff85c7;
+			--color-accent: #e6007e;
 
 			--h1-color: #e6007e;
 			--h2-color: #e6007e;

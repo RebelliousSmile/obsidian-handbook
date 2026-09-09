@@ -20,6 +20,15 @@ try {
 
 	const css = readFileSync(outfile, "utf8");
 	const workspace = ".brumes--city-of-mist.brumes--workspace-theme";
+	const lightWorkspace = css.match(
+		/\.brumes--city-of-mist\.brumes--workspace-theme\.theme-light:not\(\.brumes--colour-dark\),\s*\.brumes--city-of-mist\.brumes--workspace-theme\.brumes--colour-light\s*\{([^}]*)\}/,
+	)?.[1];
+	const darkWorkspace = css.match(
+		/\.brumes--city-of-mist\.brumes--workspace-theme\.theme-dark:not\(\.brumes--colour-light\),\s*\.brumes--city-of-mist\.brumes--workspace-theme\.brumes--colour-dark\s*\{([^}]*)\}/,
+	)?.[1];
+
+	assert.ok(lightWorkspace, "missing the City of Mist light workspace block");
+	assert.ok(darkWorkspace, "missing the City of Mist dark workspace block");
 
 	// The two general schemes carried by the v1 theme. The explicit Handbook
 	// class sits beside the Obsidian-following selector, while :not() prevents
@@ -49,6 +58,36 @@ try {
 		"--radius-s: 0px",
 	]) {
 		assert.ok(css.includes(declaration), `missing v1 declaration: ${declaration}`);
+	}
+
+	for (const declaration of [
+		"--background-primary-alt:",
+		"--background-secondary-alt:",
+		"--background-modifier-border:",
+		"--modal-background:",
+		"--settings-background:",
+		"--text-normal:",
+		"--text-muted:",
+		"--text-faint:",
+		"--interactive-accent:",
+	]) {
+		assert.ok(
+			darkWorkspace.includes(declaration),
+			`incomplete forced dark workspace: ${declaration}`,
+		);
+	}
+
+	for (const declaration of [
+		"--modal-background:",
+		"--settings-background:",
+		"--text-normal:",
+		"--text-muted:",
+		"--interactive-accent:",
+	]) {
+		assert.ok(
+			lightWorkspace.includes(declaration),
+			`incomplete forced light workspace: ${declaration}`,
+		);
 	}
 
 	assert.match(

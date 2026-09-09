@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Complete the forced City of Mist dark workspace palette so settings, controls and text no longer retain light-theme colours, and remove workspace colour overrides that contradicted the v1 theme (d4d77e5).
 - Accept the `GENERAL CONSEQUENCES` heading in `litm-journey`, the wording most official profiles actually print, alongside the existing `CONSEQUENCES` (367eef3).
 - Unwrap `{multi word tags}` in `litm-journey`'s `tags:` list instead of keeping the braces as part of the tag name, matching `litm-challenge` (367eef3).
 

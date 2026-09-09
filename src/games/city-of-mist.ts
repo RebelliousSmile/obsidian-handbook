@@ -105,10 +105,7 @@ export const cityOfMistPack: GamePack = {
 					"--brumes-weakness-color": "#EDBB89",
 				},
 			),
-			workspace: {
-				"--background-secondary": "#ECEAE5",
-				"--background-secondary-alt": "#281C34",
-			},
+			workspace: {},
 		},
 		dark: {
 			note: tokens(
@@ -165,10 +162,7 @@ export const cityOfMistPack: GamePack = {
 					"--brumes-weakness-color": "#8D5E35",
 				},
 			),
-			workspace: {
-				"--background-secondary": "#232136",
-				"--background-secondary-alt": "#393552",
-			},
+			workspace: {},
 		},
 	},
 	assets: {
