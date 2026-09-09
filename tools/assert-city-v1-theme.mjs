@@ -20,10 +20,14 @@ try {
 
 	const css = readFileSync(outfile, "utf8");
 	const workspace = ".brumes--city-of-mist.brumes--workspace-theme";
+	const lightWorkspace = css.match(
+		/\.brumes--city-of-mist\.brumes--workspace-theme\.theme-light:not\(\.brumes--colour-dark\),\s*\.brumes--city-of-mist\.brumes--workspace-theme\.brumes--colour-light\s*\{([^}]*)\}/,
+	)?.[1];
 	const darkWorkspace = css.match(
 		/\.brumes--city-of-mist\.brumes--workspace-theme\.theme-dark:not\(\.brumes--colour-light\),\s*\.brumes--city-of-mist\.brumes--workspace-theme\.brumes--colour-dark\s*\{([^}]*)\}/,
 	)?.[1];
 
+	assert.ok(lightWorkspace, "missing the City of Mist light workspace block");
 	assert.ok(darkWorkspace, "missing the City of Mist dark workspace block");
 
 	// The two general schemes carried by the v1 theme. The explicit Handbook
@@ -70,6 +74,19 @@ try {
 		assert.ok(
 			darkWorkspace.includes(declaration),
 			`incomplete forced dark workspace: ${declaration}`,
+		);
+	}
+
+	for (const declaration of [
+		"--modal-background:",
+		"--settings-background:",
+		"--text-normal:",
+		"--text-muted:",
+		"--interactive-accent:",
+	]) {
+		assert.ok(
+			lightWorkspace.includes(declaration),
+			`incomplete forced light workspace: ${declaration}`,
 		);
 	}
 
