@@ -25,7 +25,7 @@ Renommé : `manifest.json` (`id`, `name`, `author`, `authorUrl`), `package.json`
 | Chemin | Rôle |
 | --- | --- |
 | `src/main.ts`, `src/BrumesPlugin.ts` | entrée et classe du plugin |
-| `src/features/` | `blocks` (registre), `callouts`, `challenges`, `comDangers`, `comThemeCards`, `journeys`, `modes`, `tags`, `themeCards`, `themeKits` |
+| `src/features/` | `blocks` (registre), `callouts`, `challenges`, `comDangers`, `comThemeCards`, `journeys`, `modes`, `otherscape`, `osThemes`, `osChallenges`, `osCharacterCreation`, `tags`, `themeCards`, `themeKits` |
 | `src/games/` | un jeu = un pack de données : `registry.ts`, `types.ts`, `tokens.ts`, `assets.ts`, `overrides.ts`, `fromSchema.ts` + un fichier par jeu |
 | `src/views/` | `LanternView.ts`, `lanternLogo.ts` |
 | `src/settings/` | `index.ts` (onglet de réglages), `canvasSnippets.ts` (snippets Advanced Canvas), `types.ts` — et rien d'autre |
@@ -129,14 +129,14 @@ Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspond
 
 ### Un jeu est une donnée
 
-Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en variantes `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. **Aucun SCSS n'est écrit pour un jeu neuf** — :Otherscape est né comme ça, sans partial ni classe à lui.
+Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en couches `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. Une enveloppe interne `GameRegistration` peut ajouter des variantes visuelles sans modifier le `GamePack` sérialisable. :Otherscape emploie ce mécanisme pour Metro, Cairo et Tokyo, avec la priorité `pack → variante → overrides utilisateur`.
 
 **Un pack déclare ses polarités, il n'en dérive aucune** (`GamePolarity`, `src/games/types.ts`). Une couche non déclarée n'est **pas écrite**, plutôt qu'écrite en copie de `base` — un pack dont le `base` est fortement clair casserait un coffre en thème sombre. Une polarité unique s'écrit sur le sélecteur de mode nu, après `base`, donc elle gagne à spécificité égale quel que soit le réglage du thème ; deux polarités s'écrivent en sélecteurs composés. État au 2026-09-08 : City of Mist et :Otherscape déclarent `["light", "dark"]`, Legend in the Mist `["light"]` — le jeu n'imprime que du parchemin, et le schéma sombre qui existait avait été inventé.
 
-Ajouter un jeu :
+Ajouter un jeu sans variante :
 
 1. un fichier `src/games/<jeu>.ts` exportant un `GamePack` ;
-2. une ligne dans `DECLARED_PACKS` de `src/games/registry.ts` ;
+2. une ligne dans `DECLARED_GAMES` de `src/games/registry.ts` ;
 3. rien d'autre. La liste déroulante des réglages, la classe de body et le style suivent.
 
 Trois règles qui mordent :
@@ -172,7 +172,7 @@ Les **polices restent embarquées** (libres, redistribuables) ; seules les illus
 
 ### Le format est publié, mais rien ne le télécharge
 
-Le schéma vit dans le dépôt frère `schema-in-the-mist`, en `appearance/game-pack.schema.json`, à côté des schémas de contenu et **sans partager un seul champ** avec eux (`meta` volontairement absent). `src/games/fromSchema.ts` lit un document de cette forme et écrit un pack.
+Les six schémas de contenu :Otherscape vivent dans le dépôt frère `schema-in-the-mist` v0.4.0. Le dépôt ne publie pas de schéma d'apparence : les variantes de registre restent internes à Handbook et ne passent jamais par `fromSchema.ts`.
 
 **Aucune dépendance à l'exécution** : ni fetch, ni import du dépôt distant. Le contrat est honoré par la forme de la donnée. Un pack charge réseau coupé.
 
@@ -214,7 +214,7 @@ Le dépôt n'a toujours ni vitest ni jest, et n'en prendra pas : la convention a
 | --- | --- |
 | `pnpm assert:corpus` | chaque bloc de `BRUMES_BLOCKS` lit un témoin entièrement, dégrade un refus sans exception ni bloc vide, et possède sa commande de copie |
 | `pnpm assert:override` | `overrides.json` surcharge une zone, la retirer restaure le rendu au caractère près, une zone inconnue avertit une fois |
-| `pnpm dump:dom` | rend le DOM des six blocs — à comparer d'une phase à l'autre : une phase qui ne touche pas au balisage doit le laisser identique |
+| `pnpm dump:dom` | rend le DOM des douze blocs — à comparer d'une phase à l'autre : une phase qui ne touche pas au balisage doit le laisser identique |
 
 Le motif : un lanceur `tools/<nom>.mjs` bundle son harnais `tools/<nom>.harness.mts` par `esbuild.buildSync({platform:'node', format:'cjs', external:['obsidian','fs']})`, puis `node` l'exécute. **Aucune dépendance neuve** — `tsx` n'est pas installé et n'a pas à l'être.
 
@@ -235,7 +235,7 @@ Depuis le 2026-09-08 les illustrations sont sorties du bundle : `_theme-cards.sc
 
 ### Registre de blocs
 
-Depuis 2026-09, tout bloc fencé passe par `BrumesBlock<T>` (`src/features/blocks/`) et une ligne dans `BRUMES_BLOCKS`. Blocs existants : `theme-card` (alias déprécié `story-theme`), `litm-challenge`, `litm-journey`, `litm-theme-kit`, `com-theme-card`, `com-danger`.
+Depuis 2026-09, tout bloc fencé passe par `BrumesBlock<T>` (`src/features/blocks/`) et une ligne dans `BRUMES_BLOCKS`. Aux six blocs historiques s'ajoutent les six formats :Otherscape canoniques : `os-theme`, `os-theme-kit`, `os-challenge`, `os-power-set`, `os-character-trope` et `os-loadout-item`.
 
 **Ce qu'un format doit au schéma est écrit une seule fois** : [`aidd_docs/guidelines/schema-design.md`](aidd_docs/guidelines/schema-design.md). Checklist d'ajout, règle de zéro exemption, frontière valeurs / forme / pixels, polarités, langue, échappatoire SCSS, et les deux règles de compatibilité (`aliases`, clés de `features.*` jamais renommées). Ne pas redire ici ce qu'elle dit — y renvoyer.
 

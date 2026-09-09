@@ -26,6 +26,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	// Obsidian still invokes this lifecycle method; the replacement API is not
+	// available across Handbook's supported Obsidian range yet.
+	// eslint-disable-next-line @typescript-eslint/no-deprecated
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -53,7 +56,8 @@ export class BrumesSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
-									this.display();
+							// eslint-disable-next-line @typescript-eslint/no-deprecated
+							this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
@@ -119,6 +123,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 								this.plugin.settings.gameVariants[registration.pack.id] =
 									value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
+								// eslint-disable-next-line @typescript-eslint/no-deprecated
 								this.display();
 							},
 							SETTINGS_SAVE_LOG_MESSAGE,
@@ -233,6 +238,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 						this.runTask(
 							async () => {
 								await this.plugin.reloadStyleSources();
+								// eslint-disable-next-line @typescript-eslint/no-deprecated
 								this.display();
 							},
 							"Failed to look for the illustration files",
@@ -359,6 +365,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									this.plugin.settings.features.lanternIntegration =
 										value;
 									await this.plugin.saveSettings();
+									// eslint-disable-next-line @typescript-eslint/no-deprecated
 									this.display();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,

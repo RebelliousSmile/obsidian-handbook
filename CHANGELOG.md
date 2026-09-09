@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add the six canonical :Otherscape TOML blocks and their copy commands: Theme, Theme Kit, Challenge, Power Set, Character Trope and Loadout Item.
+- Add a vault-wide Metro, Cairo or Tokyo universe selector, with sourced light and dark palettes, live repainting and per-game persistence.
+- Credit Mist HUD's MIT-licensed Metro visual vocabulary without redistributing its artwork or Foundry-specific assets.
 - Render an inline `{name-2}` status as the same tag pill an isolated field gets, wherever it is written inside a description, a consequence, a trigger, an effect or an outcome, across every block (367eef3).
 - Surface malformed `litm-journey` input in a muted footer instead of dropping it silently: an unrecognised line, a `benefits:` on a non-`Undertaking` journey, a vignette missing its trigger, or a consequence written before any `CONSEQUENCES` heading (367eef3).
 
