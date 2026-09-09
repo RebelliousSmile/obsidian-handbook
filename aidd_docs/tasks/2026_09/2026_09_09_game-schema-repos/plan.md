@@ -1,6 +1,6 @@
 ---
 objective: "Un pack de jeu déposé dans le dossier du plugin (coffre) apparaît au démarrage dans le registre, la liste déroulante des réglages et le rendu, sans qu'une ligne de code ne soit écrite."
-status: in-progress
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
