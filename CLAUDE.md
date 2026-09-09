@@ -186,6 +186,7 @@ Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans u
 - Ne pas commiter ni pousser sans demande explicite.
 - `rtk proxy pnpm build` doit passer et **les deux portées de lint** rester à zéro erreur avant tout merge : `./node_modules/.bin/eslint src --ext .ts` **et** `pnpm lint`.
 - Le versionnement, `versions.json` et les releases nous appartiennent désormais — ce n'est plus « la prérogative de l'amont ».
+- **Un `status: done` de phase ne suffit pas à prouver qu'elle est complète** (constaté le 2026-09-09 sur `generic-callouts`) : le tableau **Decisions** du `plan.md` peut porter une exigence qui n'apparaît nulle part dans les critères propres à la phase — ici la suppression de `calloutAliases`, actée dans les Decisions et dans la tâche 3.2 de `phase-1.md`, mais absente au moment où la phase a été marquée `done`. Vérifier une phase, c'est croiser son propre fichier **et** le tableau Decisions du plan, pas l'un sans l'autre.
 
 ## Contraintes du code (constatées le 2026-09-06)
 
@@ -235,6 +236,8 @@ Deux pièges qui coûtent un aller-retour chacun (constatés le 2026-09-08) :
 ### SCSS : les partials pèsent des mégaoctets
 
 Depuis le 2026-09-08 les illustrations sont sorties du bundle : `_theme-cards.scss` a maigri et `dist/styles.css` est à **3,64 Mo**. Le poids restant est celui des **polices**, embarquées par décision — `fonts/caveat.scss` 670 Ko, `fonts/im-fell-great-primer.scss` 596 Ko, `fonts/im-fell-english.scss` 508 Ko. **Ne jamais `cat` ces fichiers ni `dist/styles.css`** : les lire par `grep -n … -A n` ou `sed -n`. Pour partager la géométrie d'une carte entre partials, extraire un `@mixin` (`theme-cards.frame`) et l'`@include` — jamais recopier les valeurs, jamais dupliquer l'image.
+
+**Le thème d'un jeu doit fixer `--code-normal`/`--code-background`** (constaté le 2026-09-09 sur City of Mist). Aucun `_workspace.scss` ne les posait avant cette date : le code inline (par exemple un identifiant de bloc entre backticks dans un titre, `` `com-theme-card` ``) retombait sur la couleur non thématisée d'Obsidian, quel que soit le jeu actif — un titre pouvait ainsi afficher deux teintes différentes sans qu'aucun bug ne soit en cause. À vérifier si Legend in the Mist, :Otherscape ou Adrenaline System gagnent une couche `workspace-theme` du même genre.
 
 ### Registre de blocs
 
