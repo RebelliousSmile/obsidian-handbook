@@ -1,6 +1,6 @@
 ---
 objective: "Handbook rend les six schémas :Otherscape en TOML et applique à tout le coffre une identité Metro, Cairo ou Tokyo fidèle à ses sources."
-status: in-progress
+status: implemented
 ---
 
 # Plan: :Otherscape — six schémas et trois univers visuels
