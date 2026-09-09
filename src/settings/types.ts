@@ -1,3 +1,10 @@
+import { CalloutDefinition } from "../features/callouts/types";
+import { NATIVE_CALLOUTS } from "../features/callouts/nativeCallouts";
+import { normalizeCallouts } from "../features/callouts/migrateAliases";
+import {
+	sanitizeAlias,
+	sanitizeAliases,
+} from "../features/callouts/sanitizeAlias";
 import {
 	DEFAULT_GAME_PACK_ID,
 	GAME_REGISTRATIONS,
@@ -5,6 +12,8 @@ import {
 	normalizeGameVariantId,
 } from "../games/registry";
 import { logScope } from "../utils/logger";
+
+export { sanitizeAlias, sanitizeAliases };
 
 /**
  * The identifier of a game pack, and the value written in the user's
@@ -65,7 +74,9 @@ export interface BrumesSettings {
 	logLevel: LogLevel;
 	lanternUrl: string;
 	features: BrumesFeatureSettings;
+	/** Still read by `settings/index.ts` (7 `addAliasSetting` calls) until phase 2 rewrites that screen onto `callouts`; not written to by anything new. */
 	calloutAliases: BrumesCalloutAliasesSettings;
+	callouts: CalloutDefinition[];
 }
 
 export const DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES: CityOfMistCalloutAliases = {
@@ -112,35 +123,11 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		cityOfMist: DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES,
 		legendInTheMist: DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES,
 	},
+	callouts: NATIVE_CALLOUTS,
 };
 
 const LOG_LEVELS: LogLevel[] = ["none", "error", "warn", "info", "debug"];
 const COLOUR_SCHEMES: ColourScheme[] = ["obsidian", "light", "dark"];
-
-export function sanitizeAlias(alias: string): string {
-	return alias
-		.trim()
-		.toLowerCase()
-		.replace(/^\[!?\s*/, "")
-		.replace(/\]\s*$/, "")
-		.replace(/^!\s*/, "")
-		.replace(/\s+/g, "-");
-}
-
-export function sanitizeAliases(aliases: string[]): string[] {
-	const unique = new Set<string>();
-
-	for (const alias of aliases) {
-		const sanitized = sanitizeAlias(alias);
-		if (!sanitized) {
-			continue;
-		}
-
-		unique.add(sanitized);
-	}
-
-	return Array.from(unique);
-}
 
 export function normalizeMode(mode: unknown): BrumesMode {
 	// The colon was dropped from the identifier, not from the name.
@@ -286,5 +273,6 @@ export function normalizeSettings(
 				),
 			},
 		},
+		callouts: normalizeCallouts(source.callouts, source.calloutAliases),
 	};
 }
