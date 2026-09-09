@@ -9,7 +9,9 @@ export class HiddenBracketWidget extends WidgetType {
 		super();
 	}
 	toDOM(): HTMLElement {
-		const span = activeDocument.createSpan();
+		// Document.createSpan() appends to the document, but CodeMirror widgets need a detached node.
+		// eslint-disable-next-line obsidianmd/prefer-create-el
+		const span = activeDocument.createElement("span");
 		span.hidden = true;
 		span.textContent = this.text;
 		return span;
