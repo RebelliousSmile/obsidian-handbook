@@ -103,7 +103,11 @@ export default class BrumesPlugin extends Plugin {
 			}),
 		);
 
-		this.applySettings();
+		// Processors registered above do not redraw Markdown views that were
+		// already open when Obsidian reloaded the plugin. Invalidate them now so
+		// their Handbook blocks and scoped game classes return without requiring
+		// an edit or save from the user.
+		this.applySettings({ refreshMarkdown: true });
 
 		// The override file and the illustrations live in the plugin folder,
 		// which the vault does not watch, so they are read once here and on
