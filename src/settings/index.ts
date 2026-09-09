@@ -10,6 +10,7 @@ import { resolveGameVariant } from "../games/variants";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
 import { CalloutDefinition } from "../features/callouts/types";
+import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
@@ -758,7 +759,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					.setDesc(
 						`Portée : ${this.calloutScopeLabel(entry.scope)} · alias : ${
 							entry.aliases.join(", ") || "aucun"
-						}`,
+						}.${this.calloutShortcutHint(entry)}`,
 					)
 					.addExtraButton((button) =>
 						button
@@ -811,7 +812,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting
 				.setName(`🔒 ${entry.name}`)
 				.setDesc(
-					`Portée : ${this.calloutScopeLabel(entry.scope)}. Seuls les alias sont modifiables ici, un par ligne.`,
+					`Portée : ${this.calloutScopeLabel(entry.scope)}. Seuls les alias sont modifiables ici, un par ligne.${this.calloutShortcutHint(entry)}`,
 				)
 				.addTextArea((text) => {
 					text.setValue(entry.aliases.join("\n"));
@@ -840,6 +841,17 @@ export class BrumesSettingTab extends PluginSettingTab {
 		}
 		const pack = GAME_PACKS.find((p) => p.id === scope);
 		return pack?.label ?? scope;
+	}
+
+	/** No alias means no command is registered for this entry — no hint to give then. */
+	private calloutShortcutHint(entry: CalloutDefinition): string {
+		if (!entry.aliases[0]) {
+			return "";
+		}
+
+		return ` Raccourci : Réglages → Raccourcis clavier → rechercher "${calloutCommandName(
+			entry,
+		)}".`;
 	}
 
 	private addAliasSetting(

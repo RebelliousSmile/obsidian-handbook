@@ -50,19 +50,24 @@ export function contributeCalloutInsertions(
 			item
 				.setTitle(callout.title)
 				.setIcon(callout.icon)
-				.onClick(() => insertCallout(editor, callout)),
+				.onClick(() => insertCallout(editor, callout.alias, callout.template)),
 		);
 	}
 
 	return callouts.length;
 }
 
-function insertCallout(editor: Editor, callout: CalloutInsertion) {
+/** Shared with `commands.ts`, so a keyboard shortcut inserts the same shape as the context menu. */
+export function insertCallout(
+	editor: Editor,
+	alias: string,
+	template: CalloutDefinition["template"],
+) {
 	const cursor = editor.getCursor();
 
-	if (callout.template === "title-body") {
+	if (template === "title-body") {
 		const title = "Title of the note";
-		const line1 = `> [!${callout.alias.toUpperCase()}] ${title}`;
+		const line1 = `> [!${alias.toUpperCase()}] ${title}`;
 		const line2 = "> Content of the note";
 		editor.replaceRange(`${line1}\n${line2}`, cursor);
 
@@ -74,7 +79,7 @@ function insertCallout(editor: Editor, callout: CalloutInsertion) {
 	}
 
 	const body = "Text to read aloud";
-	const line1 = `> [!${callout.alias.toUpperCase()}]`;
+	const line1 = `> [!${alias.toUpperCase()}]`;
 	const line2 = `> ${body}`;
 	editor.replaceRange(`${line1}\n${line2}`, cursor);
 

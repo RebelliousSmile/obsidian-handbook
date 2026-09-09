@@ -51,6 +51,7 @@ import {
 import { LANTERN_LOGO_SVG } from "./views/lanternLogo";
 import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
 import { buildCalloutStyleCss } from "./features/callouts/styleWriter";
+import { clearCalloutCommands, syncCalloutCommands } from "./features/callouts/commands";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -129,6 +130,7 @@ export default class BrumesPlugin extends Plugin {
 			clearBrumesModeClasses(doc);
 		}
 		this.gameStyle.removeGameStyle();
+		clearCalloutCommands(this);
 
 		log.info("Handbook plugin unloaded");
 	}
@@ -162,6 +164,7 @@ export default class BrumesPlugin extends Plugin {
 		this.refreshLanternIntegration();
 		this.refreshContextMenu();
 		this.syncCalloutAliases?.();
+		syncCalloutCommands(this, this.settings.callouts);
 
 		if (options.refreshEditor) {
 			this.app.workspace.updateOptions();
