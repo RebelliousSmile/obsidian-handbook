@@ -1,6 +1,6 @@
 ---
 objective: "Handbook propose le game Adrenaline System, rend ses fiches PJ, PNJ et monstre depuis les trois schémas publiés, et applique les maquettes light et dark attestées par le livre de base de Zombiology."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Adrenaline System — game pack et trois fiches
