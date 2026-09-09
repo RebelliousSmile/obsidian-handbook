@@ -50,11 +50,12 @@ export async function loadCustomGamePacks(plugin: Plugin): Promise<GamePack[]> {
 			.filter((file) => file.toLowerCase().endsWith(".json"))
 			.sort();
 	} catch (error) {
-		log.warn(`Could not read the "${CUSTOM_PACKS_DIR_NAME}" folder, ignoring it.`, error);
+		log.error(`Could not read the "${CUSTOM_PACKS_DIR_NAME}" folder, ignoring it.`, error);
 		return [];
 	}
 
 	const packs: GamePack[] = [];
+	const seenIds: string[] = [];
 
 	for (const filePath of fileNames) {
 		const fileName = filePath.slice(filePath.lastIndexOf("/") + 1);
@@ -83,6 +84,18 @@ export async function loadCustomGamePacks(plugin: Plugin): Promise<GamePack[]> {
 				continue;
 			}
 
+			// Files are sorted by name (see above), so the first one to claim an
+			// id is deterministic — a later custom pack sharing that id loses,
+			// named by its own filename since a `GamePack` carries none.
+			if (seenIds.indexOf(pack.id) !== -1) {
+				reportFileOnce(
+					fileName,
+					`Ignoring "${fileName}" in "${CUSTOM_PACKS_DIR_NAME}": another custom pack already claimed the id "${pack.id}".`,
+				);
+				continue;
+			}
+
+			seenIds.push(pack.id);
 			packs.push(pack);
 		} catch {
 			reportFileOnce(
@@ -93,9 +106,4 @@ export async function loadCustomGamePacks(plugin: Plugin): Promise<GamePack[]> {
 	}
 
 	return packs;
-}
-
-/** Exposed for the throwaway harness, which asserts the once-per-session rule. */
-export function resetCustomPackReports(): void {
-	reportedFiles.length = 0;
 }

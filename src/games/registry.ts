@@ -104,11 +104,6 @@ export const GAME_PACKS: GamePack[] = GAME_REGISTRATIONS.map(
 	(registration) => registration.pack,
 );
 
-/** Exposed for the throwaway harness, which asserts the once-per-session rule. */
-export function resetGameRegistryReports(): void {
-	reportedConflicts.length = 0;
-}
-
 /**
  * Merges `DECLARED_GAMES` with packs read from the vault, and refills
  * `GAME_REGISTRATIONS`/`GAME_PACKS` in place — never reassigned, since several

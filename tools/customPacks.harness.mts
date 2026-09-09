@@ -98,7 +98,7 @@ const classesBeforeLoad = gamePackClasses();
 
 	const packs = await loadCustomGamePacks(plugin);
 
-	check("the valid file yields exactly one pack", packs.length === 2);
+	check("two files parse, the broken one is dropped", packs.length === 2);
 	check(
 		"the valid pack is among them",
 		packs.some((pack) => pack.id === "my-custom-game"),
@@ -164,6 +164,7 @@ const classesBeforeLoad = gamePackClasses();
  * ------------------------------------------------------------------ */
 
 {
+	const errorsBeforeCollision = errors.length;
 	const plugin = fakePlugin({
 		"b-second.json": JSON.stringify({ id: "shared-id", label: "Second" }),
 		"a-first.json": JSON.stringify({ id: "shared-id", label: "First" }),
@@ -175,6 +176,27 @@ const classesBeforeLoad = gamePackClasses();
 	check(
 		"the file that sorts first wins the shared id",
 		resolveGamePack("shared-id").label === "First",
+	);
+	check(
+		"the losing file is named in the log",
+		errors.filter((line) => line.indexOf("b-second.json") !== -1).length === 1,
+	);
+	check(
+		"the winning file is never logged as a loser",
+		errors.filter((line) => line.indexOf("a-first.json") !== -1).length === 0,
+	);
+
+	// Replaying the same load must not log the same loser a second time.
+	const packsAgain = await loadCustomGamePacks(plugin);
+	initGameRegistry(packsAgain);
+
+	check(
+		"replaying does not log the shared-id collision again",
+		errors.filter((line) => line.indexOf("b-second.json") !== -1).length === 1,
+	);
+	check(
+		"nothing else was logged by this section",
+		errors.length === errorsBeforeCollision + 1,
 	);
 }
 
