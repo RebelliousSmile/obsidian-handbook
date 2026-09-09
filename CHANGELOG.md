@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-09-09
+
+### Added
+
+- Add Adrenaline System as a fourth game pack, with sourced light and dark visual tokens and no runtime dependency on the source repository (f3c7b0c).
+- Add tolerant local TOML document primitives and validate emitted PJ, PNJ and monster documents against the sibling `schema-adrenaline` Zod targets (eefb043).
+- Render complete Adrenaline player-character sheets with identity, characteristics, health, protections, formations, competences, equipment and provenance (1559dba).
+- Render compact Adrenaline non-player-character sheets that preserve both minimal and fully detailed profiles (ec65663).
+- Render Adrenaline monster sheets with confrontation-first information, alternate states, contagion and responsive light/dark layouts (5dfafbe).
+
 ## [2.2.1] - 2026-09-09
 
 ### Fixed
