@@ -13,7 +13,7 @@ import { log } from "../utils/logger";
 import { CalloutDefinition } from "../features/callouts/types";
 import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
-import { SchemaSourceModal } from "./sourceModal";
+import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
@@ -46,7 +46,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 					"Choose the game line you are preparing for. This updates the main style and the editor context menu.",
 				)
 				.addDropdown((drop) => {
-					drop.addOption("none", "No game installed");
+					if (GAME_PACKS.length === 0) {
+						drop.addOption("none", "No game installed");
+					}
 					// The list is the registry: a fourth pack shows up here
 					// without a line being written, and its name comes from
 					// the data rather than from a string in the interface.
@@ -134,7 +136,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 		for (const source of sources) {
 			section.addSetting((setting) => {
-				setting.setName(source.repository).setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`).addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }));
+				setting
+					.setName(source.repository)
+					.setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`)
+					.addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
+					.addButton((button) => {
+						button.buttonEl.classList.add("mod-warning");
+						button.setButtonText("Remove").onClick(() => { new SchemaSourceRemovalModal(this.app, this.plugin, source, () => this.redisplay()).open(); });
+					});
 			});
 		}
 	}

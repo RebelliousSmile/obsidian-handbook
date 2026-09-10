@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 
 const source = readFileSync("src/settings/index.ts", "utf8");
+const sourceModal = readFileSync("src/settings/sourceModal.ts", "utf8");
+const plugin = readFileSync("src/BrumesPlugin.ts", "utf8");
 const richDescriptions = [
 	"createMigrationDescription",
 	"createOverrideDescription",
@@ -13,6 +15,22 @@ const failures = [];
 
 if (!source.includes("this.renderGameVariant(generalSection)")) {
 	failures.push("The general settings do not render the conditional game variant selector.");
+}
+
+if (!/if \(GAME_PACKS\.length === 0\) \{\s*drop\.addOption\("none", "No game installed"\);\s*\}/m.test(source)) {
+	failures.push("The empty game option remains visible after real packs are installed.");
+}
+
+if (!source.includes('button.buttonEl.classList.add("mod-warning")') || !source.includes('setButtonText("Remove")') || !source.includes("SchemaSourceRemovalModal")) {
+	failures.push("Registered schema sources have no warning-styled removal action.");
+}
+
+if (!sourceModal.includes('setTitle("Remove schema source")') || !sourceModal.includes("all of its installed game packs")) {
+	failures.push("Schema source removal is not confirmed with its installed-pack impact.");
+}
+
+if (!plugin.includes("removeSchemaSourceStorage(this, source.id)") || !plugin.includes("await this.refreshGameRegistry()")) {
+	failures.push("Removing a schema source does not delete its storage and rebuild the live game registry.");
 }
 
 if (!source.includes('variants.length < 2')) {

@@ -28,3 +28,42 @@ export class SchemaSourceModal extends Modal {
 		void this.plugin.saveSchemaSource(source, this.existing?.repository ?? null).then(() => { this.saved(); this.close(); }).catch((error: unknown) => { this.errorEl?.setText(String(error)); new Notice("Schema source was not installed."); });
 	}
 }
+
+export class SchemaSourceRemovalModal extends Modal {
+	// eslint-disable-next-line obsidianmd/prefer-active-doc
+	constructor(
+		app: App,
+		private readonly plugin: BrumesPlugin,
+		private readonly source: SchemaSource,
+		private readonly removed: () => void,
+	) {
+		super(app);
+	}
+
+	onOpen(): void {
+		this.setTitle("Remove schema source");
+		this.contentEl.createEl("p", {
+			text: `Remove ${this.source.repository} and all of its installed game packs?`,
+		});
+		new Setting(this.contentEl)
+			.addButton((button) =>
+				button.setButtonText("Cancel").onClick(() => this.close()),
+			)
+			.addButton((button) => {
+				button.buttonEl.classList.add("mod-warning");
+				button.setButtonText("Remove source").onClick(() => this.remove());
+			});
+	}
+
+	private remove(): void {
+		void this.plugin
+			.removeSchemaSource(this.source)
+			.then(() => {
+				this.removed();
+				this.close();
+			})
+			.catch((error: unknown) => {
+				new Notice(`Schema source was not removed: ${String(error)}`);
+			});
+	}
+}

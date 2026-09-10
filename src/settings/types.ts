@@ -150,7 +150,7 @@ export function normalizeMode(mode: unknown): BrumesMode {
 		);
 	}
 
-	return DEFAULT_SETTINGS.mode;
+	return GAME_REGISTRATIONS[0]?.pack.id ?? DEFAULT_SETTINGS.mode;
 }
 
 function normalizeLogLevel(level: unknown): LogLevel {

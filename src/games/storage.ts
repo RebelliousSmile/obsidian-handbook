@@ -189,6 +189,21 @@ export async function replaceSchemaSource(
 	}
 }
 
+/** Remove every managed directory for one source; registered loose packs are untouched. */
+export async function removeSchemaSourceStorage(
+	plugin: Plugin,
+	sourceId: string,
+): Promise<void> {
+	const adapter = plugin.app.vault.adapter;
+	const paths = schemaSourceStoragePaths(plugin, sourceId);
+
+	for (const path of [paths.staging, `${paths.root}.previous`, paths.root]) {
+		if (await adapter.exists(path)) {
+			await adapter.rmdir(path, true);
+		}
+	}
+}
+
 /** Persistent data wins; legacy is a one-cycle fallback when migration failed. */
 export async function packsReadPath(plugin: Plugin): Promise<string> {
 	const paths = gameStoragePaths(plugin);
