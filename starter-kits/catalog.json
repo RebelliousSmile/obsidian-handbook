@@ -2,9 +2,9 @@
   "manifestVersion": 1,
   "kits": [
     {
-      "id": "city-of-mist",
-      "label": "City of Mist",
-      "description": "Start with the noir investigation game and its character tools.",
+      "id": "mist-engine",
+      "label": "Mist Engine",
+      "description": "Install City of Mist, Legend in the Mist and :Otherscape from one schema repository.",
       "initialMode": "city-of-mist",
       "sources": [
         {
@@ -14,25 +14,17 @@
       ]
     },
     {
-      "id": "legend-in-the-mist",
-      "label": "Legend in the Mist",
-      "description": "Start with the fantasy game, journeys and theme cards.",
-      "initialMode": "legend-in-the-mist",
+      "id": "adrenaline-and-pbta",
+      "label": "Adrenaline + PbtA (test)",
+      "description": "Install two schema repositories together to try Adrenaline and PbtA games.",
+      "initialMode": "adrenaline",
       "sources": [
         {
-          "repository": "RebelliousSmile/schema-in-the-mist",
+          "repository": "RebelliousSmile/schema-adrenaline",
           "reference": { "kind": "branch", "value": "main" }
-        }
-      ]
-    },
-    {
-      "id": "otherscape",
-      "label": ":Otherscape",
-      "description": "Start with the cyberpunk game and select its visual variant.",
-      "initialMode": "otherscape",
-      "sources": [
+        },
         {
-          "repository": "RebelliousSmile/schema-in-the-mist",
+          "repository": "RebelliousSmile/schema-pbta",
           "reference": { "kind": "branch", "value": "main" }
         }
       ]
