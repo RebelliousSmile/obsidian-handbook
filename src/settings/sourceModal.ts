@@ -25,7 +25,11 @@ export class SchemaSourceModal extends Modal {
 		if (!isSafeSchemaSourceRepository(this.repository) || (this.kind !== "latest" && !this.value)) { this.errorEl?.setText("Enter an owner/repository and, when required, a reference."); return; }
 		const reference: SchemaSourceReference = this.kind === "latest" ? { kind: "latest" } : { kind: this.kind, value: this.value };
 		const source: SchemaSource = { repository: this.repository, id: schemaSourceId(this.repository), reference };
-		void this.plugin.saveSchemaSource(source, this.existing?.repository ?? null).then(() => { this.saved(); this.close(); }).catch((error: unknown) => { this.errorEl?.setText(String(error)); new Notice("Schema source was not installed."); });
+		void this.plugin.saveSchemaSource(source, this.existing?.repository ?? null).then(() => { this.saved(); this.close(); }).catch((error: unknown) => {
+			const message = error instanceof Error ? error.message : String(error);
+			this.errorEl?.setText(message);
+			new Notice(`Schema source was not installed: ${message}`);
+		});
 	}
 }
 

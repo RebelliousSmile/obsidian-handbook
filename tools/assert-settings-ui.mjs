@@ -29,6 +29,10 @@ if (!sourceModal.includes('setTitle("Remove schema source")') || !sourceModal.in
 	failures.push("Schema source removal is not confirmed with its installed-pack impact.");
 }
 
+if (!sourceModal.includes("Schema source was not installed: ${message}")) {
+	failures.push("Schema installation failures hide the actionable cause from the notice.");
+}
+
 if (!plugin.includes("removeSchemaSourceStorage(this, source.id)") || !plugin.includes("await this.refreshGameRegistry()")) {
 	failures.push("Removing a schema source does not delete its storage and rebuild the live game registry.");
 }
