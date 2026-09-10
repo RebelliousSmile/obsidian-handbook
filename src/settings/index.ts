@@ -46,6 +46,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					"Choose the game line you are preparing for. This updates the main style and the editor context menu.",
 				)
 				.addDropdown((drop) => {
+					drop.addOption("none", "No game installed");
 					// The list is the registry: a fourth pack shows up here
 					// without a line being written, and its name comes from
 					// the data rather than from a string in the interface.
@@ -78,26 +79,21 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
 
-		const cityOfMistSection = this.createSection(
-			containerEl,
-			this.plugin.settings.mode !== "city-of-mist",
-		);
-		cityOfMistSection.setHeading("City of Mist");
-		this.renderCityOfMistSettings(cityOfMistSection);
-
-		const legendInTheMistSection = this.createSection(
-			containerEl,
-			this.plugin.settings.mode !== "legend-in-the-mist",
-		);
-		legendInTheMistSection.setHeading("Legend in the Mist");
-		this.renderLegendInTheMistSettings(legendInTheMistSection);
-
-		const otherscapeSection = this.createSection(
-			containerEl,
-			this.plugin.settings.mode !== "otherscape",
-		);
-		otherscapeSection.setHeading(":Otherscape");
-		this.renderOtherscapeSettings(otherscapeSection);
+		if (findGamePack("city-of-mist")) {
+			const section = this.createSection(containerEl, this.plugin.settings.mode !== "city-of-mist");
+			section.setHeading("City of Mist");
+			this.renderCityOfMistSettings(section);
+		}
+		if (findGamePack("legend-in-the-mist")) {
+			const section = this.createSection(containerEl, this.plugin.settings.mode !== "legend-in-the-mist");
+			section.setHeading("Legend in the Mist");
+			this.renderLegendInTheMistSettings(section);
+		}
+		if (findGamePack("otherscape")) {
+			const section = this.createSection(containerEl, this.plugin.settings.mode !== "otherscape");
+			section.setHeading(":Otherscape");
+			this.renderOtherscapeSettings(section);
+		}
 
 		if (findGamePack("adrenaline")) {
 			const adrenalineSection = this.createSection(
@@ -123,7 +119,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting
 				.setName("Schema sources")
 				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
-				.addButton((button) => button.setButtonText("Add source").onClick(() => new SchemaSourceModal(this.app, this.plugin, null, () => this.display()).open()))
+				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.display()).open(); }))
 				.addButton((button) => button.setButtonText("Reload installed sources").onClick(() => {
 					this.runTask(async () => {
 						await this.plugin.refreshGameRegistry();
@@ -132,7 +128,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 				}));
 		});
 		for (const source of sources) {
-			section.addSetting((setting) => setting.setName(source.repository).setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`).addButton((button) => button.setButtonText("Check").onClick(() => new SchemaSourceModal(this.app, this.plugin, source, () => this.display()).open())));
+			section.addSetting((setting) => {
+				setting.setName(source.repository).setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`).addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.display()).open(); }));
+			});
 		}
 	}
 

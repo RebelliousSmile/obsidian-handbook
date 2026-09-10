@@ -81,7 +81,7 @@ export interface BrumesSettings {
 
 export const DEFAULT_SETTINGS: BrumesSettings = {
 	mode: DEFAULT_GAME_PACK_ID,
-	gameVariants: { otherscape: "metro" },
+	gameVariants: {},
 	colourScheme: "obsidian",
 	logLevel: "error",
 	lanternUrl: "https://lantern.ravenloft.fr",
@@ -146,7 +146,7 @@ export function normalizeMode(mode: unknown): BrumesMode {
 
 	if (typeof mode === "string" && mode.length > 0) {
 		modeLog.warn(
-			`No game pack answers to "${mode}", falling back on "${DEFAULT_GAME_PACK_ID}". Reinstall optional packs in Handbook's persistent packs directory if this followed an update.`,
+			`No game pack answers to "${mode}". Handbook is using its neutral appearance; reinstall the source that provided this pack if needed.`,
 		);
 	}
 

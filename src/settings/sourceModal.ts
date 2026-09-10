@@ -1,12 +1,14 @@
 import { App, Modal, Notice, Setting } from "obsidian";
-import BrumesPlugin from "../BrumesPlugin";
-import { SchemaSource, SchemaSourceReference, isSafeSchemaSourceRepository, schemaSourceId } from "../games/sources";
+import type BrumesPlugin from "../BrumesPlugin";
+import { isSafeSchemaSourceRepository, schemaSourceId } from "../games/sources";
+import type { SchemaSource, SchemaSourceReference } from "../games/sources";
 
 export class SchemaSourceModal extends Modal {
 	private repository: string;
 	private kind: SchemaSourceReference["kind"];
 	private value: string;
 	private errorEl: HTMLElement | null = null;
+	// eslint-disable-next-line obsidianmd/prefer-active-doc
 	constructor(app: App, private readonly plugin: BrumesPlugin, private readonly existing: SchemaSource | null, private readonly saved: () => void) {
 		super(app); this.repository = existing?.repository ?? ""; this.kind = existing?.reference.kind ?? "latest"; this.value = existing?.reference.kind === "latest" ? "" : existing?.reference.value ?? "";
 	}

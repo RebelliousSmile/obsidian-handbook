@@ -1,8 +1,16 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Jeux externalisés et bootstrap de starter kit
+
+> **Décision produit révisée le 10 septembre 2026 :** la sélection ne se fait
+> plus entre plusieurs archives GitHub. Une distribution unique embarque son
+> catalogue déclaratif dans `main.js` et ouvre une modale lorsque le registre
+> ne contient aucun jeu. Le clic installe la source distante puis active le jeu
+> choisi. Cette décision remplace les mentions d'instantané et d'import unique
+> ci-dessous ; les critères effectivement retenus sont couverts par
+> `assert:starter-kits`, `assert:source-installer` et `assert:game-variants`.
 
 ## Architecture projection
 

@@ -1,6 +1,6 @@
 ---
 objective: "Handbook installe, met à jour manuellement et distribue des packs de jeu déclaratifs depuis des dépôts de schémas, avec des starter kits autonomes."
-status: blocked
+status: in-progress
 ---
 
 # Plan: Dépôts de schémas et starter kits Handbook
@@ -40,6 +40,6 @@ status: blocked
 | Une installation remplace atomiquement le répertoire entièrement géré de la source ; les overrides personnels restent à part. | Les assets de design doivent suivre leur version de schéma sans fusion ambiguë ni conservation de fichiers supprimés. |
 | Handbook ne télécharge ni n’exécute JavaScript, TypeScript ou CSS de dépôt. | Les dépôts ne transportent que des manifestes, documents de pack, images et polices vérifiés par Handbook. |
 | Le client GitHub matérialise les fichiers déclarés via l’arbre et les contenus bruts de GitHub, avec des limites de taille et de nombre de fichiers ; il ne décompresse pas une archive distante dans Obsidian. | Le chemin reste compatible mobile sans bibliothèque ZIP, et une source malveillante ne peut pas épuiser le stockage ou contourner la validation de chemins. |
-| Les starter kits sont des instantanés de sources livrés dans des archives GitHub distinctes, puis importés une seule fois dans le stockage durable. | Un utilisateur voit un résultat dès l’installation tout en gardant le dépôt de schéma comme source de vérité et de mise à jour. |
+| Une distribution unique compile un catalogue léger de starter kits dans `main.js` et ouvre une modale lorsque aucun jeu n'est installé ; le kit choisi installe ses sources par le flux distant normal. | Le parcours fonctionne depuis les modules communautaires, BRAT et une installation manuelle, sans dupliquer les données de jeu dans Handbook. |
 | Une source installe tous les packs de son catalogue dans la première version ; les variantes visuelles de pack restent des données du manifeste de pack. | Cela rend l’installation multi-pack déterministe sans ajouter une sélection qui cacherait des capacités nécessaires. |
 | Les sources privées et jetons GitHub sont différés. | Ils demandent une gestion des secrets qui n’est pas nécessaire pour démontrer la distribution publique multi-pack. |

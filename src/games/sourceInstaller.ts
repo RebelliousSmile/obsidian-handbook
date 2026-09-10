@@ -37,7 +37,8 @@ function assetPaths(manifestPath: string, pack: GamePluginManifest): Array<{ sou
 	return files.map((file) => {
 		const target = safeRelativePath(file);
 		const source = target ? safeRelativePath(`${root}/${assetRoot}/${target}`) : null;
-		return source && target ? { source, target } : null;
+		const installed = target ? safeRelativePath(`${assetRoot}/${target}`) : null;
+		return source && installed ? { source, target: installed } : null;
 	}).filter((file): file is { source: string; target: string } => file !== null);
 }
 
@@ -97,7 +98,7 @@ export async function installResolvedSchemaSource(
 			await adapter.write(join(target, "pack.json"), pack.raw);
 			for (const asset of pack.assets) {
 				const segments = asset.target.split("/");
-				let targetRoot = join(target, "assets");
+				let targetRoot = target;
 				for (const segment of segments.slice(0, -1)) {
 					targetRoot = join(targetRoot, segment);
 					await ensureStorageDirectory(adapter, targetRoot);
@@ -109,7 +110,7 @@ export async function installResolvedSchemaSource(
 				await adapter.writeBinary(join(targetRoot, segments[segments.length - 1]), binary);
 			}
 		}
-		await adapter.write(join(staging, "source.json"), JSON.stringify({ repository: source.repository, reference: source.reference, revision: resolved.revision, checkedAt: new Date().toISOString() }, null, "\t"));
+		await adapter.write(join(staging, "source.json"), JSON.stringify({ id: source.id, repository: source.repository, reference: source.reference, revision: resolved.revision, checkedAt: new Date().toISOString() }, null, "\t"));
 	});
 	void schemaSourceStoragePaths;
 }

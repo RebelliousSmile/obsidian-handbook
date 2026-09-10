@@ -1,0 +1,41 @@
+{
+  "manifestVersion": 1,
+  "kits": [
+    {
+      "id": "city-of-mist",
+      "label": "City of Mist",
+      "description": "Start with the noir investigation game and its character tools.",
+      "initialMode": "city-of-mist",
+      "sources": [
+        {
+          "repository": "RebelliousSmile/schema-in-the-mist",
+          "reference": { "kind": "branch", "value": "main" }
+        }
+      ]
+    },
+    {
+      "id": "legend-in-the-mist",
+      "label": "Legend in the Mist",
+      "description": "Start with the fantasy game, journeys and theme cards.",
+      "initialMode": "legend-in-the-mist",
+      "sources": [
+        {
+          "repository": "RebelliousSmile/schema-in-the-mist",
+          "reference": { "kind": "branch", "value": "main" }
+        }
+      ]
+    },
+    {
+      "id": "otherscape",
+      "label": ":Otherscape",
+      "description": "Start with the cyberpunk game and select its visual variant.",
+      "initialMode": "otherscape",
+      "sources": [
+        {
+          "repository": "RebelliousSmile/schema-in-the-mist",
+          "reference": { "kind": "branch", "value": "main" }
+        }
+      ]
+    }
+  ]
+}

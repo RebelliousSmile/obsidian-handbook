@@ -1,7 +1,4 @@
 import { logScope } from "../utils/logger";
-import { cityOfMistPack } from "./city-of-mist";
-import { legendInTheMistPack } from "./legend-in-the-mist";
-import { otherscapePack, otherscapeVariants } from "./otherscape";
 import { EMPTY_STYLE, GamePack, isValidGamePackId } from "./types";
 import type { InstalledGamePlugin } from "./pluginManifest";
 import {
@@ -29,16 +26,8 @@ function reportConflictOnce(id: string, message: string): void {
 	log.error(message);
 }
 
-/** Every game Handbook knows. Adding a game means adding a line here. */
-const DECLARED_GAMES: GameRegistration[] = [
-	{ pack: cityOfMistPack },
-	{ pack: legendInTheMistPack },
-	{
-		pack: otherscapePack,
-		variants: otherscapeVariants,
-		defaultVariantId: "metro",
-	},
-];
+/** Handbook owns renderers, never game design: packs are installed data. */
+const DECLARED_GAMES: GameRegistration[] = [];
 
 /**
  * A pack whose identifier is not safe as a class name is left out rather than
@@ -104,14 +93,11 @@ export const GAME_PACKS: GamePack[] = GAME_REGISTRATIONS.map(
 );
 
 /**
- * Merges `DECLARED_GAMES` with packs read from the vault, and refills
+ * Merges installed packs read from the vault and refills
  * `GAME_REGISTRATIONS`/`GAME_PACKS` in place — never reassigned, since several
  * files hold a direct reference to these arrays taken at import time.
  *
- * A custom pack never carries variants. One whose id collides with a declared
- * game loses to it, logged once; two custom packs sharing an id keep only the
- * first — callers sort their files before calling, so that first claim is
- * deterministic.
+ * A collision keeps the first pack returned by the deterministic loaders.
  */
 export function initGameRegistry(customPacks: InstalledGamePlugin[]): void {
 	const customRegistrations: GameRegistration[] = customPacks.map(
@@ -135,7 +121,8 @@ export function initGameRegistry(customPacks: InstalledGamePlugin[]): void {
 	GAME_PACKS.push(...GAME_REGISTRATIONS.map((registration) => registration.pack));
 }
 
-export const DEFAULT_GAME_PACK_ID = "city-of-mist";
+/** A neutral sentinel: it is not a game pack and writes no game design. */
+export const DEFAULT_GAME_PACK_ID = "none";
 
 /** The class every pack claims on the body, and the plugin scopes its style by. */
 export function gamePackClass(id: string): string {
@@ -182,9 +169,7 @@ export function findGamePack(id: unknown): GamePack | null {
 }
 
 /**
- * Never fails: an identifier nothing answers to falls back on the default
- * pack. A vault written by a later version, or by hand, opens on a game
- * instead of on an error.
+ * Never fails: an unavailable saved game falls back to the neutral state.
  */
 export function resolveGamePack(id: unknown): GamePack {
 	const pack = findGamePack(id);
@@ -215,7 +200,7 @@ export function normalizeGameVariantId(
 	return resolveGameVariant(resolveGameRegistration(gameId), variantId)?.id ?? null;
 }
 
-/** Only reachable if every declared pack was refused. Writes no style. */
+/** Only reachable when no installed pack answers. Writes no game style. */
 const UNDRESSED_PACK: GamePack = {
 	id: DEFAULT_GAME_PACK_ID,
 	label: DEFAULT_GAME_PACK_ID,

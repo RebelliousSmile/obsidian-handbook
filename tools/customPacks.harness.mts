@@ -126,7 +126,7 @@ async function run(): Promise<void> {
 			},
 		};
 		check("Adrenaline starts absent", !GAME_PACKS.some((pack) => pack.id === "adrenaline"));
-		check("an absent saved Adrenaline mode falls back", normalizeMode("adrenaline") === "city-of-mist");
+		check("an absent saved Adrenaline mode falls back to neutral", normalizeMode("adrenaline") === "none");
 		check(
 			"Adrenaline processors stay disabled while its mode is absent",
 			adrenalineBlocks.every((block) => !isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
@@ -161,7 +161,7 @@ async function run(): Promise<void> {
 
 		initGameRegistry([]);
 		check("removing Adrenaline removes its class", !gamePackClasses().includes("brumes--adrenaline"));
-		check("a removed saved Adrenaline mode falls back", normalizeMode("adrenaline") === "city-of-mist");
+		check("a removed saved Adrenaline mode falls back to neutral", normalizeMode("adrenaline") === "none");
 	}
 
 	/* Legacy flat files retain their tolerant, deterministic behavior. */
@@ -185,7 +185,7 @@ async function run(): Promise<void> {
 		check("GAME_PACKS identity survives merging", GAME_PACKS === packsRef);
 		check("the flat pack resolves", resolveGamePack("my-custom-game").id === "my-custom-game");
 		check("the flat pack class resolves", gamePackClasses().includes("brumes--my-custom-game"));
-		check("a declared pack wins", resolveGamePack("city-of-mist").label !== "Impostor");
+		check("a legacy pack no longer collides with a built-in", resolveGamePack("city-of-mist").label === "Impostor");
 
 		const errorsBeforeReplay = errors.length;
 		initGameRegistry(await loadCustomGamePacks(plugin));
@@ -325,7 +325,7 @@ async function run(): Promise<void> {
 		check("an escaping asset root triggers no asset lookup", reads.length === beforeAssets);
 	}
 
-	/* Candidate order decides duplicate external ids; built-ins still win later. */
+	/* Candidate order decides duplicate external ids. */
 	{
 		const errorsBefore = errors.length;
 		const { plugin } = fakePlugin({

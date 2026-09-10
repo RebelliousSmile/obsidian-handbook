@@ -2,6 +2,7 @@ import { build } from "esbuild";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "handbook-variants-"));
 const output = join(temporaryDirectory, "assert-game-variants.mjs");
@@ -16,7 +17,7 @@ try {
 		logLevel: "silent",
 		external: ["obsidian"],
 	});
-	await import(output);
+	await import(pathToFileURL(output).href);
 } finally {
 	await rm(temporaryDirectory, { recursive: true, force: true });
 }

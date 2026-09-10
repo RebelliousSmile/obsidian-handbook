@@ -15,6 +15,7 @@
 		"assert:custom-packs": "node tools/assert-custom-packs.mjs",
 		"assert:repository-manifest": "node tools/assert-repository-manifest.mjs",
 		"assert:source-installer": "node tools/assert-source-installer.mjs",
+		"assert:starter-kits": "node tools/assert-starter-kits.mjs",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",
 		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",

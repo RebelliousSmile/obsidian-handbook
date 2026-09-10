@@ -25,4 +25,10 @@ if (!files.has(`${root}/packs/test/pack.json`) || !files.has(`${root}/packs/test
 const before = files.get(`${root}/packs/test/pack.json`);
 await installResolvedSchemaSource(plugin, source, { ...resolved, revision: "b".repeat(40), readBinary: async () => { throw new Error("network failed"); } }).catch(() => undefined);
 if (files.get(`${root}/packs/test/pack.json`) !== before) throw new Error("failed installation replaced the previous source");
+const rootedContent: Record<string, string> = {
+	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "rooted", version: "1.0.0", path: "handbook/rooted/pack.json" }] }),
+	"handbook/rooted/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "rooted", label: "Rooted", style: {}, assets: { root: "media", images: { paper: "paper.png" } } } }),
+};
+await installResolvedSchemaSource(plugin, source, { revision: "c".repeat(40), readText: async (path) => rootedContent[path] ?? Promise.reject(new Error(path)), readBinary: async () => new Uint8Array([3]).buffer });
+if (!files.has(`${root}/packs/rooted/media/paper.png`)) throw new Error("custom asset root was not preserved");
 console.log("source installer: green");

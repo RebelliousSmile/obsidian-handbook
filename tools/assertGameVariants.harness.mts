@@ -3,6 +3,7 @@ import {
 	GAME_PACKS,
 	GAME_REGISTRATIONS,
 	gameVariantClasses,
+	initGameRegistry,
 	normalizeGameVariantId,
 	resolveGameRegistration,
 } from "../src/games/registry";
@@ -14,6 +15,39 @@ import {
 	clearBrumesModeClasses,
 	setBrumesVariantClass,
 } from "../src/features/modes/domModeClass";
+
+assert.equal(resolveGameRegistration("city-of-mist").pack.id, "none");
+
+const emptyStyle = {
+	base: { note: {}, workspace: {} },
+	light: { note: {}, workspace: {} },
+	dark: { note: {}, workspace: {} },
+};
+
+initGameRegistry([
+	{ pack: { id: "city-of-mist", label: "City of Mist", style: emptyStyle } },
+	{ pack: { id: "legend-in-the-mist", label: "Legend in the Mist", style: emptyStyle } },
+	{
+		pack: {
+			id: "otherscape",
+			label: ":Otherscape",
+			style: {
+				base: { note: { "--font-text-theme": '"Roboto", sans-serif' }, workspace: {} },
+				light: { note: {}, workspace: {} },
+				dark: { note: { "--background-primary": "#102B27", "--h1-color": "#B8F53C" }, workspace: {} },
+			},
+		},
+		installation: {
+			root: "packs/otherscape", version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [],
+			variants: [
+				{ id: "metro", label: "Metro", style: {}, polarities: ["light", "dark"] },
+				{ id: "cairo", label: "Cairo", style: { dark: { note: { "--background-primary": "#102B27" } } }, polarities: ["light", "dark"] },
+				{ id: "tokyo", label: "Tokyo", style: {}, polarities: ["light", "dark"] },
+			],
+			defaultVariantId: "metro",
+		},
+	},
+]);
 
 assert.deepEqual(
 	GAME_PACKS.map((pack) => pack.id),

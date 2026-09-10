@@ -1,6 +1,6 @@
 import { readGamePack } from "./fromSchema";
 import { gamePluginCapabilityIssues } from "./capabilities";
-import { GamePack } from "./types";
+import { GamePack, GamePolarity } from "./types";
 import { GameVariant } from "./variants";
 import type { InstalledSchemaSource } from "./sources";
 
@@ -161,7 +161,7 @@ function readVariants(value: unknown): { variants?: GameVariant[]; defaultVarian
 		const variantPack = readGamePack({ id, label, style: candidate.style });
 		const polarities = candidate.polarities;
 		if (!variantPack || !Array.isArray(polarities) || polarities.length === 0 || polarities.some((value) => value !== "light" && value !== "dark") || new Set(polarities).size !== polarities.length) return null;
-		variants.push({ id, label, style: variantPack.style, polarities });
+		variants.push({ id, label, style: variantPack.style, polarities: polarities as GamePolarity[] });
 	}
 	return { variants };
 }
