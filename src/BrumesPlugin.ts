@@ -27,8 +27,12 @@ import {
 	resolveGamePack,
 	resolveGameRegistration,
 } from "./games/registry";
-import { loadCustomGamePacks } from "./games/customPacks";
+import { loadCustomGamePacks, loadSchemaSourceGamePacks } from "./games/customPacks";
 import { prepareGameStorage } from "./games/storage";
+import { resolveGithubSource } from "./games/githubSources";
+import { installResolvedSchemaSource } from "./games/sourceInstaller";
+import { SchemaSource } from "./games/sources";
+import type { StarterKit } from "./games/starterKits";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -55,6 +59,7 @@ import { LANTERN_LOGO_SVG } from "./views/lanternLogo";
 import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
 import { buildCalloutStyleCss } from "./features/callouts/styleWriter";
 import { clearCalloutCommands, syncCalloutCommands } from "./features/callouts/commands";
+import { StarterKitModal } from "./settings/starterKitModal";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -69,11 +74,11 @@ export default class BrumesPlugin extends Plugin {
 	private readonly gameStyle = new GameStyleWriter();
 	private overrides: GameOverride = EMPTY_OVERRIDE;
 	private assets: GameAssetState = emptyAssetState("");
+	private starterKitPrompted = false;
 
 	async onload() {
 		await prepareGameStorage(this);
-		const customPacks = await loadCustomGamePacks(this);
-		initGameRegistry(customPacks);
+		await this.refreshGameRegistry();
 
 		await this.loadSettings();
 
@@ -122,6 +127,7 @@ export default class BrumesPlugin extends Plugin {
 			// The vault does not watch Handbook's config data, so overrides and
 			// illustrations are read once here and on demand afterwards.
 			void this.reloadStyleSources();
+			void this.promptForStarterKit();
 		});
 	}
 
@@ -164,6 +170,46 @@ export default class BrumesPlugin extends Plugin {
 	async saveSettings(options: ApplySettingsOptions = {}) {
 		await this.saveData(this.settings);
 		this.applySettings(options);
+	}
+
+	/** Rebuild the live registry after a managed source changes on disk. */
+	async refreshGameRegistry() {
+		const customPacks = await loadCustomGamePacks(this);
+		const sourcePacks = await loadSchemaSourceGamePacks(this);
+		initGameRegistry([...customPacks, ...sourcePacks]);
+		if (this.settings) {
+			this.settings = normalizeSettings(this.settings);
+			this.assets = emptyAssetState("");
+			this.applySettings({ refreshMarkdown: true });
+		}
+	}
+
+	async saveSchemaSource(source: SchemaSource, replacingRepository: string | null) {
+		const resolved = await resolveGithubSource(source);
+		await installResolvedSchemaSource(this, source, resolved);
+		const sources = this.settings.schemaSources.filter((known) => known.repository.toLowerCase() !== (replacingRepository ?? source.repository).toLowerCase() && known.repository.toLowerCase() !== source.repository.toLowerCase());
+		sources.push(source);
+		this.settings.schemaSources = sources;
+		await this.saveData(this.settings);
+		await this.refreshGameRegistry();
+	}
+
+
+	async installStarterKit(starterKit: StarterKit) {
+		for (const source of starterKit.sources) {
+			await this.saveSchemaSource(source, null);
+		}
+		if (resolveGamePack(starterKit.initialMode).id === starterKit.initialMode) {
+			this.settings.mode = starterKit.initialMode;
+			await this.saveData(this.settings);
+			this.applySettings({ refreshMarkdown: true });
+		}
+	}
+
+	private async promptForStarterKit() {
+		if (this.starterKitPrompted || GAME_PACKS.length > 0) return;
+		this.starterKitPrompted = true;
+		new StarterKitModal(this.app, this).open();
 	}
 
 	private applySettings(options: ApplySettingsOptions = {}) {

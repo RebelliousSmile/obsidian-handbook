@@ -142,12 +142,8 @@ assert.equal(
 	"light",
 );
 assert.equal(normalizeSettings({ colourScheme: "dark" }).colourScheme, "dark");
-assert.equal(normalizeSettings(undefined).gameVariants.otherscape, "metro");
-assert.equal(
-	normalizeSettings({ gameVariants: { otherscape: "retired" } }).gameVariants
-		.otherscape,
-	"metro",
-);
+assert.deepEqual(normalizeSettings(undefined).gameVariants, {});
+assert.deepEqual(normalizeSettings({ gameVariants: { otherscape: "retired" } }).gameVariants, {});
 assert.equal(
 	normalizeSettings({ colourScheme: "sepia" as "dark" }).colourScheme,
 	"obsidian",

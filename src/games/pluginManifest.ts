@@ -1,6 +1,8 @@
 import { readGamePack } from "./fromSchema";
 import { gamePluginCapabilityIssues } from "./capabilities";
-import { GamePack } from "./types";
+import { GamePack, GamePolarity } from "./types";
+import { GameVariant } from "./variants";
+import type { InstalledSchemaSource } from "./sources";
 
 export const GAME_PLUGIN_MANIFEST_VERSION = 1;
 
@@ -9,6 +11,8 @@ const MANIFEST_FIELDS = [
 	"version",
 	"minimumHandbookVersion",
 	"requires",
+	"variants",
+	"defaultVariantId",
 	"pack",
 ];
 const CAPABILITY_PATTERN = /^(?:block|style):[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -20,6 +24,8 @@ export interface GamePluginManifest {
 	version: string;
 	minimumHandbookVersion: string;
 	requires: string[];
+	variants?: GameVariant[];
+	defaultVariantId?: string;
 	pack: GamePack;
 }
 
@@ -28,6 +34,9 @@ export interface GamePluginInstallation {
 	version: string;
 	minimumHandbookVersion: string;
 	requires: string[];
+	variants?: GameVariant[];
+	defaultVariantId?: string;
+	source?: InstalledSchemaSource;
 }
 
 export interface InstalledGamePlugin {
@@ -140,6 +149,23 @@ function readRequirements(value: unknown): string[] | null {
 	return requirements;
 }
 
+function readVariants(value: unknown): { variants?: GameVariant[]; defaultVariantId?: string } | null {
+	if (value === undefined) return {};
+	if (!Array.isArray(value)) return null;
+	const variants: GameVariant[] = [];
+	for (const candidate of value) {
+		if (!isRecord(candidate) || Object.keys(candidate).some((field) => !["id", "label", "style", "polarities"].includes(field))) return null;
+		const id = typeof candidate.id === "string" ? candidate.id : "";
+		const label = typeof candidate.label === "string" ? candidate.label.trim() : "";
+		if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || !label || variants.some((variant) => variant.id === id)) return null;
+		const variantPack = readGamePack({ id, label, style: candidate.style });
+		const polarities = candidate.polarities;
+		if (!variantPack || !Array.isArray(polarities) || polarities.length === 0 || polarities.some((value) => value !== "light" && value !== "dark") || new Set(polarities).size !== polarities.length) return null;
+		variants.push({ id, label, style: variantPack.style, polarities: polarities as GamePolarity[] });
+	}
+	return { variants };
+}
+
 /**
  * Read the strict installation envelope around the deliberately tolerant
  * GamePack document. An incompatible plugin is rejected whole before it can
@@ -190,6 +216,15 @@ export function readGamePluginManifest(
 	if (!requires) {
 		return { error: `"requires" is not a valid capability list` };
 	}
+	const variantResult = readVariants(source.variants);
+	if (!variantResult) return { error: '"variants" is not a valid variant list' };
+	let defaultVariantId: string | undefined;
+	if (source.defaultVariantId !== undefined) {
+		if (typeof source.defaultVariantId !== "string" || !variantResult.variants?.some((variant) => variant.id === source.defaultVariantId)) {
+			return { error: '"defaultVariantId" does not name a declared variant' };
+		}
+		defaultVariantId = source.defaultVariantId;
+	}
 
 	const pack = readGamePack(source.pack);
 	if (!pack) {
@@ -214,6 +249,8 @@ export function readGamePluginManifest(
 			version: String(source.version),
 			minimumHandbookVersion: String(source.minimumHandbookVersion),
 			requires,
+			variants: variantResult.variants,
+			defaultVariantId,
 			pack,
 		},
 	};

@@ -1,6 +1,6 @@
 # Handbook
 
-Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mist** and **:Otherscape** vaults, with **Adrenaline System** available as an optional game plugin. It provides game-specific styling, custom inline syntax, themed callouts, character sheets, challenge and danger profiles, and optional canvas helpers.
+Handbook is an Obsidian plugin host for versioned tabletop game packs. Its first-run catalogue currently offers **City of Mist**, **Legend in the Mist** and **:Otherscape**; additional public schema repositories can be registered from the settings. It provides game-specific styling, custom inline syntax, themed callouts, character sheets, challenge and danger profiles, and optional canvas helpers.
 
 It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
@@ -40,6 +40,20 @@ Handbook ne redistribue aucun de ses assets ni aucune image extraite des livres.
 > `.obsidian/handbook/overrides.json`. Replace `.obsidian` with your actual
 > configuration directory when it is customized. If BRAT or another updater
 > has already deleted the old files, Handbook cannot detect or restore them.
+
+Handbook itself ships without game design. On the first launch of any install
+(Community plugins, BRAT or a manual install), a modal appears when no game is
+available. Choose City of Mist, Legend in the Mist or :Otherscape; Handbook
+installs the declared `schema-in-the-mist` source and activates the selected
+game. All three packs then remain available because that repository publishes
+them together.
+
+The same sources are managed under **Settings → Handbook → Schema sources**.
+Each source can follow its latest release, an explicit tag or a branch. Network
+checks happen only after **Install** or **Check** is clicked. Handbook reads the
+repository's root `handbook.json`, validates every listed `pack.json`, downloads
+only their declared images and fonts, and atomically replaces the prior source.
+It never downloads or executes JavaScript, TypeScript or external CSS.
 
 ### 1. Prepare a vault
 
@@ -90,7 +104,7 @@ Suggested vault setup:
 3. Enter `RebelliousSmile/obsidian-handbook`.
 4. Install the plugin, then enable `Handbook`.
 
-### 3. Install the optional Adrenaline game plugin
+### 3. Install another schema source
 
 A **Handbook game plugin** is a declarative directory discovered when Handbook
 starts. Adrenaline's canonical directory lives in the shared
@@ -98,17 +112,10 @@ starts. Adrenaline's canonical directory lives in the shared
 repository at `handbook/adrenaline`; that same repository serves both Handbook
 and Lantern, so no second Adrenaline integration repository is needed.
 
-Copy the whole directory into Handbook's durable data folder:
-
-```txt
-schema-adrenaline/handbook/adrenaline
-  → <configDir>/handbook/packs/adrenaline
-```
-
-Then restart Handbook and select `Adrenaline System` under `Game mode`. To
-uninstall it, remove only the destination `packs/adrenaline` directory and
-restart Handbook. Saved parser and callout preferences remain available if the
-directory is copied back later.
+Open **Schema sources**, choose **Add source**, enter the public GitHub
+`owner/repository`, then select latest release, tag or branch. **Save and check**
+installs every pack listed in its `handbook.json`. Legacy copies under
+`<configDir>/handbook/packs/` remain readable for migration and offline use.
 
 On its first 2.7.0 startup, Handbook migrates the legacy pack directory and
 legacy override independently, but only when the corresponding durable target
@@ -160,22 +167,12 @@ fallback-capable Handbook host first, publish the package against that immutable
 Handbook tag second, then update Handbook's schema commit pin. No reciprocal
 schema SHA is needed.
 
-### 5. Add the illustrations
+### 5. Illustrations and fonts
 
-Handbook no longer carries its art inside its stylesheet: a game names the
-files it draws with, and the plugin looks for them in the vault. They live in
-Handbook's own folder, one subfolder per game:
-
-```txt
-.obsidian/plugins/obsidian-handbook/assets/
-├── city-of-mist/
-│   ├── callout-edge.svg
-│   └── iceberg-*.svg
-└── legend-in-the-mist/
-    ├── theme-card*.png
-    ├── fonts/pragroman.ttf
-    └── ...
-```
+Handbook no longer carries game art. A schema repository publishes each pack's
+declared illustrations and fonts beside its `pack.json`; installing or updating
+the source installs the matching asset version into the vault's durable
+Handbook data directory.
 
 The `Illustrations` setting names the folder of the active game, counts the
 files it reads, and lists the ones it did not find; `Check files` looks again
@@ -187,10 +184,8 @@ its icon goes away instead of leaving an empty box, a drawn checkbox mark
 becomes a typed one, and a missing typeface falls through to the next family in
 its stack. Nothing errors and nothing renders as a broken image.
 
-One file is asked for rather than shipped by choice: `pragroman.ttf`, the
-display face of the Legend in the Mist headings. Its license allows giving it
-away but not including it in a product, so it is downloaded by whoever wants
-it and dropped in like an illustration.
+Repositories are responsible for publishing only assets they may redistribute
+and for carrying the corresponding licence information.
 
 ### 6. Optional canvas setup
 

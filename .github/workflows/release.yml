@@ -15,18 +15,6 @@ jobs:
               with:
                   path: handbook
 
-            - name: Read schema-adrenaline pin
-              id: schema-ref
-              working-directory: handbook
-              run: echo "sha=$(cat compat/schema-adrenaline.ref)" >> "$GITHUB_OUTPUT"
-
-            - name: Checkout pinned schema-adrenaline
-              uses: actions/checkout@v4
-              with:
-                  repository: RebelliousSmile/schema-adrenaline
-                  ref: ${{ steps.schema-ref.outputs.sha }}
-                  path: schema-adrenaline
-
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
@@ -34,14 +22,10 @@ jobs:
 
             - name: Install dependencies
               working-directory: handbook
-              run: |
-                  npm install
-                  npm ci --prefix ../schema-adrenaline
+              run: npm install
 
             - name: Check plugin
               working-directory: handbook
-              env:
-                  SCHEMA_ADRENALINE_ROOT: ${{ github.workspace }}/schema-adrenaline
               run: npm run check
 
             - name: Create release

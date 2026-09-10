@@ -5,6 +5,7 @@ const log = logScope("Games");
 
 export const HANDBOOK_DATA_DIR_NAME = "handbook";
 export const PACKS_DIR_NAME = "packs";
+export const SOURCES_DIR_NAME = "sources";
 export const OVERRIDE_FILE_NAME = "overrides.json";
 
 export interface GameStoragePaths {
@@ -13,6 +14,11 @@ export interface GameStoragePaths {
 	overrides: string;
 	legacyPacks: string | null;
 	legacyOverrides: string | null;
+}
+
+export interface SchemaSourceStoragePaths {
+	root: string;
+	staging: string;
 }
 
 function joinPath(root: string, name: string): string {
@@ -35,7 +41,13 @@ export function gameStoragePaths(plugin: Plugin): GameStoragePaths {
 	};
 }
 
-async function ensureDirectory(adapter: DataAdapter, path: string): Promise<void> {
+/** A source is fully owned by Handbook, unlike the backward-compatible packs folder. */
+export function schemaSourceStoragePaths(plugin: Plugin, sourceId: string): SchemaSourceStoragePaths {
+	const root = joinPath(joinPath(gameStoragePaths(plugin).root, SOURCES_DIR_NAME), sourceId);
+	return { root, staging: `${root}.staging` };
+}
+
+export async function ensureStorageDirectory(adapter: DataAdapter, path: string): Promise<void> {
 	if (!(await adapter.exists(path))) {
 		await adapter.mkdir(path);
 	}
@@ -59,7 +71,7 @@ async function copyDirectory(
 	source: string,
 	destination: string,
 ): Promise<void> {
-	await ensureDirectory(adapter, destination);
+	await ensureStorageDirectory(adapter, destination);
 	const listing = await adapter.list(source);
 
 	for (const folder of listing.folders) {
@@ -142,7 +154,7 @@ export async function prepareGameStorage(plugin: Plugin): Promise<GameStoragePat
 	const adapter = plugin.app.vault.adapter;
 
 	try {
-		await ensureDirectory(adapter, paths.root);
+		await ensureStorageDirectory(adapter, paths.root);
 		await migratePacks(adapter, paths);
 		await migrateOverrides(adapter, paths);
 	} catch (error) {
@@ -150,6 +162,31 @@ export async function prepareGameStorage(plugin: Plugin): Promise<GameStoragePat
 	}
 
 	return paths;
+}
+
+export async function replaceSchemaSource(
+	plugin: Plugin,
+	sourceId: string,
+	writeStaging: (staging: string) => Promise<void>,
+): Promise<void> {
+	const adapter = plugin.app.vault.adapter;
+	const paths = schemaSourceStoragePaths(plugin, sourceId);
+	const backup = `${paths.root}.previous`;
+	await ensureStorageDirectory(adapter, joinPath(gameStoragePaths(plugin).root, SOURCES_DIR_NAME));
+	await removeTemporaryDirectory(adapter, paths.staging);
+	await removeTemporaryDirectory(adapter, backup);
+	try {
+		await writeStaging(paths.staging);
+		if (await adapter.exists(paths.root)) await adapter.rename(paths.root, backup);
+		await adapter.rename(paths.staging, paths.root);
+		await removeTemporaryDirectory(adapter, backup);
+	} catch (error) {
+		await removeTemporaryDirectory(adapter, paths.staging);
+		if (!(await adapter.exists(paths.root)) && (await adapter.exists(backup))) {
+			await adapter.rename(backup, paths.root);
+		}
+		throw error;
+	}
 }
 
 /** Persistent data wins; legacy is a one-cycle fallback when migration failed. */

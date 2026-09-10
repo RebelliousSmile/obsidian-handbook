@@ -1,6 +1,6 @@
 /** Assertions for legacy flat packs and versioned declarative game plugins. */
 import { readFileSync } from "node:fs";
-import { GAME_PACKS, initGameRegistry, resolveGamePack, gamePackClasses } from "../src/games/registry";
+import { GAME_PACKS, initGameRegistry, resolveGamePack, resolveGameRegistration, gamePackClasses } from "../src/games/registry";
 import { loadCustomGamePacks } from "../src/games/customPacks";
 import { resolveGameAssets } from "../src/games/assets";
 import { GAME_PLUGIN_BLOCK_CAPABILITIES } from "../src/games/capabilities";
@@ -18,6 +18,8 @@ function gamePlugin(
 		requires?: string[];
 		manifestVersion?: number;
 		assets?: Record<string, unknown>;
+		variants?: Array<Record<string, unknown>>;
+		defaultVariantId?: string;
 	} = {},
 ): string {
 	return JSON.stringify({
@@ -25,6 +27,8 @@ function gamePlugin(
 		version: "0.1.0",
 		minimumHandbookVersion: options.minimum ?? HOST_VERSION,
 		requires: options.requires ?? [],
+		...(options.variants ? { variants: options.variants } : {}),
+		...(options.defaultVariantId ? { defaultVariantId: options.defaultVariantId } : {}),
 		pack: {
 			id,
 			label: `Plugin ${id}`,
@@ -122,7 +126,7 @@ async function run(): Promise<void> {
 			},
 		};
 		check("Adrenaline starts absent", !GAME_PACKS.some((pack) => pack.id === "adrenaline"));
-		check("an absent saved Adrenaline mode falls back", normalizeMode("adrenaline") === "city-of-mist");
+		check("an absent saved Adrenaline mode falls back to neutral", normalizeMode("adrenaline") === "none");
 		check(
 			"Adrenaline processors stay disabled while its mode is absent",
 			adrenalineBlocks.every((block) => !isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
@@ -157,7 +161,7 @@ async function run(): Promise<void> {
 
 		initGameRegistry([]);
 		check("removing Adrenaline removes its class", !gamePackClasses().includes("brumes--adrenaline"));
-		check("a removed saved Adrenaline mode falls back", normalizeMode("adrenaline") === "city-of-mist");
+		check("a removed saved Adrenaline mode falls back to neutral", normalizeMode("adrenaline") === "none");
 	}
 
 	/* Legacy flat files retain their tolerant, deterministic behavior. */
@@ -181,7 +185,7 @@ async function run(): Promise<void> {
 		check("GAME_PACKS identity survives merging", GAME_PACKS === packsRef);
 		check("the flat pack resolves", resolveGamePack("my-custom-game").id === "my-custom-game");
 		check("the flat pack class resolves", gamePackClasses().includes("brumes--my-custom-game"));
-		check("a declared pack wins", resolveGamePack("city-of-mist").label !== "Impostor");
+		check("a legacy pack no longer collides with a built-in", resolveGamePack("city-of-mist").label === "Impostor");
 
 		const errorsBeforeReplay = errors.length;
 		initGameRegistry(await loadCustomGamePacks(plugin));
@@ -220,6 +224,20 @@ async function run(): Promise<void> {
 		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
 		check("an explicit asset root stays under the plugin", state.folder.endsWith("/packs/rooted/media"));
 		check("the explicit root image resolves", state.tokens["--brumes-image-portrait"]?.includes("rooted/media/portrait.png") === true);
+	}
+
+	/* Variants belong to the versioned plugin envelope, not GamePack itself. */
+	{
+		const { plugin } = fakePlugin({
+			"variant/pack.json": gamePlugin("variant", {
+				variants: [{ id: "night", label: "Night", style: { dark: { note: { "--accent": "#000" } } }, polarities: ["dark"] }],
+				defaultVariantId: "night",
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		initGameRegistry(installed);
+		check("a plugin variant joins its registration", resolveGameRegistration("variant").variants?.[0]?.id === "night");
+		check("a plugin default variant joins its registration", resolveGameRegistration("variant").defaultVariantId === "night");
 	}
 
 	/* Existing static formats remain valid; executable or unknown ones do not. */
@@ -307,7 +325,7 @@ async function run(): Promise<void> {
 		check("an escaping asset root triggers no asset lookup", reads.length === beforeAssets);
 	}
 
-	/* Candidate order decides duplicate external ids; built-ins still win later. */
+	/* Candidate order decides duplicate external ids. */
 	{
 		const errorsBefore = errors.length;
 		const { plugin } = fakePlugin({
