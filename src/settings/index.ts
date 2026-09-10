@@ -3,6 +3,7 @@ import BrumesPlugin from "../BrumesPlugin";
 import { ColourScheme, LogLevel, sanitizeAliases } from "./types";
 import {
 	GAME_PACKS,
+	findGamePack,
 	resolveGamePack,
 	resolveGameRegistration,
 } from "../games/registry";
@@ -96,12 +97,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 		otherscapeSection.setHeading(":Otherscape");
 		this.renderOtherscapeSettings(otherscapeSection);
 
-		const adrenalineSection = this.createSection(
-			containerEl,
-			this.plugin.settings.mode !== "adrenaline",
-		);
-		adrenalineSection.setHeading("Adrenaline System");
-		this.renderAdrenalineSettings(adrenalineSection);
+		if (findGamePack("adrenaline")) {
+			const adrenalineSection = this.createSection(
+				containerEl,
+				this.plugin.settings.mode !== "adrenaline",
+			);
+			adrenalineSection.setHeading("Adrenaline System");
+			this.renderAdrenalineSettings(adrenalineSection);
+		}
 
 		const calloutsSection = this.createSection(containerEl);
 		calloutsSection.setHeading("Callouts");
@@ -767,6 +770,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							.setTooltip("Modifier")
 							.onClick(() => {
 								new CalloutsModal(this.app, this.plugin, entry, () => {
+									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 									this.display();
 								}).open();
 							}),
@@ -784,9 +788,10 @@ export class BrumesSettingTab extends PluginSettingTab {
 										this.plugin.settings.callouts =
 											this.plugin.settings.callouts.filter(
 												(c) => c.id !== entry.id,
-											);
-										await this.plugin.saveSettings();
-										this.display();
+										);
+									await this.plugin.saveSettings();
+									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+									this.display();
 									},
 									SETTINGS_SAVE_LOG_MESSAGE,
 									SETTINGS_SAVE_NOTICE,
@@ -800,6 +805,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting.addButton((button) =>
 				button.setButtonText("+ nouveau callout").onClick(() => {
 					new CalloutsModal(this.app, this.plugin, null, () => {
+						// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 						this.display();
 					}).open();
 				}),

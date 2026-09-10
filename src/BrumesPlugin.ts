@@ -28,7 +28,6 @@ import {
 	resolveGameRegistration,
 } from "./games/registry";
 import { loadCustomGamePacks } from "./games/customPacks";
-import { GamePack } from "./games/types";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -36,6 +35,7 @@ import {
 } from "./games/overrides";
 import {
 	effectiveColourScheme,
+	GameRegistration,
 	resolveGameAppearance,
 } from "./games/variants";
 import {
@@ -218,7 +218,7 @@ export default class BrumesPlugin extends Plugin {
 		// the vault has answered — the blocks fall back for a frame instead
 		// of waiting for the disk.
 		if (!fresh) {
-			void this.refreshAssets(pack);
+			void this.refreshAssets(registration);
 		}
 
 		const block = buildGameStyle(
@@ -253,8 +253,13 @@ export default class BrumesPlugin extends Plugin {
 	 * Resolve for a given pack and repaint only if that pack is still the
 	 * active one: two quick switches must not let the slower answer win.
 	 */
-	private async refreshAssets(pack: GamePack) {
-		const state = await resolveGameAssets(this, pack);
+	private async refreshAssets(registration: GameRegistration) {
+		const pack = registration.pack;
+		const state = await resolveGameAssets(
+			this,
+			pack,
+			registration.installation,
+		);
 
 		if (resolveGamePack(this.settings.mode).id !== pack.id) {
 			return;

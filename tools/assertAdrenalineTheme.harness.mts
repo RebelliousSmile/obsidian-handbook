@@ -5,7 +5,19 @@ import { adrenalinePjBlock } from "../src/features/adrenalinePj/block";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../src/features/adrenalineMonstre/block";
 import { buildGameStyle } from "../src/features/modes/styleElement";
-import { adrenalinePack } from "../src/games/adrenaline";
+import { readGamePluginManifest } from "../src/games/pluginManifest";
+
+const sourceRoot = process.env.SCHEMA_ADRENALINE_ROOT;
+assert.ok(sourceRoot, "SCHEMA_ADRENALINE_ROOT is required");
+const manifestSource = JSON.parse(
+	readFileSync(
+		join(sourceRoot, "handbook", "adrenaline", "pack.json"),
+		"utf8",
+	),
+) as unknown;
+const manifestResult = readGamePluginManifest(manifestSource, "2.6.0");
+assert.ok(manifestResult.manifest, manifestResult.error);
+const adrenalinePack = manifestResult.manifest.pack;
 
 class El {
 	tagName: string;

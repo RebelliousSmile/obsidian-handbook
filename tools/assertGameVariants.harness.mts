@@ -17,9 +17,9 @@ import {
 
 assert.deepEqual(
 	GAME_PACKS.map((pack) => pack.id),
-	["city-of-mist", "legend-in-the-mist", "otherscape", "adrenaline"],
+	["city-of-mist", "legend-in-the-mist", "otherscape"],
 );
-assert.equal(GAME_REGISTRATIONS.length, 4);
+assert.equal(GAME_REGISTRATIONS.length, 3);
 
 const otherscape = resolveGameRegistration("otherscape");
 assert.deepEqual(
@@ -29,9 +29,7 @@ assert.deepEqual(
 assert.equal(normalizeGameVariantId("otherscape", "missing"), "metro");
 assert.equal(normalizeGameVariantId("city-of-mist", "metro"), null);
 
-const adrenaline = resolveGameRegistration("adrenaline");
-assert.deepEqual(adrenaline.variants, []);
-assert.equal(adrenaline.defaultVariantId, undefined);
+assert.equal(resolveGameRegistration("adrenaline").pack.id, "city-of-mist");
 assert.equal(normalizeGameVariantId("adrenaline", "metro"), null);
 
 const cairo = resolveGameAppearance(otherscape, "cairo", {

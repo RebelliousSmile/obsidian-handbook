@@ -1,9 +1,9 @@
 import { logScope } from "../utils/logger";
-import { adrenalinePack } from "./adrenaline";
 import { cityOfMistPack } from "./city-of-mist";
 import { legendInTheMistPack } from "./legend-in-the-mist";
 import { otherscapePack, otherscapeVariants } from "./otherscape";
 import { EMPTY_STYLE, GamePack, isValidGamePackId } from "./types";
+import type { InstalledGamePlugin } from "./pluginManifest";
 import {
 	GameRegistration,
 	gameVariantClass,
@@ -38,7 +38,6 @@ const DECLARED_GAMES: GameRegistration[] = [
 		variants: otherscapeVariants,
 		defaultVariantId: "metro",
 	},
-	{ pack: adrenalinePack },
 ];
 
 /**
@@ -114,10 +113,10 @@ export const GAME_PACKS: GamePack[] = GAME_REGISTRATIONS.map(
  * first — callers sort their files before calling, so that first claim is
  * deterministic.
  */
-export function initGameRegistry(customPacks: GamePack[]): void {
-	const customRegistrations: GameRegistration[] = customPacks.map((pack) => ({
-		pack,
-	}));
+export function initGameRegistry(customPacks: InstalledGamePlugin[]): void {
+	const customRegistrations: GameRegistration[] = customPacks.map(
+		({ pack, installation }) => ({ pack, installation }),
+	);
 
 	const accepted = acceptRegistrations([
 		...DECLARED_GAMES,

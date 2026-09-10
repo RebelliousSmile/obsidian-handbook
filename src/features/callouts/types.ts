@@ -1,9 +1,11 @@
-export type CalloutScope =
-	| "all"
-	| "city-of-mist"
-	| "legend-in-the-mist"
-	| "otherscape"
-	| "adrenaline";
+import { isValidGamePackId } from "../../games/types";
+
+/**
+ * A callout can follow every game or any syntactically safe game plugin id.
+ * The id need not currently be installed: keeping it lets a user's callout
+ * configuration become active again after the plugin directory comes back.
+ */
+export type CalloutScope = string;
 
 export type CalloutColorRegime = { kind: "fixed"; hex: string } | { kind: "theme" };
 
@@ -24,20 +26,12 @@ export interface CalloutDefinition {
 	styleKey: string;
 }
 
-export const CALLOUT_SCOPES: CalloutScope[] = [
-	"all",
-	"city-of-mist",
-	"legend-in-the-mist",
-	"otherscape",
-	"adrenaline",
-];
-
 export const CALLOUT_FONT_ROLES: CalloutFontRole[] = ["header", "text"];
 
 export const CALLOUT_TEMPLATES: CalloutTemplate[] = ["title-body", "body-only"];
 
 export function isCalloutScope(value: unknown): value is CalloutScope {
-	return typeof value === "string" && CALLOUT_SCOPES.includes(value as CalloutScope);
+	return value === "all" || isValidGamePackId(value);
 }
 
 export function isCalloutFontRole(value: unknown): value is CalloutFontRole {

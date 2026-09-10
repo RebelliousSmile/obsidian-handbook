@@ -131,23 +131,27 @@ Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspond
 
 **Style Settings et le thème Border ne sont plus des prérequis.** `themes/*.settings.json` a été supprimé, l'onglet de réglages n'offre plus de bouton de copie de preset. Le plugin écrit lui-même ses variables CSS dans **un unique élément `<style>` qu'il possède** (`src/features/modes/styleElement.ts`, `id: brumes-game-style`) : un seul point d'écriture, donc un seul point de nettoyage, et changer de jeu ne laisse aucun résidu de l'ancien.
 
-### Un jeu est une donnée
+### Un jeu est une donnée, son moteur reste dans Handbook
 
-Un pack (`src/games/<jeu>.ts`) déclare une identité, des jetons de note et d'interface, en couches `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. Une enveloppe interne `GameRegistration` peut ajouter des variantes visuelles sans modifier le `GamePack` sérialisable. :Otherscape emploie ce mécanisme pour Metro, Cairo et Tokyo, avec la priorité `pack → variante → overrides utilisateur`.
+Un pack déclare une identité, des jetons de note et d'interface, en couches `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. Les jeux livrés avec Handbook vivent dans `src/games/<jeu>.ts`. Un jeu optionnel moderne est un **plugin de jeu Handbook** déclaratif dans `packs/<id>/pack.json`, accompagné au besoin de son répertoire `assets/`. Aucun JavaScript, TypeScript ou CSS externe n'est exécuté. Une enveloppe interne `GameRegistration` peut ajouter des variantes visuelles sans modifier le `GamePack` sérialisable. :Otherscape emploie ce mécanisme pour Metro, Cairo et Tokyo, avec la priorité `pack → variante → overrides utilisateur`.
 
 **Un pack ou sa variante active déclare ses polarités, il n'en dérive aucune** (`GamePolarity`, `src/games/types.ts`). Une couche non déclarée n'est **pas écrite**, plutôt qu'écrite en copie de `base` — un pack dont le `base` est fortement clair casserait un coffre en thème sombre. Une polarité unique s'écrit sur le sélecteur de mode nu, après `base`, donc elle gagne à spécificité égale quel que soit le réglage du thème ; deux polarités s'écrivent en sélecteurs composés. City of Mist et chacune des variantes Metro/Cairo/Tokyo déclarent `["light", "dark"]`; Legend in the Mist déclare `["light"]` — le jeu n'imprime que du parchemin, et le schéma sombre qui existait avait été inventé.
 
-Ajouter un jeu sans variante :
+Ajouter un jeu embarqué sans variante :
 
 1. un fichier `src/games/<jeu>.ts` exportant un `GamePack` ;
 	2. une registration dans `DECLARED_GAMES` de `src/games/registry.ts` ;
 3. rien d'autre. La liste déroulante des réglages, la classe de body et le style suivent.
 
+Ajouter un jeu optionnel ne modifie pas `DECLARED_GAMES` : son manifeste versionné annonce sa version, la version minimale de Handbook, ses capacités `block:*` / `style:*` et son `pack`. `loadCustomGamePacks` le découvre uniquement au démarrage, `initGameRegistry` l'enregistre, la sélection du mode l'active, et retirer son répertoire puis redémarrer le désinstalle. Un mode sauvegardé devenu absent retombe sur le jeu par défaut. Les anciens fichiers personnels `packs/*.json` restent lisibles, mais `packs/<id>/pack.json` est la convention distribuable.
+
+`schema-adrenaline/handbook/adrenaline` est la source canonique du plugin de jeu Adrenaline pour Handbook ; le même dépôt sert aussi Lantern, sans second dépôt d'intégration. L'optionalité porte sur le mode, ses données et ses surfaces visibles, pas sur le binaire : les parseurs, renderers et styles structurels Adrenaline restent dormants dans le bundle Handbook. Les feature flags et scopes de callouts sûrs sont conservés pendant l'absence du répertoire afin qu'une réinstallation retrouve les préférences.
+
 Trois règles qui mordent :
 
 - **Les variantes s'écrivent en sélecteur composé** : `.brumes--<jeu>.theme-dark`, jamais `.theme-dark` seul. Les deux classes sont sur le même `body` — à spécificité égale seul l'ordre des feuilles trancherait, et rien ne garantit que la nôtre passe après celle du thème actif.
 - **L'identifiant d'un pack est un suffixe de classe CSS et une clé du `data.json` de l'utilisateur** : minuscules, chiffres, traits d'union simples (`isValidGamePackId`). Un pack qui échoue au contrôle est écarté seul, les autres chargent.
-- **Le registre accueille aussi des packs personnels, lus au démarrage.** Un fichier déposé dans `<dossier du plugin>/packs/*.json` (`src/games/customPacks.ts`) rejoint `DECLARED_GAMES` avant le premier rendu : `BrumesPlugin.ts::onload()` appelle `loadCustomGamePacks` puis `initGameRegistry` avant `loadSettings()`. Un id en collision avec un jeu déclaré perd, journalisé une fois ; deux packs personnels partageant un id, le fichier qui trie premier gagne. `domModeClass.ts` ne fige plus `gamePackClasses()`/`gameVariantClasses()` à l'import — les deux se relisent à chaque appel, comme l'onglet de réglages et `settings/types.ts` le faisaient déjà chacun de leur côté.
+- **Le registre accueille aussi des packs personnels et plugins de jeu, lus au démarrage.** Un fichier `packs/*.json` ou un manifeste `packs/<id>/pack.json` (`src/games/customPacks.ts`) rejoint `DECLARED_GAMES` avant le premier rendu : `BrumesPlugin.ts::onload()` appelle `loadCustomGamePacks` puis `initGameRegistry` avant `loadSettings()`. Le nom du répertoire moderne doit égaler l'id du pack ; sa racine d'assets reste relative à ce répertoire. Un id en collision avec un jeu déclaré perd, journalisé une fois ; deux candidats partageant un id, le chemin qui trie premier gagne. `domModeClass.ts` ne fige plus `gamePackClasses()`/`gameVariantClasses()` à l'import — les deux se relisent à chaque appel, comme l'onglet de réglages et `settings/types.ts` le faisaient déjà chacun de leur côté.
 
 ### Le réglage fin passe par un fichier, pas par des curseurs
 

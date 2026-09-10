@@ -1,6 +1,6 @@
 # Handbook
 
-Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mist**, **:Otherscape** and **Adrenaline System** vaults with game-specific styling, custom inline syntax, themed callouts, character sheets, challenge and danger profiles, and optional canvas helpers.
+Handbook is an Obsidian plugin for running **City of Mist**, **Legend in the Mist** and **:Otherscape** vaults, with **Adrenaline System** available as an optional game plugin. It provides game-specific styling, custom inline syntax, themed callouts, character sheets, challenge and danger profiles, and optional canvas helpers.
 
 It started as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes) by [4rtamis](https://github.com/4rtamis), and now follows its own road. Everything Brumes did, Handbook still does; the settings key names are unchanged, so a vault moving over keeps its configuration.
 
@@ -79,7 +79,35 @@ Suggested vault setup:
 3. Enter `RebelliousSmile/obsidian-handbook`.
 4. Install the plugin, then enable `Handbook`.
 
-### 3. Configure Handbook
+### 3. Install the optional Adrenaline game plugin
+
+A **Handbook game plugin** is a declarative directory discovered when Handbook
+starts. Adrenaline's canonical directory lives in the shared
+[`schema-adrenaline`](https://github.com/RebelliousSmile/schema-adrenaline)
+repository at `handbook/adrenaline`; that same repository serves both Handbook
+and Lantern, so no second Adrenaline integration repository is needed.
+
+Copy the whole directory into the installed Handbook plugin:
+
+```txt
+schema-adrenaline/handbook/adrenaline
+  → .obsidian/plugins/obsidian-handbook/packs/adrenaline
+```
+
+Then restart Handbook and select `Adrenaline System` under `Game mode`. To
+uninstall it, remove only the destination `packs/adrenaline` directory and
+restart Handbook. Saved parser and callout preferences remain available if the
+directory is copied back later.
+
+The modern layout is `packs/<id>/pack.json`. Its images and fonts are resolved
+inside that plugin directory, from `assets/` by default or from the relative
+root declared by its manifest. Existing personal packs stored as
+`packs/*.json` remain supported.
+
+Game plugins are data only: Handbook does not execute JavaScript, TypeScript or
+external CSS from these directories.
+
+### 4. Configure Handbook
 
 1. Open `Settings -> Handbook`.
 2. Pick your `Game mode`. The rendering follows immediately, with no reload
@@ -89,7 +117,7 @@ Suggested vault setup:
 3. Leave `Colour scheme` on `Follow Obsidian`, or force Handbook's light or
    dark scheme independently of the vault theme.
 
-### 4. Add the illustrations
+### 5. Add the illustrations
 
 Handbook no longer carries its art inside its stylesheet: a game names the
 files it draws with, and the plugin looks for them in the vault. They live in
@@ -121,7 +149,7 @@ display face of the Legend in the Mist headings. Its license allows giving it
 away but not including it in a product, so it is downloaded by whoever wants
 it and dropped in like an illustration.
 
-### 5. Optional canvas setup
+### 6. Optional canvas setup
 
 If you use `Advanced Canvas`, Handbook can generate mode-specific node-style snippets:
 
@@ -379,7 +407,8 @@ Available Mountain variants:
 
 ### 8. Adrenaline System sheets
 
-Choose `Adrenaline System` as the game mode, then keep `Colour scheme` on
+Install the optional Handbook game plugin as described above, choose
+`Adrenaline System` as the game mode, then keep `Colour scheme` on
 `Follow Obsidian` or force the sourced light or dark scheme. The Adrenaline
 section in the settings enables the three TOML parsers independently.
 

@@ -5,9 +5,39 @@ import { pathToFileURL } from "node:url";
 import { parse as parseToml } from "smol-toml";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
+import { readGamePluginManifest } from "../src/games/pluginManifest";
 
 const sourceRoot = process.env.SCHEMA_ADRENALINE_ROOT;
 assert.ok(sourceRoot, "SCHEMA_ADRENALINE_ROOT is required");
+const pluginSource = JSON.parse(
+	readFileSync(join(sourceRoot, "handbook", "adrenaline", "pack.json"), "utf8"),
+) as unknown;
+const pluginResult = readGamePluginManifest(pluginSource, "2.6.0");
+assert.ok(pluginResult.manifest, pluginResult.error);
+const gamePlugin = pluginResult.manifest;
+assert.equal(gamePlugin.version, "0.1.0");
+assert.equal(gamePlugin.minimumHandbookVersion, "2.6.0");
+assert.deepEqual(gamePlugin.requires, [
+	"block:adrenaline-pj",
+	"block:adrenaline-pnj",
+	"block:adrenaline-monstre",
+	"style:adrenaline",
+]);
+assert.equal(gamePlugin.pack.id, "adrenaline");
+assert.equal(gamePlugin.pack.label, "Adrenaline System");
+assert.deepEqual(gamePlugin.pack.polarities, ["light", "dark"]);
+for (const layer of [gamePlugin.pack.style.light, gamePlugin.pack.style.dark]) {
+	for (const token of [
+		"--adrenaline-panel",
+		"--adrenaline-section-band",
+		"--adrenaline-section-band-ink",
+		"--adrenaline-band",
+		"--adrenaline-band-ink",
+		"--adrenaline-rule",
+	]) {
+		assert.ok(layer.note[token], `Missing ${token}`);
+	}
+}
 const constantsUrl = pathToFileURL(
 	join(sourceRoot, "src", "zod", "constants.ts"),
 ).href;

@@ -1,5 +1,6 @@
 import { GameStyleOverride, mergeGameStyle } from "./overrides";
 import { GamePack, GamePolarity, GameStyleValues, isValidGamePackId } from "./types";
+import type { GamePluginInstallation } from "./pluginManifest";
 
 export interface GameVariant {
 	id: string;
@@ -13,6 +14,8 @@ export interface GameRegistration {
 	pack: GamePack;
 	variants?: GameVariant[];
 	defaultVariantId?: string;
+	/** Present only when the pack came from an installed game plugin. */
+	installation?: GamePluginInstallation;
 }
 
 export interface ResolvedGameAppearance {
