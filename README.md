@@ -159,6 +159,10 @@ cssclasses:
 ---
 ```
 
+Urban Shadows and Monsterhearts packs use the same responsive reading pattern,
+with a lower breakpoint suited to their denser book layouts. Opt one note out
+with `pbta-one-column` in `cssclasses`.
+
 Handbook and Lantern deliberately consume the same `schema-adrenaline`
 repository. The package declares the minimum Handbook release it supports;
 Handbook pins one full schema-adrenaline commit in

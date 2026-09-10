@@ -1,0 +1,36 @@
+@mixin editorial-page {
+	.markdown-source-view,
+	.markdown-reading-view {
+		background-color: var(--background-primary);
+	}
+
+	.markdown-source-view :is(.inline-title, h1, h2, h3),
+	.markdown-reading-view :is(.inline-title, h1, h2, h3) {
+		font-family: var(--font-header-theme);
+		text-wrap: balance;
+	}
+
+	.markdown-reading-view .markdown-preview-sizer > :is(
+		h1,
+		h2,
+		h3,
+		blockquote,
+		.callout,
+		pre,
+		table
+	) {
+		break-inside: avoid;
+	}
+
+	@media (min-width: 720px) {
+		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer {
+			column-count: 2;
+			column-gap: var(--pbta-column-gap, 2.4rem);
+			column-rule: 1px solid var(--pbta-column-rule, var(--color-accent));
+		}
+
+		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer > :is(.inline-title, h1) {
+			column-span: all;
+		}
+	}
+}

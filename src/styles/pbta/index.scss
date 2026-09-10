@@ -1,0 +1,31 @@
+@use "./page";
+
+.brumes--urban-shadows,
+.brumes--monsterhearts {
+	@include page.editorial-page;
+}
+
+.brumes--urban-shadows {
+	.markdown-source-view :is(.inline-title, h1, h2, h3),
+	.markdown-reading-view :is(.inline-title, h1, h2, h3) {
+		letter-spacing: 0.025em;
+	}
+}
+
+.brumes--monsterhearts {
+	.markdown-source-view :is(.inline-title, h1),
+	.markdown-reading-view :is(.inline-title, h1) {
+		letter-spacing: 0.055em;
+	}
+
+	&.brumes--variant-drowned-lake {
+		.markdown-source-view :is(.inline-title, h1),
+		.markdown-reading-view :is(.inline-title, h1) {
+			-webkit-text-stroke: 1px var(--drowned-lake-title-outline);
+			paint-order: stroke fill;
+			text-shadow:
+				0.055em 0.055em 0 var(--drowned-lake-title-shadow),
+				-0.025em -0.025em 0 var(--drowned-lake-title-shadow);
+		}
+	}
+}
