@@ -45,4 +45,12 @@ export function readStarterKitCatalog(value: unknown): StarterKit[] {
 	return kits;
 }
 
+/** Installs every source declared by a kit, in catalogue order. */
+export async function installStarterKitSources(
+	starterKit: StarterKit,
+	installSource: (source: SchemaSource) => Promise<void>,
+): Promise<void> {
+	for (const source of starterKit.sources) await installSource(source);
+}
+
 export const STARTER_KITS: StarterKit[] = readStarterKitCatalog(starterKitCatalog);

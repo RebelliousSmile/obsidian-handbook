@@ -32,7 +32,7 @@ import { prepareGameStorage } from "./games/storage";
 import { resolveGithubSource } from "./games/githubSources";
 import { installResolvedSchemaSource } from "./games/sourceInstaller";
 import { SchemaSource } from "./games/sources";
-import type { StarterKit } from "./games/starterKits";
+import { installStarterKitSources, type StarterKit } from "./games/starterKits";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -196,9 +196,7 @@ export default class BrumesPlugin extends Plugin {
 
 
 	async installStarterKit(starterKit: StarterKit) {
-		for (const source of starterKit.sources) {
-			await this.saveSchemaSource(source, null);
-		}
+		await installStarterKitSources(starterKit, (source) => this.saveSchemaSource(source, null));
 		if (resolveGamePack(starterKit.initialMode).id === starterKit.initialMode) {
 			this.settings.mode = starterKit.initialMode;
 			await this.saveData(this.settings);
