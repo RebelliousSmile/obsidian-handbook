@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 
 const source = readFileSync("src/settings/index.ts", "utf8");
 const sourceModal = readFileSync("src/settings/sourceModal.ts", "utf8");
+const themeContentsModal = readFileSync("src/settings/themeContentsModal.ts", "utf8");
 const plugin = readFileSync("src/BrumesPlugin.ts", "utf8");
 const richDescriptions = [
 	"createMigrationDescription",
@@ -49,6 +50,22 @@ for (const game of ["city-of-mist", "legend-in-the-mist", "otherscape", "adrenal
 	if (!source.includes(`this.plugin.settings.mode === "${game}" && findGamePack("${game}")`)) {
 		failures.push(`The ${game} settings section remains visible while another game is active.`);
 	}
+}
+
+if (!/if \(polarities\.length < 2\) \{\s*return;\s*\}/m.test(source)) {
+	failures.push("The colour scheme setting remains visible when the active game has no light/dark choice.");
+}
+
+if (!source.includes('setName("Theme features")') || !source.includes("new ThemeContentsModal(")) {
+	failures.push("The settings tab has no button opening the active theme feature inventory.");
+}
+
+if (!themeContentsModal.includes('callout.scope === "all" || callout.scope === gameId')) {
+	failures.push("The theme inventory does not limit callouts to the active game and global scope.");
+}
+
+if (!themeContentsModal.includes('.filter((capability) => capability.startsWith("block:"))') || !themeContentsModal.includes("requiredBlocks.has(block.id)")) {
+	failures.push("The theme inventory does not derive code blocks from the installed schema manifest.");
 }
 
 if (!/entry\.scope !== "all" && entry\.scope !== this\.plugin\.settings\.mode[\s\S]*?continue;/m.test(source)) {
