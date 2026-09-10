@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1] - 2026-09-10
+
+### Added
+
+- Replace the three per-game Mist starter choices with a Mist Engine kit and a multi-source test kit that installs the Adrenaline and PbtA schema repositories together.
+
+### Fixed
+
+- Read downloaded schema files from Obsidian's `requestUrl` response properties, restoring starter-kit and schema-source installation in the desktop application.
+
 ## [2.7.0] - 2026-09-10
 
 ### Added
