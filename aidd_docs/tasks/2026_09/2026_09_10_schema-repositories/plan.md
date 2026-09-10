@@ -1,6 +1,6 @@
 ---
 objective: "Handbook installe, met à jour manuellement et distribue des packs de jeu déclaratifs depuis des dépôts de schémas, avec des starter kits autonomes."
-status: in-progress
+status: blocked
 ---
 
 # Plan: Dépôts de schémas et starter kits Handbook
