@@ -1,4 +1,5 @@
 import { readSchemaRepositoryManifest } from "../src/games/repositoryManifest";
+import { schemaSourceId } from "../src/games/sources";
 
 const failures: string[] = [];
 function check(label: string, held: boolean): void {
@@ -22,6 +23,7 @@ check("unknown versions are rejected", readSchemaRepositoryManifest({ ...valid, 
 check("escaping paths are rejected", readSchemaRepositoryManifest({ ...valid, packs: [{ id: "escape", version: "1.0.0", path: "../pack.json" }] }).error !== undefined);
 check("duplicate ids are rejected", readSchemaRepositoryManifest({ ...valid, packs: [valid.packs[0], { ...valid.packs[0], path: "other/pack.json" }] }).error !== undefined);
 check("duplicate paths are rejected", readSchemaRepositoryManifest({ ...valid, packs: [valid.packs[0], { id: "other", version: "1.0.0", path: valid.packs[0].path }] }).error !== undefined);
+check("source keys preserve owner and repository boundaries", schemaSourceId("Alpha-Beta/Gamma") !== schemaSourceId("Alpha/Beta-Gamma"));
 
 if (failures.length > 0) {
 	for (const failure of failures) console.error(`not held: ${failure}`);

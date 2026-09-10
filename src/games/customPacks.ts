@@ -6,6 +6,8 @@ import {
 	readGamePluginManifest,
 } from "./pluginManifest";
 import { PACKS_DIR_NAME, packsReadPath } from "./storage";
+import { gameStoragePaths, SOURCES_DIR_NAME } from "./storage";
+import type { InstalledSchemaSource } from "./sources";
 
 const log = logScope("Games");
 
@@ -161,4 +163,32 @@ export async function loadCustomGamePacks(
 	}
 
 	return packs;
+}
+
+/** Read only locally installed, already-validated source directories; never contacts GitHub. */
+export async function loadSchemaSourceGamePacks(plugin: Plugin): Promise<InstalledGamePlugin[]> {
+	const adapter = plugin.app.vault.adapter;
+	const root = `${gameStoragePaths(plugin).root}/${SOURCES_DIR_NAME}`;
+	if (!(await adapter.exists(root))) return [];
+	const result: InstalledGamePlugin[] = [];
+	try {
+		const sources = (await adapter.list(root)).folders.sort();
+		for (const sourceRoot of sources) {
+			let source: InstalledSchemaSource;
+			try { source = JSON.parse(await adapter.read(`${sourceRoot}/source.json`)) as InstalledSchemaSource; } catch { reportFileOnce(`${sourceRoot}/source.json`, `Ignoring source "${sourceRoot}": invalid source metadata.`); continue; }
+			const packsRoot = `${sourceRoot}/packs`;
+			if (!(await adapter.exists(packsRoot))) continue;
+			for (const packRoot of (await adapter.list(packsRoot)).folders.sort()) {
+				const reportName = `${packRoot}/pack.json`;
+				try {
+					const parsed = JSON.parse(await adapter.read(reportName)) as unknown;
+					const read = readGamePluginManifest(parsed, plugin.manifest.version);
+					const id = packRoot.slice(packRoot.lastIndexOf("/") + 1);
+					if (!read.manifest || read.manifest.pack.id !== id) { reportFileOnce(reportName, `Ignoring source pack "${reportName}": ${read.error ?? "directory does not match pack id"}.`); continue; }
+					result.push({ pack: read.manifest.pack, installation: { root: packRoot, version: read.manifest.version, minimumHandbookVersion: read.manifest.minimumHandbookVersion, requires: read.manifest.requires, variants: read.manifest.variants, defaultVariantId: read.manifest.defaultVariantId, source } });
+				} catch { reportFileOnce(reportName, `Could not read source pack "${reportName}", ignoring it.`); }
+			}
+		}
+	} catch (error) { log.error(`Could not read the "${SOURCES_DIR_NAME}" folder, ignoring it.`, error); }
+	return result;
 }

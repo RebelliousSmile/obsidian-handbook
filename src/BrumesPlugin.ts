@@ -27,7 +27,7 @@ import {
 	resolveGamePack,
 	resolveGameRegistration,
 } from "./games/registry";
-import { loadCustomGamePacks } from "./games/customPacks";
+import { loadCustomGamePacks, loadSchemaSourceGamePacks } from "./games/customPacks";
 import { prepareGameStorage } from "./games/storage";
 import {
 	EMPTY_OVERRIDE,
@@ -73,7 +73,8 @@ export default class BrumesPlugin extends Plugin {
 	async onload() {
 		await prepareGameStorage(this);
 		const customPacks = await loadCustomGamePacks(this);
-		initGameRegistry(customPacks);
+		const sourcePacks = await loadSchemaSourceGamePacks(this);
+		initGameRegistry([...customPacks, ...sourcePacks]);
 
 		await this.loadSettings();
 

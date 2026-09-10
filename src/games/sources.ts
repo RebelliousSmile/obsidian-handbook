@@ -21,11 +21,7 @@ export interface InstalledSchemaSource {
 }
 
 export function schemaSourceId(repository: string): string {
-	return repository
-		.trim()
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "");
+	return repository.trim().toLowerCase().replace("/", "--");
 }
 
 export function isSafeSchemaSourceRepository(value: unknown): value is string {

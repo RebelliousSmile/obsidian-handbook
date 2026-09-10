@@ -2,6 +2,7 @@ import { readGamePack } from "./fromSchema";
 import { gamePluginCapabilityIssues } from "./capabilities";
 import { GamePack } from "./types";
 import { GameVariant } from "./variants";
+import type { InstalledSchemaSource } from "./sources";
 
 export const GAME_PLUGIN_MANIFEST_VERSION = 1;
 
@@ -35,6 +36,7 @@ export interface GamePluginInstallation {
 	requires: string[];
 	variants?: GameVariant[];
 	defaultVariantId?: string;
+	source?: InstalledSchemaSource;
 }
 
 export interface InstalledGamePlugin {
