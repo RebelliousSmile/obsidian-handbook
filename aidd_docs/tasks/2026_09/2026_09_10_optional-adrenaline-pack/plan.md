@@ -1,6 +1,6 @@
 ---
 objective: "Adrenaline n'apparaît dans Handbook que lorsque le répertoire `handbook/adrenaline` publié par `schema-adrenaline` est copié dans le dossier `packs` du plugin."
-status: in-progress
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
