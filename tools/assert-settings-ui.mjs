@@ -41,8 +41,14 @@ if (!source.includes('.setName("Univers")')) {
 	failures.push("The game variant selector has no French-first visible label.");
 }
 
-if (!/if \(findGamePack\("adrenaline"\)\) \{[\s\S]*?setHeading\("Adrenaline System"\)/m.test(source)) {
-	failures.push("The Adrenaline System section is not gated by the installed game registry.");
+for (const game of ["city-of-mist", "legend-in-the-mist", "otherscape", "adrenaline"]) {
+	if (!source.includes(`this.plugin.settings.mode === "${game}" && findGamePack("${game}")`)) {
+		failures.push(`The ${game} settings section remains visible while another game is active.`);
+	}
+}
+
+if (!/entry\.scope !== "all" && entry\.scope !== this\.plugin\.settings\.mode[\s\S]*?continue;/m.test(source)) {
+	failures.push("Callouts scoped to inactive games remain visible in settings.");
 }
 
 for (const flag of [

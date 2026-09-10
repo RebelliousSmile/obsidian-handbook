@@ -81,27 +81,24 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
 
-		if (findGamePack("city-of-mist")) {
-			const section = this.createSection(containerEl, this.plugin.settings.mode !== "city-of-mist");
+		if (this.plugin.settings.mode === "city-of-mist" && findGamePack("city-of-mist")) {
+			const section = this.createSection(containerEl);
 			section.setHeading("City of Mist");
 			this.renderCityOfMistSettings(section);
 		}
-		if (findGamePack("legend-in-the-mist")) {
-			const section = this.createSection(containerEl, this.plugin.settings.mode !== "legend-in-the-mist");
+		if (this.plugin.settings.mode === "legend-in-the-mist" && findGamePack("legend-in-the-mist")) {
+			const section = this.createSection(containerEl);
 			section.setHeading("Legend in the Mist");
 			this.renderLegendInTheMistSettings(section);
 		}
-		if (findGamePack("otherscape")) {
-			const section = this.createSection(containerEl, this.plugin.settings.mode !== "otherscape");
+		if (this.plugin.settings.mode === "otherscape" && findGamePack("otherscape")) {
+			const section = this.createSection(containerEl);
 			section.setHeading(":Otherscape");
 			this.renderOtherscapeSettings(section);
 		}
 
-		if (findGamePack("adrenaline")) {
-			const adrenalineSection = this.createSection(
-				containerEl,
-				this.plugin.settings.mode !== "adrenaline",
-			);
+		if (this.plugin.settings.mode === "adrenaline" && findGamePack("adrenaline")) {
+			const adrenalineSection = this.createSection(containerEl);
 			adrenalineSection.setHeading("Adrenaline System");
 			this.renderAdrenalineSettings(adrenalineSection);
 		}
@@ -784,6 +781,10 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	private renderCalloutsSection(section: SettingGroup) {
 		for (const entry of this.plugin.settings.callouts) {
+			if (entry.scope !== "all" && entry.scope !== this.plugin.settings.mode) {
+				continue;
+			}
+
 			if (entry.native) {
 				this.addCalloutAliasSetting(section, entry);
 				continue;
