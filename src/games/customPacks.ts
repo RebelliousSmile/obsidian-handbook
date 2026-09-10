@@ -114,13 +114,15 @@ export async function loadCustomGamePacks(
 
 				installed = {
 					pack,
-					installation: {
-						root: candidate.pluginRoot,
-						version: result.manifest.version,
-						minimumHandbookVersion:
-							result.manifest.minimumHandbookVersion,
-						requires: result.manifest.requires,
-					},
+				installation: {
+					root: candidate.pluginRoot,
+					version: result.manifest.version,
+					minimumHandbookVersion:
+						result.manifest.minimumHandbookVersion,
+					requires: result.manifest.requires,
+					variants: result.manifest.variants,
+					defaultVariantId: result.manifest.defaultVariantId,
+				},
 				};
 			} else {
 				const pack = readGamePack(parsed);

@@ -115,7 +115,12 @@ export const GAME_PACKS: GamePack[] = GAME_REGISTRATIONS.map(
  */
 export function initGameRegistry(customPacks: InstalledGamePlugin[]): void {
 	const customRegistrations: GameRegistration[] = customPacks.map(
-		({ pack, installation }) => ({ pack, installation }),
+		({ pack, installation }) => ({
+			pack,
+			installation,
+			variants: installation?.variants,
+			defaultVariantId: installation?.defaultVariantId,
+		}),
 	);
 
 	const accepted = acceptRegistrations([

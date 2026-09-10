@@ -1,6 +1,6 @@
 /** Assertions for legacy flat packs and versioned declarative game plugins. */
 import { readFileSync } from "node:fs";
-import { GAME_PACKS, initGameRegistry, resolveGamePack, gamePackClasses } from "../src/games/registry";
+import { GAME_PACKS, initGameRegistry, resolveGamePack, resolveGameRegistration, gamePackClasses } from "../src/games/registry";
 import { loadCustomGamePacks } from "../src/games/customPacks";
 import { resolveGameAssets } from "../src/games/assets";
 import { GAME_PLUGIN_BLOCK_CAPABILITIES } from "../src/games/capabilities";
@@ -18,6 +18,8 @@ function gamePlugin(
 		requires?: string[];
 		manifestVersion?: number;
 		assets?: Record<string, unknown>;
+		variants?: Array<Record<string, unknown>>;
+		defaultVariantId?: string;
 	} = {},
 ): string {
 	return JSON.stringify({
@@ -25,6 +27,8 @@ function gamePlugin(
 		version: "0.1.0",
 		minimumHandbookVersion: options.minimum ?? HOST_VERSION,
 		requires: options.requires ?? [],
+		...(options.variants ? { variants: options.variants } : {}),
+		...(options.defaultVariantId ? { defaultVariantId: options.defaultVariantId } : {}),
 		pack: {
 			id,
 			label: `Plugin ${id}`,
@@ -220,6 +224,20 @@ async function run(): Promise<void> {
 		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
 		check("an explicit asset root stays under the plugin", state.folder.endsWith("/packs/rooted/media"));
 		check("the explicit root image resolves", state.tokens["--brumes-image-portrait"]?.includes("rooted/media/portrait.png") === true);
+	}
+
+	/* Variants belong to the versioned plugin envelope, not GamePack itself. */
+	{
+		const { plugin } = fakePlugin({
+			"variant/pack.json": gamePlugin("variant", {
+				variants: [{ id: "night", label: "Night", style: { dark: { note: { "--accent": "#000" } } }, polarities: ["dark"] }],
+				defaultVariantId: "night",
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		initGameRegistry(installed);
+		check("a plugin variant joins its registration", resolveGameRegistration("variant").variants?.[0]?.id === "night");
+		check("a plugin default variant joins its registration", resolveGameRegistration("variant").defaultVariantId === "night");
 	}
 
 	/* Existing static formats remain valid; executable or unknown ones do not. */
