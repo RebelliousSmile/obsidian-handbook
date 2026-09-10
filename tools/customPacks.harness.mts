@@ -191,7 +191,6 @@ async function run(): Promise<void> {
 	{
 		const { plugin } = fakePlugin({
 			"portable/pack.json": gamePlugin("portable", {
-				requires: ["block:theme-card", "style:city-of-mist"],
 				assets: { images: { portrait: "portrait.png" } },
 			}),
 			"portable/assets/portrait.png": "image",
@@ -270,6 +269,29 @@ async function run(): Promise<void> {
 		}
 	}
 
+	/* A known capability cannot be borrowed by a differently named game. */
+	{
+		const errorsBefore = errors.length;
+		const { plugin } = fakePlugin({
+			"borrowed/pack.json": gamePlugin("borrowed", {
+				requires: ["block:adrenaline-pj", "style:adrenaline"],
+			}),
+			"mixed/pack.json": gamePlugin("mixed", {
+				requires: ["style:adrenaline", "block:not-installed"],
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		check("foreign capabilities reject the whole plugin", installed.length === 0);
+		check(
+			"the foreign capability diagnosis names the game",
+			errors.slice(errorsBefore).some((line) => line.includes('for "borrowed"') && line.includes("style:adrenaline")),
+		);
+		check(
+			"unknown capabilities keep their own diagnosis",
+			errors.slice(errorsBefore).some((line) => line.includes("unknown Handbook capabilities") && line.includes("block:not-installed")),
+		);
+	}
+
 	/* A plugin asset root is relative and confined to its installation. */
 	{
 		const { plugin, reads } = fakePlugin({
@@ -302,6 +324,12 @@ async function run(): Promise<void> {
 		const declared = [...GAME_PLUGIN_BLOCK_CAPABILITIES].sort();
 		const registered = BRUMES_BLOCKS.map((block) => `block:${block.id}`).sort();
 		check("block capabilities match BRUMES_BLOCKS", JSON.stringify(declared) === JSON.stringify(registered));
+		for (const block of BRUMES_BLOCKS) {
+			const result = gamePlugin(block.mode, { requires: [`block:${block.id}`] });
+			const parsed = JSON.parse(result) as unknown;
+			const manifest = (await import("../src/games/pluginManifest")).readGamePluginManifest(parsed, HOST_VERSION);
+			check(`${block.id} belongs to its renderer mode`, manifest.manifest !== undefined);
+		}
 	}
 
 	/* Reinitializing without external plugins models removal at next startup. */
