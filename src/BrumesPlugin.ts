@@ -28,7 +28,10 @@ import {
 	resolveGameRegistration,
 } from "./games/registry";
 import { loadCustomGamePacks, loadSchemaSourceGamePacks } from "./games/customPacks";
-import { prepareGameStorage } from "./games/storage";
+import {
+	prepareGameStorage,
+	removeSchemaSourceStorage,
+} from "./games/storage";
 import { resolveGithubSource } from "./games/githubSources";
 import { installResolvedSchemaSource } from "./games/sourceInstaller";
 import { SchemaSource } from "./games/sources";
@@ -192,6 +195,15 @@ export default class BrumesPlugin extends Plugin {
 		this.settings.schemaSources = sources;
 		await this.saveData(this.settings);
 		await this.refreshGameRegistry();
+	}
+
+	async removeSchemaSource(source: SchemaSource) {
+		await removeSchemaSourceStorage(this, source.id);
+		this.settings.schemaSources = this.settings.schemaSources.filter(
+			(known) => known.id !== source.id,
+		);
+		await this.refreshGameRegistry();
+		await this.saveData(this.settings);
 	}
 
 

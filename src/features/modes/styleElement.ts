@@ -90,6 +90,7 @@ function noteSelector(
 	const localScope = `.${BLOCK_SCOPE_CLASS}.${modeClass}`;
 
 	return [
+		`body.${modeClass}${themeClass} .workspace-leaf-content[data-type="markdown"]`,
 		`body.${modeClass}${themeClass} .markdown-source-view`,
 		`body.${modeClass}${themeClass} .markdown-reading-view`,
 		polarity ? `body${themeClass} ${localScope}` : localScope,

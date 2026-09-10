@@ -149,6 +149,7 @@ async function run(): Promise<void> {
 		initGameRegistry(await loadCustomGamePacks(plugin));
 		check("Adrenaline installs from its directory", resolveGamePack("adrenaline").id === "adrenaline");
 		check("the installed Adrenaline mode normalizes", normalizeMode("adrenaline") === "adrenaline");
+		check("a neutral mode selects the first installed game", normalizeMode("none") === "adrenaline");
 		check("the installed Adrenaline class is registered", gamePackClasses().includes("brumes--adrenaline"));
 		check(
 			"installed Adrenaline processors follow their enabled flags",

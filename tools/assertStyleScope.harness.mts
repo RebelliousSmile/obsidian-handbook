@@ -32,6 +32,7 @@ const css = buildGameStyle(
 assert.match(css, /--test-note-base: note-base/);
 assert.match(css, /--test-note-light: note-light/);
 assert.doesNotMatch(css, /--test-workspace-/);
+assert.match(css, /\.workspace-leaf-content\[data-type="markdown"\]/);
 assert.match(css, /\.markdown-source-view/);
 assert.match(css, /\.markdown-reading-view/);
 assert.match(css, /\.brumes-block-scope\.brumes--legend-in-the-mist/);

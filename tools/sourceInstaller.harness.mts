@@ -1,6 +1,7 @@
 import { installResolvedSchemaSource } from "../src/games/sourceInstaller";
 import type { ResolvedGithubSource } from "../src/games/githubSources";
 import type { SchemaSource } from "../src/games/sources";
+import { removeSchemaSourceStorage } from "../src/games/storage";
 
 const files = new Map<string, string | ArrayBuffer>();
 const folders = new Set<string>([".obsidian/handbook/sources"]);
@@ -31,4 +32,7 @@ const rootedContent: Record<string, string> = {
 };
 await installResolvedSchemaSource(plugin, source, { revision: "c".repeat(40), readText: async (path) => rootedContent[path] ?? Promise.reject(new Error(path)), readBinary: async () => new Uint8Array([3]).buffer });
 if (!files.has(`${root}/packs/rooted/media/paper.png`)) throw new Error("custom asset root was not preserved");
+await removeSchemaSourceStorage(plugin, source.id);
+if ([...files.keys()].some((path) => path.startsWith(`${root}/`))) throw new Error("removed source left installed files behind");
+if ([...folders].some((path) => path === root || path.startsWith(`${root}/`))) throw new Error("removed source left installed folders behind");
 console.log("source installer: green");

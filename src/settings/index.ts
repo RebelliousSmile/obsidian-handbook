@@ -13,7 +13,8 @@ import { log } from "../utils/logger";
 import { CalloutDefinition } from "../features/callouts/types";
 import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
-import { SchemaSourceModal } from "./sourceModal";
+import { ThemeContentsModal } from "./themeContentsModal";
+import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
@@ -46,7 +47,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 					"Choose the game line you are preparing for. This updates the main style and the editor context menu.",
 				)
 				.addDropdown((drop) => {
-					drop.addOption("none", "No game installed");
+					if (GAME_PACKS.length === 0) {
+						drop.addOption("none", "No game installed");
+					}
 					// The list is the registry: a fourth pack shows up here
 					// without a line being written, and its name comes from
 					// the data rather than from a string in the interface.
@@ -74,32 +77,30 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 		this.renderGameVariant(generalSection);
 		this.renderPolarities(generalSection);
+		this.renderThemeContents(generalSection);
 		this.renderMigrationNotice(generalSection);
 		this.renderSchemaSources(generalSection);
 		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
 
-		if (findGamePack("city-of-mist")) {
-			const section = this.createSection(containerEl, this.plugin.settings.mode !== "city-of-mist");
+		if (this.plugin.settings.mode === "city-of-mist" && findGamePack("city-of-mist")) {
+			const section = this.createSection(containerEl);
 			section.setHeading("City of Mist");
 			this.renderCityOfMistSettings(section);
 		}
-		if (findGamePack("legend-in-the-mist")) {
-			const section = this.createSection(containerEl, this.plugin.settings.mode !== "legend-in-the-mist");
+		if (this.plugin.settings.mode === "legend-in-the-mist" && findGamePack("legend-in-the-mist")) {
+			const section = this.createSection(containerEl);
 			section.setHeading("Legend in the Mist");
 			this.renderLegendInTheMistSettings(section);
 		}
-		if (findGamePack("otherscape")) {
-			const section = this.createSection(containerEl, this.plugin.settings.mode !== "otherscape");
+		if (this.plugin.settings.mode === "otherscape" && findGamePack("otherscape")) {
+			const section = this.createSection(containerEl);
 			section.setHeading(":Otherscape");
 			this.renderOtherscapeSettings(section);
 		}
 
-		if (findGamePack("adrenaline")) {
-			const adrenalineSection = this.createSection(
-				containerEl,
-				this.plugin.settings.mode !== "adrenaline",
-			);
+		if (this.plugin.settings.mode === "adrenaline" && findGamePack("adrenaline")) {
+			const adrenalineSection = this.createSection(containerEl);
 			adrenalineSection.setHeading("Adrenaline System");
 			this.renderAdrenalineSettings(adrenalineSection);
 		}
@@ -134,7 +135,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 		for (const source of sources) {
 			section.addSetting((setting) => {
-				setting.setName(source.repository).setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`).addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }));
+				setting
+					.setName(source.repository)
+					.setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`)
+					.addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
+					.addButton((button) => {
+						button.buttonEl.classList.add("mod-warning");
+						button.setButtonText("Remove").onClick(() => { new SchemaSourceRemovalModal(this.app, this.plugin, source, () => this.redisplay()).open(); });
+					});
 			});
 		}
 	}
@@ -175,14 +183,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	/**
-	 * Say which colour schemes the active game actually has.
-	 *
-	 * A line printed on parchment alone keeps its own register whichever theme
-	 * the vault is set to, and someone toggling dark and seeing nothing move
-	 * has no way to tell that from a broken setting. So it is written down,
-	 * next to the game rather than in a changelog.
-	 */
+	/** Only offer a choice when the active appearance provides both schemes. */
 	private renderPolarities(section: SettingGroup) {
 		const registration = resolveGameRegistration(this.plugin.settings.mode);
 		const variant = resolveGameVariant(
@@ -190,14 +191,15 @@ export class BrumesSettingTab extends PluginSettingTab {
 			this.plugin.settings.gameVariants[registration.pack.id],
 		);
 		const polarities = variant?.polarities ?? registration.pack.polarities ?? [];
+		if (polarities.length < 2) {
+			return;
+		}
 
 		section.addSetting((setting) => {
-			const configured = setting
+			setting
 				.setName("Colour scheme")
-				.setDesc(this.createPolarityDescription());
-
-			if (polarities.length > 1) {
-				configured.addDropdown((drop) =>
+				.setDesc("The active game has both a light and a dark scheme. Follow Obsidian to keep them aligned, or choose one scheme for the plugin.")
+				.addDropdown((drop) =>
 					drop
 						.addOption("obsidian", "Follow Obsidian")
 						.addOption("light", "Light")
@@ -215,28 +217,29 @@ export class BrumesSettingTab extends PluginSettingTab {
 							);
 						}),
 				);
-			}
 		});
 	}
 
-	private createPolarityDescription(): string {
+	private renderThemeContents(section: SettingGroup) {
 		const registration = resolveGameRegistration(this.plugin.settings.mode);
-		const variant = resolveGameVariant(
-			registration,
-			this.plugin.settings.gameVariants[registration.pack.id],
-		);
-		const polarities = variant?.polarities ?? registration.pack.polarities ?? [];
-
-		if (polarities.length === 0) {
-			return "The active game brings no colour scheme of its own: it dresses your notes with its fonts and leaves the colours to the theme you are running.";
+		if (!findGamePack(registration.pack.id)) {
+			return;
 		}
 
-		if (polarities.length === 1) {
-			const only = polarities[0] === "dark" ? "dark" : "light";
-			return `The active game has one scheme, the ${only} one its books are printed in, and it holds whichever theme the vault is set to. Toggling the theme is meant to leave your notes as they are.`;
-		}
-
-		return "The active game has both a light and a dark scheme. Follow Obsidian to keep them aligned, or choose one scheme for Handbook.";
+		section.addSetting((setting) => {
+			setting
+				.setName("Theme features")
+				.setDesc("Review the callouts and code blocks declared for the active game.")
+				.addButton((button) =>
+					button.setButtonText("View").onClick(() => {
+						new ThemeContentsModal(
+							this.app,
+							registration,
+							this.plugin.settings.callouts,
+						).open();
+					}),
+				);
+		});
 	}
 
 	private renderMigrationNotice(section: SettingGroup) {
@@ -775,6 +778,10 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	private renderCalloutsSection(section: SettingGroup) {
 		for (const entry of this.plugin.settings.callouts) {
+			if (entry.scope !== "all" && entry.scope !== this.plugin.settings.mode) {
+				continue;
+			}
+
 			if (entry.native) {
 				this.addCalloutAliasSetting(section, entry);
 				continue;
