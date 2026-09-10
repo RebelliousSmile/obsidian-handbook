@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { adrenalinePjBlock } from "../src/features/adrenalinePj/block";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
@@ -15,7 +15,8 @@ const manifestSource = JSON.parse(
 		"utf8",
 	),
 ) as unknown;
-const manifestResult = readGamePluginManifest(manifestSource, "2.6.0");
+const handbookVersion = (JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version;
+const manifestResult = readGamePluginManifest(manifestSource, handbookVersion);
 assert.ok(manifestResult.manifest, manifestResult.error);
 const adrenalinePack = manifestResult.manifest.pack;
 
@@ -77,10 +78,19 @@ for (const scheme of ["light", "dark"] as const) {
 	assert.doesNotMatch(css, /(^|\n)body\.theme-(light|dark)\s*\{/);
 }
 
-const scss = ["_pj.scss", "_pnj.scss", "_monstre.scss"]
+const scss = readdirSync(join("src", "styles", "adrenaline"))
+	.filter((file) => file.endsWith(".scss"))
 	.map((file) => readFileSync(join("src", "styles", "adrenaline", file), "utf8"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
+assert.match(scss, /@media \(min-width: 900px\)/);
+assert.match(scss, /--adrenaline-page-texture/);
+assert.match(scss, /--adrenaline-callout-warning/);
 assert.doesNotMatch(scss, /#[0-9a-f]{3,8}/i);
+assert.doesNotMatch(scss, /(?:^|[\s:(])(black|white|red|yellow)(?:[\s;,)])/i);
+
+const oldHost = readGamePluginManifest(manifestSource, "2.6.0");
+assert.equal(oldHost.manifest, undefined);
+assert.match(oldHost.error, /requires Handbook 2\.7\.0/);
 
 console.log("Adrenaline theme assertions passed.");

@@ -1,4 +1,5 @@
 /** Assertions for legacy flat packs and versioned declarative game plugins. */
+import { readFileSync } from "node:fs";
 import { GAME_PACKS, initGameRegistry, resolveGamePack, gamePackClasses } from "../src/games/registry";
 import { loadCustomGamePacks } from "../src/games/customPacks";
 import { resolveGameAssets } from "../src/games/assets";
@@ -8,7 +9,7 @@ import { isBlockEnabled } from "../src/features/blocks/types";
 import { log } from "../src/utils/logger";
 import { DEFAULT_SETTINGS, normalizeMode, normalizeSettings } from "../src/settings/types";
 
-const HOST_VERSION = "2.6.0";
+const HOST_VERSION = (JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version;
 
 function gamePlugin(
 	id: string,

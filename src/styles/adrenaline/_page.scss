@@ -1,0 +1,87 @@
+@mixin page {
+	.markdown-source-view,
+	.markdown-reading-view {
+		background-color: var(--background-primary);
+		background-image: var(--adrenaline-page-texture, none);
+		background-repeat: repeat;
+		background-size: 32rem 32rem;
+		background-blend-mode: soft-light;
+	}
+
+	.markdown-source-view .inline-title,
+	.markdown-reading-view .inline-title,
+	.markdown-source-view h1,
+	.markdown-reading-view h1,
+	.markdown-source-view h2,
+	.markdown-reading-view h2,
+	.markdown-source-view h3,
+	.markdown-reading-view h3 {
+		font-family: var(--font-header-theme);
+		letter-spacing: 0.035em;
+		text-wrap: balance;
+	}
+
+	.markdown-source-view h2,
+	.markdown-reading-view h2 {
+		padding-block-end: 0.16em;
+		border-block-end: 1px solid var(--adrenaline-rule);
+	}
+
+	&.theme-light:not(.brumes--colour-dark),
+	&.brumes--colour-light {
+		.markdown-source-view .inline-title,
+		.markdown-reading-view .inline-title,
+		.markdown-source-view h1,
+		.markdown-reading-view h1 {
+			padding: 0.18em 0.32em;
+			border-inline-start: 0.32em solid var(--adrenaline-rule);
+			color: var(--adrenaline-cartouche-ink);
+			background: var(--adrenaline-cartouche);
+		}
+	}
+
+	&.theme-dark:not(.brumes--colour-light),
+	&.brumes--colour-dark {
+		.markdown-source-view .inline-title,
+		.markdown-reading-view .inline-title,
+		.markdown-source-view h1,
+		.markdown-reading-view h1 {
+			padding: 0.28em 0.42em;
+			color: var(--adrenaline-cartouche-ink);
+			background: var(--adrenaline-cartouche);
+			text-shadow: 0.04em 0.04em 0 var(--background-primary);
+		}
+
+		.markdown-source-view h2,
+		.markdown-reading-view h2 {
+			padding-inline-start: 0.35em;
+			border-inline-start: 0.22em solid var(--adrenaline-rule);
+		}
+	}
+
+	.markdown-reading-view .markdown-preview-sizer > :is(
+		h1,
+		h2,
+		h3,
+		.callout,
+		pre,
+		table,
+		.brumes-adrenaline-pj,
+		.brumes-adrenaline-pnj,
+		.brumes-adrenaline-monstre
+	) {
+		break-inside: avoid;
+	}
+
+	@media (min-width: 900px) {
+		.markdown-reading-view .markdown-preview-sizer {
+			column-count: 2;
+			column-gap: 3rem;
+			column-rule: 1px solid var(--adrenaline-rule);
+		}
+
+		.markdown-reading-view .markdown-preview-sizer > :is(.inline-title, h1, h2) {
+			column-span: all;
+		}
+	}
+}

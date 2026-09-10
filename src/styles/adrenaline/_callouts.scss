@@ -1,99 +1,79 @@
-// A minimal base so a native Obsidian callout (`> [!info]`) is tinted on
-// Adrenaline System too — no game-specific style like City of Mist's
-// `clue`/`move` mixins, only the closed palette keyed by `data-callout`.
+// The pack owns every Adrenaline colour and typeface. This partial owns only
+// native callout anatomy and the mapping from Obsidian vocabulary to intent.
 @mixin global {
 	.callout {
-		background-color: #e0d0d0;
-		color: black;
+		position: relative;
+		overflow: hidden;
+		border: 1px solid var(--adrenaline-callout-border);
+		color: var(--adrenaline-callout-ink);
+		background: var(--adrenaline-callout-surface);
+		break-inside: avoid;
 
 		.callout-title {
-			font-family: "Fira Sans Extra Condensed", sans-serif;
+			font-family: var(--font-header-theme);
 			text-transform: uppercase;
-			--callout-title-size: 1.5em;
-			--callout-title-color: black;
-			color: black;
+			--callout-title-size: 1.35em;
+			--callout-title-color: var(--adrenaline-callout-title);
+			color: var(--adrenaline-callout-title);
 		}
 
-		.callout-icon .svg-icon {
-			color: black;
-		}
-
+		.callout-icon .svg-icon,
 		.callout-content {
-			color: black;
+			color: var(--adrenaline-callout-ink);
 		}
 	}
-
-	// Blue
 
 	.callout[data-callout="summary"],
 	.callout[data-callout="abstract"],
-	.callout[data-callout="tldr"] {
-		background-color: #d8cfca;
+	.callout[data-callout="tldr"],
+	.callout[data-callout="quote"] {
+		background: var(--adrenaline-callout-quote);
 	}
 
-	.callout[data-callout="info"] {
-		background-color: #e4ddc3;
-	}
-
+	.callout[data-callout="info"],
 	.callout[data-callout="todo"] {
-		background-color: #e4ddc3;
+		background: var(--adrenaline-callout-info);
 	}
 
 	.callout[data-callout="tip"],
 	.callout[data-callout="hint"],
-	.callout[data-callout="important"] {
-		background-color: #dee4d9;
-	}
-
-	// Green
-
+	.callout[data-callout="important"],
 	.callout[data-callout="success"],
 	.callout[data-callout="check"],
 	.callout[data-callout="done"] {
-		background-color: #e3e1c0;
+		background: var(--adrenaline-callout-success);
 	}
-
-	// Yellow
 
 	.callout[data-callout="question"],
 	.callout[data-callout="help"],
 	.callout[data-callout="faq"] {
-		background-color: #f0ede0;
+		background: var(--adrenaline-callout-question);
 	}
-
-	// Orange
 
 	.callout[data-callout="warning"],
 	.callout[data-callout="caution"],
 	.callout[data-callout="attention"] {
-		background-color: #eaddcd;
+		border-block-start: 0.4rem solid var(--adrenaline-signal);
+		background-color: var(--adrenaline-callout-warning);
+		background-image: var(--adrenaline-warning-texture, none);
+		background-repeat: repeat-x;
+		background-position: top;
+		background-size: 7rem 0.4rem;
+
+		.callout-title,
+		.callout-content {
+			background: var(--adrenaline-text-backplate);
+		}
 	}
 
-	// Red
-
-	.callout[data-callout="failure"] {
-		background-color: #edc0bb;
-	}
-
-	.callout[data-callout="danger"] {
-		background-color: #edc0bb;
-	}
-
-	.callout[data-callout="error"] {
-		background-color: #decece;
-	}
-
+	.callout[data-callout="failure"],
+	.callout[data-callout="danger"],
+	.callout[data-callout="error"],
 	.callout[data-callout="bug"] {
-		background-color: #ece1d4;
+		background: var(--adrenaline-callout-danger);
 	}
-
-	// Purple
 
 	.callout[data-callout="example"] {
-		background-color: #e3e1c0;
-	}
-
-	.callout[data-callout="quote"] {
-		background-color: #e4ddc3;
+		background: var(--adrenaline-callout-example);
 	}
 }

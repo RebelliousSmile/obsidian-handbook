@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import type BrumesPlugin from "../src/BrumesPlugin";
 import { loadBrumesBlocks } from "../src/features/blocks/registry";
 import {
@@ -113,6 +114,27 @@ assert.equal(
 	".brumes--city-of-mist { --city-only: true; }",
 );
 assert.doesNotMatch(styleElement?.textContent ?? "", /test-note/);
+
+const adrenalinePage = readFileSync(
+	"src/styles/adrenaline/_page.scss",
+	"utf8",
+);
+const adrenalineCallouts = readFileSync(
+	"src/styles/adrenaline/_callouts.scss",
+	"utf8",
+);
+assert.match(adrenalinePage, /\.markdown-source-view/);
+assert.match(adrenalinePage, /\.markdown-reading-view/);
+assert.match(adrenalinePage, /&\.theme-light:not\(\.brumes--colour-dark\)/);
+assert.match(adrenalinePage, /&\.theme-dark:not\(\.brumes--colour-light\)/);
+assert.match(adrenalinePage, /&\.brumes--colour-light/);
+assert.match(adrenalinePage, /&\.brumes--colour-dark/);
+assert.doesNotMatch(adrenalinePage, /brumes--workspace-theme/);
+assert.doesNotMatch(adrenalineCallouts, /brumes--workspace-theme/);
+assert.doesNotMatch(
+	`${adrenalinePage}\n${adrenalineCallouts}`,
+	/(^|[,{]\s*)\.theme-(?:light|dark)(?:\s|[,{}])/m,
+);
 
 assert.equal(normalizeSettings(undefined).colourScheme, "obsidian");
 assert.equal(
