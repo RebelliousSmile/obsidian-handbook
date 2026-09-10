@@ -29,6 +29,9 @@ import {
 } from "./games/registry";
 import { loadCustomGamePacks, loadSchemaSourceGamePacks } from "./games/customPacks";
 import { prepareGameStorage } from "./games/storage";
+import { resolveGithubSource } from "./games/githubSources";
+import { installResolvedSchemaSource } from "./games/sourceInstaller";
+import { SchemaSource } from "./games/sources";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -72,9 +75,7 @@ export default class BrumesPlugin extends Plugin {
 
 	async onload() {
 		await prepareGameStorage(this);
-		const customPacks = await loadCustomGamePacks(this);
-		const sourcePacks = await loadSchemaSourceGamePacks(this);
-		initGameRegistry([...customPacks, ...sourcePacks]);
+		await this.refreshGameRegistry();
 
 		await this.loadSettings();
 
@@ -165,6 +166,28 @@ export default class BrumesPlugin extends Plugin {
 	async saveSettings(options: ApplySettingsOptions = {}) {
 		await this.saveData(this.settings);
 		this.applySettings(options);
+	}
+
+	/** Rebuild the live registry after a managed source changes on disk. */
+	async refreshGameRegistry() {
+		const customPacks = await loadCustomGamePacks(this);
+		const sourcePacks = await loadSchemaSourceGamePacks(this);
+		initGameRegistry([...customPacks, ...sourcePacks]);
+		if (this.settings) {
+			this.settings = normalizeSettings(this.settings);
+			this.assets = emptyAssetState("");
+			this.applySettings({ refreshMarkdown: true });
+		}
+	}
+
+	async saveSchemaSource(source: SchemaSource, replacingRepository: string | null) {
+		const resolved = await resolveGithubSource(source);
+		await installResolvedSchemaSource(this, source, resolved);
+		const sources = this.settings.schemaSources.filter((known) => known.repository.toLowerCase() !== (replacingRepository ?? source.repository).toLowerCase() && known.repository.toLowerCase() !== source.repository.toLowerCase());
+		sources.push(source);
+		this.settings.schemaSources = sources;
+		await this.saveData(this.settings);
+		await this.refreshGameRegistry();
 	}
 
 	private applySettings(options: ApplySettingsOptions = {}) {

@@ -12,6 +12,7 @@ import {
 	normalizeGameVariantId,
 } from "../games/registry";
 import { logScope } from "../utils/logger";
+import { SchemaSource, SchemaSourceReference, isSafeSchemaSourceRepository, schemaSourceId } from "../games/sources";
 
 export { sanitizeAlias, sanitizeAliases };
 
@@ -75,6 +76,7 @@ export interface BrumesSettings {
 	lanternUrl: string;
 	features: BrumesFeatureSettings;
 	callouts: CalloutDefinition[];
+	schemaSources: SchemaSource[];
 }
 
 export const DEFAULT_SETTINGS: BrumesSettings = {
@@ -104,7 +106,32 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		adrenalineMonsterParser: true,
 	},
 	callouts: NATIVE_CALLOUTS,
+	schemaSources: [],
 };
+
+function normalizeSourceReference(value: unknown): SchemaSourceReference | null {
+	if (typeof value !== "object" || value === null) return null;
+	const source = value as Record<string, unknown>;
+	if (source.kind === "latest") return { kind: "latest" };
+	if ((source.kind === "tag" || source.kind === "branch") && typeof source.value === "string" && source.value.trim()) return { kind: source.kind, value: source.value.trim() };
+	return null;
+}
+
+function normalizeSchemaSources(value: unknown): SchemaSource[] {
+	if (!Array.isArray(value)) return [];
+	const sources: SchemaSource[] = [];
+	for (const entry of value) {
+		if (typeof entry !== "object" || entry === null) continue;
+		const source = entry as Record<string, unknown>;
+		if (!isSafeSchemaSourceRepository(source.repository)) continue;
+		const reference = normalizeSourceReference(source.reference);
+		if (!reference) continue;
+		const repository = source.repository;
+		if (sources.some((known) => known.repository.toLowerCase() === repository.toLowerCase())) continue;
+		sources.push({ repository, id: schemaSourceId(repository), reference });
+	}
+	return sources;
+}
 
 const LOG_LEVELS: LogLevel[] = ["none", "error", "warn", "info", "debug"];
 const COLOUR_SCHEMES: ColourScheme[] = ["obsidian", "light", "dark"];
@@ -212,5 +239,6 @@ export function normalizeSettings(
 				: DEFAULT_SETTINGS.lanternUrl,
 		features: normalizeFeatures(features),
 		callouts: normalizeCallouts(source.callouts, source.calloutAliases),
+		schemaSources: normalizeSchemaSources(source.schemaSources),
 	};
 }
