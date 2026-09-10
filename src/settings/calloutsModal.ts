@@ -107,7 +107,7 @@ export class CalloutsModal extends Modal {
 					drop.addOption(pack.id, pack.label);
 				}
 				drop.setValue(this.calloutScope).onChange((value) => {
-					this.calloutScope = value as CalloutScope;
+					this.calloutScope = value;
 				});
 			});
 
@@ -172,7 +172,7 @@ export class CalloutsModal extends Modal {
 			);
 		colorPickerSetting.settingEl.hidden = this.colorKind !== "fixed";
 
-		this.errorEl = contentEl.createEl("div", { cls: "setting-item-description" });
+		this.errorEl = contentEl.createDiv({ cls: "setting-item-description" });
 
 		new Setting(contentEl)
 			.addButton((button) => button.setButtonText("Annuler").onClick(() => this.close()))

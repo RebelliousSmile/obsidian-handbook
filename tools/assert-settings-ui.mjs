@@ -23,8 +23,8 @@ if (!source.includes('.setName("Univers")')) {
 	failures.push("The game variant selector has no French-first visible label.");
 }
 
-if (!source.includes('setHeading("Adrenaline System")')) {
-	failures.push("The settings tab has no Adrenaline System section.");
+if (!/if \(findGamePack\("adrenaline"\)\) \{[\s\S]*?setHeading\("Adrenaline System"\)/m.test(source)) {
+	failures.push("The Adrenaline System section is not gated by the installed game registry.");
 }
 
 for (const flag of [

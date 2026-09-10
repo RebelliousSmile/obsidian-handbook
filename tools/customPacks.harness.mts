@@ -4,7 +4,9 @@ import { loadCustomGamePacks } from "../src/games/customPacks";
 import { resolveGameAssets } from "../src/games/assets";
 import { GAME_PLUGIN_BLOCK_CAPABILITIES } from "../src/games/capabilities";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
+import { isBlockEnabled } from "../src/features/blocks/types";
 import { log } from "../src/utils/logger";
+import { DEFAULT_SETTINGS, normalizeMode, normalizeSettings } from "../src/settings/types";
 
 const HOST_VERSION = "2.6.0";
 
@@ -102,6 +104,58 @@ async function run(): Promise<void> {
 		check("a missing packs folder yields no plugin", packs.length === 0);
 		check("a missing packs folder warns nothing", errors.length === 0);
 		check("the registry is untouched before init", GAME_PACKS.length === packsBefore);
+	}
+
+	/* Adrenaline follows the complete absent, installed, removed lifecycle. */
+	{
+		initGameRegistry([]);
+		const adrenalineBlocks = BRUMES_BLOCKS.filter((block) => block.mode === "adrenaline");
+		const savedData = {
+			mode: "adrenaline",
+			features: {
+				...DEFAULT_SETTINGS.features,
+				adrenalinePjParser: false,
+				adrenalinePnjParser: false,
+				adrenalineMonsterParser: false,
+			},
+		};
+		check("Adrenaline starts absent", !GAME_PACKS.some((pack) => pack.id === "adrenaline"));
+		check("an absent saved Adrenaline mode falls back", normalizeMode("adrenaline") === "city-of-mist");
+		check(
+			"Adrenaline processors stay disabled while its mode is absent",
+			adrenalineBlocks.every((block) => !isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
+		);
+		check(
+			"saved Adrenaline feature flags survive absence",
+			adrenalineBlocks.every((block) => !normalizeSettings(savedData).features[block.flag]),
+		);
+
+		const { plugin } = fakePlugin({
+			"adrenaline/pack.json": gamePlugin("adrenaline", {
+				requires: [
+					"block:adrenaline-pj",
+					"block:adrenaline-pnj",
+					"block:adrenaline-monstre",
+					"style:adrenaline",
+				],
+			}),
+		});
+		initGameRegistry(await loadCustomGamePacks(plugin));
+		check("Adrenaline installs from its directory", resolveGamePack("adrenaline").id === "adrenaline");
+		check("the installed Adrenaline mode normalizes", normalizeMode("adrenaline") === "adrenaline");
+		check("the installed Adrenaline class is registered", gamePackClasses().includes("brumes--adrenaline"));
+		check(
+			"installed Adrenaline processors follow their enabled flags",
+			adrenalineBlocks.every((block) => isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
+		);
+		check(
+			"saved Adrenaline feature flags return on reinstall",
+			adrenalineBlocks.every((block) => !normalizeSettings(savedData).features[block.flag]),
+		);
+
+		initGameRegistry([]);
+		check("removing Adrenaline removes its class", !gamePackClasses().includes("brumes--adrenaline"));
+		check("a removed saved Adrenaline mode falls back", normalizeMode("adrenaline") === "city-of-mist");
 	}
 
 	/* Legacy flat files retain their tolerant, deterministic behavior. */

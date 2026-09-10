@@ -5,9 +5,7 @@ import {
 	buildGameStyle,
 	GameStyleWriter,
 } from "../src/features/modes/styleElement";
-import { adrenalinePack } from "../src/games/adrenaline";
 import { readPackTokens } from "../src/games/fromSchema";
-import { resolveGamePack } from "../src/games/registry";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../src/settings/types";
 
 const MODE_CLASS = "brumes--legend-in-the-mist";
@@ -86,33 +84,6 @@ assert.match(forcedDarkCss, /--forced-dark: dark/);
 assert.doesNotMatch(forcedDarkCss, /\.theme-dark/);
 assert.doesNotMatch(forcedDarkCss, /--forced-light/);
 
-assert.equal(resolveGamePack("adrenaline"), adrenalinePack);
-assert.deepEqual(adrenalinePack.polarities, ["light", "dark"]);
-
-const adrenalineLightCss = buildGameStyle(
-	adrenalinePack.id,
-	adrenalinePack.style,
-	true,
-	adrenalinePack.polarities,
-	"light",
-);
-const adrenalineDarkCss = buildGameStyle(
-	adrenalinePack.id,
-	adrenalinePack.style,
-	true,
-	adrenalinePack.polarities,
-	"dark",
-);
-
-assert.match(adrenalineLightCss, /\.brumes--colour-light/);
-assert.match(adrenalineLightCss, /--background-primary: #F4F0E8/);
-assert.doesNotMatch(adrenalineLightCss, /--background-primary: #160D0B/);
-assert.match(adrenalineDarkCss, /\.brumes--colour-dark/);
-assert.match(adrenalineDarkCss, /--background-primary: #160D0B/);
-assert.doesNotMatch(adrenalineDarkCss, /--background-primary: #F4F0E8/);
-assert.doesNotMatch(adrenalineLightCss, /body\.theme-light/);
-assert.doesNotMatch(adrenalineDarkCss, /body\.theme-dark/);
-
 class StyleElement {
 	id = "";
 	textContent = "";
@@ -134,14 +105,14 @@ const styleDocument = {
 };
 const writer = new GameStyleWriter();
 writer.addDocument(styleDocument as unknown as Document);
-writer.applyGameStyle(adrenalineLightCss);
-assert.equal(styleElement?.textContent, adrenalineLightCss);
+writer.applyGameStyle(workspaceCss);
+assert.equal(styleElement?.textContent, workspaceCss);
 writer.applyGameStyle(".brumes--city-of-mist { --city-only: true; }");
 assert.equal(
 	styleElement?.textContent,
 	".brumes--city-of-mist { --city-only: true; }",
 );
-assert.doesNotMatch(styleElement?.textContent ?? "", /adrenaline/);
+assert.doesNotMatch(styleElement?.textContent ?? "", /test-note/);
 
 assert.equal(normalizeSettings(undefined).colourScheme, "obsidian");
 assert.equal(

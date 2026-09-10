@@ -50,8 +50,8 @@ log.setLevel("warn");
 	assert.deepEqual(clue?.aliases, ["clue"]);
 }
 
-// An already-migrated `callouts` list with one entry at an unknown scope is
-// discarded, warned once, the rest of the list survives.
+// An unsafe scope is discarded and warned once; a safe plugin id is allowed
+// even when that plugin is absent, so uninstalling it does not erase data.
 {
 	const warnings: unknown[][] = [];
 	const originalWarn = console.warn;
@@ -64,7 +64,7 @@ log.setLevel("warn");
 				id: "user-secret",
 				name: "Secret de faction",
 				aliases: ["secret"],
-				scope: "not-a-real-game",
+				scope: "../not-a-game",
 				template: "body-only",
 				font: "text",
 				color: { kind: "fixed", hex: "#e2c6c5" },
@@ -81,6 +81,29 @@ log.setLevel("warn");
 	assert.ok(
 		settings.callouts.every((c) => c.id !== "user-secret"),
 	);
+}
+
+{
+	const settings = normalizeSettings({
+		callouts: [
+			...NATIVE_CALLOUTS,
+			{
+				id: "adrenaline-action",
+				name: "Action Adrenaline",
+				aliases: ["action-adrenaline"],
+				scope: "adrenaline",
+				template: "body-only",
+				font: "text",
+				color: { kind: "theme" },
+				native: false,
+				styleKey: "adrenaline-action",
+			},
+		],
+	});
+
+	const pluginEntry = settings.callouts.find((c) => c.id === "adrenaline-action");
+	assert.ok(pluginEntry);
+	assert.equal(pluginEntry.scope, "adrenaline");
 }
 
 // A valid user entry at scope "all" survives, keeps its id and gets
