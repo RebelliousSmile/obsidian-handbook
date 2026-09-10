@@ -37,14 +37,14 @@ async function resolveReference(repository: string, reference: SchemaSourceRefer
 
 export async function resolveGithubSource(source: SchemaSource): Promise<ResolvedGithubSource> {
 	const revision = await resolveReference(source.repository, source.reference);
-	const read = async (path: string, _binary: boolean): Promise<Response> => {
+	const read = async (path: string) => {
 		const response = await requestUrl({ url: `https://raw.githubusercontent.com/${source.repository}/${revision}/${path}` });
 		if (response.status < 200 || response.status >= 300) throw new Error(`GitHub returned ${response.status} for ${path}`);
-		return response as unknown as Response;
+		return response;
 	};
 	return {
 		revision,
-		readText: async (path) => (await read(path, false)).text(),
-		readBinary: async (path) => (await read(path, true)).arrayBuffer(),
+		readText: async (path) => (await read(path)).text,
+		readBinary: async (path) => (await read(path)).arrayBuffer,
 	};
 }
