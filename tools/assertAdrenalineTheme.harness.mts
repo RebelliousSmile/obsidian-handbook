@@ -57,6 +57,33 @@ for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlo
 	);
 }
 
+const visualFixture = readFileSync(
+	join("tools", "fixtures", "adrenaline-visual.md"),
+	"utf8",
+);
+for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlock]) {
+	const fence = visualFixture.match(
+		new RegExp("```" + block.id + "\\n([\\s\\S]*?)\\n```"),
+	);
+	assert.ok(fence, `${block.id} must be present in the visual fixture`);
+	assert.ok(block.parse(fence[1]), `${block.id} visual fixture must parse`);
+}
+for (const callout of [
+	"info",
+	"success",
+	"question",
+	"warning",
+	"danger",
+	"example",
+	"quote",
+]) {
+	assert.match(
+		visualFixture,
+		new RegExp(`> \\[!${callout}\\]`, "i"),
+		`Missing ${callout} callout family from visual fixture`,
+	);
+}
+
 const minimal = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);
 assert.ok(minimal);
 const minimalRendered = adrenalineMonsterBlock.render(minimal, doc) as unknown as El;
@@ -84,6 +111,7 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
 assert.match(scss, /@media \(min-width: 900px\)/);
+assert.match(scss, /markdown-reading-view:not\(\.adrenaline-one-column\)/);
 assert.match(scss, /--adrenaline-page-texture/);
 assert.match(scss, /--adrenaline-callout-warning/);
 assert.doesNotMatch(scss, /#[0-9a-f]{3,8}/i);

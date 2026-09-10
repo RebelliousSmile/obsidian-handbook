@@ -1,15 +1,13 @@
-name: Create a new release
+name: CI
 
 on:
     push:
-        tags:
-            - "*"
+        branches: [main]
+    pull_request:
 
 jobs:
-    build:
+    check:
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
         steps:
             - uses: actions/checkout@v4
               with:
@@ -34,29 +32,14 @@ jobs:
 
             - name: Install dependencies
               working-directory: handbook
-              run: |
-                  npm install
-                  npm ci --prefix ../schema-adrenaline
+              run: npm install
 
-            - name: Check plugin
+            - name: Install schema-adrenaline dependencies
+              working-directory: schema-adrenaline
+              run: npm ci
+
+            - name: Check Handbook
               working-directory: handbook
               env:
                   SCHEMA_ADRENALINE_ROOT: ${{ github.workspace }}/schema-adrenaline
               run: npm run check
-
-            - name: Create release
-              working-directory: handbook
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  tag="${GITHUB_REF#refs/tags/}"
-
-                  release_flags=()
-                  if [[ "$tag" == *-* ]]; then
-                    release_flags+=(--prerelease)
-                  fi
-
-                  gh release create "$tag" \
-                    --title="$tag" \
-                    "${release_flags[@]}" \
-                    dist/main.js dist/manifest.json dist/styles.css

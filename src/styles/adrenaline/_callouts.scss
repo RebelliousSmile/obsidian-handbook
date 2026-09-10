@@ -52,9 +52,12 @@
 
 	.callout[data-callout="warning"],
 	.callout[data-callout="caution"],
-	.callout[data-callout="attention"] {
+	.callout[data-callout="attention"],
+	.callout[data-callout="failure"],
+	.callout[data-callout="danger"],
+	.callout[data-callout="error"],
+	.callout[data-callout="bug"] {
 		border-block-start: 0.4rem solid var(--adrenaline-signal);
-		background-color: var(--adrenaline-callout-warning);
 		background-image: var(--adrenaline-warning-texture, none);
 		background-repeat: repeat-x;
 		background-position: top;
@@ -64,6 +67,12 @@
 		.callout-content {
 			background: var(--adrenaline-text-backplate);
 		}
+	}
+
+	.callout[data-callout="warning"],
+	.callout[data-callout="caution"],
+	.callout[data-callout="attention"] {
+		background-color: var(--adrenaline-callout-warning);
 	}
 
 	.callout[data-callout="failure"],
