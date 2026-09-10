@@ -1,5 +1,4 @@
 import { logScope } from "../utils/logger";
-import { adrenalinePack } from "./adrenaline";
 import { cityOfMistPack } from "./city-of-mist";
 import { legendInTheMistPack } from "./legend-in-the-mist";
 import { otherscapePack, otherscapeVariants } from "./otherscape";
@@ -39,7 +38,6 @@ const DECLARED_GAMES: GameRegistration[] = [
 		variants: otherscapeVariants,
 		defaultVariantId: "metro",
 	},
-	{ pack: adrenalinePack },
 ];
 
 /**
