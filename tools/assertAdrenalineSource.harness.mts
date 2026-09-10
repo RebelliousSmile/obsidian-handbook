@@ -12,11 +12,14 @@ assert.ok(sourceRoot, "SCHEMA_ADRENALINE_ROOT is required");
 const pluginSource = JSON.parse(
 	readFileSync(join(sourceRoot, "handbook", "adrenaline", "pack.json"), "utf8"),
 ) as unknown;
-const pluginResult = readGamePluginManifest(pluginSource, "2.6.0");
+const handbookVersion = (
+	JSON.parse(readFileSync("package.json", "utf8")) as { version: string }
+).version;
+const pluginResult = readGamePluginManifest(pluginSource, handbookVersion);
 assert.ok(pluginResult.manifest, pluginResult.error);
 const gamePlugin = pluginResult.manifest;
-assert.equal(gamePlugin.version, "0.1.0");
-assert.equal(gamePlugin.minimumHandbookVersion, "2.6.0");
+assert.equal(gamePlugin.version, "0.2.0");
+assert.equal(gamePlugin.minimumHandbookVersion, "2.7.0");
 assert.deepEqual(gamePlugin.requires, [
 	"block:adrenaline-pj",
 	"block:adrenaline-pnj",
@@ -34,10 +37,43 @@ for (const layer of [gamePlugin.pack.style.light, gamePlugin.pack.style.dark]) {
 		"--adrenaline-band",
 		"--adrenaline-band-ink",
 		"--adrenaline-rule",
+		"--adrenaline-page-texture",
+		"--adrenaline-callout-surface",
+		"--adrenaline-callout-ink",
+		"--adrenaline-signal",
+		"--adrenaline-signal-ink",
 	]) {
 		assert.ok(layer.note[token], `Missing ${token}`);
 	}
+	for (const token of [
+		"--background-primary",
+		"--background-primary-alt",
+		"--background-secondary",
+		"--text-normal",
+		"--text-muted",
+		"--background-modifier-border",
+		"--background-modifier-hover",
+		"--interactive-accent",
+	]) {
+		assert.ok(layer.workspace[token], `Missing workspace ${token}`);
+	}
+	assert.equal(
+		Object.keys(layer.workspace).some((token) =>
+			token.includes("texture"),
+		),
+		false,
+		"Workspace tokens must not contain page textures",
+	);
 }
+assert.deepEqual(Object.keys(gamePlugin.pack.assets?.images ?? {}), [
+	"paper-grain",
+	"dark-organic",
+	"warning-stripe",
+]);
+assert.deepEqual(Object.keys(gamePlugin.pack.assets?.fonts ?? {}), [
+	"Adrenaline Body",
+	"Adrenaline Display",
+]);
 const constantsUrl = pathToFileURL(
 	join(sourceRoot, "src", "zod", "constants.ts"),
 ).href;

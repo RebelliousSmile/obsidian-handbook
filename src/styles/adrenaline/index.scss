@@ -2,8 +2,10 @@
 @use "./pnj";
 @use "./monstre";
 @use "./callouts";
+@use "./page";
 
 .brumes--adrenaline {
+	@include page.page;
 	.brumes-adrenaline--section > h4 {
 		margin: -0.42rem -0.5rem 0.38rem;
 		padding: 0.18rem 0.5rem;

@@ -1,4 +1,5 @@
 /** Assertions for legacy flat packs and versioned declarative game plugins. */
+import { readFileSync } from "node:fs";
 import { GAME_PACKS, initGameRegistry, resolveGamePack, gamePackClasses } from "../src/games/registry";
 import { loadCustomGamePacks } from "../src/games/customPacks";
 import { resolveGameAssets } from "../src/games/assets";
@@ -8,7 +9,7 @@ import { isBlockEnabled } from "../src/features/blocks/types";
 import { log } from "../src/utils/logger";
 import { DEFAULT_SETTINGS, normalizeMode, normalizeSettings } from "../src/settings/types";
 
-const HOST_VERSION = "2.6.0";
+const HOST_VERSION = (JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version;
 
 function gamePlugin(
 	id: string,
@@ -39,7 +40,8 @@ function fakePlugin(
 	options: { packsExists?: boolean; version?: string } = {},
 ) {
 	const dir = "plugins/obsidian-handbook";
-	const packsPath = `${dir}/packs`;
+	const configDir = ".obsidian-test";
+	const packsPath = `${configDir}/handbook/packs`;
 	const prefix = `${packsPath}/`;
 	const reads: string[] = [];
 	const packsExists = options.packsExists ?? true;
@@ -77,7 +79,7 @@ function fakePlugin(
 	return {
 		plugin: {
 			manifest: { dir, version: options.version ?? HOST_VERSION },
-			app: { vault: { adapter } },
+			app: { vault: { configDir, adapter } },
 		} as unknown as import("obsidian").Plugin,
 		reads,
 	};
@@ -190,7 +192,6 @@ async function run(): Promise<void> {
 	{
 		const { plugin } = fakePlugin({
 			"portable/pack.json": gamePlugin("portable", {
-				requires: ["block:theme-card", "style:city-of-mist"],
 				assets: { images: { portrait: "portrait.png" } },
 			}),
 			"portable/assets/portrait.png": "image",
@@ -221,6 +222,36 @@ async function run(): Promise<void> {
 		check("the explicit root image resolves", state.tokens["--brumes-image-portrait"]?.includes("rooted/media/portrait.png") === true);
 	}
 
+	/* Existing static formats remain valid; executable or unknown ones do not. */
+	{
+		const { plugin, reads } = fakePlugin({
+			"formats/pack.json": gamePlugin("formats", {
+				assets: {
+					images: { safe: "safe.svg", unsafe: "unsafe.html" },
+					fonts: {
+						Legacy: { file: "legacy.ttf" },
+						Script: { file: "font.js" },
+					},
+				},
+			}),
+			"formats/assets/safe.svg": "svg",
+			"formats/assets/unsafe.html": "html",
+			"formats/assets/legacy.ttf": "font",
+			"formats/assets/font.js": "script",
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const beforeAssets = reads.length;
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("v1 SVG images remain supported", state.tokens["--brumes-image-safe"] !== undefined);
+		check("v1 TTF fonts remain supported", state.fontCss.includes('font-family: "Legacy"'));
+		check("HTML images are refused", state.tokens["--brumes-image-unsafe"] === undefined);
+		check("JavaScript fonts are refused", !state.fontCss.includes('font-family: "Script"'));
+		check(
+			"unsupported assets are not looked up",
+			!reads.slice(beforeAssets).some((path) => path.endsWith("unsafe.html") || path.endsWith("font.js")),
+		);
+	}
+
 	/* Identity, protocol, host version and capabilities fail atomically. */
 	{
 		const errorsBefore = errors.length;
@@ -237,6 +268,29 @@ async function run(): Promise<void> {
 		for (const name of ["wrong-name", "future-protocol", "future-host", "missing-capability", "bad-semver"]) {
 			check(`${name} is diagnosed once`, errors.slice(errorsBefore).filter((line) => line.includes(`${name}/pack.json`)).length === 1);
 		}
+	}
+
+	/* A known capability cannot be borrowed by a differently named game. */
+	{
+		const errorsBefore = errors.length;
+		const { plugin } = fakePlugin({
+			"borrowed/pack.json": gamePlugin("borrowed", {
+				requires: ["block:adrenaline-pj", "style:adrenaline"],
+			}),
+			"mixed/pack.json": gamePlugin("mixed", {
+				requires: ["style:adrenaline", "block:not-installed"],
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		check("foreign capabilities reject the whole plugin", installed.length === 0);
+		check(
+			"the foreign capability diagnosis names the game",
+			errors.slice(errorsBefore).some((line) => line.includes('for "borrowed"') && line.includes("style:adrenaline")),
+		);
+		check(
+			"unknown capabilities keep their own diagnosis",
+			errors.slice(errorsBefore).some((line) => line.includes("unknown Handbook capabilities") && line.includes("block:not-installed")),
+		);
 	}
 
 	/* A plugin asset root is relative and confined to its installation. */
@@ -271,6 +325,12 @@ async function run(): Promise<void> {
 		const declared = [...GAME_PLUGIN_BLOCK_CAPABILITIES].sort();
 		const registered = BRUMES_BLOCKS.map((block) => `block:${block.id}`).sort();
 		check("block capabilities match BRUMES_BLOCKS", JSON.stringify(declared) === JSON.stringify(registered));
+		for (const block of BRUMES_BLOCKS) {
+			const result = gamePlugin(block.mode, { requires: [`block:${block.id}`] });
+			const parsed = JSON.parse(result) as unknown;
+			const manifest = (await import("../src/games/pluginManifest")).readGamePluginManifest(parsed, HOST_VERSION);
+			check(`${block.id} belongs to its renderer mode`, manifest.manifest !== undefined);
+		}
 	}
 
 	/* Reinitializing without external plugins models removal at next startup. */

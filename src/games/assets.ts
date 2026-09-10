@@ -37,6 +37,17 @@ const FONT_FORMATS: Record<string, string> = {
 	otf: "opentype",
 };
 
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "svg"];
+const FONT_EXTENSIONS = Object.keys(FONT_FORMATS);
+
+function fileExtension(file: string): string {
+	return (file.split(".").pop() ?? "").toLowerCase();
+}
+
+function hasSupportedExtension(file: string, supported: string[]): boolean {
+	return supported.includes(fileExtension(file));
+}
+
 export interface GameAssetState {
 	/** The pack these were resolved for, so a stale state is never used. */
 	packId: string;
@@ -225,6 +236,11 @@ export async function resolveGameAssets(
 			state.roles.push(role);
 
 			const declared = images[role];
+			if (!hasSupportedExtension(declared, IMAGE_EXTENSIONS)) {
+				state.missing.push({ role, path: `${folder}/${declared}` });
+				log.warn(`Ignoring unsupported image file "${declared}" for "${pack.id}".`);
+				continue;
+			}
 			const path = await locate(declared);
 
 			if (!path) {
@@ -253,6 +269,14 @@ export async function resolveGameAssets(
 			state.families.push(family);
 
 			const face = readFontFace(fonts[family]);
+			if (!hasSupportedExtension(face.file, FONT_EXTENSIONS)) {
+				state.missingFonts.push({
+					family,
+					path: `${folder}/${face.file}`,
+				});
+				log.warn(`Ignoring unsupported font file "${face.file}" for "${pack.id}".`);
+				continue;
+			}
 			const path = await locate(face.file);
 
 			if (!path) {

@@ -1,0 +1,182 @@
+import type { DataAdapter, Plugin } from "obsidian";
+import { logScope } from "../utils/logger";
+
+const log = logScope("Games");
+
+export const HANDBOOK_DATA_DIR_NAME = "handbook";
+export const PACKS_DIR_NAME = "packs";
+export const OVERRIDE_FILE_NAME = "overrides.json";
+
+export interface GameStoragePaths {
+	root: string;
+	packs: string;
+	overrides: string;
+	legacyPacks: string | null;
+	legacyOverrides: string | null;
+}
+
+function joinPath(root: string, name: string): string {
+	return `${root.replace(/\/+$/, "")}/${name}`;
+}
+
+/** User-owned files live beside Obsidian's config, not inside a replaceable plugin. */
+export function gameStoragePaths(plugin: Plugin): GameStoragePaths {
+	const root = joinPath(plugin.app.vault.configDir, HANDBOOK_DATA_DIR_NAME);
+	const legacyRoot = plugin.manifest.dir ?? null;
+
+	return {
+		root,
+		packs: joinPath(root, PACKS_DIR_NAME),
+		overrides: joinPath(root, OVERRIDE_FILE_NAME),
+		legacyPacks: legacyRoot ? joinPath(legacyRoot, PACKS_DIR_NAME) : null,
+		legacyOverrides: legacyRoot
+			? joinPath(legacyRoot, OVERRIDE_FILE_NAME)
+			: null,
+	};
+}
+
+async function ensureDirectory(adapter: DataAdapter, path: string): Promise<void> {
+	if (!(await adapter.exists(path))) {
+		await adapter.mkdir(path);
+	}
+}
+
+async function removeTemporaryDirectory(
+	adapter: DataAdapter,
+	path: string,
+): Promise<void> {
+	try {
+		if (await adapter.exists(path)) {
+			await adapter.rmdir(path, true);
+		}
+	} catch (error) {
+		log.warn(`Could not remove incomplete storage migration "${path}".`, error);
+	}
+}
+
+async function copyDirectory(
+	adapter: DataAdapter,
+	source: string,
+	destination: string,
+): Promise<void> {
+	await ensureDirectory(adapter, destination);
+	const listing = await adapter.list(source);
+
+	for (const folder of listing.folders) {
+		const name = folder.slice(source.length + 1);
+		await copyDirectory(adapter, folder, joinPath(destination, name));
+	}
+
+	for (const file of listing.files) {
+		const name = file.slice(source.length + 1);
+		await adapter.copy(file, joinPath(destination, name));
+	}
+}
+
+async function migratePacks(
+	adapter: DataAdapter,
+	paths: GameStoragePaths,
+): Promise<void> {
+	if (
+		(await adapter.exists(paths.packs)) ||
+		!paths.legacyPacks ||
+		!(await adapter.exists(paths.legacyPacks))
+	) {
+		return;
+	}
+
+	const temporary = joinPath(paths.root, ".packs-migration");
+	await removeTemporaryDirectory(adapter, temporary);
+
+	try {
+		await copyDirectory(adapter, paths.legacyPacks, temporary);
+		await adapter.rename(temporary, paths.packs);
+		log.info(`Migrated game plugins to "${paths.packs}".`);
+	} catch (error) {
+		await removeTemporaryDirectory(adapter, temporary);
+		log.error(
+			`Could not migrate game plugins to "${paths.packs}"; the legacy source is left untouched.`,
+			error,
+		);
+	}
+}
+
+async function migrateOverrides(
+	adapter: DataAdapter,
+	paths: GameStoragePaths,
+): Promise<void> {
+	if (
+		(await adapter.exists(paths.overrides)) ||
+		!paths.legacyOverrides ||
+		!(await adapter.exists(paths.legacyOverrides))
+	) {
+		return;
+	}
+
+	const temporary = joinPath(paths.root, ".overrides-migration.json");
+	try {
+		if (await adapter.exists(temporary)) {
+			await adapter.remove(temporary);
+		}
+		await adapter.copy(paths.legacyOverrides, temporary);
+		await adapter.rename(temporary, paths.overrides);
+		log.info(`Migrated personal overrides to "${paths.overrides}".`);
+	} catch (error) {
+		try {
+			if (await adapter.exists(temporary)) {
+				await adapter.remove(temporary);
+			}
+		} catch {
+			// The controlled temporary file is harmless and retried next startup.
+		}
+		log.error(
+			`Could not migrate personal overrides to "${paths.overrides}"; the legacy source is left untouched.`,
+			error,
+		);
+	}
+}
+
+/** Best-effort migration. Failure never prevents Handbook from loading. */
+export async function prepareGameStorage(plugin: Plugin): Promise<GameStoragePaths> {
+	const paths = gameStoragePaths(plugin);
+	const adapter = plugin.app.vault.adapter;
+
+	try {
+		await ensureDirectory(adapter, paths.root);
+		await migratePacks(adapter, paths);
+		await migrateOverrides(adapter, paths);
+	} catch (error) {
+		log.error(`Could not prepare Handbook storage at "${paths.root}".`, error);
+	}
+
+	return paths;
+}
+
+/** Persistent data wins; legacy is a one-cycle fallback when migration failed. */
+export async function packsReadPath(plugin: Plugin): Promise<string> {
+	const paths = gameStoragePaths(plugin);
+	if (await plugin.app.vault.adapter.exists(paths.packs)) {
+		return paths.packs;
+	}
+	if (
+		paths.legacyPacks &&
+		(await plugin.app.vault.adapter.exists(paths.legacyPacks))
+	) {
+		return paths.legacyPacks;
+	}
+	return paths.packs;
+}
+
+export async function overridesReadPath(plugin: Plugin): Promise<string> {
+	const paths = gameStoragePaths(plugin);
+	if (await plugin.app.vault.adapter.exists(paths.overrides)) {
+		return paths.overrides;
+	}
+	if (
+		paths.legacyOverrides &&
+		(await plugin.app.vault.adapter.exists(paths.legacyOverrides))
+	) {
+		return paths.legacyOverrides;
+	}
+	return paths.overrides;
+}

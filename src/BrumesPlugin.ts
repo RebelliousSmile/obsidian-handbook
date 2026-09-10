@@ -28,6 +28,7 @@ import {
 	resolveGameRegistration,
 } from "./games/registry";
 import { loadCustomGamePacks } from "./games/customPacks";
+import { prepareGameStorage } from "./games/storage";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -70,6 +71,7 @@ export default class BrumesPlugin extends Plugin {
 	private assets: GameAssetState = emptyAssetState("");
 
 	async onload() {
+		await prepareGameStorage(this);
 		const customPacks = await loadCustomGamePacks(this);
 		initGameRegistry(customPacks);
 
@@ -110,16 +112,17 @@ export default class BrumesPlugin extends Plugin {
 			}),
 		);
 
-		// Processors registered above do not redraw Markdown views that were
-		// already open when Obsidian reloaded the plugin. Invalidate them now so
-		// their Handbook blocks and scoped game classes return without requiring
-		// an edit or save from the user.
-		this.applySettings({ refreshMarkdown: true });
+		this.app.workspace.onLayoutReady(() => {
+			// Before layout-ready both rootSplit and every leaf container may be
+			// absent. Dress the initial documents only once Obsidian exposes them.
+			// Processors registered above also need an explicit redraw when a
+			// plugin reloads while Markdown views are already open.
+			this.applySettings({ refreshMarkdown: true });
 
-		// The override file and the illustrations live in the plugin folder,
-		// which the vault does not watch, so they are read once here and on
-		// demand afterwards.
-		void this.reloadStyleSources();
+			// The vault does not watch Handbook's config data, so overrides and
+			// illustrations are read once here and on demand afterwards.
+			void this.reloadStyleSources();
+		});
 	}
 
 	onunload() {
@@ -318,13 +321,19 @@ export default class BrumesPlugin extends Plugin {
 
 	/** The main window, plus one document per detached window in use. */
 	private collectDocuments(): Document[] {
-		const documents: Document[] = [this.app.workspace.rootSplit.doc];
-
-		this.app.workspace.iterateAllLeaves((leaf) => {
-			const doc = leaf.getContainer().doc;
-			if (documents.indexOf(doc) === -1) {
+		const documents: Document[] = [];
+		const addDocument = (doc: Document | null | undefined) => {
+			if (doc && documents.indexOf(doc) === -1) {
 				documents.push(doc);
 			}
+		};
+
+		// During startup Obsidian may expose rootSplit before attaching its
+		// document. Leaves already carry the usable document in that interval.
+		addDocument(this.app.workspace.rootSplit?.doc);
+
+		this.app.workspace.iterateAllLeaves((leaf) => {
+			addDocument(leaf.getContainer()?.doc);
 		});
 
 		return documents;

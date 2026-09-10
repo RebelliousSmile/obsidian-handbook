@@ -119,7 +119,7 @@ export function normalizeMode(mode: unknown): BrumesMode {
 
 	if (typeof mode === "string" && mode.length > 0) {
 		modeLog.warn(
-			`No game pack answers to "${mode}", falling back on "${DEFAULT_GAME_PACK_ID}".`,
+			`No game pack answers to "${mode}", falling back on "${DEFAULT_GAME_PACK_ID}". Reinstall optional packs in Handbook's persistent packs directory if this followed an update.`,
 		);
 	}
 

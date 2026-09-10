@@ -1,5 +1,5 @@
 import { readGamePack } from "./fromSchema";
-import { missingGamePluginCapabilities } from "./capabilities";
+import { gamePluginCapabilityIssues } from "./capabilities";
 import { GamePack } from "./types";
 
 export const GAME_PLUGIN_MANIFEST_VERSION = 1;
@@ -191,14 +191,21 @@ export function readGamePluginManifest(
 		return { error: `"requires" is not a valid capability list` };
 	}
 
-	const missing = missingGamePluginCapabilities(requires);
-	if (missing.length > 0) {
-		return { error: `missing Handbook capabilities: ${missing.join(", ")}` };
-	}
-
 	const pack = readGamePack(source.pack);
 	if (!pack) {
 		return { error: `"pack" is not a usable game pack` };
+	}
+
+	const issues = gamePluginCapabilityIssues(pack.id, requires);
+	if (issues.unknown.length > 0) {
+		return {
+			error: `unknown Handbook capabilities: ${issues.unknown.join(", ")}`,
+		};
+	}
+	if (issues.foreign.length > 0) {
+		return {
+			error: `Handbook does not provide these capabilities for "${pack.id}": ${issues.foreign.join(", ")}`,
+		};
 	}
 
 	return {

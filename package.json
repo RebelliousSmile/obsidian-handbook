@@ -1,15 +1,17 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.6.0",
+	"version": "2.7.0",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs --watch",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"check": "node tools/check.mjs",
 		"lint": "eslint .",
 		"assert:corpus": "node tools/assert-corpus.mjs",
 		"dump:dom": "node tools/dump-dom.mjs",
 		"assert:override": "node tools/assert-override.mjs",
+		"assert:game-storage": "node tools/assert-game-storage.mjs",
 		"assert:custom-packs": "node tools/assert-custom-packs.mjs",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",

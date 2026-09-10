@@ -8,6 +8,7 @@ import {
 	GameStyleTokens,
 	GameStyleValues,
 } from "./types";
+import { OVERRIDE_FILE_NAME, overridesReadPath } from "./storage";
 
 const log = logScope("Games");
 
@@ -20,7 +21,7 @@ const log = logScope("Games");
  * so removing the file returns the rendering to the game untouched — the
  * values it writes and the shape of the blocks alike.
  */
-export const OVERRIDE_FILE_NAME = "overrides.json";
+export { OVERRIDE_FILE_NAME } from "./storage";
 
 const LAYER_NAMES: (keyof GameStyleValues)[] = ["base", "light", "dark"];
 const SLOT_NAMES: (keyof GameStyleLayer)[] = ["note", "workspace"];
@@ -158,11 +159,6 @@ export function mergeGameStyle(
 	};
 }
 
-function overridePath(plugin: Plugin): string | null {
-	const dir = plugin.manifest.dir;
-	return dir ? `${dir}/${OVERRIDE_FILE_NAME}` : null;
-}
-
 /**
  * Reading fails softly: no file, an unreadable one, or a plugin folder the
  * manifest does not name all lead to an empty override, never to a load
@@ -171,10 +167,7 @@ function overridePath(plugin: Plugin): string | null {
 export async function loadGameOverride(
 	plugin: Plugin,
 ): Promise<GameOverride> {
-	const path = overridePath(plugin);
-	if (!path) {
-		return EMPTY_OVERRIDE;
-	}
+	const path = await overridesReadPath(plugin);
 
 	try {
 		const adapter = plugin.app.vault.adapter;

@@ -31,6 +31,16 @@ Handbook ne redistribue aucun de ses assets ni aucune image extraite des livres.
 
 ## Installation
 
+> [!IMPORTANT]
+> **Before the first update to Handbook 2.7.0**, copy any personal game packs
+> and overrides out of the replaceable plugin directory. With the default
+> Obsidian configuration directory, copy
+> `.obsidian/plugins/obsidian-handbook/packs` to `.obsidian/handbook/packs` and
+> `.obsidian/plugins/obsidian-handbook/overrides.json` to
+> `.obsidian/handbook/overrides.json`. Replace `.obsidian` with your actual
+> configuration directory when it is customized. If BRAT or another updater
+> has already deleted the old files, Handbook cannot detect or restore them.
+
 ### 1. Prepare a vault
 
 Handbook is easiest to test in a dedicated vault.
@@ -48,9 +58,10 @@ open `Style Settings` and reset the sections it created — the leftover keys
 still override what Handbook writes.
 
 The fine-grained knobs that preset offered come back as a file you write. Put
-an `overrides.json` in Handbook's own folder in the vault
-(`.obsidian/plugins/obsidian-handbook/overrides.json`) and it wins over the
-active game for the custom properties it declares, and for nothing else:
+an `overrides.json` in the durable Handbook data folder
+(`<configDir>/handbook/overrides.json`, normally
+`.obsidian/handbook/overrides.json`) and it wins over the active game for the
+custom properties it declares, and for nothing else:
 
 ```json
 {
@@ -87,17 +98,24 @@ starts. Adrenaline's canonical directory lives in the shared
 repository at `handbook/adrenaline`; that same repository serves both Handbook
 and Lantern, so no second Adrenaline integration repository is needed.
 
-Copy the whole directory into the installed Handbook plugin:
+Copy the whole directory into Handbook's durable data folder:
 
 ```txt
 schema-adrenaline/handbook/adrenaline
-  → .obsidian/plugins/obsidian-handbook/packs/adrenaline
+  → <configDir>/handbook/packs/adrenaline
 ```
 
 Then restart Handbook and select `Adrenaline System` under `Game mode`. To
 uninstall it, remove only the destination `packs/adrenaline` directory and
 restart Handbook. Saved parser and callout preferences remain available if the
 directory is copied back later.
+
+On its first 2.7.0 startup, Handbook migrates the legacy pack directory and
+legacy override independently, but only when the corresponding durable target
+does not already exist. The durable target always wins. This migration cannot
+recover a legacy source that an updater removed before Handbook started, which
+is why the pre-update copy above is required. Reinstalling a game later means
+copying its complete directory back under `<configDir>/handbook/packs/`.
 
 The modern layout is `packs/<id>/pack.json`. Its images and fonts are resolved
 inside that plugin directory, from `assets/` by default or from the relative
@@ -116,6 +134,31 @@ external CSS from these directories.
    choix repeint toutes les notes ouvertes.
 3. Leave `Colour scheme` on `Follow Obsidian`, or force Handbook's light or
    dark scheme independently of the vault theme.
+
+The selected game mode styles every open Markdown source, live-preview and
+reading view in that window. It does not repaint the Obsidian chrome unless
+`Theme the workspace` is enabled. That toggle is independent of the game and
+colour-scheme selectors: page textures, title cartouches and warning motifs
+remain confined to notes even when the workspace colours follow the game.
+
+Adrenaline reading view uses two columns on wide notes. To keep one particular
+note in a single column, add this frontmatter; editing and narrow views already
+remain single-column:
+
+```yaml
+---
+cssclasses:
+  - adrenaline-one-column
+---
+```
+
+Handbook and Lantern deliberately consume the same `schema-adrenaline`
+repository. The package declares the minimum Handbook release it supports;
+Handbook pins one full schema-adrenaline commit in
+`compat/schema-adrenaline.ref`. For a coordinated release, publish the
+fallback-capable Handbook host first, publish the package against that immutable
+Handbook tag second, then update Handbook's schema commit pin. No reciprocal
+schema SHA is needed.
 
 ### 5. Add the illustrations
 

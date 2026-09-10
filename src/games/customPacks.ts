@@ -5,10 +5,9 @@ import {
 	InstalledGamePlugin,
 	readGamePluginManifest,
 } from "./pluginManifest";
+import { PACKS_DIR_NAME, packsReadPath } from "./storage";
 
 const log = logScope("Games");
-
-const CUSTOM_PACKS_DIR_NAME = "packs";
 
 /** A candidate already reported this session, so a repeated read stays silent. */
 const reportedFiles: string[] = [];
@@ -22,14 +21,9 @@ function reportFileOnce(fileName: string, message: string): void {
 	log.error(message);
 }
 
-function customPacksPath(plugin: Plugin): string | null {
-	const dir = plugin.manifest.dir;
-	return dir ? `${dir}/${CUSTOM_PACKS_DIR_NAME}` : null;
-}
-
 /**
- * Every valid legacy GamePack in `<plugin dir>/packs/*.json`, plus every
- * declarative game plugin installed as `<plugin dir>/packs/<id>/pack.json`.
+ * Every valid legacy GamePack in `<configDir>/handbook/packs/*.json`, plus
+ * every declarative game plugin installed as `packs/<id>/pack.json`.
  *
  * A missing folder is the normal state of a vault with no custom pack and
  * warns about nothing. A file that fails to parse or that `readGamePack`
@@ -39,10 +33,7 @@ function customPacksPath(plugin: Plugin): string | null {
 export async function loadCustomGamePacks(
 	plugin: Plugin,
 ): Promise<InstalledGamePlugin[]> {
-	const path = customPacksPath(plugin);
-	if (!path) {
-		return [];
-	}
+	const path = await packsReadPath(plugin);
 
 	const adapter = plugin.app.vault.adapter;
 	let candidates: Array<{
@@ -73,7 +64,7 @@ export async function loadCustomGamePacks(
 			a.reportName.localeCompare(b.reportName),
 		);
 	} catch (error) {
-		log.error(`Could not read the "${CUSTOM_PACKS_DIR_NAME}" folder, ignoring it.`, error);
+		log.error(`Could not read the "${PACKS_DIR_NAME}" folder, ignoring it.`, error);
 		return [];
 	}
 
@@ -90,7 +81,7 @@ export async function loadCustomGamePacks(
 			} catch {
 				reportFileOnce(
 					candidate.reportName,
-					`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": not valid JSON.`,
+					`Ignoring "${candidate.reportName}" in "${PACKS_DIR_NAME}": not valid JSON.`,
 				);
 				continue;
 			}
@@ -104,7 +95,7 @@ export async function loadCustomGamePacks(
 				if (!result.manifest) {
 					reportFileOnce(
 						candidate.reportName,
-						`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": ${result.error}.`,
+						`Ignoring "${candidate.reportName}" in "${PACKS_DIR_NAME}": ${result.error}.`,
 					);
 					continue;
 				}
@@ -116,7 +107,7 @@ export async function loadCustomGamePacks(
 				if (pack.id !== directoryId) {
 					reportFileOnce(
 						candidate.reportName,
-						`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": directory "${directoryId}" does not match pack id "${pack.id}".`,
+						`Ignoring "${candidate.reportName}" in "${PACKS_DIR_NAME}": directory "${directoryId}" does not match pack id "${pack.id}".`,
 					);
 					continue;
 				}
@@ -137,7 +128,7 @@ export async function loadCustomGamePacks(
 				if (!pack) {
 					reportFileOnce(
 						candidate.reportName,
-						`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": not a usable game pack.`,
+						`Ignoring "${candidate.reportName}" in "${PACKS_DIR_NAME}": not a usable game pack.`,
 					);
 					continue;
 				}
@@ -152,7 +143,7 @@ export async function loadCustomGamePacks(
 			if (seenIds.indexOf(pack.id) !== -1) {
 				reportFileOnce(
 					candidate.reportName,
-					`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": another game plugin already claimed the id "${pack.id}".`,
+					`Ignoring "${candidate.reportName}" in "${PACKS_DIR_NAME}": another game plugin already claimed the id "${pack.id}".`,
 				);
 				continue;
 			}
@@ -162,7 +153,7 @@ export async function loadCustomGamePacks(
 		} catch {
 			reportFileOnce(
 				candidate.reportName,
-				`Could not read "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}", ignoring it.`,
+				`Could not read "${candidate.reportName}" in "${PACKS_DIR_NAME}", ignoring it.`,
 			);
 		}
 	}

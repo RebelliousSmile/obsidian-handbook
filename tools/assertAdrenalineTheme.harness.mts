@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { adrenalinePjBlock } from "../src/features/adrenalinePj/block";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
@@ -15,7 +15,8 @@ const manifestSource = JSON.parse(
 		"utf8",
 	),
 ) as unknown;
-const manifestResult = readGamePluginManifest(manifestSource, "2.6.0");
+const handbookVersion = (JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version;
+const manifestResult = readGamePluginManifest(manifestSource, handbookVersion);
 assert.ok(manifestResult.manifest, manifestResult.error);
 const adrenalinePack = manifestResult.manifest.pack;
 
@@ -56,6 +57,33 @@ for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlo
 	);
 }
 
+const visualFixture = readFileSync(
+	join("tools", "fixtures", "adrenaline-visual.md"),
+	"utf8",
+);
+for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlock]) {
+	const fence = visualFixture.match(
+		new RegExp("```" + block.id + "\\n([\\s\\S]*?)\\n```"),
+	);
+	assert.ok(fence, `${block.id} must be present in the visual fixture`);
+	assert.ok(block.parse(fence[1]), `${block.id} visual fixture must parse`);
+}
+for (const callout of [
+	"info",
+	"success",
+	"question",
+	"warning",
+	"danger",
+	"example",
+	"quote",
+]) {
+	assert.match(
+		visualFixture,
+		new RegExp(`> \\[!${callout}\\]`, "i"),
+		`Missing ${callout} callout family from visual fixture`,
+	);
+}
+
 const minimal = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);
 assert.ok(minimal);
 const minimalRendered = adrenalineMonsterBlock.render(minimal, doc) as unknown as El;
@@ -77,10 +105,20 @@ for (const scheme of ["light", "dark"] as const) {
 	assert.doesNotMatch(css, /(^|\n)body\.theme-(light|dark)\s*\{/);
 }
 
-const scss = ["_pj.scss", "_pnj.scss", "_monstre.scss"]
+const scss = readdirSync(join("src", "styles", "adrenaline"))
+	.filter((file) => file.endsWith(".scss"))
 	.map((file) => readFileSync(join("src", "styles", "adrenaline", file), "utf8"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
+assert.match(scss, /@media \(min-width: 900px\)/);
+assert.match(scss, /markdown-reading-view:not\(\.adrenaline-one-column\)/);
+assert.match(scss, /--adrenaline-page-texture/);
+assert.match(scss, /--adrenaline-callout-warning/);
 assert.doesNotMatch(scss, /#[0-9a-f]{3,8}/i);
+assert.doesNotMatch(scss, /(?:^|[\s:(])(black|white|red|yellow)(?:[\s;,)])/i);
+
+const oldHost = readGamePluginManifest(manifestSource, "2.6.0");
+assert.equal(oldHost.manifest, undefined);
+assert.match(oldHost.error, /requires Handbook 2\.7\.0/);
 
 console.log("Adrenaline theme assertions passed.");
