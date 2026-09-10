@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Install and manually update public GitHub schema sources that follow a release, tag or branch, including repositories that publish several game packs.
+- Open a three-choice starter-kit modal when Handbook starts without a game; the catalogue is compiled into `main.js`, so Community plugins and BRAT installations expose the same first-run experience.
+
+### Changed
+
+- Move City of Mist, Legend in the Mist and :Otherscape design data and assets to `schema-in-the-mist`; Handbook now starts in a neutral state and retains only host renderers and structural styles.
+- Make the core build and CI independent from a local `schema-adrenaline` checkout while keeping its dedicated compatibility assertion available.
+
 ## [2.6.0] - 2026-09-10
 
 ### Added

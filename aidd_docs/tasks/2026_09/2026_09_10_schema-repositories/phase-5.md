@@ -1,8 +1,16 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Variantes GitHub, documentation et preuve
+
+> **Décision produit révisée le 10 septembre 2026 :** Handbook possède une
+> distribution unique compatible avec les modules communautaires, BRAT et
+> l'installation manuelle. Le catalogue de trois kits est compilé dans
+> `main.js`; il ne contient que des références de sources et la modale installe
+> la source choisie. Cette décision remplace les archives et snapshots par kit
+> décrits ci-dessous. La CI valide donc le core et les contrats avec des
+> fixtures locales, sans checkout de jeu obligatoire.
 
 ## Architecture projection
 

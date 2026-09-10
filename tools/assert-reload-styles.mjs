@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const source = readFileSync("src/BrumesPlugin.ts", "utf8");
-const onload = source.match(/async onload\(\) \{(?<body>[\s\S]*?)\n\t\}\n\n\tonunload\(\)/)
+const onload = source.match(/async onload\(\) \{(?<body>[\s\S]*?)\r?\n\t\}\r?\n\r?\n\tonunload\(\)/)
 	?.groups?.body;
 
 assert.ok(onload, "BrumesPlugin.onload must remain inspectable by this lifecycle contract");
 
 const layoutReady = onload.match(
-	/this\.app\.workspace\.onLayoutReady\(\(\) => \{(?<body>[\s\S]*?)\n\t\t\}\)/,
+	/this\.app\.workspace\.onLayoutReady\(\(\) => \{(?<body>[\s\S]*?)\r?\n\t\t\}\)/,
 )?.groups?.body;
 
 assert.ok(
@@ -22,7 +22,7 @@ assert.match(
 );
 
 const collectDocuments = source.match(
-	/private collectDocuments\(\): Document\[\] \{(?<body>[\s\S]*?)\n\t\}/,
+	/private collectDocuments\(\): Document\[\] \{(?<body>[\s\S]*?)\r?\n\t\}/,
 )?.groups?.body;
 assert.ok(collectDocuments, "document collection must remain inspectable");
 assert.match(

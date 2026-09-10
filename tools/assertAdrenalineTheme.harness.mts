@@ -63,7 +63,7 @@ const visualFixture = readFileSync(
 );
 for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlock]) {
 	const fence = visualFixture.match(
-		new RegExp("```" + block.id + "\\n([\\s\\S]*?)\\n```"),
+		new RegExp("```" + block.id + "\\r?\\n([\\s\\S]*?)\\r?\\n```"),
 	);
 	assert.ok(fence, `${block.id} must be present in the visual fixture`);
 	assert.ok(block.parse(fence[1]), `${block.id} visual fixture must parse`);
