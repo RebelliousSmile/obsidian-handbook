@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3] - 2026-09-11
+
+### Added
+
+- Add responsive two-column reading layouts for Urban Shadows and Monsterhearts, with a per-note `pbta-one-column` opt-out.
+- Add Drowned Lake-specific title outlining backed by tokens from the installed game pack.
+
 ## [2.7.1] - 2026-09-10
 
 ### Added
