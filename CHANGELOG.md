@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-09-10
+
+### Added
+
+- Load versioned Handbook game plugins from `packs/<id>/pack.json`, with host-version and capability checks, deterministic collision handling, and assets confined to each plugin directory; legacy `packs/*.json` files remain supported.
+
+### Changed
+
+- Make Adrenaline System optional: its canonical declarative pack now lives in the shared `schema-adrenaline/handbook/adrenaline` directory and appears in Handbook only when that directory is installed.
+- Preserve Adrenaline parser preferences and safe game-scoped callouts across uninstall and reinstall while hiding its mode and settings whenever the game plugin is absent.
+
+### Fixed
+
+- Reject unsafe CSS custom-property names at the pack and override boundary, read styles from overrides wrapped under `pack`, and restore readable City of Mist callout body and icon colours.
+
 ## [2.5.0] - 2026-09-10
 
 ### Added
