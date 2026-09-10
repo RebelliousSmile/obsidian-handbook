@@ -47,7 +47,7 @@ function optionalText(source: Record<string, unknown>, field: string): string | 
 	return text(source[field]) ?? undefined;
 }
 
-function readPack(value: unknown, index: number): SchemaRepositoryPackEntry | null {
+function readPack(value: unknown, _index: number): SchemaRepositoryPackEntry | null {
 	if (!isRecord(value)) return null;
 	const unknown = Object.keys(value).filter((field) => !PACK_FIELDS.includes(field));
 	if (unknown.length > 0) return null;

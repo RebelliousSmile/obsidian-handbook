@@ -10,7 +10,10 @@ export class HiddenBracketWidget extends WidgetType {
 	}
 	toDOM(): HTMLElement {
 		// Document.createSpan() appends to the document, but CodeMirror widgets need a detached node.
-		const span = activeDocument.createElement("span");
+		const span = activeDocument.createElementNS(
+			"http://www.w3.org/1999/xhtml",
+			"span",
+		);
 		span.hidden = true;
 		span.textContent = this.text;
 		return span;

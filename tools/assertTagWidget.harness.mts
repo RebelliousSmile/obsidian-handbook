@@ -8,7 +8,8 @@ const createdSpan = {
 
 Object.assign(globalThis, {
 	activeDocument: {
-		createElement(tagName: string) {
+		createElementNS(namespace: string, tagName: string) {
+			assert.equal(namespace, "http://www.w3.org/1999/xhtml");
 			assert.equal(tagName, "span");
 			return createdSpan;
 		},

@@ -63,7 +63,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 										refreshMarkdown: true,
 									});
 									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-									this.display();
+									this.redisplay();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
@@ -113,23 +113,28 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderAdvancedSection(advancedSection);
 	}
 
+	private redisplay(): void {
+		// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+		this.display();
+	}
+
 	private renderSchemaSources(section: SettingGroup) {
 		const sources = this.plugin.settings.schemaSources;
 		section.addSetting((setting) => {
 			setting
 				.setName("Schema sources")
 				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
-				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.display()).open(); }))
+				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }))
 				.addButton((button) => button.setButtonText("Reload installed sources").onClick(() => {
 					this.runTask(async () => {
 						await this.plugin.refreshGameRegistry();
-						this.display();
+						this.redisplay();
 					}, "Failed to reload schema sources", "Failed to reload schema sources.");
 				}));
 		});
 		for (const source of sources) {
 			section.addSetting((setting) => {
-				setting.setName(source.repository).setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`).addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.display()).open(); }));
+				setting.setName(source.repository).setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`).addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }));
 			});
 		}
 	}
@@ -160,7 +165,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
 								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-								this.display();
+								this.redisplay();
 							},
 							SETTINGS_SAVE_LOG_MESSAGE,
 							SETTINGS_SAVE_NOTICE,
@@ -275,7 +280,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							async () => {
 								await this.plugin.reloadStyleSources();
 								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-								this.display();
+								this.redisplay();
 							},
 							"Failed to look for the illustration files",
 							"Failed to look for the illustration files.",
@@ -402,7 +407,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 										value;
 									await this.plugin.saveSettings();
 									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-									this.display();
+									this.redisplay();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
 								SETTINGS_SAVE_NOTICE,
@@ -790,7 +795,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							.onClick(() => {
 								new CalloutsModal(this.app, this.plugin, entry, () => {
 									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-									this.display();
+									this.redisplay();
 								}).open();
 							}),
 					)
@@ -810,7 +815,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 										);
 									await this.plugin.saveSettings();
 									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-									this.display();
+									this.redisplay();
 									},
 									SETTINGS_SAVE_LOG_MESSAGE,
 									SETTINGS_SAVE_NOTICE,
@@ -825,7 +830,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 				button.setButtonText("+ nouveau callout").onClick(() => {
 					new CalloutsModal(this.app, this.plugin, null, () => {
 						// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-						this.display();
+						this.redisplay();
 					}).open();
 				}),
 			);
