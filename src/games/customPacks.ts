@@ -1,13 +1,16 @@
 import { Plugin } from "obsidian";
 import { logScope } from "../utils/logger";
 import { readGamePack } from "./fromSchema";
-import { GamePack } from "./types";
+import {
+	InstalledGamePlugin,
+	readGamePluginManifest,
+} from "./pluginManifest";
 
 const log = logScope("Games");
 
 const CUSTOM_PACKS_DIR_NAME = "packs";
 
-/** A filename already reported this session, so a repeated read stays silent. */
+/** A candidate already reported this session, so a repeated read stays silent. */
 const reportedFiles: string[] = [];
 
 function reportFileOnce(fileName: string, message: string): void {
@@ -25,82 +28,141 @@ function customPacksPath(plugin: Plugin): string | null {
 }
 
 /**
- * Every valid `GamePack` sitting in `<plugin dir>/packs/*.json`.
+ * Every valid legacy GamePack in `<plugin dir>/packs/*.json`, plus every
+ * declarative game plugin installed as `<plugin dir>/packs/<id>/pack.json`.
  *
  * A missing folder is the normal state of a vault with no custom pack and
  * warns about nothing. A file that fails to parse or that `readGamePack`
  * refuses is dropped alone, its name logged once per session — the folder
  * never blocks the rest, and no error ever reaches `onload()`.
  */
-export async function loadCustomGamePacks(plugin: Plugin): Promise<GamePack[]> {
+export async function loadCustomGamePacks(
+	plugin: Plugin,
+): Promise<InstalledGamePlugin[]> {
 	const path = customPacksPath(plugin);
 	if (!path) {
 		return [];
 	}
 
 	const adapter = plugin.app.vault.adapter;
-	let fileNames: string[];
+	let candidates: Array<{
+		path: string;
+		reportName: string;
+		pluginRoot?: string;
+	}>;
 
 	try {
 		if (!(await adapter.exists(path))) {
 			return [];
 		}
 
-		fileNames = (await adapter.list(path)).files
+		const listing = await adapter.list(path);
+		const flat = listing.files
 			.filter((file) => file.toLowerCase().endsWith(".json"))
-			.sort();
+			.map((file) => ({
+				path: file,
+				reportName: file.slice(path.length + 1),
+			}));
+		const directories = listing.folders.map((folder) => ({
+			path: `${folder}/pack.json`,
+			reportName: `${folder.slice(path.length + 1)}/pack.json`,
+			pluginRoot: folder,
+		}));
+
+		candidates = [...flat, ...directories].sort((a, b) =>
+			a.reportName.localeCompare(b.reportName),
+		);
 	} catch (error) {
 		log.error(`Could not read the "${CUSTOM_PACKS_DIR_NAME}" folder, ignoring it.`, error);
 		return [];
 	}
 
-	const packs: GamePack[] = [];
+	const packs: InstalledGamePlugin[] = [];
 	const seenIds: string[] = [];
 
-	for (const filePath of fileNames) {
-		const fileName = filePath.slice(filePath.lastIndexOf("/") + 1);
-
+	for (const candidate of candidates) {
 		try {
-			const raw = await adapter.read(filePath);
+			const raw = await adapter.read(candidate.path);
 			let parsed: unknown;
 
 			try {
 				parsed = JSON.parse(raw);
 			} catch {
 				reportFileOnce(
-					fileName,
-					`Ignoring "${fileName}" in "${CUSTOM_PACKS_DIR_NAME}": not valid JSON.`,
+					candidate.reportName,
+					`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": not valid JSON.`,
 				);
 				continue;
 			}
 
-			const pack = readGamePack(parsed);
-
-			if (!pack) {
-				reportFileOnce(
-					fileName,
-					`Ignoring "${fileName}" in "${CUSTOM_PACKS_DIR_NAME}": not a usable game pack.`,
+			let installed: InstalledGamePlugin;
+			if (candidate.pluginRoot) {
+				const result = readGamePluginManifest(
+					parsed,
+					plugin.manifest.version,
 				);
-				continue;
+				if (!result.manifest) {
+					reportFileOnce(
+						candidate.reportName,
+						`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": ${result.error}.`,
+					);
+					continue;
+				}
+
+				const pack = result.manifest.pack;
+				const directoryId = candidate.pluginRoot.slice(
+					candidate.pluginRoot.lastIndexOf("/") + 1,
+				);
+				if (pack.id !== directoryId) {
+					reportFileOnce(
+						candidate.reportName,
+						`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": directory "${directoryId}" does not match pack id "${pack.id}".`,
+					);
+					continue;
+				}
+
+				installed = {
+					pack,
+					installation: {
+						root: candidate.pluginRoot,
+						version: result.manifest.version,
+						minimumHandbookVersion:
+							result.manifest.minimumHandbookVersion,
+						requires: result.manifest.requires,
+					},
+				};
+			} else {
+				const pack = readGamePack(parsed);
+
+				if (!pack) {
+					reportFileOnce(
+						candidate.reportName,
+						`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": not a usable game pack.`,
+					);
+					continue;
+				}
+
+				installed = { pack };
 			}
+			const pack = installed.pack;
 
 			// Files are sorted by name (see above), so the first one to claim an
 			// id is deterministic — a later custom pack sharing that id loses,
 			// named by its own filename since a `GamePack` carries none.
 			if (seenIds.indexOf(pack.id) !== -1) {
 				reportFileOnce(
-					fileName,
-					`Ignoring "${fileName}" in "${CUSTOM_PACKS_DIR_NAME}": another custom pack already claimed the id "${pack.id}".`,
+					candidate.reportName,
+					`Ignoring "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}": another game plugin already claimed the id "${pack.id}".`,
 				);
 				continue;
 			}
 
 			seenIds.push(pack.id);
-			packs.push(pack);
+			packs.push(installed);
 		} catch {
 			reportFileOnce(
-				fileName,
-				`Could not read "${fileName}" in "${CUSTOM_PACKS_DIR_NAME}", ignoring it.`,
+				candidate.reportName,
+				`Could not read "${candidate.reportName}" in "${CUSTOM_PACKS_DIR_NAME}", ignoring it.`,
 			);
 		}
 	}

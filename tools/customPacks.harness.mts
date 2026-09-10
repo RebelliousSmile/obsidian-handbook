@@ -1,246 +1,237 @@
-/**
- * Phase 2 promises three things about a pack dropped in `<plugin dir>/packs/`:
- * it joins the registry before the first render, a faulty file costs only
- * itself, and a collision with a declared game never displaces it. None of
- * that is visible in a vault without writing files and reloading — so it is
- * asserted here against an in-memory adapter instead.
- *
- * Run it with `pnpm assert:custom-packs`, never with node directly: it needs
- * the esbuild bundle that `tools/assert-custom-packs.mjs` produces.
- */
+/** Assertions for legacy flat packs and versioned declarative game plugins. */
 import { GAME_PACKS, initGameRegistry, resolveGamePack, gamePackClasses } from "../src/games/registry";
 import { loadCustomGamePacks } from "../src/games/customPacks";
+import { resolveGameAssets } from "../src/games/assets";
+import { GAME_PLUGIN_BLOCK_CAPABILITIES } from "../src/games/capabilities";
+import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { log } from "../src/utils/logger";
 
-/**
- * Enough of `Plugin`/`DataAdapter` for `loadCustomGamePacks`: a manifest
- * folder and a fixed `packs/` listing served from memory.
- */
-function fakePlugin(files: Record<string, string>) {
+const HOST_VERSION = "2.6.0";
+
+function gamePlugin(
+	id: string,
+	options: {
+		minimum?: string;
+		requires?: string[];
+		manifestVersion?: number;
+		assets?: Record<string, unknown>;
+	} = {},
+): string {
+	return JSON.stringify({
+		manifestVersion: options.manifestVersion ?? 1,
+		version: "0.1.0",
+		minimumHandbookVersion: options.minimum ?? HOST_VERSION,
+		requires: options.requires ?? [],
+		pack: {
+			id,
+			label: `Plugin ${id}`,
+			style: {},
+			...(options.assets ? { assets: options.assets } : {}),
+		},
+	});
+}
+
+/** Enough of Plugin/DataAdapter for discovery and asset resolution. */
+function fakePlugin(
+	files: Record<string, string>,
+	options: { packsExists?: boolean; version?: string } = {},
+) {
 	const dir = "plugins/obsidian-handbook";
-	const prefix = `${dir}/packs/`;
+	const packsPath = `${dir}/packs`;
+	const prefix = `${packsPath}/`;
+	const reads: string[] = [];
+	const packsExists = options.packsExists ?? true;
+	const paths = new Set(Object.keys(files).map((name) => `${prefix}${name}`));
+	const folders = new Set<string>();
+
+	for (const name of Object.keys(files)) {
+		const slash = name.indexOf("/");
+		if (slash !== -1) folders.add(`${prefix}${name.slice(0, slash)}`);
+	}
 
 	const adapter = {
-		exists: async (path: string) => path === `${dir}/packs`,
+		exists: async (path: string) => {
+			reads.push(path);
+			return (path === packsPath && packsExists) || paths.has(path) || folders.has(path);
+		},
 		list: async (path: string) => {
-			if (path !== `${dir}/packs`) {
-				return { files: [], folders: [] };
-			}
-			return { files: Object.keys(files).map((name) => `${prefix}${name}`), folders: [] };
+			if (path !== packsPath || !packsExists) return { files: [], folders: [] };
+			return {
+				files: Array.from(paths).filter(
+					(candidate) => !candidate.slice(prefix.length).includes("/"),
+				),
+				folders: Array.from(folders),
+			};
 		},
 		read: async (path: string) => {
+			reads.push(path);
 			const name = path.slice(prefix.length);
-			if (!(name in files)) {
-				throw new Error(`no such file: ${path}`);
-			}
+			if (!(name in files)) throw new Error(`no such file: ${path}`);
 			return files[name];
 		},
+		getResourcePath: (path: string) => `app://vault/${path}`,
 	};
 
 	return {
-		manifest: { dir },
-		app: { vault: { adapter } },
-	} as unknown as import("obsidian").Plugin;
+		plugin: {
+			manifest: { dir, version: options.version ?? HOST_VERSION },
+			app: { vault: { adapter } },
+		} as unknown as import("obsidian").Plugin,
+		reads,
+	};
 }
 
 const failures: string[] = [];
-
 function check(claim: string, held: boolean): void {
-	if (!held) {
-		failures.push(claim);
-	}
+	if (!held) failures.push(claim);
 }
 
-log.setLevel("warn");
+log.setLevel("error");
 const errors: string[] = [];
 const realError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
 	errors.push(args.map((arg) => String(arg)).join(" "));
 };
 
-/**
- * The esbuild bundle targets "cjs", which has no top-level await: every
- * assertion that reads a custom pack runs inside this function instead.
- */
 async function run(): Promise<void> {
+	/* Missing folders are the normal, silent state. */
+	{
+		const { plugin } = fakePlugin({}, { packsExists: false });
+		const packsBefore = GAME_PACKS.length;
+		const packs = await loadCustomGamePacks(plugin);
+		check("a missing packs folder yields no plugin", packs.length === 0);
+		check("a missing packs folder warns nothing", errors.length === 0);
+		check("the registry is untouched before init", GAME_PACKS.length === packsBefore);
+	}
 
-/* ------------------------------------------------------------------ *
- * 1. No folder at all: the normal state of a vault with no custom pack.
- * ------------------------------------------------------------------ */
+	/* Legacy flat files retain their tolerant, deterministic behavior. */
+	const packsRef = GAME_PACKS;
+	const classesBeforeLoad = gamePackClasses();
+	{
+		const { plugin } = fakePlugin({
+			"valid.json": JSON.stringify({ id: "my-custom-game", label: "My Custom Game" }),
+			"broken.json": "{ not json",
+			"colliding.json": JSON.stringify({ id: "city-of-mist", label: "Impostor" }),
+		});
+		const packs = await loadCustomGamePacks(plugin);
 
-{
-	const plugin = fakePlugin({});
-	const packsBefore = GAME_PACKS.length;
-	const packs = await loadCustomGamePacks(plugin);
+		check("two flat files parse", packs.length === 2);
+		check("the valid flat pack is retained", packs.some(({ pack }) => pack.id === "my-custom-game"));
+		check("the broken flat file is logged once", errors.filter((line) => line.includes("broken.json")).length === 1);
+		check("GAME_PACKS identity is stable before merging", GAME_PACKS === packsRef);
+		check("loading alone does not mutate classes", gamePackClasses().length === classesBeforeLoad.length);
 
-	check("a missing packs folder yields no pack", packs.length === 0);
-	check("a missing packs folder warns nothing", errors.length === 0);
-	check(
-		"GAME_PACKS is untouched before any initGameRegistry call",
-		GAME_PACKS.length === packsBefore,
-	);
-}
+		initGameRegistry(packs);
+		check("GAME_PACKS identity survives merging", GAME_PACKS === packsRef);
+		check("the flat pack resolves", resolveGamePack("my-custom-game").id === "my-custom-game");
+		check("the flat pack class resolves", gamePackClasses().includes("brumes--my-custom-game"));
+		check("a declared pack wins", resolveGamePack("city-of-mist").label !== "Impostor");
 
-/* ------------------------------------------------------------------ *
- * 2. A valid pack, an invalid-JSON file, and a pack colliding with a
- * declared game.
- * ------------------------------------------------------------------ */
+		const errorsBeforeReplay = errors.length;
+		initGameRegistry(await loadCustomGamePacks(plugin));
+		check("reloading repeats no file or collision diagnosis", errors.length === errorsBeforeReplay);
+	}
 
-const packsRef = GAME_PACKS;
-const classesBeforeLoad = gamePackClasses();
+	/* A directory is a strict, versioned plugin whose id matches its folder. */
+	{
+		const { plugin } = fakePlugin({
+			"portable/pack.json": gamePlugin("portable", {
+				requires: ["block:theme-card", "style:city-of-mist"],
+				assets: { images: { portrait: "portrait.png" } },
+			}),
+			"portable/assets/portrait.png": "image",
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		initGameRegistry(installed);
 
-{
-	const plugin = fakePlugin({
-		"valid.json": JSON.stringify({ id: "my-custom-game", label: "My Custom Game" }),
-		"broken.json": "{ not json",
-		"colliding.json": JSON.stringify({ id: "city-of-mist", label: "Impostor" }),
-	});
+		check("one directory plugin loads", installed.length === 1);
+		check("the directory plugin records its root", installed[0]?.installation?.root.endsWith("/packs/portable") === true);
+		check("the directory plugin resolves", resolveGamePack("portable").id === "portable");
 
-	const packs = await loadCustomGamePacks(plugin);
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("plugin assets default to its assets folder", state.folder.endsWith("/packs/portable/assets"));
+		check("the declared image resolves", state.tokens["--brumes-image-portrait"]?.includes("portable/assets/portrait.png") === true);
+	}
 
-	check("two files parse, the broken one is dropped", packs.length === 2);
-	check(
-		"the valid pack is among them",
-		packs.some((pack) => pack.id === "my-custom-game"),
-	);
-	check(
-		"the colliding pack is read here (acceptRegistrations decides collisions, not the loader)",
-		packs.some((pack) => pack.id === "city-of-mist"),
-	);
-	check(
-		"the broken file is logged exactly once",
-		errors.filter((line) => line.indexOf("broken.json") !== -1).length === 1,
-	);
+	/* An explicit asset root remains relative to the plugin directory. */
+	{
+		const { plugin } = fakePlugin({
+			"rooted/pack.json": gamePlugin("rooted", {
+				assets: { root: "media", images: { portrait: "portrait.png" } },
+			}),
+			"rooted/media/portrait.png": "image",
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("an explicit asset root stays under the plugin", state.folder.endsWith("/packs/rooted/media"));
+		check("the explicit root image resolves", state.tokens["--brumes-image-portrait"]?.includes("rooted/media/portrait.png") === true);
+	}
 
-	check(
-		"GAME_PACKS keeps its array identity before merging",
-		GAME_PACKS === packsRef,
-	);
-	check(
-		"a reference taken before initGameRegistry has not changed yet",
-		gamePackClasses().length === classesBeforeLoad.length,
-	);
+	/* Identity, protocol, host version and capabilities fail atomically. */
+	{
+		const errorsBefore = errors.length;
+		const { plugin } = fakePlugin({
+			"wrong-name/pack.json": gamePlugin("other-name"),
+			"future-protocol/pack.json": gamePlugin("future-protocol", { manifestVersion: 2 }),
+			"future-host/pack.json": gamePlugin("future-host", { minimum: "99.0.0" }),
+			"missing-capability/pack.json": gamePlugin("missing-capability", { requires: ["block:not-installed"] }),
+			"bad-semver/pack.json": gamePlugin("bad-semver", { minimum: "2.06.0" }),
+		});
+		const installed = await loadCustomGamePacks(plugin);
 
-	initGameRegistry(packs);
+		check("all incompatible plugins are rejected", installed.length === 0);
+		for (const name of ["wrong-name", "future-protocol", "future-host", "missing-capability", "bad-semver"]) {
+			check(`${name} is diagnosed once`, errors.slice(errorsBefore).filter((line) => line.includes(`${name}/pack.json`)).length === 1);
+		}
+	}
 
-	check("GAME_PACKS array identity survives the merge", GAME_PACKS === packsRef);
-	check(
-		"the custom pack now resolves through the live registry",
-		resolveGamePack("my-custom-game").id === "my-custom-game",
-	);
-	check(
-		"the custom pack's class appears through the same reference taken earlier",
-		gamePackClasses().indexOf("brumes--my-custom-game") !== -1,
-	);
-	check(
-		"a declared pack wins a collision with a custom pack of the same id",
-		resolveGamePack("city-of-mist").label !== "Impostor",
-	);
-	check(
-		"the collision is logged exactly once",
-		errors.filter((line) => line.indexOf('"city-of-mist"') !== -1).length === 1,
-	);
+	/* A plugin asset root is relative and confined to its installation. */
+	{
+		const { plugin, reads } = fakePlugin({
+			"unsafe/pack.json": gamePlugin("unsafe", {
+				assets: { root: "../outside", images: { portrait: "portrait.png" } },
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const beforeAssets = reads.length;
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("an escaping asset root is refused", state.folder === "");
+		check("an escaping asset root triggers no asset lookup", reads.length === beforeAssets);
+	}
 
-	// Repeating the whole cycle must not log the same collision or the same
-	// broken file a second time.
-	const errorsBeforeReplay = errors.length;
-	const packsAgain = await loadCustomGamePacks(plugin);
-	initGameRegistry(packsAgain);
+	/* Candidate order decides duplicate external ids; built-ins still win later. */
+	{
+		const errorsBefore = errors.length;
+		const { plugin } = fakePlugin({
+			"b-second.json": JSON.stringify({ id: "shared-id", label: "Second" }),
+			"a-first.json": JSON.stringify({ id: "shared-id", label: "First" }),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		initGameRegistry(installed);
+		check("the first sorted candidate wins", resolveGamePack("shared-id").label === "First");
+		check("the loser is named once", errors.slice(errorsBefore).filter((line) => line.includes("b-second.json")).length === 1);
+	}
 
-	check(
-		"replaying the load does not log the broken file again",
-		errors.filter((line) => line.indexOf("broken.json") !== -1).length === 1,
-	);
-	check(
-		"replaying the merge does not log the collision again",
-		errors.filter((line) => line.indexOf('"city-of-mist"') !== -1).length === 1,
-	);
-	check("nothing new was logged on replay", errors.length === errorsBeforeReplay);
-}
+	/* The explicit catalogue must match the registered block ids. */
+	{
+		const declared = [...GAME_PLUGIN_BLOCK_CAPABILITIES].sort();
+		const registered = BRUMES_BLOCKS.map((block) => `block:${block.id}`).sort();
+		check("block capabilities match BRUMES_BLOCKS", JSON.stringify(declared) === JSON.stringify(registered));
+	}
 
-/* ------------------------------------------------------------------ *
- * 3. Two custom packs sharing an id: the one whose filename sorts first
- * wins, the other is logged once.
- * ------------------------------------------------------------------ */
-
-{
-	const errorsBeforeCollision = errors.length;
-	const plugin = fakePlugin({
-		"b-second.json": JSON.stringify({ id: "shared-id", label: "Second" }),
-		"a-first.json": JSON.stringify({ id: "shared-id", label: "First" }),
-	});
-
-	const packs = await loadCustomGamePacks(plugin);
-	initGameRegistry(packs);
-
-	check(
-		"the file that sorts first wins the shared id",
-		resolveGamePack("shared-id").label === "First",
-	);
-	check(
-		"the losing file is named in the log",
-		errors.filter((line) => line.indexOf("b-second.json") !== -1).length === 1,
-	);
-	check(
-		"the winning file is never logged as a loser",
-		errors.filter((line) => line.indexOf("a-first.json") !== -1).length === 0,
-	);
-
-	// Replaying the same load must not log the same loser a second time.
-	const packsAgain = await loadCustomGamePacks(plugin);
-	initGameRegistry(packsAgain);
-
-	check(
-		"replaying does not log the shared-id collision again",
-		errors.filter((line) => line.indexOf("b-second.json") !== -1).length === 1,
-	);
-	check(
-		"nothing else was logged by this section",
-		errors.length === errorsBeforeCollision + 1,
-	);
-}
-
-/* ------------------------------------------------------------------ *
- * 4. Lifecycle order: a settings mode pointing at a custom pack resolves
- * to it once loadCustomGamePacks -> initGameRegistry -> resolveGamePack
- * have run in that order, never falling back to the default pack.
- * ------------------------------------------------------------------ */
-
-{
-	const plugin = fakePlugin({
-		"only-custom.json": JSON.stringify({ id: "only-custom", label: "Only Custom" }),
-	});
-
-	const packs = await loadCustomGamePacks(plugin);
-	initGameRegistry(packs);
-
-	const resolved = resolveGamePack("only-custom");
-
-	check(
-		"a mode pointing at a custom-only id resolves to it, not to the default",
-		resolved.id === "only-custom",
-	);
-}
-
+	/* Reinitializing without external plugins models removal at next startup. */
+	initGameRegistry([]);
+	check("removed plugins leave the next registry", resolveGamePack("portable").id !== "portable");
 }
 
 run()
 	.then(() => {
-		/* ------------------------------------------------------------ *
-		 * Verdict.
-		 * ------------------------------------------------------------ */
-
 		console.error = realError;
-
 		if (failures.length > 0) {
-			for (const failure of failures) {
-				console.error(`not held: ${failure}`);
-			}
-
+			for (const failure of failures) console.error(`not held: ${failure}`);
 			console.error(`custom packs: ${failures.length} broken`);
 			process.exit(1);
 		}
-
 		console.log("custom packs: green");
 	})
 	.catch((error: unknown) => {

@@ -1,6 +1,7 @@
 import { Plugin } from "obsidian";
 import { logScope } from "../utils/logger";
 import { GameFontFace, GamePack, GameStyleTokens } from "./types";
+import type { GamePluginInstallation } from "./pluginManifest";
 
 const log = logScope("Games");
 
@@ -132,8 +133,32 @@ function joinVaultPath(root: string, name: string): string | null {
 	return base.length > 0 ? `${base}/${clean}` : clean;
 }
 
-function assetFolder(plugin: Plugin, pack: GamePack): string | null {
+function relativePluginPath(root: string, declared: string): string | null {
+	const clean = declared.replace(/\\/g, "/").replace(/\/+$/g, "");
+	const parts = clean.split("/");
+	if (
+		clean.length === 0 ||
+		clean.startsWith("/") ||
+		parts.some((part) => part === "" || part === "." || part === "..")
+	) {
+		return null;
+	}
+
+	return `${root.replace(/\/+$/, "")}/${clean}`;
+}
+
+function assetFolder(
+	plugin: Plugin,
+	pack: GamePack,
+	installation?: GamePluginInstallation,
+): string | null {
 	const declared = pack.assets?.root;
+	if (installation) {
+		return relativePluginPath(
+			installation.root,
+			declared || DEFAULT_ASSET_ROOT,
+		);
+	}
 
 	if (declared) {
 		const clean = declared.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
@@ -158,6 +183,7 @@ function assetFolder(plugin: Plugin, pack: GamePack): string | null {
 export async function resolveGameAssets(
 	plugin: Plugin,
 	pack: GamePack,
+	installation?: GamePluginInstallation,
 ): Promise<GameAssetState> {
 	const state = emptyAssetState(pack.id);
 	const images = pack.assets?.images;
@@ -167,7 +193,7 @@ export async function resolveGameAssets(
 		return state;
 	}
 
-	const folder = assetFolder(plugin, pack);
+	const folder = assetFolder(plugin, pack, installation);
 	if (!folder) {
 		log.warn(
 			`No folder to look for the files of "${pack.id}" in; they are skipped.`,
