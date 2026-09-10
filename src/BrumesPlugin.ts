@@ -28,6 +28,7 @@ import {
 	resolveGameRegistration,
 } from "./games/registry";
 import { loadCustomGamePacks } from "./games/customPacks";
+import { prepareGameStorage } from "./games/storage";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -70,6 +71,7 @@ export default class BrumesPlugin extends Plugin {
 	private assets: GameAssetState = emptyAssetState("");
 
 	async onload() {
+		await prepareGameStorage(this);
 		const customPacks = await loadCustomGamePacks(this);
 		initGameRegistry(customPacks);
 
@@ -116,9 +118,8 @@ export default class BrumesPlugin extends Plugin {
 		// an edit or save from the user.
 		this.applySettings({ refreshMarkdown: true });
 
-		// The override file and the illustrations live in the plugin folder,
-		// which the vault does not watch, so they are read once here and on
-		// demand afterwards.
+		// The vault does not watch Handbook's config data, so overrides and
+		// illustrations are read once here and on demand afterwards.
 		void this.reloadStyleSources();
 	}
 

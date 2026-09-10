@@ -10,6 +10,7 @@
 		"assert:corpus": "node tools/assert-corpus.mjs",
 		"dump:dom": "node tools/dump-dom.mjs",
 		"assert:override": "node tools/assert-override.mjs",
+		"assert:game-storage": "node tools/assert-game-storage.mjs",
 		"assert:custom-packs": "node tools/assert-custom-packs.mjs",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",

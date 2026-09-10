@@ -39,7 +39,8 @@ function fakePlugin(
 	options: { packsExists?: boolean; version?: string } = {},
 ) {
 	const dir = "plugins/obsidian-handbook";
-	const packsPath = `${dir}/packs`;
+	const configDir = ".obsidian-test";
+	const packsPath = `${configDir}/handbook/packs`;
 	const prefix = `${packsPath}/`;
 	const reads: string[] = [];
 	const packsExists = options.packsExists ?? true;
@@ -77,7 +78,7 @@ function fakePlugin(
 	return {
 		plugin: {
 			manifest: { dir, version: options.version ?? HOST_VERSION },
-			app: { vault: { adapter } },
+			app: { vault: { configDir, adapter } },
 		} as unknown as import("obsidian").Plugin,
 		reads,
 	};
@@ -219,6 +220,36 @@ async function run(): Promise<void> {
 		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
 		check("an explicit asset root stays under the plugin", state.folder.endsWith("/packs/rooted/media"));
 		check("the explicit root image resolves", state.tokens["--brumes-image-portrait"]?.includes("rooted/media/portrait.png") === true);
+	}
+
+	/* Existing static formats remain valid; executable or unknown ones do not. */
+	{
+		const { plugin, reads } = fakePlugin({
+			"formats/pack.json": gamePlugin("formats", {
+				assets: {
+					images: { safe: "safe.svg", unsafe: "unsafe.html" },
+					fonts: {
+						Legacy: { file: "legacy.ttf" },
+						Script: { file: "font.js" },
+					},
+				},
+			}),
+			"formats/assets/safe.svg": "svg",
+			"formats/assets/unsafe.html": "html",
+			"formats/assets/legacy.ttf": "font",
+			"formats/assets/font.js": "script",
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const beforeAssets = reads.length;
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("v1 SVG images remain supported", state.tokens["--brumes-image-safe"] !== undefined);
+		check("v1 TTF fonts remain supported", state.fontCss.includes('font-family: "Legacy"'));
+		check("HTML images are refused", state.tokens["--brumes-image-unsafe"] === undefined);
+		check("JavaScript fonts are refused", !state.fontCss.includes('font-family: "Script"'));
+		check(
+			"unsupported assets are not looked up",
+			!reads.slice(beforeAssets).some((path) => path.endsWith("unsafe.html") || path.endsWith("font.js")),
+		);
 	}
 
 	/* Identity, protocol, host version and capabilities fail atomically. */

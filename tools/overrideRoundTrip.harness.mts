@@ -19,6 +19,7 @@ import {
 	setShapeOverrides,
 } from "../src/features/blocks/shape";
 import { parseGameOverride } from "../src/games/overrides";
+import { gameStoragePaths } from "../src/games/storage";
 import { log } from "../src/utils/logger";
 
 class El {
@@ -90,6 +91,15 @@ function check(claim: string, held: boolean): void {
 		failures.push(claim);
 	}
 }
+
+const storagePaths = gameStoragePaths({
+	manifest: { dir: "plugins/obsidian-handbook" },
+	app: { vault: { configDir: ".obsidian-custom" } },
+} as unknown as import("obsidian").Plugin);
+check(
+	"personal overrides live outside the replaceable plugin directory",
+	storagePaths.overrides === ".obsidian-custom/handbook/overrides.json",
+);
 
 /* ------------------------------------------------------------------ *
  * The warnings are counted, so `log.warn` is both raised to a level
