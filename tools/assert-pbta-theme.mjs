@@ -1,0 +1,22 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const page = readFileSync(join("src", "styles", "pbta", "_page.scss"), "utf8");
+const modes = readFileSync(join("src", "styles", "pbta", "index.scss"), "utf8");
+const entry = readFileSync(join("src", "styles", "styles.scss"), "utf8");
+
+assert.match(entry, /@use "pbta\/index\.scss"/);
+assert.match(modes, /\.brumes--urban-shadows/);
+assert.match(modes, /\.brumes--monsterhearts/);
+assert.match(modes, /\.brumes--variant-drowned-lake/);
+assert.match(modes, /-webkit-text-stroke: 1px var\(--drowned-lake-title-outline\)/);
+assert.match(page, /@media \(min-width: 720px\)/);
+assert.match(page, /markdown-reading-view:not\(\.pbta-one-column\)/);
+assert.match(page, /column-count: 2/);
+assert.match(page, /column-gap: var\(--pbta-column-gap/);
+assert.match(page, /column-rule: 1px solid var\(--pbta-column-rule/);
+assert.match(page, /:is\(\.inline-title, h1\)/);
+assert.doesNotMatch(`${page}\n${modes}`, /#[0-9a-f]{3,8}/i);
+
+console.log("PbtA editorial theme assertions passed.");
