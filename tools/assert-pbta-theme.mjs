@@ -20,6 +20,7 @@ assert.match(modes, /\.markdown-preview-sizer::before/);
 assert.match(modes, /\.cm-sizer::before/);
 assert.match(modes, /font-family: var\(--monsterhearts-title-font/);
 assert.match(modes, /color: var\(--monsterhearts-title-ink/);
+assert.match(modes, /-webkit-text-fill-color: var\(--monsterhearts-title-ink/);
 assert.match(page, /@media \(min-width: 720px\)/);
 assert.match(page, /markdown-reading-view:not\(\.pbta-one-column\)/);
 assert.match(page, /column-count: 2/);
