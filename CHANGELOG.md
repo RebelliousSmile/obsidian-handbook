@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.1] - 2026-09-11
+
+### Changed
+
+- Make the three Adrenaline code blocks automatically available with the installed game instead of exposing redundant feature switches.
+- Simplify the settings screen by removing the illustration diagnostics and obsolete Style Settings migration notice.
+- Rename the schema refresh action to `Reload installed schemas` and make it fetch, validate and reinstall every registered Git reference before rebuilding the game registry.
+
+### Fixed
+
+- Keep level-one headings above the two-column reading layout in Adrenaline, Urban Shadows and Monsterhearts.
+
 ## [2.8.0] - 2026-09-11
 
 ### Added
