@@ -191,7 +191,31 @@ its stack. Nothing errors and nothing renders as a broken image.
 Repositories are responsible for publishing only assets they may redistribute
 and for carrying the corresponding licence information.
 
-### 6. Optional canvas setup
+### 6. Note-local backgrounds
+
+A note can use an image already stored in the vault as its page background.
+This works in Live Preview and reading view, with every game mode, and does not
+copy the image into Handbook or a schema package.
+
+```yaml
+background-image: "[[Assets/paper.webp]]"
+background-position: center top
+background-size: cover
+background-repeat: no-repeat
+background-opacity: 0.2
+```
+
+`background-position` accepts combinations of `left`, `center`, `right`,
+`top`, and `bottom`. `background-size` accepts `cover`, `contain`, or `auto`;
+`background-repeat` accepts `no-repeat`, `repeat`, `repeat-x`, or `repeat-y`;
+and `background-opacity` accepts a number from `0` to `1`. Omitted or invalid
+options use `center center`, `cover`, `no-repeat`, and full opacity.
+
+When `background-image` resolves to a supported image, it replaces the game's
+page texture for that note. Removing the property, or linking to a missing or
+unsupported file, restores the game's normal background.
+
+### 7. Optional canvas setup
 
 If you use `Advanced Canvas`, Handbook can generate mode-specific node-style snippets:
 

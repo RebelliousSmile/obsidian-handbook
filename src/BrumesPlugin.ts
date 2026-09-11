@@ -1,4 +1,4 @@
-import { addIcon, EventRef, MarkdownView, Notice, Plugin } from "obsidian";
+import { addIcon, EventRef, MarkdownView, Notice, Plugin, TFile } from "obsidian";
 import { loadTagFeature } from "./features/tags";
 import { BrumesSettingTab } from "./settings";
 import { BrumesSettings, normalizeSettings } from "./settings/types";
@@ -63,6 +63,10 @@ import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
 import { buildCalloutStyleCss } from "./features/callouts/styleWriter";
 import { clearCalloutCommands, syncCalloutCommands } from "./features/callouts/commands";
 import { StarterKitModal } from "./settings/starterKitModal";
+import {
+	clearNoteBackground,
+	refreshNoteBackground,
+} from "./features/noteBackground";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -119,6 +123,21 @@ export default class BrumesPlugin extends Plugin {
 				this.undressDocument(win.doc);
 			}),
 		);
+		this.registerEvent(
+			this.app.workspace.on("file-open", () => {
+				this.refreshNoteBackgrounds();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("layout-change", () => {
+				this.refreshNoteBackgrounds();
+			}),
+		);
+		this.registerEvent(
+			this.app.metadataCache.on("changed", (file) => {
+				this.refreshNoteBackgrounds(file);
+			}),
+		);
 
 		this.app.workspace.onLayoutReady(() => {
 			// Before layout-ready both rootSplit and every leaf container may be
@@ -126,6 +145,7 @@ export default class BrumesPlugin extends Plugin {
 			// Processors registered above also need an explicit redraw when a
 			// plugin reloads while Markdown views are already open.
 			this.applySettings({ refreshMarkdown: true });
+			this.refreshNoteBackgrounds();
 
 			// The vault does not watch Handbook's config data, so overrides and
 			// illustrations are read once here and on demand afterwards.
@@ -145,6 +165,11 @@ export default class BrumesPlugin extends Plugin {
 
 		for (const doc of this.collectDocuments()) {
 			clearBrumesModeClasses(doc);
+		}
+		for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+			if (leaf.view instanceof MarkdownView) {
+				clearNoteBackground(leaf.view);
+			}
 		}
 		this.gameStyle.removeGameStyle();
 		clearCalloutCommands(this);
@@ -437,6 +462,18 @@ export default class BrumesPlugin extends Plugin {
 			const view = leaf.view;
 			if (view instanceof MarkdownView) {
 				view.previewMode.rerender(true);
+			}
+		}
+	}
+
+	private refreshNoteBackgrounds(file?: TFile) {
+		for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+			const view = leaf.view;
+			if (
+				view instanceof MarkdownView &&
+				(!file || view.file?.path === file.path)
+			) {
+				refreshNoteBackground(this.app, view);
 			}
 		}
 	}
