@@ -34,7 +34,7 @@
 			column-rule: 1px solid var(--pbta-column-rule, var(--color-accent));
 		}
 
-		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer > :is(.inline-title, h1) {
+		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer > :is(.inline-title, .el-h1, h1) {
 			column-span: all;
 		}
 	}

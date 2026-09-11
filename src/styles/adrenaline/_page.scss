@@ -80,7 +80,7 @@
 			column-rule: 1px solid var(--adrenaline-rule);
 		}
 
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > :is(.inline-title, h1, h2) {
+		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > :is(.inline-title, .el-h1, h1, h2) {
 			column-span: all;
 		}
 
