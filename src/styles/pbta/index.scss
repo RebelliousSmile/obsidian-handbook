@@ -13,8 +13,41 @@
 }
 
 .brumes--monsterhearts {
+	--monsterhearts-note-mark: var(--brumes-image-game-mark);
+	--monsterhearts-note-mark-width: clamp(9rem, 18vw, 14rem);
+	--monsterhearts-note-mark-ratio: 1;
+	--monsterhearts-note-mark-opacity: 0.14;
+
+	.markdown-source-view .cm-sizer,
+	.markdown-reading-view .markdown-preview-sizer {
+		position: relative;
+		isolation: isolate;
+	}
+
+	.markdown-source-view .cm-contentContainer,
+	.markdown-reading-view .markdown-preview-section {
+		position: relative;
+		z-index: 1;
+	}
+
+	.markdown-source-view .cm-sizer::before,
+	.markdown-reading-view .markdown-preview-sizer::before {
+		position: absolute;
+		z-index: 0;
+		inset-block-start: 1rem;
+		inset-inline-end: 1.5rem;
+		width: var(--monsterhearts-note-mark-width);
+		aspect-ratio: var(--monsterhearts-note-mark-ratio);
+		background: var(--monsterhearts-note-mark) top right / contain no-repeat;
+		content: "";
+		opacity: var(--monsterhearts-note-mark-opacity);
+		pointer-events: none;
+	}
+
 	.markdown-source-view :is(.inline-title, h1),
 	.markdown-reading-view :is(.inline-title, h1) {
+		position: relative;
+		z-index: 1;
 		letter-spacing: 0.055em;
 	}
 
@@ -48,6 +81,11 @@
 	}
 
 	&.brumes--variant-drowned-lake {
+		--monsterhearts-note-mark: var(--brumes-image-variant-mark);
+		--monsterhearts-note-mark-width: clamp(14rem, 28vw, 24rem);
+		--monsterhearts-note-mark-ratio: 1.5;
+		--monsterhearts-note-mark-opacity: 0.18;
+
 		.markdown-source-view :is(.inline-title, h1),
 		.markdown-reading-view :is(.inline-title, h1) {
 			-webkit-text-stroke: 1px var(--drowned-lake-title-outline);
@@ -55,6 +93,14 @@
 			text-shadow:
 				0.055em 0.055em 0 var(--drowned-lake-title-shadow),
 				-0.025em -0.025em 0 var(--drowned-lake-title-shadow);
+		}
+	}
+
+	&.brumes-missing--game-mark:not(.brumes--variant-drowned-lake),
+	&.brumes--variant-drowned-lake.brumes-missing--variant-mark {
+		.markdown-source-view .cm-sizer::before,
+		.markdown-reading-view .markdown-preview-sizer::before {
+			content: none;
 		}
 	}
 }
