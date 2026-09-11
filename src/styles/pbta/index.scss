@@ -18,6 +18,35 @@
 		letter-spacing: 0.055em;
 	}
 
+	.markdown-source-view.mod-cm6 .cm-table-widget table,
+	.markdown-reading-view.markdown-rendered table {
+		width: 100%;
+		border-collapse: collapse;
+		color: var(--monsterhearts-table-ink, var(--text-normal));
+		background: var(--monsterhearts-table-background, var(--background-primary));
+	}
+
+	.markdown-source-view.mod-cm6 .cm-table-widget :is(th, td),
+	.markdown-reading-view.markdown-rendered :is(th, td) {
+		padding: 0.34em 0.65em;
+		border: 1px solid var(--monsterhearts-table-rule, var(--background-modifier-border));
+		vertical-align: middle;
+	}
+
+	.markdown-source-view.mod-cm6 .cm-table-widget thead tr,
+	.markdown-reading-view.markdown-rendered thead tr {
+		background: var(--monsterhearts-table-header, var(--background-primary-alt));
+	}
+
+	.markdown-source-view.mod-cm6 .cm-table-widget th,
+	.markdown-reading-view.markdown-rendered th {
+		color: var(--monsterhearts-table-header-ink, var(--text-normal));
+		font-family: var(--font-header-theme);
+		font-weight: 700;
+		text-align: center;
+		text-transform: uppercase;
+	}
+
 	&.brumes--variant-drowned-lake {
 		.markdown-source-view :is(.inline-title, h1),
 		.markdown-reading-view :is(.inline-title, h1) {
