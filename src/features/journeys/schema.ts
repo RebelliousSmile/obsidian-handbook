@@ -18,7 +18,7 @@ export interface JourneyDocument {
 	/** "landscape", "occasion" or "undertaking". */
 	type: string;
 	name: string;
-	description?: string[];
+	description?: string;
 	tags?: string[];
 	benefits?: string;
 	/** The consequences that belong to the journey rather than to a vignette. */
@@ -86,7 +86,10 @@ export function documentToJourney(value: unknown): JourneyData | null {
 				? DEFAULT_TYPE
 				: (declared as JourneyType),
 		name,
-		description: asStringList(document.description),
+		description:
+			typeof document.description === "string"
+				? document.description.split(/\n\s*\n/).filter(Boolean)
+				: asStringList(document.description),
 		tags: asStringList(document.tags),
 		consequences: asStringList(document.consequences),
 		vignettes: readVignettes(document.vignettes),
@@ -109,7 +112,7 @@ export function journeyToDocument(data: JourneyData): JourneyDocument {
 	const document: JourneyDocument = { type: data.type, name: data.name };
 
 	if (data.description.length > 0) {
-		document.description = [...data.description];
+		document.description = data.description.join("\n\n");
 	}
 
 	if (data.tags.length > 0) {

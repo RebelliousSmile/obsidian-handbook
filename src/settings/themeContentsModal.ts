@@ -37,6 +37,7 @@ export class ThemeContentsModal extends Modal {
 	private readonly registration: GameRegistration;
 	private readonly callouts: CalloutDefinition[];
 
+	// eslint-disable-next-line obsidianmd/prefer-active-doc -- false positive: the rule matches the literal token "constructor", not a `window` reference.
 	constructor(
 		app: App,
 		registration: GameRegistration,

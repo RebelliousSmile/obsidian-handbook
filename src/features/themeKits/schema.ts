@@ -1,5 +1,5 @@
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { asString, asStringList, looksLikeToml } from "../blocks/schemaValues";
+import { asRecordList, asString, asStringList, looksLikeToml } from "../blocks/schemaValues";
 import { ThemeKitData, ThemeKitImprovement } from "./parser";
 
 /**
@@ -21,7 +21,7 @@ export interface ThemeKitDocument {
 	power_tags?: string[];
 	weakness_tags?: string[];
 	quest?: string;
-	improvement?: ThemeKitImprovementDocument;
+	improvements?: ThemeKitImprovementDocument[];
 }
 
 export interface ThemeKitImprovementDocument {
@@ -89,7 +89,10 @@ export function documentToThemeKit(value: unknown): ThemeKitData | null {
 		data.quest = quest;
 	}
 
-	const improvement = readImprovement(document.improvement);
+	const canonicalImprovements = asRecordList(document.improvements);
+	const improvement = readImprovement(
+		document.improvement ?? canonicalImprovements[0],
+	);
 
 	if (improvement) {
 		data.improvement = improvement;
@@ -127,7 +130,7 @@ export function themeKitToDocument(data: ThemeKitData): ThemeKitDocument {
 			improvement.effect = data.improvement.effect;
 		}
 
-		document.improvement = improvement;
+		document.improvements = [improvement];
 	}
 
 	return document;

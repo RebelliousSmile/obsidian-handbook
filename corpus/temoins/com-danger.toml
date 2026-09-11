@@ -37,7 +37,7 @@ description = "Answer a question the chorus asked, and it answers one of yours."
 description = "An unnamed move: the chorus does something no one wrote down."
 
 [meta]
-publication_type = "corpus"
+publication_type = "homebrew"
 source = "Handbook corpus"
 authors = ["Handbook"]
 page = 1

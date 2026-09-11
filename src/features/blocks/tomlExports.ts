@@ -1,4 +1,5 @@
 import type BrumesPlugin from "../../BrumesPlugin";
+import { validatedMistSerializer } from "../../contracts/mist-engine";
 import { challengeBlock } from "../challenges/block";
 import { challengeToToml } from "../challenges/schema";
 import { comDangerBlock } from "../comDangers/block";
@@ -51,7 +52,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: themeCardBlock,
 		commandId: "copy-theme-card-as-toml",
 		noun: "theme card",
-		toToml: themeCardToToml,
+		toToml: validatedMistSerializer("legend-in-the-mist/story-theme", themeCardToToml),
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -62,7 +63,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: challengeBlock,
 		commandId: "copy-challenge-as-toml",
 		noun: "challenge",
-		toToml: challengeToToml,
+		toToml: validatedMistSerializer("legend-in-the-mist/challenge", challengeToToml),
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must open with the challenge name"),
 	},
@@ -70,7 +71,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: journeyBlock,
 		commandId: "copy-journey-as-toml",
 		noun: "journey",
-		toToml: journeyToToml,
+		toToml: validatedMistSerializer("legend-in-the-mist/journey", journeyToToml),
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -81,7 +82,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: themeKitBlock,
 		commandId: "copy-theme-kit-as-toml",
 		noun: "theme kit",
-		toToml: themeKitToToml,
+		toToml: validatedMistSerializer("legend-in-the-mist/theme-kit", themeKitToToml),
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -92,7 +93,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: comThemeCardBlock,
 		commandId: "copy-com-theme-card-as-toml",
 		noun: "city theme card",
-		toToml: comThemeCardToToml,
+		toToml: validatedMistSerializer("city-of-mist/theme-card", comThemeCardToToml),
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -103,7 +104,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: comDangerBlock,
 		commandId: "copy-danger-as-toml",
 		noun: "danger",
-		toToml: comDangerToToml,
+		toToml: validatedMistSerializer("city-of-mist/danger", comDangerToToml),
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -114,7 +115,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: osThemeBlock,
 		commandId: "copy-os-theme-as-toml",
 		noun: ":Otherscape theme",
-		toToml: osThemeToToml,
+		toToml: validatedMistSerializer("otherscape/theme", osThemeToToml),
 		describeFailure: (source) =>
 			describeMissingPart(source, "title_tag et theme_type sont requis"),
 	},
@@ -122,7 +123,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: osThemeKitBlock,
 		commandId: "copy-os-theme-kit-as-toml",
 		noun: ":Otherscape theme kit",
-		toToml: osThemeToToml,
+		toToml: validatedMistSerializer("otherscape/theme-kit", osThemeToToml),
 		describeFailure: (source) =>
 			describeMissingPart(source, "title_tag et theme_type sont requis"),
 	},
@@ -130,28 +131,28 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		block: osChallengeBlock,
 		commandId: "copy-os-challenge-as-toml",
 		noun: ":Otherscape challenge",
-		toToml: osProfileToToml,
+		toToml: validatedMistSerializer("otherscape/challenge", osProfileToToml),
 		describeFailure: (source) => describeMissingPart(source, "name est requis"),
 	},
 	{
 		block: osPowerSetBlock,
 		commandId: "copy-os-power-set-as-toml",
 		noun: ":Otherscape power set",
-		toToml: osProfileToToml,
+		toToml: validatedMistSerializer("otherscape/power-set", osProfileToToml),
 		describeFailure: (source) => describeMissingPart(source, "name et type sont requis"),
 	},
 	{
 		block: osCharacterTropeBlock,
 		commandId: "copy-os-character-trope-as-toml",
 		noun: ":Otherscape character trope",
-		toToml: osCreationToToml,
+		toToml: validatedMistSerializer("otherscape/character-trope", osCreationToToml),
 		describeFailure: (source) => describeMissingPart(source, "name est requis"),
 	},
 	{
 		block: osLoadoutItemBlock,
 		commandId: "copy-os-loadout-item-as-toml",
 		noun: ":Otherscape loadout item",
-		toToml: osCreationToToml,
+		toToml: validatedMistSerializer("otherscape/loadout-item", osCreationToToml),
 		describeFailure: (source) => describeMissingPart(source, "name est requis"),
 	},
 	{

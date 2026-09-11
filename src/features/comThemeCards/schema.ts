@@ -26,11 +26,12 @@ import {
  * would let a document disagree with itself.
  */
 export interface ComThemeCardDocument {
-	themebook: string;
+	themebook?: string;
+	theme_type: "mythos" | "logos" | "extra" | "crew";
 	title?: string;
-	drive?: ComDriveDocument;
-	attention?: ComTrackDocument;
-	deterioration?: ComTrackDocument;
+	motivation?: ComDriveDocument;
+	attention?: Omit<ComTrackDocument, "kind">;
+	erosion?: ComTrackDocument;
 	power_tags?: ComThemeTagDocument[];
 	weakness_tags?: ComThemeTagDocument[];
 	improvements?: ComImprovementDocument[];
@@ -182,12 +183,13 @@ export function documentToComThemeCard(
 		improvements: readImprovements(document.improvements),
 	};
 
+	const motivation = document.motivation ?? document.drive;
 	if (
-		document.drive !== null &&
-		typeof document.drive === "object" &&
-		!Array.isArray(document.drive)
+		motivation !== null &&
+		typeof motivation === "object" &&
+		!Array.isArray(motivation)
 	) {
-		const entry = document.drive as Record<string, unknown>;
+		const entry = motivation as Record<string, unknown>;
 		const declared = asString(entry.kind).toLowerCase();
 		// An unnamed drive is a motivation: neutral is the kind that neither
 		// matches nor contradicts a themebook.
@@ -212,7 +214,7 @@ export function documentToComThemeCard(
 	// The erosion track defaults to the one the themebook calls for, so a
 	// document that names no kind still draws the right boxes.
 	const deterioration = readTrack(
-		document.deterioration,
+		document.erosion ?? document.deterioration,
 		type && EXPECTED[type] ? EXPECTED[type].track : "fade",
 	);
 
@@ -237,52 +239,46 @@ function tagToDocument(tag: ComThemeTag): ComThemeTagDocument {
 	return entry;
 }
 
-function trackToDocument(track: ComThemeTrack): ComTrackDocument {
-	return { kind: track.kind, filled: track.filled, maximum: track.max };
-}
-
-/** Turn a parsed theme card back into a schema-shaped document. */
+/** Turn a parsed theme card back into the canonical schema document. */
 export function comThemeCardToDocument(
 	data: ComThemeCardData,
 ): ComThemeCardDocument {
-	const document: ComThemeCardDocument = { themebook: data.themebook };
+	const inferred = findComThemeType(data.themebook);
+	const themeType =
+		inferred ?? (data.drive?.kind === "identity" ? "logos" : "mythos");
+	const document: ComThemeCardDocument = {
+		themebook: data.themebook || undefined,
+		theme_type: themeType,
+	};
 
-	if (data.title) {
-		document.title = data.title;
-	}
-
+	if (data.title) document.title = data.title;
 	if (data.drive) {
-		// The mismatch flag is derived from the themebook and is not written
-		// back: a document that carried it could contradict its own themebook.
-		document.drive = { kind: data.drive.kind, text: data.drive.text };
+		document.motivation = { kind: data.drive.kind, text: data.drive.text };
 	}
-
 	if (data.attention) {
-		document.attention = trackToDocument(data.attention);
+		document.attention = {
+			filled: data.attention.filled,
+			maximum: data.attention.max,
+		};
 	}
-
 	if (data.deterioration) {
-		document.deterioration = trackToDocument(data.deterioration);
+		document.erosion = {
+			kind: data.deterioration.kind,
+			filled: data.deterioration.filled,
+			maximum: data.deterioration.max,
+		};
 	}
-
 	if (data.powerTags.length > 0) {
 		document.power_tags = data.powerTags.map(tagToDocument);
 	}
-
 	if (data.weaknessTags.length > 0) {
 		document.weakness_tags = data.weaknessTags.map(tagToDocument);
 	}
-
 	if (data.improvements.length > 0) {
-		document.improvements = data.improvements.map((improvement) => {
-			const entry: ComImprovementDocument = { name: improvement.name };
-
-			if (improvement.effect) {
-				entry.effect = improvement.effect;
-			}
-
-			return entry;
-		});
+		document.improvements = data.improvements.map((improvement) => ({
+			name: improvement.name,
+			...(improvement.effect ? { effect: improvement.effect } : {}),
+		}));
 	}
 
 	return document;

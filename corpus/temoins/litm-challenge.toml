@@ -65,7 +65,7 @@ text = "Nothing pulls the rope. The marsh moves the bell from below."
 text = "The bell was cast from a melted-down reliquary."
 
 [meta]
-publication_type = "corpus"
+publication_type = "homebrew"
 source = "Handbook corpus"
 authors = ["Handbook"]
 page = 1
