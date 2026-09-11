@@ -24,19 +24,30 @@ const commands = [
 ];
 const npmCli = process.env.npm_execpath;
 
-for (const command of commands) {
-	console.log(`\n> check: ${command}`);
-	const result = npmCli
-		? spawnSync(process.execPath, [npmCli, "run", command], {
+function runPackageScript(command) {
+	if (!npmCli) {
+		return spawnSync("npm", ["run", command], {
 			cwd: root,
 			env: process.env,
 			stdio: "inherit",
-		})
-		: spawnSync("npm", ["run", command], {
-		cwd: root,
-		env: process.env,
-		stdio: "inherit",
 		});
+	}
+
+	const isJavaScriptCli = /\.(?:c?js|mjs)$/i.test(npmCli);
+	return spawnSync(
+		isJavaScriptCli ? process.execPath : npmCli,
+		isJavaScriptCli ? [npmCli, "run", command] : ["run", command],
+		{
+			cwd: root,
+			env: process.env,
+			stdio: "inherit",
+		},
+	);
+}
+
+for (const command of commands) {
+	console.log(`\n> check: ${command}`);
+	const result = runPackageScript(command);
 	if (result.error) throw result.error;
 	if (result.status !== 0) {
 		process.exit(result.status ?? 1);

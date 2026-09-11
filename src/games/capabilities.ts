@@ -8,6 +8,12 @@ export interface GameSupport {
 	styles: readonly string[];
 }
 
+/** Capabilities any installed pack may opt into without its id being known here. */
+export const PORTABLE_GAME_PLUGIN_SUPPORT: GameSupport = {
+	blocks: ["block:pbta-playbook", "block:pbta-move"],
+	styles: ["style:pbta"],
+};
+
 export const GAME_PLUGIN_SUPPORT: Readonly<Record<string, GameSupport>> = {
 	"city-of-mist": {
 		blocks: ["block:com-theme-card", "block:com-danger"],
@@ -52,10 +58,10 @@ function collectCapabilities(field: keyof GameSupport): string[] {
 }
 
 export const GAME_PLUGIN_BLOCK_CAPABILITIES: readonly string[] =
-	collectCapabilities("blocks");
+	[...collectCapabilities("blocks"), ...PORTABLE_GAME_PLUGIN_SUPPORT.blocks];
 
 export const GAME_PLUGIN_STYLE_CAPABILITIES: readonly string[] =
-	collectCapabilities("styles");
+	[...collectCapabilities("styles"), ...PORTABLE_GAME_PLUGIN_SUPPORT.styles];
 
 const ALL_CAPABILITIES = [
 	...GAME_PLUGIN_BLOCK_CAPABILITIES,
@@ -73,12 +79,18 @@ export function gamePluginCapabilityIssues(
 ): GameCapabilityIssues {
 	const support = GAME_PLUGIN_SUPPORT[gameId];
 	const provided = support ? [...support.blocks, ...support.styles] : [];
+	const portable = [
+		...PORTABLE_GAME_PLUGIN_SUPPORT.blocks,
+		...PORTABLE_GAME_PLUGIN_SUPPORT.styles,
+	];
 
 	return {
 		unknown: required.filter((capability) => !ALL_CAPABILITIES.includes(capability)),
 		foreign: required.filter(
 			(capability) =>
-				ALL_CAPABILITIES.includes(capability) && !provided.includes(capability),
+				ALL_CAPABILITIES.includes(capability) &&
+				!portable.includes(capability) &&
+				!provided.includes(capability),
 		),
 	};
 }

@@ -24,6 +24,17 @@ export interface CalloutDefinition {
 	color: CalloutColorRegime;
 	native: boolean;
 	styleKey: string;
+	/** Optional host capability required before this callout is visible. */
+	capability?: string;
+}
+
+export function isCalloutAvailable(
+	entry: CalloutDefinition,
+	activePackId: string,
+	requiredCapabilities: readonly string[] = [],
+): boolean {
+	if (entry.capability && !requiredCapabilities.includes(entry.capability)) return false;
+	return entry.scope === "all" || entry.scope === activePackId;
 }
 
 export const CALLOUT_FONT_ROLES: CalloutFontRole[] = ["header", "text"];

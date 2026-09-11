@@ -1,6 +1,8 @@
 import { Editor, Menu } from "obsidian";
 import { BrumesSettings } from "../../settings/types";
 import { CalloutDefinition } from "./types";
+import { isCalloutAvailable } from "./types";
+import { findGameRegistration } from "../../games/registry";
 
 interface CalloutInsertion {
 	title: string;
@@ -15,9 +17,10 @@ export function getAvailableCalloutInsertions(
 	activePackId: string,
 ): CalloutInsertion[] {
 	const insertions: CalloutInsertion[] = [];
+	const required = findGameRegistration(activePackId)?.installation?.requires ?? [];
 
 	for (const entry of settings.callouts) {
-		if (entry.scope !== "all" && entry.scope !== activePackId) {
+		if (!isCalloutAvailable(entry, activePackId, required)) {
 			continue;
 		}
 

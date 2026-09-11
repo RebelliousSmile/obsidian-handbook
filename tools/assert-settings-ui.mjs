@@ -60,16 +60,20 @@ if (!source.includes('setName("Theme features")') || !source.includes("new Theme
 	failures.push("The settings tab has no button opening the active theme feature inventory.");
 }
 
-if (!themeContentsModal.includes('callout.scope === "all" || callout.scope === gameId')) {
-	failures.push("The theme inventory does not limit callouts to the active game and global scope.");
+if (!themeContentsModal.includes("isCalloutAvailable(callout, gameId, requiredCapabilities)")) {
+	failures.push("The theme inventory does not resolve callouts from the active manifest capabilities.");
 }
 
 if (!themeContentsModal.includes('.filter((capability) => capability.startsWith("block:"))') || !themeContentsModal.includes("requiredBlocks.has(block.id)")) {
 	failures.push("The theme inventory does not derive code blocks from the installed schema manifest.");
 }
 
-if (!/entry\.scope !== "all" && entry\.scope !== this\.plugin\.settings\.mode[\s\S]*?continue;/m.test(source)) {
-	failures.push("Callouts scoped to inactive games remain visible in settings.");
+if (!themeContentsModal.includes("handouts: blocks.filter((block) => block.handout)")) {
+	failures.push("The theme inventory does not derive handouts from declared blocks.");
+}
+
+if (!source.includes("isCalloutAvailable(entry, this.plugin.settings.mode, required)")) {
+	failures.push("Callouts unavailable to the active manifest remain visible in settings.");
 }
 
 for (const flag of [

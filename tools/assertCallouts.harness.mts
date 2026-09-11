@@ -1,15 +1,16 @@
 import assert from "node:assert/strict";
 import { log } from "../src/utils/logger";
 import { NATIVE_CALLOUTS } from "../src/features/callouts/nativeCallouts";
+import { isCalloutAvailable } from "../src/features/callouts/types";
 import { normalizeSettings } from "../src/settings/types";
 
 log.setLevel("warn");
 
-// Fresh vault: no calloutAliases, no callouts -> the 7 native entries with
+// Fresh vault: no calloutAliases, no callouts -> all native entries with
 // their default aliases.
 {
 	const settings = normalizeSettings(undefined);
-	assert.equal(settings.callouts.length, 7);
+	assert.equal(settings.callouts.length, NATIVE_CALLOUTS.length);
 	assert.deepEqual(
 		settings.callouts.map((c) => c.id),
 		NATIVE_CALLOUTS.map((c) => c.id),
@@ -20,6 +21,14 @@ log.setLevel("warn");
 		assert.deepEqual(migrated.aliases, native.aliases);
 		assert.equal(migrated.native, true);
 	}
+}
+
+// Portable callouts follow the manifest capability, independently of game id.
+{
+	const pbta = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:pbta");
+	assert.equal(pbta.length, 4);
+	assert.equal(pbta.every((entry) => !isCalloutAvailable(entry, "unknown-game", [])), true);
+	assert.equal(pbta.every((entry) => isCalloutAvailable(entry, "unknown-game", ["style:pbta"])), true);
 }
 
 // Old shape with custom aliases on move and redClue migrates exactly onto
@@ -76,7 +85,7 @@ log.setLevel("warn");
 
 	console.warn = originalWarn;
 
-	assert.equal(settings.callouts.length, 7);
+	assert.equal(settings.callouts.length, NATIVE_CALLOUTS.length);
 	assert.equal(warnings.length, 1);
 	assert.ok(
 		settings.callouts.every((c) => c.id !== "user-secret"),
@@ -129,7 +138,7 @@ log.setLevel("warn");
 	const userEntry = settings.callouts.find((c) => c.id === "secret-de-faction");
 	assert.ok(userEntry);
 	assert.equal(userEntry.styleKey, userEntry.id);
-	assert.equal(settings.callouts.length, 8);
+	assert.equal(settings.callouts.length, NATIVE_CALLOUTS.length + 1);
 }
 
 // A user entry without a recognized id gets a stable slug generated from its

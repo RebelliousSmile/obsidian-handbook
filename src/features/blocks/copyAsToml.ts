@@ -1,7 +1,8 @@
 import { Editor, Notice } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import { logScope } from "../../utils/logger";
-import { BrumesBlock, blockIds, isBlockEnabled } from "./types";
+import { BrumesBlock, blockIds } from "./types";
+import { isAvailableBlock } from "./registry";
 
 const log = logScope("BlockToml");
 
@@ -150,7 +151,7 @@ export function loadCopyAsTomlCommand<T>(
 		id: spec.commandId,
 		name: `Copy ${spec.noun} as TOML`,
 		editorCheckCallback: (checking: boolean, editor: Editor) => {
-			if (!isBlockEnabled(spec.block, plugin.settings)) {
+			if (!isAvailableBlock(spec.block, plugin.settings)) {
 				return false;
 			}
 
