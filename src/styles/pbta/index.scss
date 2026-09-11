@@ -48,6 +48,9 @@
 	.markdown-reading-view :is(.inline-title, h1) {
 		position: relative;
 		z-index: 1;
+		color: var(--monsterhearts-title-ink, var(--h1-color, var(--text-normal)));
+		font-family: var(--monsterhearts-title-font, var(--font-header-theme));
+		font-weight: 400;
 		letter-spacing: 0.055em;
 	}
 
@@ -88,6 +91,7 @@
 
 		.markdown-source-view :is(.inline-title, h1),
 		.markdown-reading-view :is(.inline-title, h1) {
+			-webkit-text-fill-color: var(--monsterhearts-title-ink, var(--h1-color, var(--text-normal)));
 			-webkit-text-stroke: 1px var(--drowned-lake-title-outline);
 			paint-order: stroke fill;
 			text-shadow:
