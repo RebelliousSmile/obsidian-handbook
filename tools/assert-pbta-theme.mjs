@@ -14,6 +14,10 @@ assert.match(modes, /-webkit-text-stroke: 1px var\(--drowned-lake-title-outline\
 assert.match(modes, /\.cm-table-widget table/);
 assert.match(modes, /var\(--monsterhearts-table-rule/);
 assert.match(modes, /text-transform: uppercase/);
+assert.match(modes, /var\(--brumes-image-game-mark\)/);
+assert.match(modes, /var\(--brumes-image-variant-mark\)/);
+assert.match(modes, /\.markdown-preview-sizer::before/);
+assert.match(modes, /\.cm-sizer::before/);
 assert.match(page, /@media \(min-width: 720px\)/);
 assert.match(page, /markdown-reading-view:not\(\.pbta-one-column\)/);
 assert.match(page, /column-count: 2/);
