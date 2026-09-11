@@ -5,9 +5,7 @@ const sourceModal = readFileSync("src/settings/sourceModal.ts", "utf8");
 const themeContentsModal = readFileSync("src/settings/themeContentsModal.ts", "utf8");
 const plugin = readFileSync("src/BrumesPlugin.ts", "utf8");
 const richDescriptions = [
-	"createMigrationDescription",
 	"createOverrideDescription",
-	"createAssetDescription",
 	"createIcebergDescription",
 	"createMountainDescription",
 ];
@@ -38,6 +36,14 @@ if (!plugin.includes("removeSchemaSourceStorage(this, source.id)") || !plugin.in
 	failures.push("Removing a schema source does not delete its storage and rebuild the live game registry.");
 }
 
+if (!source.includes('setButtonText("Reload installed schemas")') || !source.includes("this.plugin.reloadInstalledSchemaSources()")) {
+	failures.push("The schema reload action is not named precisely or does not fetch installed schemas again.");
+}
+
+if (!plugin.includes("async reloadInstalledSchemaSources()") || !plugin.includes("resolveGithubSource(source)") || !plugin.includes("installResolvedSchemaSource(this, source, resolved)")) {
+	failures.push("Reloading installed schemas does not resolve and reinstall their configured Git references.");
+}
+
 if (!source.includes('variants.length < 2')) {
 	failures.push("The game variant selector is not hidden for packs without choices.");
 }
@@ -46,7 +52,7 @@ if (!source.includes('.setName("Univers")')) {
 	failures.push("The game variant selector has no French-first visible label.");
 }
 
-for (const game of ["city-of-mist", "legend-in-the-mist", "otherscape", "adrenaline"]) {
+for (const game of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
 	if (!source.includes(`this.plugin.settings.mode === "${game}" && findGamePack("${game}")`)) {
 		failures.push(`The ${game} settings section remains visible while another game is active.`);
 	}
@@ -58,6 +64,18 @@ if (!/if \(polarities\.length < 2\) \{\s*return;\s*\}/m.test(source)) {
 
 if (!source.includes('setName("Theme features")') || !source.includes("new ThemeContentsModal(")) {
 	failures.push("The settings tab has no button opening the active theme feature inventory.");
+}
+
+if (source.includes('setName("Illustrations")') || source.includes("renderAssetSetup") || source.includes("createAssetDescription")) {
+	failures.push("The removed illustration diagnostics are still exposed in the settings tab.");
+}
+
+if (source.includes('setName("Colours and fonts")') || source.includes("createMigrationDescription")) {
+	failures.push("The obsolete colours and fonts migration notice is still exposed in the settings tab.");
+}
+
+if (!source.includes("this.renderPersonalOverrides(generalSection)")) {
+	failures.push("Removing the migration notice also hid the personal overrides control.");
 }
 
 if (!themeContentsModal.includes("isCalloutAvailable(callout, gameId, requiredCapabilities)")) {
@@ -76,14 +94,8 @@ if (!source.includes("isCalloutAvailable(entry, this.plugin.settings.mode, requi
 	failures.push("Callouts unavailable to the active manifest remain visible in settings.");
 }
 
-for (const flag of [
-	"adrenalinePjParser",
-	"adrenalinePnjParser",
-	"adrenalineMonsterParser",
-]) {
-	if (!source.includes(flag)) {
-		failures.push(`The settings tab does not expose ${flag}.`);
-	}
+if (source.includes("renderAdrenalineSettings") || source.includes("addAdrenalineToggle")) {
+	failures.push("Adrenaline code blocks are still exposed as optional settings.");
 }
 
 for (const factory of richDescriptions) {

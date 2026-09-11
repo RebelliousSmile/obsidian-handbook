@@ -132,10 +132,7 @@ async function run(): Promise<void> {
 			"Adrenaline processors stay disabled while its mode is absent",
 			adrenalineBlocks.every((block) => !isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
 		);
-		check(
-			"saved Adrenaline feature flags survive absence",
-			adrenalineBlocks.every((block) => !normalizeSettings(savedData).features[block.flag]),
-		);
+		check("saved Adrenaline feature flags survive absence", !normalizeSettings(savedData).features.adrenalinePjParser && !normalizeSettings(savedData).features.adrenalinePnjParser && !normalizeSettings(savedData).features.adrenalineMonsterParser);
 
 		const { plugin } = fakePlugin({
 			"adrenaline/pack.json": gamePlugin("adrenaline", {
@@ -153,12 +150,12 @@ async function run(): Promise<void> {
 		check("a neutral mode selects the first installed game", normalizeMode("none") === "adrenaline");
 		check("the installed Adrenaline class is registered", gamePackClasses().includes("brumes--adrenaline"));
 		check(
-			"installed Adrenaline processors follow their enabled flags",
+			"installed Adrenaline processors are always available",
 			adrenalineBlocks.every((block) => isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
 		);
 		check(
-			"saved Adrenaline feature flags return on reinstall",
-			adrenalineBlocks.every((block) => !normalizeSettings(savedData).features[block.flag]),
+			"obsolete disabled flags cannot disable reinstalled Adrenaline blocks",
+			adrenalineBlocks.every((block) => isBlockEnabled(block, normalizeSettings(savedData))),
 		);
 
 		initGameRegistry([]);

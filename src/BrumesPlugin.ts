@@ -187,6 +187,15 @@ export default class BrumesPlugin extends Plugin {
 		}
 	}
 
+	/** Fetch every registered schema source again, then rebuild the live games. */
+	async reloadInstalledSchemaSources() {
+		for (const source of this.settings.schemaSources) {
+			const resolved = await resolveGithubSource(source);
+			await installResolvedSchemaSource(this, source, resolved);
+		}
+		await this.refreshGameRegistry();
+	}
+
 	async saveSchemaSource(source: SchemaSource, replacingRepository: string | null) {
 		const resolved = await resolveGithubSource(source);
 		await installResolvedSchemaSource(this, source, resolved);

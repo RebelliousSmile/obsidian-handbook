@@ -80,9 +80,8 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderGameVariant(generalSection);
 		this.renderPolarities(generalSection);
 		this.renderThemeContents(generalSection);
-		this.renderMigrationNotice(generalSection);
+		this.renderPersonalOverrides(generalSection);
 		this.renderSchemaSources(generalSection);
-		this.renderAssetSetup(generalSection);
 		this.renderGeneralSettings(generalSection);
 
 		if (this.plugin.settings.mode === "city-of-mist" && findGamePack("city-of-mist")) {
@@ -99,12 +98,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 			const section = this.createSection(containerEl);
 			section.setHeading(":Otherscape");
 			this.renderOtherscapeSettings(section);
-		}
-
-		if (this.plugin.settings.mode === "adrenaline" && findGamePack("adrenaline")) {
-			const adrenalineSection = this.createSection(containerEl);
-			adrenalineSection.setHeading("Adrenaline System");
-			this.renderAdrenalineSettings(adrenalineSection);
 		}
 
 		const calloutsSection = this.createSection(containerEl);
@@ -128,9 +121,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 				.setName("Schema sources")
 				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
 				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }))
-				.addButton((button) => button.setButtonText("Reload installed sources").onClick(() => {
+				.addButton((button) => button.setButtonText("Reload installed schemas").onClick(() => {
 					this.runTask(async () => {
-						await this.plugin.refreshGameRegistry();
+						await this.plugin.reloadInstalledSchemaSources();
 						this.redisplay();
 					}, "Failed to reload schema sources", "Failed to reload schema sources.");
 				}));
@@ -244,12 +237,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderMigrationNotice(section: SettingGroup) {
-		section.addSetting((setting) => {
-			setting.setName("Colours and fonts");
-			setting.descEl.append(this.createMigrationDescription());
-		});
-
+	private renderPersonalOverrides(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
 				.setName("Personal overrides")
@@ -267,81 +255,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 				);
 			setting.descEl.append(this.createOverrideDescription());
 		});
-	}
-
-	/**
-	 * The illustrations of a game are files in the vault, not data URIs baked
-	 * into the stylesheet. This says how many the active game reads, where it
-	 * looks for them, and which are absent: a block whose image is missing
-	 * still renders, flat, so the list is information rather than an error.
-	 */
-	private renderAssetSetup(section: SettingGroup) {
-		section.addSetting((setting) => {
-			setting
-				.setName("Illustrations")
-				.addButton((button) =>
-					button.setButtonText("Check files").onClick(() => {
-						this.runTask(
-							async () => {
-								await this.plugin.reloadStyleSources();
-								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
-								this.redisplay();
-							},
-							"Failed to look for the illustration files",
-							"Failed to look for the illustration files.",
-						);
-					}),
-				);
-			setting.descEl.append(this.createAssetDescription());
-		});
-	}
-
-	private createAssetDescription(): DocumentFragment {
-		const fragment = this.containerEl.doc.createDocumentFragment();
-		const state = this.plugin.getAssetState();
-		const pack = resolveGamePack(this.plugin.settings.mode);
-
-		if (state.packId !== pack.id) {
-			fragment.append(
-				"The files of the active game have not been looked for yet. The button below does it.",
-			);
-			return fragment;
-		}
-
-		const expected = state.roles.length + state.families.length;
-
-		if (expected === 0) {
-			fragment.append("The active game brings no file of its own.");
-			return fragment;
-		}
-
-		fragment.append(`The active game reads ${expected} files from `);
-		fragment.createEl("code", { text: state.folder });
-		fragment.append(". ");
-
-		const absent: string[] = [];
-		for (const entry of state.missing) {
-			absent.push(entry.path);
-		}
-		for (const entry of state.missingFonts) {
-			absent.push(entry.path);
-		}
-
-		if (absent.length === 0) {
-			fragment.append("All of them are there.");
-			return fragment;
-		}
-
-		fragment.append(
-			`${absent.length} are absent. A block whose illustration is missing renders plain, and a typeface that is missing falls back on the next one in its stack. Drop these in to complete the game:`,
-		);
-
-		const list = fragment.createEl("ul");
-		for (const path of absent) {
-			list.createEl("li").createEl("code", { text: path });
-		}
-
-		return fragment;
 	}
 
 	private renderGeneralSettings(section: SettingGroup) {
@@ -712,39 +625,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderAdrenalineSettings(section: SettingGroup) {
-		const isActive = this.plugin.settings.mode === "adrenaline";
-		this.addAdrenalineToggle(section, "Fiche PJ", "adrenaline-pj", "adrenalinePjParser", isActive);
-		this.addAdrenalineToggle(section, "Fiche PNJ", "adrenaline-pnj", "adrenalinePnjParser", isActive);
-		this.addAdrenalineToggle(section, "Fiche monstre", "adrenaline-monstre", "adrenalineMonsterParser", isActive);
-	}
-
-	private addAdrenalineToggle(
-		section: SettingGroup,
-		name: string,
-		blockId: string,
-		flag: "adrenalinePjParser" | "adrenalinePnjParser" | "adrenalineMonsterParser",
-		isActive: boolean,
-	) {
-		section.addSetting((setting) => {
-			setting
-				.setName(name)
-				.setDesc(`Active le bloc TOML ${blockId} et son insertion.`)
-				.setDisabled(!isActive)
-				.addToggle((toggle) =>
-					toggle
-						.setValue(this.plugin.settings.features[flag])
-						.setDisabled(!isActive)
-						.onChange((value) => {
-							this.runTask(async () => {
-								this.plugin.settings.features[flag] = value;
-								await this.plugin.saveSettings({ refreshMarkdown: true });
-							}, SETTINGS_SAVE_LOG_MESSAGE, SETTINGS_SAVE_NOTICE);
-						}),
-				);
-		});
-	}
-
 	private renderAdvancedSection(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
@@ -913,22 +793,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 			", in this plugin's folder in the vault. What the file leaves out keeps the value of the game; removing the file restores it whole.",
 		);
 
-		return fragment;
-	}
-
-	private createMigrationDescription(): DocumentFragment {
-		const fragment = this.containerEl.doc.createDocumentFragment();
-		fragment.append(
-			"Colours and fonts are written by the plugin itself. No theme and no other plugin is required. If a preset was imported into ",
-		);
-		this.appendLink(
-			fragment,
-			"Style Settings",
-			"https://github.com/mgmeyers/obsidian-style-settings",
-		);
-		fragment.append(
-			" before, open that plugin and reset the sections it created: the leftover keys still override what is written here.",
-		);
 		return fragment;
 	}
 

@@ -42,7 +42,6 @@ solidite = 5
 export const adrenalinePjBlock: BrumesBlock<AdrenalinePjData> = {
 	id: "adrenaline-pj",
 	mode: "adrenaline",
-	flag: "adrenalinePjParser",
 	label: "Fiche PJ Adrenaline",
 	icon: "user-round",
 	shape: adrenalinePjShape,

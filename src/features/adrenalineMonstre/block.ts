@@ -6,7 +6,6 @@ import { adrenalineMonsterShape } from "./shape";
 export const adrenalineMonsterBlock: BrumesBlock<AdrenalineMonsterData> = {
 	id: "adrenaline-monstre",
 	mode: "adrenaline",
-	flag: "adrenalineMonsterParser",
 	label: "Fiche monstre Adrenaline",
 	icon: "skull",
 	shape: adrenalineMonsterShape,

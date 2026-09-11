@@ -20,8 +20,8 @@ export interface BrumesBlock<T> {
 	capability?: `block:${string}`;
 	/** True when this block is also a complete printable handout. */
 	handout?: boolean;
-	/** The feature flag that turns it on. */
-	flag: keyof BrumesFeatureSettings;
+	/** Optional user-facing feature flag. Blocks without one follow their game. */
+	flag?: keyof BrumesFeatureSettings;
 	/** Context menu entry title. */
 	label: string;
 	/** Context menu entry icon. */
@@ -48,7 +48,7 @@ export function isBlockEnabled(
 	const active = block.capability
 		? requiredCapabilities.includes(block.capability)
 		: settings.mode === block.mode;
-	return active && settings.features[block.flag];
+	return active && (block.flag === undefined || settings.features[block.flag]);
 }
 
 /** The block id followed by every alias it answers to. */
