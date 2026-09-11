@@ -5,6 +5,7 @@
 	"main": "dist/main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs --watch",
+		"dev:schema-pbta": "node tools/dev-schema-source.mjs --source ../schema-pbta",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"check": "node tools/check.mjs",
 		"lint": "eslint .",

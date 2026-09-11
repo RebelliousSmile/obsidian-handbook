@@ -40,7 +40,13 @@ jobs:
                     release_flags+=(--prerelease)
                   fi
 
-                  gh release create "$tag" \
-                    --title="$tag" \
-                    "${release_flags[@]}" \
-                    dist/main.js dist/manifest.json dist/styles.css
+                  release_assets=(dist/main.js dist/manifest.json dist/styles.css)
+
+                  if gh release view "$tag" >/dev/null 2>&1; then
+                    gh release upload "$tag" --clobber "${release_assets[@]}"
+                  else
+                    gh release create "$tag" \
+                      --title="$tag" \
+                      "${release_flags[@]}" \
+                      "${release_assets[@]}"
+                  fi
