@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.0] - 2026-09-11
+
+### Added
+
+- Add manifest-driven PbtA playbook and move blocks, a playbook handout, four portable callouts and shared PbtA styling without coupling Handbook to game identifiers.
+- Display installed handouts, blocks and callouts from `installation.requires`, including for a previously unknown compatible game.
+
+### Changed
+
+- Consume the canonical `schema-pbta` v1 contract from its immutable GitHub Release asset and preserve the resolved integrity in the lockfile.
+
 ## [2.7.3] - 2026-09-11
 
 ### Added

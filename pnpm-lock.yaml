@@ -12,8 +12,8 @@ importers:
         specifier: ^1.12.3
         version: 1.13.1(@codemirror/state@6.5.0)(@codemirror/view@6.38.6)
       schema-pbta:
-        specifier: link:../schema-pbta
-        version: link:../schema-pbta
+        specifier: https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz
+        version: https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz
       smol-toml:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1487,6 +1487,10 @@ packages:
     engines: {node: '>=20.19.0'}
     hasBin: true
 
+  schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz:
+    resolution: {integrity: sha512-VBAnUlh/R+s3VaWrEjw35nAyso7vDrWiEJRXYslS7U0cqjadOFDToO6d8H+kkb9yusvyqDkIHCexnQ3R4QXucA==, tarball: https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz}
+    version: 1.0.0
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -1718,6 +1722,9 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  zod@4.6.2:
+    resolution: {integrity: sha512-lh5RCAGFa1Cm2hjtNwLQhSs/AsqdWnTQaBER9fEwN/88pSh7KOtJavtBx/0VlkN/uFd61SwYmljLMDAsHlvzBQ==}
 
 snapshots:
 
@@ -3339,6 +3346,11 @@ snapshots:
     optionalDependencies:
       '@parcel/watcher': 2.6.0
 
+  schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz:
+    dependencies:
+      smol-toml: 1.8.0
+      zod: 4.6.2
+
   semver@6.3.1: {}
 
   semver@7.8.5: {}
@@ -3638,3 +3650,5 @@ snapshots:
   yaml@2.9.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@4.6.2: {}
