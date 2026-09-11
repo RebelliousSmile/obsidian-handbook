@@ -10,6 +10,11 @@
 		text-wrap: balance;
 	}
 
+	.markdown-source-view .callout .callout-content,
+	.markdown-reading-view .callout .callout-content {
+		color: var(--pbta-callout-ink, var(--text-normal));
+	}
+
 	.markdown-reading-view .markdown-preview-sizer > :is(
 		h1,
 		h2,
