@@ -15,7 +15,7 @@ const tagLog = logScope("Tags");
 /**
  * Builds the CodeMirror plugin that decorates tag patterns like {status-3}, {!fear}, etc.
  */
-export function brumesEditorExtension(isEnabled: () => boolean): Extension {
+export function brumesEditorExtension(): Extension {
 		return ViewPlugin.fromClass(
 			class {
 				decorations: DecorationSet = Decoration.none;
@@ -38,10 +38,6 @@ export function brumesEditorExtension(isEnabled: () => boolean): Extension {
 			}
 
 			private buildDecorations(view: EditorView): DecorationSet {
-				if (!isEnabled()) {
-					return Decoration.none;
-				}
-
 				const builder = new RangeSetBuilder<Decoration>();
 				const doc = view.state.doc;
 				const selection = view.state.selection;

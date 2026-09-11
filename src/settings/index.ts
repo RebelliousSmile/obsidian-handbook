@@ -283,32 +283,6 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Tags, statuses and limits")
-				.setDesc(
-					"Enable the special Markdown syntax, parsing and context menu action for tags, statuses and limits.",
-				)
-				.addToggle((toggle) =>
-					toggle
-						.setValue(this.plugin.settings.features.tagsSyntax)
-						.onChange((value) => {
-							this.runTask(
-								async () => {
-									this.plugin.settings.features.tagsSyntax =
-										value;
-									await this.plugin.saveSettings({
-										refreshEditor: true,
-										refreshMarkdown: true,
-									});
-								},
-								SETTINGS_SAVE_LOG_MESSAGE,
-								SETTINGS_SAVE_NOTICE,
-							);
-						}),
-				);
-		});
-
-		section.addSetting((setting) => {
-			setting
 				.setName("Lantern in the Mist integration") // eslint-disable-line obsidianmd/ui/sentence-case
 				.setDesc(
 					"Show the ribbon icon and keep the embedded Lantern in the Mist view available.", // eslint-disable-line obsidianmd/ui/sentence-case

@@ -26,6 +26,7 @@ assert.match(page, /markdown-reading-view:not\(\.pbta-one-column\)/);
 assert.match(page, /column-count: 2/);
 assert.match(page, /column-gap: var\(--pbta-column-gap/);
 assert.match(page, /column-rule: 1px solid var\(--pbta-column-rule/);
+assert.match(page, /markdown-preview-sizer > \.mod-header \{\s*column-span: all;/);
 assert.match(page, /:is\(\.inline-title, \.el-h1, h1\)/);
 assert.match(page, /\.callout \.callout-content/);
 assert.match(page, /color: var\(--pbta-callout-ink, var\(--text-normal\)\)/);

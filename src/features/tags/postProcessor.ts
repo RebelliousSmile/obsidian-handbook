@@ -7,17 +7,11 @@ const tagLog = logScope("Tags");
 /**
  * Replaces tag patterns with spans in rendered markdown view.
  */
-export function brumesPostProcessor(
-	isEnabled: () => boolean,
-): MarkdownPostProcessor {
+export function brumesPostProcessor(): MarkdownPostProcessor {
 	return (
 		element: HTMLElement,
 		context: MarkdownPostProcessorContext,
 	) => {
-		if (!isEnabled()) {
-			return;
-		}
-
 		tagLog.debug("Running markdown post processor", { context });
 
 		const doc = element.doc;

@@ -112,6 +112,7 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 assert.match(scss, /@media \(max-width: 520px\)/);
 assert.match(scss, /@media \(min-width: 900px\)/);
 assert.match(scss, /markdown-reading-view:not\(\.adrenaline-one-column\)/);
+assert.match(scss, /markdown-preview-sizer > \.mod-header \{\s*column-span: all;/);
 assert.match(scss, /:is\(\.inline-title, \.el-h1, h1, h2\)/);
 assert.match(scss, /--adrenaline-page-texture/);
 assert.match(scss, /--adrenaline-callout-warning/);

@@ -74,6 +74,10 @@ if (source.includes('setName("Colours and fonts")') || source.includes("createMi
 	failures.push("The obsolete colours and fonts migration notice is still exposed in the settings tab.");
 }
 
+if (source.includes('setName("Tags, statuses and limits")') || source.includes("settings.features.tagsSyntax")) {
+	failures.push("The always-on tag syntax is still exposed as an optional setting.");
+}
+
 if (!source.includes("this.renderPersonalOverrides(generalSection)")) {
 	failures.push("Removing the migration notice also hid the personal overrides control.");
 }

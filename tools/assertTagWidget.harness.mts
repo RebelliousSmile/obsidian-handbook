@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { hasTagInsertion } from "../src/features/tags/contextMenu";
 import { HiddenBracketWidget } from "../src/features/tags/widgets";
 
 const createdSpan = {
@@ -28,5 +29,6 @@ const rendered = widget.toDOM();
 assert.equal(rendered, createdSpan);
 assert.equal(rendered.hidden, true);
 assert.equal(rendered.textContent, "{");
+assert.equal(hasTagInsertion(), true);
 
-console.log("Tag widget creates a detached span.");
+console.log("Tag syntax stays active and its widget creates a detached span.");

@@ -1,19 +1,13 @@
 import { Menu, Editor } from "obsidian";
-import { BrumesSettings } from "../../settings/types";
 
-export function hasTagInsertion(settings: BrumesSettings): boolean {
-	return settings.features.tagsSyntax;
+export function hasTagInsertion(): boolean {
+	return true;
 }
 
 export function contributeTagInsertion(
 	menu: Menu,
 	editor: Editor,
-	settings: BrumesSettings,
 ): number {
-	if (!hasTagInsertion(settings)) {
-		return 0;
-	}
-
 	menu.addItem((item) =>
 		item
 			.setTitle("Tag, status or limit")

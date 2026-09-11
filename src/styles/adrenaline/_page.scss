@@ -80,6 +80,12 @@
 			column-rule: 1px solid var(--adrenaline-rule);
 		}
 
+		// Obsidian groups the inline title and properties in `.mod-header`.
+		// Keep that complete document header above the editorial columns.
+		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > .mod-header {
+			column-span: all;
+		}
+
 		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > :is(.inline-title, .el-h1, h1, h2) {
 			column-span: all;
 		}

@@ -30,6 +30,7 @@ export type LogLevel = "none" | "error" | "warn" | "info" | "debug";
 export type ColourScheme = "obsidian" | "light" | "dark";
 
 export interface BrumesFeatureSettings {
+	/** Legacy persisted key; tag syntax is now always active. */
 	tagsSyntax: boolean;
 	workspaceTheme: boolean;
 	lanternIntegration: boolean;
