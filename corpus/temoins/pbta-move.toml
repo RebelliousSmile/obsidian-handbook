@@ -1,0 +1,13 @@
+slug = "hold-the-line"
+name = "Hold the Line"
+game = "masks"
+moveType = "basic"
+description = "Stand between danger and someone who needs protection."
+trigger = "When you plant yourself between danger and someone else."
+
+[roll]
+rollType = "danger"
+
+[results.success]
+label = "Full success"
+text = "Nothing gets past you."

@@ -3,9 +3,10 @@ import { readFileSync } from "node:fs";
 import { GAME_PACKS, initGameRegistry, resolveGamePack, resolveGameRegistration, gamePackClasses } from "../src/games/registry";
 import { loadCustomGamePacks } from "../src/games/customPacks";
 import { resolveGameAssets } from "../src/games/assets";
-import { GAME_PLUGIN_BLOCK_CAPABILITIES } from "../src/games/capabilities";
-import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
+import { GAME_PLUGIN_BLOCK_CAPABILITIES, PORTABLE_GAME_PLUGIN_SUPPORT } from "../src/games/capabilities";
+import { BRUMES_BLOCKS, isAvailableBlock } from "../src/features/blocks/registry";
 import { isBlockEnabled } from "../src/features/blocks/types";
+import { resolveThemeContents } from "../src/settings/themeContentsModal";
 import { log } from "../src/utils/logger";
 import { DEFAULT_SETTINGS, normalizeMode, normalizeSettings } from "../src/settings/types";
 
@@ -312,6 +313,31 @@ async function run(): Promise<void> {
 		);
 	}
 
+	/* Portable PbtA primitives are activated by capability, never by game id. */
+	{
+		const id = "never-seen-by-handbook";
+		const requires = [
+			...PORTABLE_GAME_PLUGIN_SUPPORT.blocks,
+			...PORTABLE_GAME_PLUGIN_SUPPORT.styles,
+		];
+		const { plugin } = fakePlugin({
+			[`${id}/pack.json`]: gamePlugin(id, { requires }),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		initGameRegistry(installed);
+		const settings = normalizeSettings({ mode: id });
+		const registration = resolveGameRegistration(id);
+		const contents = resolveThemeContents(registration, settings.callouts);
+
+		check("an unknown game id can install the portable PbtA contract", installed.length === 1);
+		check("the unknown PbtA game remains the active mode", settings.mode === id);
+		check("the PbtA playbook is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-playbook")!, settings));
+		check("the PbtA move is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-move")!, settings));
+		check("the unknown PbtA game exposes one handout", contents.handouts.map((block) => block.id).join(",") === "pbta-playbook");
+		check("the unknown PbtA game exposes both code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-move,pbta-playbook");
+		check("the unknown PbtA game exposes the four generic callouts", contents.callouts.filter((callout) => callout.capability === "style:pbta").length === 4);
+	}
+
 	/* A plugin asset root is relative and confined to its installation. */
 	{
 		const { plugin, reads } = fakePlugin({
@@ -345,10 +371,11 @@ async function run(): Promise<void> {
 		const registered = BRUMES_BLOCKS.map((block) => `block:${block.id}`).sort();
 		check("block capabilities match BRUMES_BLOCKS", JSON.stringify(declared) === JSON.stringify(registered));
 		for (const block of BRUMES_BLOCKS) {
-			const result = gamePlugin(block.mode, { requires: [`block:${block.id}`] });
+			const gameId = block.capability ? "unknown-pbta-game" : block.mode!;
+			const result = gamePlugin(gameId, { requires: [`block:${block.id}`] });
 			const parsed = JSON.parse(result) as unknown;
 			const manifest = (await import("../src/games/pluginManifest")).readGamePluginManifest(parsed, HOST_VERSION);
-			check(`${block.id} belongs to its renderer mode`, manifest.manifest !== undefined);
+			check(`${block.id} is accepted for its declared activation`, manifest.manifest !== undefined);
 		}
 	}
 

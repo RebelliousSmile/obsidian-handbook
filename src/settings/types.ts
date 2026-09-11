@@ -48,6 +48,7 @@ export interface BrumesFeatureSettings {
 	adrenalinePjParser: boolean;
 	adrenalinePnjParser: boolean;
 	adrenalineMonsterParser: boolean;
+	pbtaParser: boolean;
 }
 
 export interface CityOfMistCalloutAliases {
@@ -104,6 +105,7 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		adrenalinePjParser: true,
 		adrenalinePnjParser: true,
 		adrenalineMonsterParser: true,
+		pbtaParser: true,
 	},
 	callouts: NATIVE_CALLOUTS,
 	schemaSources: [],

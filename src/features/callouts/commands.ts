@@ -3,6 +3,8 @@ import type BrumesPlugin from "../../BrumesPlugin";
 import { GAME_PACKS } from "../../games/registry";
 import { insertCallout } from "./contextMenu";
 import { CalloutDefinition } from "./types";
+import { isCalloutAvailable } from "./types";
+import { findGameRegistration } from "../../games/registry";
 
 function commandId(entry: CalloutDefinition): string {
 	return `callout-insert-${entry.id}`;
@@ -93,7 +95,8 @@ function registerCalloutCommand(plugin: BrumesPlugin, id: string): void {
 				return false;
 			}
 
-			const visible = current.scope === "all" || current.scope === plugin.settings.mode;
+			const required = findGameRegistration(plugin.settings.mode)?.installation?.requires ?? [];
+			const visible = isCalloutAvailable(current, plugin.settings.mode, required);
 			if (!visible) {
 				return false;
 			}

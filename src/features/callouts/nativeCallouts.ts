@@ -1,5 +1,28 @@
 import { CalloutDefinition } from "./types";
 
+const PBTA_CALLOUTS: CalloutDefinition[] = [
+	{
+		id: "pbta-rule", name: "PbtA rule", aliases: ["pbta-rule"], scope: "all",
+		template: "title-body", icon: "book-open-check", font: "header",
+		color: { kind: "theme" }, native: true, styleKey: "pbta-rule", capability: "style:pbta",
+	},
+	{
+		id: "pbta-trigger", name: "PbtA trigger", aliases: ["pbta-trigger"], scope: "all",
+		template: "body-only", icon: "zap", font: "text",
+		color: { kind: "theme" }, native: true, styleKey: "pbta-trigger", capability: "style:pbta",
+	},
+	{
+		id: "pbta-choice", name: "PbtA choice", aliases: ["pbta-choice"], scope: "all",
+		template: "title-body", icon: "list-checks", font: "text",
+		color: { kind: "theme" }, native: true, styleKey: "pbta-choice", capability: "style:pbta",
+	},
+	{
+		id: "pbta-result", name: "PbtA result", aliases: ["pbta-result"], scope: "all",
+		template: "title-body", icon: "dice-6", font: "text",
+		color: { kind: "theme" }, native: true, styleKey: "pbta-result", capability: "style:pbta",
+	},
+];
+
 /**
  * The 7 historical styles, verrouillées : styleKey/scope/aliases par défaut
  * repris tels quels de `aliasSupport.ts` et des anciennes constantes
@@ -92,4 +115,5 @@ export const NATIVE_CALLOUTS: CalloutDefinition[] = [
 		native: true,
 		styleKey: "read-aloud",
 	},
+	...PBTA_CALLOUTS,
 ];

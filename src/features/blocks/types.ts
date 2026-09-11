@@ -14,8 +14,12 @@ export interface BrumesBlock<T> {
 	id: string;
 	/** Older ids kept working after a rename. */
 	aliases?: string[];
-	/** The mode this block belongs to. */
-	mode: BrumesMode;
+	/** Historical single-game activation. Shared blocks use `capability` instead. */
+	mode?: BrumesMode;
+	/** Installed-pack capability which activates a shared block. */
+	capability?: `block:${string}`;
+	/** True when this block is also a complete printable handout. */
+	handout?: boolean;
 	/** The feature flag that turns it on. */
 	flag: keyof BrumesFeatureSettings;
 	/** Context menu entry title. */
@@ -39,8 +43,12 @@ export interface BrumesBlock<T> {
 export function isBlockEnabled(
 	block: BrumesBlock<unknown>,
 	settings: BrumesSettings,
+	requiredCapabilities: readonly string[] = [],
 ): boolean {
-	return settings.mode === block.mode && settings.features[block.flag];
+	const active = block.capability
+		? requiredCapabilities.includes(block.capability)
+		: settings.mode === block.mode;
+	return active && settings.features[block.flag];
 }
 
 /** The block id followed by every alias it answers to. */

@@ -45,6 +45,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"obsidian": "^1.12.3",
+		"schema-pbta": "link:../schema-pbta",
 		"smol-toml": "^1.8.0"
 	},
 	"devDependencies": {

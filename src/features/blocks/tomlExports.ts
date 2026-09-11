@@ -28,6 +28,12 @@ import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { pnjToToml } from "../adrenalinePnj/schema";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { monsterToToml } from "../adrenalineMonstre/schema";
+import {
+	pbtaMoveBlock,
+	pbtaMoveToToml,
+	pbtaPlaybookBlock,
+	pbtaPlaybookToToml,
+} from "../pbta/block";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -173,6 +179,22 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: monsterToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "nom and four physical characteristics are required"),
+	},
+	{
+		block: pbtaPlaybookBlock,
+		commandId: "copy-pbta-playbook-as-toml",
+		noun: "PbtA playbook",
+		toToml: pbtaPlaybookToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta playbook contract"),
+	},
+	{
+		block: pbtaMoveBlock,
+		commandId: "copy-pbta-move-as-toml",
+		noun: "PbtA move",
+		toToml: pbtaMoveToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta move contract"),
 	},
 ];
 

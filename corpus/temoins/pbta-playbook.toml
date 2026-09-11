@@ -1,0 +1,8 @@
+slug = "quiet-spark"
+name = "Quiet Spark"
+game = "masks"
+description = "A minimal playbook from the canonical schema-pbta contract."
+moves = []
+
+[stats]
+danger = 0

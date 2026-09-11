@@ -2,9 +2,11 @@ import { App, Modal, Setting } from "obsidian";
 import { BRUMES_BLOCKS } from "../features/blocks/registry";
 import type { BrumesBlock } from "../features/blocks/types";
 import type { CalloutDefinition } from "../features/callouts/types";
+import { isCalloutAvailable } from "../features/callouts/types";
 import type { GameRegistration } from "../games/variants";
 
 export interface ThemeContents {
+	handouts: BrumesBlock<unknown>[];
 	callouts: CalloutDefinition[];
 	blocks: BrumesBlock<unknown>[];
 }
@@ -20,12 +22,14 @@ export function resolveThemeContents(
 			.filter((capability) => capability.startsWith("block:"))
 			.map((capability) => capability.slice("block:".length)),
 	);
+	const requiredCapabilities = registration.installation?.requires ?? [];
 
+	const blocks = BRUMES_BLOCKS.filter((block) => requiredBlocks.has(block.id));
 	return {
-		callouts: callouts.filter(
-			(callout) => callout.scope === "all" || callout.scope === gameId,
-		),
-		blocks: BRUMES_BLOCKS.filter((block) => requiredBlocks.has(block.id)),
+		handouts: blocks.filter((block) => block.handout),
+		callouts: callouts.filter((callout) =>
+			isCalloutAvailable(callout, gameId, requiredCapabilities)),
+		blocks,
 	};
 }
 
@@ -46,6 +50,17 @@ export class ThemeContentsModal extends Modal {
 	onOpen(): void {
 		this.setTitle(`${this.registration.pack.label} features`);
 		const contents = resolveThemeContents(this.registration, this.callouts);
+
+		this.contentEl.createEl("h3", { text: "Handouts" });
+		if (contents.handouts.length === 0) {
+			this.contentEl.createEl("p", { text: "No handout is declared for this game." });
+		} else {
+			for (const handout of contents.handouts) {
+				new Setting(this.contentEl)
+					.setName(handout.label)
+					.setDesc(`Code block: ${handout.id}`);
+			}
+		}
 
 		this.contentEl.createEl("h3", { text: "Callouts" });
 		if (contents.callouts.length === 0) {

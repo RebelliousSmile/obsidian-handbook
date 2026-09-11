@@ -1,6 +1,8 @@
 import type BrumesPlugin from "../../BrumesPlugin";
 import { BrumesSettings } from "../../settings/types";
 import { logScope } from "../../utils/logger";
+import { findGameRegistration } from "../../games/registry";
+import { isCalloutAvailable } from "./types";
 
 const BRUMES_CALLOUT_STYLE_ATTR = "data-brumes-callout-style";
 
@@ -97,9 +99,10 @@ function getCalloutElements(root: ParentNode & Node): HTMLElement[] {
  */
 function buildAliasMap(settings: BrumesSettings, activePackId: string): Map<string, string> {
 	const aliasMap = new Map<string, string>();
+	const required = findGameRegistration(activePackId)?.installation?.requires ?? [];
 
 	for (const entry of settings.callouts) {
-		if (entry.scope !== "all" && entry.scope !== activePackId) {
+		if (!isCalloutAvailable(entry, activePackId, required)) {
 			continue;
 		}
 

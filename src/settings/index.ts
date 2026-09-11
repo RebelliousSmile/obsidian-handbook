@@ -4,6 +4,7 @@ import { ColourScheme, LogLevel, sanitizeAliases } from "./types";
 import {
 	GAME_PACKS,
 	findGamePack,
+	findGameRegistration,
 	resolveGamePack,
 	resolveGameRegistration,
 } from "../games/registry";
@@ -11,6 +12,7 @@ import { resolveGameVariant } from "../games/variants";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
 import { CalloutDefinition } from "../features/callouts/types";
+import { isCalloutAvailable } from "../features/callouts/types";
 import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
 import { ThemeContentsModal } from "./themeContentsModal";
@@ -777,8 +779,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 	}
 
 	private renderCalloutsSection(section: SettingGroup) {
+		const required = findGameRegistration(this.plugin.settings.mode)?.installation?.requires ?? [];
 		for (const entry of this.plugin.settings.callouts) {
-			if (entry.scope !== "all" && entry.scope !== this.plugin.settings.mode) {
+			if (!isCalloutAvailable(entry, this.plugin.settings.mode, required)) {
 				continue;
 			}
 

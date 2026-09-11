@@ -1,6 +1,6 @@
 import { Editor, Menu, MenuItem } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
-import { gamePackClass } from "../../games/registry";
+import { findGameRegistration, gamePackClass } from "../../games/registry";
 import { BrumesSettings } from "../../settings/types";
 import { logScope } from "../../utils/logger";
 import { renderRawBlock } from "./fallback";
@@ -18,6 +18,7 @@ import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreatio
 import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
+import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
 
 const log = logScope("Blocks");
 
@@ -38,7 +39,20 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	adrenalinePjBlock,
 	adrenalinePnjBlock,
 	adrenalineMonsterBlock,
+	pbtaPlaybookBlock,
+	pbtaMoveBlock,
 ];
+
+function requiredCapabilities(settings: BrumesSettings): readonly string[] {
+	return findGameRegistration(settings.mode)?.installation?.requires ?? [];
+}
+
+export function isAvailableBlock(
+	block: BrumesBlock<unknown>,
+	settings: BrumesSettings,
+): boolean {
+	return isBlockEnabled(block, settings, requiredCapabilities(settings));
+}
 
 /**
  * A shape names the block it describes, so that it can be resolved without the
@@ -72,7 +86,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 					);
 				}
 
-				if (!isBlockEnabled(block, plugin.settings)) {
+				if (!isAvailableBlock(block, plugin.settings)) {
 					renderRawBlock(source, el, id);
 					return;
 				}
@@ -88,7 +102,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				}
 
 				log.debug(`Rendering ${id}:`, parsed);
-				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(block.mode));
+				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
 				el.appendChild(block.render(parsed, el.doc));
 			});
 		}
@@ -96,7 +110,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 }
 
 export function hasBlockInsertions(settings: BrumesSettings): boolean {
-	return BRUMES_BLOCKS.some((block) => isBlockEnabled(block, settings));
+	return BRUMES_BLOCKS.some((block) => isAvailableBlock(block, settings));
 }
 
 export function contributeBlockInsertions(
@@ -107,7 +121,7 @@ export function contributeBlockInsertions(
 	let added = 0;
 
 	for (const block of BRUMES_BLOCKS) {
-		if (!isBlockEnabled(block, settings)) {
+		if (!isAvailableBlock(block, settings)) {
 			continue;
 		}
 
