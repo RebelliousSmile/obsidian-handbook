@@ -15,7 +15,6 @@ function section(doc: Document, zone: BlockZone): HTMLElement {
 
 function narrativeLines(data: AdrenalinePnjData): string[] {
 	const lines: string[] = [];
-	if (data.description) lines.push(data.description);
 	const narrative = data.narratif;
 	if (!narrative) return lines;
 	for (const key of ["attitude", "historique", "evolutionPossible"] as const) {
@@ -52,9 +51,17 @@ export function renderAdrenalinePnj(data: AdrenalinePnjData, doc: Document): HTM
 		},
 		narrative: (zone) => {
 			const lines = narrativeLines(data);
-			if (lines.length === 0) return null;
+			if (!data.description && lines.length === 0) return null;
 			const element = section(doc, zone);
-			element.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-pnj--narrative-list"));
+			if (data.description) {
+				const description = doc.createElement("p");
+				description.classList.add("brumes-adrenaline-pnj--description");
+				description.textContent = data.description;
+				element.appendChild(description);
+			}
+			if (lines.length > 0) {
+				element.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-pnj--narrative-list"));
+			}
 			return element;
 		},
 		characteristics: (zone) => {

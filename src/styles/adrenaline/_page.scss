@@ -15,22 +15,39 @@
 	.markdown-source-view h2,
 	.markdown-reading-view h2,
 	.markdown-source-view h3,
-	.markdown-reading-view h3 {
+	.markdown-reading-view h3,
+	.markdown-source-view h4,
+	.markdown-reading-view h4 {
 		border-inline-start: none;
 		font-family: var(--font-header-theme);
 		letter-spacing: 0.035em;
 		text-wrap: balance;
 	}
 
-	.markdown-source-view :is(.inline-title, h1, h2, h3)::before,
-	.markdown-reading-view :is(.inline-title, h1, h2, h3)::before {
+	.markdown-source-view :is(.inline-title, h1, h2, h3, h4)::before,
+	.markdown-reading-view :is(.inline-title, h1, h2, h3, h4)::before {
 		display: none;
 		content: none;
+	}
+
+	.markdown-source-view .inline-title,
+	.markdown-reading-view .inline-title {
+		text-transform: var(--inline-title-text-transform, none);
+		font-weight: var(--inline-title-weight, inherit);
+	}
+
+	.markdown-source-view h1,
+	.markdown-reading-view h1 {
+		text-transform: var(--h1-text-transform, none);
+		font-weight: var(--h1-weight, inherit);
 	}
 
 	.markdown-source-view h2,
 	.markdown-reading-view h2 {
 		padding-block-end: 0.16em;
+		text-transform: var(--h2-text-transform, none);
+		font-weight: var(--h2-weight, inherit);
+		color: var(--h2-color, inherit);
 		border-block-end: 1px solid var(--adrenaline-rule);
 	}
 

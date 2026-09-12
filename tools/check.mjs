@@ -10,6 +10,7 @@ const packageJson = JSON.parse(
 const externalSchemaAssertions = new Set([
 	"assert:adrenaline-source",
 	"assert:adrenaline-theme",
+	"assert:adrenaline-zombiology-style",
 ]);
 const commands = [
 	"build",

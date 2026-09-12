@@ -24,6 +24,7 @@
 		"assert:adrenaline-documents": "node tools/assert-adrenaline-documents.mjs",
 		"assert:adrenaline-source": "node tools/assert-adrenaline-source.mjs",
 		"assert:adrenaline-theme": "node tools/assert-adrenaline-theme.mjs",
+		"assert:adrenaline-zombiology-style": "node tools/assert-adrenaline-zombiology-style.mjs",
 		"assert:pbta-theme": "node tools/assert-pbta-theme.mjs",
 		"assert:pbta-contract": "node tools/assert-pbta-contract.mjs",
 		"assert:settings-ui": "node tools/assert-settings-ui.mjs",
