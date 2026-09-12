@@ -1,9 +1,8 @@
 import { buildSync } from "esbuild";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 
 const projectRoot = process.cwd();
 const candidates = [];
@@ -22,7 +21,7 @@ if (common.status === 0) {
 }
 
 const sourceRoot = candidates.find((candidate) =>
-	existsSync(join(candidate, "src", "zod", "constants.ts")),
+	existsSync(join(candidate, "handbook", "adrenaline", "pack.json")),
 );
 if (!sourceRoot) {
 	console.error(
@@ -31,25 +30,10 @@ if (!sourceRoot) {
 	process.exit(1);
 }
 
-const tsx = join(
-	sourceRoot,
-	"node_modules",
-	".bin",
-	process.platform === "win32" ? "tsx.cmd" : "tsx",
-);
-if (!existsSync(tsx)) {
-	console.error(
-		`schema-adrenaline dependencies are missing at ${sourceRoot}. Run npm ci there after obtaining permission, then retry.`,
-	);
-	process.exit(1);
-}
-
-const work = mkdtempSync(join(tmpdir(), "handbook-adrenaline-source-"));
+const work = mkdtempSync(join(tmpdir(), "handbook-adrenaline-zombiology-style-"));
 const stub = join(work, "obsidian-stub.mjs");
-const bundle = join(work, "assert.mjs");
-writeFileSync(
-	stub,
-	`export class Notice { constructor() {} }
+const bundle = join(work, "assert.cjs");
+writeFileSync(stub, `export class Notice {}
 export class Menu {}
 export class MenuItem {}
 export class Editor {}
@@ -59,26 +43,24 @@ export class Setting {}
 export class Modal {}
 export class ItemView {}
 export function setIcon() {}
-`,
-);
+`);
 
 try {
 	buildSync({
-		entryPoints: ["tools/assertAdrenalineSource.harness.mts"],
+		entryPoints: ["tools/assertAdrenalineZombiologyStyle.harness.mts"],
 		outfile: bundle,
 		bundle: true,
 		platform: "node",
-		format: "esm",
+		format: "cjs",
 		target: "node16",
 		alias: { obsidian: stub },
 		logLevel: "warning",
 	});
-	const run = spawnSync(tsx, [bundle], {
+	const run = spawnSync(process.execPath, [bundle], {
 		stdio: "inherit",
 		env: { ...process.env, SCHEMA_ADRENALINE_ROOT: sourceRoot },
-		shell: process.platform === "win32",
 	});
-	process.exitCode = run.status ?? 1;
+	process.exit(run.status ?? 1);
 } finally {
 	rmSync(work, { recursive: true, force: true });
 }

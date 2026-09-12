@@ -1,0 +1,79 @@
+// The pack owns every colour, weight, transform and glyph. This partial owns
+// only the mapping from native Markdown constructs (headings, emphasis,
+// lists, tables, status marks) to the pack's custom properties. Every rule
+// falls back to a neutral value so an older pack that does not declare a
+// given token still renders a readable, unstyled equivalent.
+@mixin content {
+	.markdown-source-view h3,
+	.markdown-reading-view h3,
+	.HyperMD-header-3,
+	.HyperMD-list-line .cm-header-3 {
+		padding: 0.16em 0.4em;
+		text-transform: var(--h3-text-transform, none);
+		font-weight: var(--h3-weight, inherit);
+		color: var(--adrenaline-band-ink, var(--h3-color, inherit));
+		background: var(--adrenaline-band, none);
+	}
+
+	.markdown-source-view h4,
+	.markdown-reading-view h4,
+	.HyperMD-header-4,
+	.HyperMD-list-line .cm-header-4 {
+		font-family: var(--h4-font, inherit);
+		text-transform: var(--h4-text-transform, none);
+		font-weight: var(--h4-weight, inherit);
+		font-style: var(--h4-style, normal);
+		text-decoration: var(--h4-decoration, none);
+		color: var(--h4-color, inherit);
+	}
+
+	.markdown-source-view :is(em, i, .cm-em),
+	.markdown-reading-view :is(em, i, .cm-em) {
+		font-style: var(--adrenaline-emphasis-style, italic);
+		color: var(--adrenaline-emphasis-color, inherit);
+	}
+
+	.markdown-reading-view :is(ul, ol) li::marker {
+		content: var(--adrenaline-list-marker-glyph, "•") " ";
+		color: var(--list-marker-color, inherit);
+	}
+
+	.markdown-source-view table,
+	.markdown-reading-view table {
+		border: 1px solid var(--adrenaline-table-border, var(--background-modifier-border));
+	}
+
+	.markdown-source-view :is(th, td),
+	.markdown-reading-view :is(th, td) {
+		border-color: var(--adrenaline-table-border, var(--background-modifier-border));
+	}
+
+	.markdown-source-view thead th,
+	.markdown-reading-view thead th {
+		color: var(--adrenaline-table-header-ink, var(--table-header-color));
+		background: var(--adrenaline-table-header-bg, none);
+	}
+
+	.markdown-source-view tbody tr:nth-child(even),
+	.markdown-reading-view tbody tr:nth-child(even) {
+		background: var(--adrenaline-table-stripe, none);
+	}
+
+	// A note author marks a severity badge with native HTML, e.g.
+	// `<mark class="adrenaline-status-yellow">3 MALUS</mark>`, since Adrenaline
+	// has no dedicated block for a standalone status — Obsidian renders inline
+	// HTML in both reading view and Live Preview without a new parser.
+	.markdown-source-view mark.adrenaline-status-yellow,
+	.markdown-reading-view mark.adrenaline-status-yellow {
+		padding: 0.05em 0.4em;
+		color: var(--adrenaline-status-yellow-ink, inherit);
+		background: var(--adrenaline-status-yellow-bg, none);
+	}
+
+	.markdown-source-view mark.adrenaline-status-red,
+	.markdown-reading-view mark.adrenaline-status-red {
+		padding: 0.05em 0.4em;
+		color: var(--adrenaline-status-red-ink, inherit);
+		background: var(--adrenaline-status-red-bg, none);
+	}
+}
