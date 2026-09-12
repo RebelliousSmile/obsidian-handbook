@@ -1,6 +1,12 @@
 @mixin page {
+	// Obsidian's real PDF export never nests content under
+	// `.markdown-reading-view`/`.markdown-source-view` — `printToPdf()` builds a
+	// sibling `body > .print > .markdown-preview-view` instead (confirmed by
+	// reading `obsidian.asar`). `.print .markdown-preview-view` is added
+	// throughout this mixin so page-level styling reaches that container too.
 	.markdown-source-view,
-	.markdown-reading-view {
+	.markdown-reading-view,
+	.print .markdown-preview-view {
 		background-color: var(--background-primary);
 		background-image: var(--adrenaline-page-texture, none);
 		background-repeat: repeat;
@@ -10,12 +16,16 @@
 
 	.markdown-source-view .inline-title,
 	.markdown-reading-view .inline-title,
+	.print .markdown-preview-view .inline-title,
 	.markdown-source-view h1,
 	.markdown-reading-view h1,
+	.print .markdown-preview-view h1,
 	.markdown-source-view h2,
 	.markdown-reading-view h2,
+	.print .markdown-preview-view h2,
 	.markdown-source-view h3,
-	.markdown-reading-view h3 {
+	.markdown-reading-view h3,
+	.print .markdown-preview-view h3 {
 		border-inline-start: none;
 		font-family: var(--font-header-theme);
 		letter-spacing: 0.035em;
@@ -23,13 +33,15 @@
 	}
 
 	.markdown-source-view :is(.inline-title, h1, h2, h3)::before,
-	.markdown-reading-view :is(.inline-title, h1, h2, h3)::before {
+	.markdown-reading-view :is(.inline-title, h1, h2, h3)::before,
+	.print .markdown-preview-view :is(.inline-title, h1, h2, h3)::before {
 		display: none;
 		content: none;
 	}
 
 	.markdown-source-view h2,
-	.markdown-reading-view h2 {
+	.markdown-reading-view h2,
+	.print .markdown-preview-view h2 {
 		padding-block-end: 0.16em;
 		border-block-end: 1px solid var(--adrenaline-rule);
 	}
@@ -38,8 +50,10 @@
 	&.brumes--colour-light {
 		.markdown-source-view .inline-title,
 		.markdown-reading-view .inline-title,
+		.print .markdown-preview-view .inline-title,
 		.markdown-source-view h1,
-		.markdown-reading-view h1 {
+		.markdown-reading-view h1,
+		.print .markdown-preview-view h1 {
 			padding: 0.18em 0.32em;
 			color: var(--adrenaline-cartouche-ink);
 			background: var(--adrenaline-cartouche);
@@ -50,8 +64,10 @@
 	&.brumes--colour-dark {
 		.markdown-source-view .inline-title,
 		.markdown-reading-view .inline-title,
+		.print .markdown-preview-view .inline-title,
 		.markdown-source-view h1,
-		.markdown-reading-view h1 {
+		.markdown-reading-view h1,
+		.print .markdown-preview-view h1 {
 			padding: 0.28em 0.42em;
 			color: var(--adrenaline-cartouche-ink);
 			background: var(--adrenaline-cartouche);
@@ -60,6 +76,17 @@
 	}
 
 	.markdown-reading-view .markdown-preview-sizer > :is(
+		h1,
+		h2,
+		h3,
+		.callout,
+		pre,
+		table,
+		.brumes-adrenaline-pj,
+		.brumes-adrenaline-pnj,
+		.brumes-adrenaline-monstre
+	),
+	.print .markdown-preview-view > :is(
 		h1,
 		h2,
 		h3,
@@ -104,6 +131,18 @@
 			.block-language-adrenaline-monstre
 		) {
 			column-span: all;
+		}
+	}
+
+	@media print {
+		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer {
+			column-count: 1;
+		}
+
+		.markdown-source-view,
+		.markdown-reading-view,
+		.print .markdown-preview-view {
+			background-image: none;
 		}
 	}
 }
