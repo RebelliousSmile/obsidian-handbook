@@ -58,6 +58,7 @@ export interface Competence {
 	caracteristique?: CharacteristicKey;
 	total?: number;
 	avantages?: string[];
+	notes?: string;
 }
 
 export interface Formation {
@@ -263,7 +264,7 @@ export function readCompetences(value: unknown): Competence[] {
 	for (const record of asRecordList(value)) {
 		warnUnknownKeys(
 			record,
-			["nom", "specialite", "pourcentage", "caracteristique", "total", "avantages"],
+			["nom", "specialite", "pourcentage", "caracteristique", "total", "avantages", "notes"],
 			"competence",
 		);
 		const nom = asString(record.nom);
@@ -280,6 +281,8 @@ export function readCompetences(value: unknown): Competence[] {
 		if (total !== undefined) competence.total = total;
 		const avantages = asStringList(record.avantages);
 		if (avantages.length > 0) competence.avantages = avantages;
+		const notes = asString(record.notes);
+		if (notes) competence.notes = notes;
 		result.push(competence);
 	}
 	return result;

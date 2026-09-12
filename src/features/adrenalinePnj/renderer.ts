@@ -1,10 +1,13 @@
 import {
+	AdrenalineEntry,
 	adrenalineList,
 	adrenalineSection,
 	renderCharacteristics,
+	renderEntryList,
 	renderHealth,
+	renderRows,
 } from "../adrenaline/view";
-import { displayedCompetenceTotal } from "../adrenaline/document";
+import { CharacteristicKey, displayedCompetenceTotal, Equipment, EquipmentWeapon } from "../adrenaline/document";
 import { BlockZone, renderZones } from "../blocks/shape";
 import { AdrenalinePnjData } from "./parser";
 import { adrenalinePnjShape } from "./shape";
@@ -17,13 +20,39 @@ function narrativeLines(data: AdrenalinePnjData): string[] {
 	const lines: string[] = [];
 	const narrative = data.narratif;
 	if (!narrative) return lines;
-	for (const key of ["attitude", "historique", "evolutionPossible"] as const) {
-		if (narrative[key]) lines.push(narrative[key] ?? "");
-	}
-	for (const key of ["personnalite", "interpretation", "repliques", "notesMj"] as const) {
-		if (narrative[key]) lines.push(...(narrative[key] ?? []));
-	}
+	if (narrative.attitude) lines.push(`Attitude : ${narrative.attitude}`);
+	if (narrative.historique) lines.push(`Historique : ${narrative.historique}`);
+	if (narrative.evolutionPossible) lines.push(`Évolution possible : ${narrative.evolutionPossible}`);
+	if (narrative.personnalite?.length) lines.push(`Personnalité : ${narrative.personnalite.join(", ")}`);
+	if (narrative.interpretation?.length) lines.push(`Interprétation : ${narrative.interpretation.join(", ")}`);
+	for (const line of narrative.repliques ?? []) lines.push(`Réplique : « ${line} »`);
+	for (const line of narrative.notesMj ?? []) lines.push(`Note MJ : ${line}`);
 	return lines;
+}
+
+function characteristicSuffix(caracteristique: CharacteristicKey | undefined): string {
+	return caracteristique ? ` + ${caracteristique.toUpperCase()}` : "";
+}
+
+function weaponEntry(weapon: EquipmentWeapon): AdrenalineEntry {
+	const subLines: string[] = [];
+	if (weapon.desDeDegats !== undefined) subLines.push(`Dégâts : ${weapon.desDeDegats} d10`);
+	if (weapon.notes) subLines.push(weapon.notes);
+	return {
+		title: `${weapon.nom}${weapon.type ? ` (${weapon.type})` : ""}`,
+		value: weapon.pourcentage === undefined ? undefined : `${weapon.pourcentage} %`,
+		subLines,
+	};
+}
+
+function possessionLines(equipment: Equipment): string[] {
+	const lines = [...(equipment.possessions ?? [])];
+	if (equipment.equipementFavori) lines.push(`Favori : ${equipment.equipementFavori}`);
+	return lines;
+}
+
+function weaponEntries(equipment: Equipment): AdrenalineEntry[] {
+	return [...(equipment.armesPhysiques ?? []), ...(equipment.armesMentales ?? [])].map(weaponEntry);
 }
 
 export function renderAdrenalinePnj(data: AdrenalinePnjData, doc: Document): HTMLElement {
@@ -74,31 +103,55 @@ export function renderAdrenalinePnj(data: AdrenalinePnjData, doc: Document): HTM
 			if (!data.sante && !data.protections) return null;
 			const element = section(doc, zone);
 			if (data.sante) element.appendChild(renderHealth(doc, data.sante));
-			const values: string[] = [];
-			if (data.protections?.physiques?.solidite !== undefined) values.push(`Solidité physique : ${data.protections.physiques.solidite}`);
-			if (data.protections?.mentales?.solidite !== undefined) values.push(`Solidité mentale : ${data.protections.mentales.solidite}`);
-			if (values.length > 0) element.appendChild(adrenalineList(doc, values, "brumes-adrenaline-pnj--protection-list"));
+			const protectionLines: string[] = [];
+			if (data.protections?.physiques?.solidite !== undefined) protectionLines.push(`Solidité physique : ${data.protections.physiques.solidite}`);
+			if (data.protections?.mentales?.solidite !== undefined) protectionLines.push(`Solidité mentale : ${data.protections.mentales.solidite}`);
+			const armour = data.protections?.physiques?.armure;
+			if (armour) protectionLines.push(`Armure : ${armour.nom ?? ""} · ${armour.points} PP · ${armour.localisations.join(", ")}`);
+			const character = data.protections?.mentales?.caractere;
+			if (character) protectionLines.push(`Caractère : ${character.trait} · ${character.points} PM · ${character.localisations.join(", ")}`);
+			if (protectionLines.length > 0) {
+				element.appendChild(renderRows(doc, protectionLines, "brumes-adrenaline-pnj--protection-rows"));
+			}
 			return element;
 		},
 		competences: (zone) => {
 			if (formations.length === 0 && competences.length === 0) return null;
 			const element = section(doc, zone);
-			const values = formations.map((item) => `${item.nom} · ${item.pourcentage} %`);
-			for (const item of competences) {
-				const total = displayedCompetenceTotal(item, data.caracteristiques);
-				values.push(`${item.nom}${item.specialite ? ` (${item.specialite})` : ""} · ${total ?? item.pourcentage} %`);
+			if (formations.length > 0) {
+				element.appendChild(renderEntryList(doc, formations.map((item) => ({
+					title: item.nom,
+					value: `${item.pourcentage} %`,
+				})), "brumes-adrenaline-pnj--formation-list"));
 			}
-			element.appendChild(adrenalineList(doc, values, "brumes-adrenaline-pnj--competence-list"));
+			if (competences.length > 0) {
+				element.appendChild(renderEntryList(doc, competences.map((item) => {
+					const total = displayedCompetenceTotal(item, data.caracteristiques);
+					const subLines: string[] = [];
+					if (total !== undefined) subLines.push(`${item.pourcentage} %${characteristicSuffix(item.caracteristique)}`);
+					if (item.avantages?.length) subLines.push(`Avantage : ${item.avantages.join(", ")}`);
+					if (item.notes) subLines.push(item.notes);
+					return {
+						title: `${item.nom}${item.specialite ? ` (${item.specialite})` : ""}`,
+						value: `${total ?? item.pourcentage} %`,
+						subLines,
+					};
+				}), "brumes-adrenaline-pnj--competence-list"));
+			}
 			return element;
 		},
 		equipment: (zone) => {
 			if (!data.equipement) return null;
-			const values = [...(data.equipement.possessions ?? [])];
-			if (data.equipement.equipementFavori) values.push(`Favori : ${data.equipement.equipementFavori}`);
-			for (const weapon of [...(data.equipement.armesPhysiques ?? []), ...(data.equipement.armesMentales ?? [])]) values.push(weapon.nom);
-			if (values.length === 0) return null;
+			const possessions = possessionLines(data.equipement);
+			const weapons = weaponEntries(data.equipement);
+			if (possessions.length === 0 && weapons.length === 0) return null;
 			const element = section(doc, zone);
-			element.appendChild(adrenalineList(doc, values, "brumes-adrenaline-pnj--equipment-list"));
+			if (possessions.length > 0) {
+				element.appendChild(adrenalineList(doc, possessions, "brumes-adrenaline-pnj--equipment-list"));
+			}
+			if (weapons.length > 0) {
+				element.appendChild(renderEntryList(doc, weapons, "brumes-adrenaline-pnj--weapon-list"));
+			}
 			return element;
 		},
 	});

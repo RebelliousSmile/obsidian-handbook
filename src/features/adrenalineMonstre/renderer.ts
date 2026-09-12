@@ -69,6 +69,7 @@ function capabilities(data: AdrenalineMonsterData): string[] {
 			competence.specialite,
 			`${displayedCompetenceTotal(competence, data.caracteristiques) ?? competence.pourcentage} %`,
 			...(competence.avantages ?? []),
+			competence.notes,
 		].filter((value): value is string => Boolean(value));
 		lines.push(`${competence.nom} · ${details.join(" · ")}`);
 	}

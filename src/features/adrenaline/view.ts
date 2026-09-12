@@ -32,6 +32,60 @@ export function adrenalineList(
 	return list;
 }
 
+export function renderRows(
+	doc: Document,
+	values: string[],
+	className: string,
+): HTMLElement {
+	const wrap = doc.createElement("div");
+	wrap.classList.add(className);
+	for (const value of values) {
+		const row = doc.createElement("div");
+		row.textContent = value;
+		wrap.appendChild(row);
+	}
+	return wrap;
+}
+
+export interface AdrenalineEntry {
+	title: string;
+	value?: string;
+	subLines?: string[];
+}
+
+export function renderEntryList(
+	doc: Document,
+	entries: AdrenalineEntry[],
+	className: string,
+): HTMLElement {
+	const list = doc.createElement("ul");
+	list.classList.add(className, "brumes-adrenaline--entry-list");
+	for (const entry of entries) {
+		const item = doc.createElement("li");
+		item.classList.add("brumes-adrenaline--entry");
+		const head = doc.createElement("div");
+		head.classList.add("brumes-adrenaline--entry-head");
+		const title = doc.createElement("strong");
+		title.textContent = entry.title;
+		head.appendChild(title);
+		if (entry.value) {
+			const value = doc.createElement("span");
+			value.classList.add("brumes-adrenaline--entry-value");
+			value.textContent = entry.value;
+			head.appendChild(value);
+		}
+		item.appendChild(head);
+		for (const sub of entry.subLines ?? []) {
+			const subLine = doc.createElement("div");
+			subLine.classList.add("brumes-adrenaline--entry-sub");
+			subLine.textContent = sub;
+			item.appendChild(subLine);
+		}
+		list.appendChild(item);
+	}
+	return list;
+}
+
 export function renderCharacteristics(
 	doc: Document,
 	characteristics: Characteristics,
