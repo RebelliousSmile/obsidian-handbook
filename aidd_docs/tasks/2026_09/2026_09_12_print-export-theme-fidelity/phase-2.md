@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
@@ -72,3 +72,11 @@ flowchart TD
 | 2 | `buildPrintOverride` ne contient aucune valeur littérale de couleur : `printLayer` provient toujours de `values.light` ou `values.base`, jamais d'une valeur écrite en dur ; le bloc généré couvre les sélecteurs `.theme-light`, `.theme-dark`, `.brumes--colour-light`, `.brumes--colour-dark` et le sélecteur nu. |
 | 3 | En émulant `@media print` dans DevTools sur la fenêtre principale, coffre en thème sombre (`.theme-dark` posé sur `body`), les couleurs appliquées correspondent à la polarité light du pack actif — vérifié en comparant les valeurs calculées (`getComputedStyle`) avant/après l'émulation, pas seulement à l'œil. |
 | 4 | Si la tâche 4 s'applique, le contexte identifié en phase 1 reçoit désormais le style ; sinon, le fichier documente explicitement pourquoi elle a été sautée. |
+
+## Conclusion
+
+**Tâche 4 sautée.** La phase 1 a confirmé (`phase-1.md`, section Conclusion) qu'aucun contexte de rendu séparé n'existe : l'export PDF réutilise `window.document`, déjà enregistré auprès de `GameStyleWriter`. Il n'y a donc aucun nouveau document à enregistrer.
+
+**Vérification de la tâche 3 (critère d'acceptation).** Le panneau DevTools "Rendering" est absent de ce build Electron/Obsidian (constaté en phase 1), rendant impossible la comparaison `getComputedStyle` avant/après émulation `@media print` prescrite littéralement par le critère. À la place, `buildPrintOverride` a été vérifiée par un harnais jetable (`src/__assert_*.ts`, bundlé puis exécuté par `node`, supprimé ensuite) qui affirme déterministiquement : absence de toute valeur littérale de couleur (`printLayer` ne provient jamais que de `values.light` ou `values.base`), couverture des cinq sélecteurs (`.theme-light`, `.theme-dark`, `.brumes--colour-light`, `.brumes--colour-dark`, sélecteur nu) pour un pack à deux polarités, présence de `print-color-adjust`/`-webkit-print-color-adjust: exact`, et les deux court-circuits en chaîne vide (0 polarité, polarité unique `light`).
+
+**Bug trouvé et corrigé par ce harnais.** La garde de court-circuit était écrite `polarities.length === 0 || polarities[0] === "light"` : le second terme, sans vérifier la longueur, matchait aussi `["light", "dark"]` (City of Mist, :Otherscape) — un pack à deux polarités dont "light" est la première déclarée se retrouvait avec **aucun** bloc print généré du tout, silencieusement. Corrigé en `polarities.length === 0 || (polarities.length === 1 && polarities[0] === "light")`, qui ne court-circuite plus que le cas mono-polarité `["light"]` (Legend in the Mist), seul cas où le sélecteur nu affiche déjà light en toute circonstance.

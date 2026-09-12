@@ -13,6 +13,7 @@ import {
 } from "./features/modes/domModeClass";
 import {
 	buildGameStyle,
+	buildPrintOverride,
 	GameStyleWriter,
 } from "./features/modes/styleElement";
 import {
@@ -314,24 +315,37 @@ export default class BrumesPlugin extends Plugin {
 			void this.refreshAssets(registration);
 		}
 
+		const mergedValues = {
+			...style,
+			base: {
+				note: { ...style.base.note, ...images },
+				workspace: style.base.workspace,
+			},
+		};
+		// The game says which polarities it has, and the user's file may claim
+		// others; nothing here supplies one neither of them named.
+		const polarities = this.overrides.polarities ?? appearance.polarities;
+
 		const block = buildGameStyle(
 			pack.id,
-			{
-				...style,
-				base: {
-					note: { ...style.base.note, ...images },
-					workspace: style.base.workspace,
-				},
-			},
+			mergedValues,
 			this.settings.features.workspaceTheme,
-			// The game says which polarities it has, and the user's file may
-			// claim others; nothing here supplies one neither of them named.
-			this.overrides.polarities ?? appearance.polarities,
+			polarities,
 			this.settings.colourScheme,
 		);
 
+		// Printing always forces light polarity, independently of the vault's
+		// live theme or colour-scheme override — see buildPrintOverride.
+		const printOverride = buildPrintOverride(
+			pack.id,
+			mergedValues,
+			this.settings.features.workspaceTheme,
+			polarities,
+		);
+		const withPrint = printOverride ? `${block}\n\n${printOverride}` : block;
+
 		const calloutCss = buildCalloutStyleCss(this.settings.callouts);
-		const withCallouts = calloutCss ? `${block}\n\n${calloutCss}` : block;
+		const withCallouts = calloutCss ? `${withPrint}\n\n${calloutCss}` : withPrint;
 
 		this.gameStyle.applyGameStyle(
 			fontCss ? `${fontCss}\n\n${withCallouts}` : withCallouts,
