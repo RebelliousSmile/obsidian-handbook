@@ -31,7 +31,12 @@ if (!sourceRoot) {
 	process.exit(1);
 }
 
-const tsx = join(sourceRoot, "node_modules", ".bin", "tsx");
+const tsx = join(
+	sourceRoot,
+	"node_modules",
+	".bin",
+	process.platform === "win32" ? "tsx.cmd" : "tsx",
+);
 if (!existsSync(tsx)) {
 	console.error(
 		`schema-adrenaline dependencies are missing at ${sourceRoot}. Run npm ci there after obtaining permission, then retry.`,
@@ -71,6 +76,7 @@ try {
 	const run = spawnSync(tsx, [bundle], {
 		stdio: "inherit",
 		env: { ...process.env, SCHEMA_ADRENALINE_ROOT: sourceRoot },
+		shell: process.platform === "win32",
 	});
 	process.exitCode = run.status ?? 1;
 } finally {
