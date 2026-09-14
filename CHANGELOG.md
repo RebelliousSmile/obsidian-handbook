@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.8.6] - 2026-09-14
+
+### Changed
+
+- Consume the installed `schema-in-the-mist` v1.0.0 contract corpus across Handbook assertions while preserving all 12 tolerant renderers and removing the duplicated local Mist fixtures.
+- Keep the immutable Mist Engine release URL and its integrity in both lockfiles instead of persisting an expiring signed GitHub redirect.
+
 ## [2.8.5] - 2026-09-14
 
 ### Added
