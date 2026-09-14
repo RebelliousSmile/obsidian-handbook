@@ -1,29 +1,16 @@
 # Le schéma dépositaire du design
 
 > Ce que doit un format au schéma, et ce que doit un pack de jeu.
-> Écrit le 2026-09-08, après un assert qui a mesuré l'écart entre six blocs.
+> Écrit le 2026-09-08, puis aligné sur les contrats externes v1 le 2026-09-14.
 
 ## Le constat
 
-Six blocs fencés existent : `theme-card`, `litm-challenge`, `litm-journey`,
-`litm-theme-kit`, `com-theme-card`, `com-danger`. Ils se comportent de **quatre
-façons différentes** vis-à-vis du schéma :
-
-| Bloc              | Lit un document TOML | Écrit un document TOML |
-| ----------------- | -------------------- | ---------------------- |
-| `litm-challenge`  | oui                  | oui                    |
-| `com-danger`      | oui                  | oui                    |
-| `theme-card`      | non                  | oui                    |
-| `com-theme-card`  | non                  | non                    |
-| `litm-journey`    | non                  | non                    |
-| `litm-theme-kit`  | non                  | non                    |
-
-`com-danger` et `com-theme-card` ont été ajoutés dans la même série. Le premier
-a toute la chaîne, le second n'en a rien. La cause n'est pas la négligence :
-**aucune règle écrite ne disait quoi faire**, et le commentaire d'en-tête de
-`tomlExports.ts` accordait même une dispense aux formats sans amont.
-
-Cette page est la règle qui manquait.
+La règle est née quand six blocs fencés lisaient et écrivaient leurs schémas de
+façons différentes. Elle couvre désormais plusieurs propriétaires de contrat :
+Mist Engine publie 14 cibles canoniques dont Handbook rend 12, tandis
+qu’Adrenaline et PbtA gardent leurs propres intégrations. La question n’est donc
+plus seulement « ce bloc a-t-il un schéma ? », mais aussi « quel dépôt possède
+ce schéma et son corpus ? ».
 
 ## La checklist d'un format
 
@@ -43,9 +30,10 @@ aucune ne dépend de l'existence d'un amont.
    zones et le rôle d'image que chacune porte. Le renderer pose les zones, le
    SCSS les habille.
 
-Les quatre sont vérifiées par le harnais de corpus (`pnpm assert:corpus`), pas
-seulement écrites ici. Une règle que rien ne contrôle reproduit d'un cran plus
-haut la défaillance qu'elle corrige.
+Les quatre sont vérifiées par les harnais de corpus (`pnpm assert:corpus` et,
+pour Mist, `pnpm assert:mist-contract`), pas seulement écrites ici. Une règle
+que rien ne contrôle reproduit d'un cran plus haut la défaillance qu'elle
+corrige.
 
 ## Zéro exemption
 
@@ -116,6 +104,13 @@ Les deux camps ne font pas le même travail, et c'est voulu :
 **Le même corpus alimente les deux assertions.** Un cas de refus prouve que le
 schéma rejette ; le même document prouve que le consommateur dégrade sans
 casser. Deux corpus séparés dériveraient l'un de l'autre.
+
+Le corpus vit chez le propriétaire du contrat. Pour Mist Engine, Handbook lit
+directement `corpus/contract/cases.json` depuis le package immuable
+`schema-in-the-mist` v1.0.0 : `canonical` porte le verdict strict et `handbook`
+le verdict tolérant. Handbook ne conserve aucune copie de ces cas. Un format
+possédé ici, ou dont l’intégration ne publie pas encore de manifeste partagé,
+utilise le corpus local sous `corpus/`.
 
 Le corpus a deux moitiés, et les deux sont nécessaires :
 
@@ -191,7 +186,9 @@ l'`@include`. Jamais dupliquer les valeurs, jamais dupliquer l'image.
 2. un booléen dans `BrumesFeatureSettings` + un `Setting` dans l'onglet ;
 3. un partial SCSS ;
 4. **les quatre obligations de la checklist ci-dessus** ;
-5. un témoin et un cas de refus dans le corpus.
+5. un témoin et un cas de refus dans le corpus du **propriétaire du contrat** :
+   dans le package externe quand il publie un manifeste partagé, sinon dans le
+   corpus local de Handbook.
 
 Deux règles de compatibilité qui ne souffrent pas d'exception :
 
