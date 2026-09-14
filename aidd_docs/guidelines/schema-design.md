@@ -112,6 +112,13 @@ le verdict tolérant. Handbook ne conserve aucune copie de ces cas. Un format
 possédé ici, ou dont l’intégration ne publie pas encore de manifeste partagé,
 utilise le corpus local sous `corpus/`.
 
+Un package distribué comme asset GitHub Release garde dans chaque lockfile
+l’URL publique immuable et une intégrité ; une URL de redirection signée sous
+`release-assets.githubusercontent.com` n’est jamais un verrou, car son jeton
+expire. L’assertion du contrat contrôle `specifier`, `version`, `tarball` et
+intégrité hors ligne. Une installation figée depuis un store vide prouve
+séparément que ce verrou sait encore télécharger l’asset.
+
 Le corpus a deux moitiés, et les deux sont nécessaires :
 
 - **refus** : des documents qui doivent être rejetés ;
