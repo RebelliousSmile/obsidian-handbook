@@ -1,6 +1,6 @@
 ---
 objective: "Handbook épingle l’asset immuable schema-in-the-mist v1.0.0 avec une intégrité reproductible, exerce les 14 cibles de son corpus canonique tout en conservant ses 12 renderers tolérants, puis ne garde localement aucun doublon de corpus Mist."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Contrat Mist Engine v1
