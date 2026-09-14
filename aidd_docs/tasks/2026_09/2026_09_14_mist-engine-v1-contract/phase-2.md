@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Bascule des harnais et retrait des doublons Mist
@@ -81,7 +81,7 @@ journey
 
 1. Faire lire à `dumpDom.harness.mts` les cas Mist du manifeste installé en plus des cas hôte locaux, avec des libellés déterministes portant l’id canonique.
 2. Inclure dans le dump les cas `render` et `degraded`, et représenter explicitement les attentes `null`, pour préserver la comparaison des zones absentes.
-3. Faire obtenir à `overrideRoundTrip.harness.mts` les sources `litm-challenge-valid` et `litm-journey-valid` par leur id canonique au lieu de chemins locaux.
+3. Faire obtenir à `overrideRoundTrip.harness.mts` les sources `litm-challenge-secrets` et `litm-journey-valid` par leur id canonique au lieu de chemins locaux ; le premier est nécessaire au scénario qui masque puis restaure la zone `secrets`.
 4. Stabiliser l’ordre des autres cas par leur id afin qu’une évolution d’ordre du manifeste ne rende pas les assertions aléatoires.
 
 ### `3)` Retirer uniquement les copies Mist
