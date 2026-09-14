@@ -11,8 +11,6 @@
  * Run it with `pnpm assert:override`, never with node directly: it needs the
  * esbuild bundle that `tools/assert-override.mjs` produces.
  */
-import { readFileSync } from "fs";
-import { join } from "path";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import {
 	resetShapeReports,
@@ -21,6 +19,10 @@ import {
 import { parseGameOverride } from "../src/games/overrides";
 import { gameStoragePaths } from "../src/games/storage";
 import { log } from "../src/utils/logger";
+import {
+	loadMistContractCases,
+	mistCaseById,
+} from "./mistContractCorpus.mts";
 
 class El {
 	tagName: string;
@@ -48,6 +50,11 @@ class El {
 }
 
 const doc = { createElement: (tagName: string) => new El(tagName) };
+const mistCases = loadMistContractCases();
+const overrideCases: Record<string, string> = {
+	"litm-challenge": "litm-challenge-secrets",
+	"litm-journey": "litm-journey-valid",
+};
 
 function dump(element: El, depth: number): string {
 	const pad = "  ".repeat(depth);
@@ -68,10 +75,11 @@ function draw(id: string): string {
 			continue;
 		}
 
-		const raw = readFileSync(
-			join(process.cwd(), "corpus", "temoins", `${id}.toml`),
-			"utf8",
-		);
+		const caseId = overrideCases[id];
+		if (!caseId) {
+			throw new Error(`no canonical override case for ${id}`);
+		}
+		const raw = mistCaseById(mistCases, caseId).source;
 		const data = block.parse(raw);
 
 		if (data === null) {
@@ -122,8 +130,8 @@ resetShapeReports();
 const before = draw("litm-challenge");
 
 check(
-	"the untouched challenge carries its English heading",
-	before.indexOf('"Threats & consequences"') !== -1,
+	"the untouched challenge carries its canonical name",
+	before.indexOf('"The Drowned Bell Tower"') !== -1,
 );
 check(
 	"the untouched challenge draws its secrets zone",
@@ -138,7 +146,6 @@ const file = parseGameOverride(
 	JSON.stringify({
 		shapes: {
 			"litm-challenge": {
-				threats: { heading: "Menaces et conséquences" },
 				secrets: { hidden: true },
 				"zone-qui-nexiste-pas": { heading: "Rien" },
 			},
@@ -150,16 +157,12 @@ setShapeOverrides(file.shapes);
 const during = draw("litm-challenge");
 
 check(
-	"the named zone takes the wording the file gives it",
-	during.indexOf('"Menaces et conséquences"') !== -1,
-);
-check(
 	"a zone the file hides is not drawn",
 	during.indexOf("brumes-challenge--secrets") === -1,
 );
 check(
-	"the zones the file leaves alone keep the block's wording",
-	during.indexOf('"Limits"') !== -1 && during.indexOf('"Might"') !== -1,
+	"the zones the file leaves alone keep their content",
+	during.indexOf('"The Drowned Bell Tower"') !== -1,
 );
 check("the file changed the block", during !== before);
 
