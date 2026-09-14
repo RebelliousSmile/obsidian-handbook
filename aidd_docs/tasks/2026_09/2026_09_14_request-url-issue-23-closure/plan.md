@@ -1,6 +1,6 @@
 ---
 objective: "L’issue #23 est fermée avec des preuves reproductibles que les installations de starter kit et de source lisent les réponses texte et binaires selon le contrat Obsidian déjà livré en 2.7.1."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Clôture du correctif requestUrl
