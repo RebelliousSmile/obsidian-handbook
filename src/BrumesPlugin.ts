@@ -314,19 +314,22 @@ export default class BrumesPlugin extends Plugin {
 			void this.refreshAssets(registration);
 		}
 
+		const mergedValues = {
+			...style,
+			base: {
+				note: { ...style.base.note, ...images },
+				workspace: style.base.workspace,
+			},
+		};
+		// The game says which polarities it has, and the user's file may claim
+		// others; nothing here supplies one neither of them named.
+		const polarities = this.overrides.polarities ?? appearance.polarities;
+
 		const block = buildGameStyle(
 			pack.id,
-			{
-				...style,
-				base: {
-					note: { ...style.base.note, ...images },
-					workspace: style.base.workspace,
-				},
-			},
+			mergedValues,
 			this.settings.features.workspaceTheme,
-			// The game says which polarities it has, and the user's file may
-			// claim others; nothing here supplies one neither of them named.
-			this.overrides.polarities ?? appearance.polarities,
+			polarities,
 			this.settings.colourScheme,
 		);
 

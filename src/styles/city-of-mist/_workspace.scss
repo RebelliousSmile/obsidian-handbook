@@ -218,6 +218,67 @@
 			--link-external-decoration: none;
 
 			--brumes-internal-link-line: #5fc6f0;
+
+			// Contextual menus are workspace chrome, not note content. The host
+			// used its light menu surface here while inheriting City’s light text,
+			// making disabled commands disappear. Keep all three menu states in
+			// the same night register as the surrounding workspace.
+			.menu {
+				background-color: #382859;
+				border-color: #51406c;
+			}
+
+			.menu-item {
+				color: #f2f2f0;
+
+				&:hover:not(.is-disabled) {
+					color: #ffffff;
+					background-color: #4b356a;
+				}
+
+				&.is-disabled {
+					color: #c2b8cf;
+					opacity: 1;
+				}
+			}
+
+			.menu-separator {
+				border-color: #51406c;
+			}
+
+			// The command palette is a modal rather than a contextual `.menu`.
+			// It lives in Obsidian's chrome, outside the pack's note layer, so it
+			// needs the same night surface explicitly.
+			.prompt,
+			.suggestion-container {
+				background-color: #382859;
+				border-color: #51406c;
+			}
+
+			.prompt-input {
+				color: #f2f2f0;
+				background-color: #382859;
+				border-bottom-color: #e6007e;
+			}
+
+			.suggestion-item {
+				color: #f2f2f0;
+
+				&.is-selected {
+					color: #ffffff;
+					background-color: #4b356a;
+				}
+
+				&.is-disabled {
+					color: #c2b8cf;
+					opacity: 1;
+				}
+			}
+
+			.suggestion-hotkey {
+				color: #e0def4;
+				background-color: #432f5e;
+			}
 		}
 
 		// The v1 theme drew the link line as a border. The plugin already

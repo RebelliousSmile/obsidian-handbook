@@ -93,6 +93,15 @@ function noteSelector(
 		`body.${modeClass}${themeClass} .workspace-leaf-content[data-type="markdown"]`,
 		`body.${modeClass}${themeClass} .markdown-source-view`,
 		`body.${modeClass}${themeClass} .markdown-reading-view`,
+		// Obsidian's real PDF export (`printToPdf()`) reuses `document.body` —
+		// keeping our mode/theme classes — but appends its rendered content in a
+		// sibling `.print .markdown-preview-view`, never nested under
+		// `.markdown-reading-view`/`.markdown-source-view` (confirmed by reading
+		// `obsidian.asar`). Without this variant, every custom property this
+		// function's callers write (cartouche colours, rules, fonts…) is simply
+		// absent from that subtree, whatever `src/styles/**/*.scss` selectors
+		// then try to read from it.
+		`body.${modeClass}${themeClass} .print .markdown-preview-view`,
 		polarity ? `body${themeClass} ${localScope}` : localScope,
 	].join(",\n");
 }
