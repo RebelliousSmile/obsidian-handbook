@@ -1,6 +1,0 @@
-# attend: dégradé
-name = "Standalone threat"
-type = "noise"
-[[threats]]
-name = "Act now"
-description = "It moves."

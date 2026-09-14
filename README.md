@@ -9,9 +9,13 @@ chacun dans les registres clair et sombre attestés par ses maquettes. Les notes
 restent portables : l'univers est un réglage du coffre, jamais une donnée ajoutée
 à leur TOML.
 
-Les six formats publiés par `schema-in-the-mist` v0.4.0 sont pris en charge :
-`os-theme`, `os-theme-kit`, `os-challenge`, `os-power-set`,
-`os-character-trope` et `os-loadout-item`. Exemple minimal :
+Handbook épingle l’asset immuable `schema-in-the-mist` v1.0.0. Son contrat
+publie 14 cibles canoniques ; Handbook en rend 12 : `com-danger`,
+`com-theme-card`, `litm-challenge`, `litm-journey`, `theme-card`,
+`litm-theme-kit`, `os-theme`, `os-theme-kit`, `os-challenge`, `os-power-set`,
+`os-character-trope` et `os-loadout-item`. Les cibles canoniques
+`city-of-mist/custom-move` et `city-of-mist/theme-kit` restent volontairement
+sans renderer Handbook. Exemple minimal :
 
 ````markdown
 ```os-theme

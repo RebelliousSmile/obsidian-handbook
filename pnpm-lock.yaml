@@ -13,7 +13,7 @@ importers:
         version: 1.13.1(@codemirror/state@6.5.0)(@codemirror/view@6.38.6)
       schema-in-the-mist:
         specifier: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz
-        version: https://release-assets.githubusercontent.com/github-production-release-asset/1359242827/5254623a-38a0-45b3-b0d9-41ddb027c080?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-09-12T18%3A28%3A54Z&rscd=attachment%3B+filename%3Dschema-in-the-mist-1.0.0.tgz&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-09-12T17%3A28%3A03Z&ske=2026-09-12T18%3A28%3A54Z&sks=b&skv=2018-11-09&sig=FGD2BhkVk16E0rxg%2F%2FQAxK6lVPUR8F5MC8gk2SmOkfw%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc4OTIzNTA2OCwibmJmIjoxNzg5MjM0NzY4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.2fgJBP5T3qYnI1kHxBYRbdgVPX_e1MZwUSwpfswZgCk&response-content-disposition=attachment%3B%20filename%3Dschema-in-the-mist-1.0.0.tgz&response-content-type=application%2Foctet-stream
+        version: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz
       schema-pbta:
         specifier: https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz
         version: https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz
@@ -1476,8 +1476,8 @@ packages:
     engines: {node: '>=20.19.0'}
     hasBin: true
 
-  schema-in-the-mist@https://release-assets.githubusercontent.com/github-production-release-asset/1359242827/5254623a-38a0-45b3-b0d9-41ddb027c080?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-09-12T18%3A28%3A54Z&rscd=attachment%3B+filename%3Dschema-in-the-mist-1.0.0.tgz&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-09-12T17%3A28%3A03Z&ske=2026-09-12T18%3A28%3A54Z&sks=b&skv=2018-11-09&sig=FGD2BhkVk16E0rxg%2F%2FQAxK6lVPUR8F5MC8gk2SmOkfw%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc4OTIzNTA2OCwibmJmIjoxNzg5MjM0NzY4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.2fgJBP5T3qYnI1kHxBYRbdgVPX_e1MZwUSwpfswZgCk&response-content-disposition=attachment%3B%20filename%3Dschema-in-the-mist-1.0.0.tgz&response-content-type=application%2Foctet-stream:
-    resolution: {tarball: https://release-assets.githubusercontent.com/github-production-release-asset/1359242827/5254623a-38a0-45b3-b0d9-41ddb027c080?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-09-12T18%3A28%3A54Z&rscd=attachment%3B+filename%3Dschema-in-the-mist-1.0.0.tgz&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-09-12T17%3A28%3A03Z&ske=2026-09-12T18%3A28%3A54Z&sks=b&skv=2018-11-09&sig=FGD2BhkVk16E0rxg%2F%2FQAxK6lVPUR8F5MC8gk2SmOkfw%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc4OTIzNTA2OCwibmJmIjoxNzg5MjM0NzY4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.2fgJBP5T3qYnI1kHxBYRbdgVPX_e1MZwUSwpfswZgCk&response-content-disposition=attachment%3B%20filename%3Dschema-in-the-mist-1.0.0.tgz&response-content-type=application%2Foctet-stream}
+  schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz:
+    resolution: {integrity: sha512-6wgDSCKL9I2W/c00IRdIxOdXzrj4O6LE1catb5fztjaF0+QhFbro8Wn2mrvtr3S9koMSvuDRwWiAj+zgWhasiQ==, tarball: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz}
     version: 1.0.0
 
   schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz:
@@ -3339,7 +3339,7 @@ snapshots:
     optionalDependencies:
       '@parcel/watcher': 2.6.0
 
-  schema-in-the-mist@https://release-assets.githubusercontent.com/github-production-release-asset/1359242827/5254623a-38a0-45b3-b0d9-41ddb027c080?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-09-12T18%3A28%3A54Z&rscd=attachment%3B+filename%3Dschema-in-the-mist-1.0.0.tgz&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-09-12T17%3A28%3A03Z&ske=2026-09-12T18%3A28%3A54Z&sks=b&skv=2018-11-09&sig=FGD2BhkVk16E0rxg%2F%2FQAxK6lVPUR8F5MC8gk2SmOkfw%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc4OTIzNTA2OCwibmJmIjoxNzg5MjM0NzY4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.2fgJBP5T3qYnI1kHxBYRbdgVPX_e1MZwUSwpfswZgCk&response-content-disposition=attachment%3B%20filename%3Dschema-in-the-mist-1.0.0.tgz&response-content-type=application%2Foctet-stream:
+  schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz:
     dependencies:
       smol-toml: 1.8.0
       zod: 4.6.2
