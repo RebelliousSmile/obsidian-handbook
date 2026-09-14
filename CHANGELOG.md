@@ -18,6 +18,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a reusable, self-restoring Obsidian E2E journey for `requestUrl` source installation, with per-step screenshots and exact GitHub revision comparisons.
 
+## [2.8.4] - 2026-09-12
+
+### Added
+
+- Apply pack-driven Adrenaline styling to native headings, emphasis, lists, tables, status marks and distinct callout anatomies, including the Zombiology NPC sheet.
+
+### Fixed
+
+- Render the Adrenaline NPC description as its own paragraph instead of mixing it into the narrative list.
+- Run the cross-repository Adrenaline source assertion on Windows and expect the published pack version 0.3.0.
+
+## [2.8.3] - 2026-09-11
+
+### Added
+
+- Allow a note to use a supported vault image as its own configurable background in Live Preview and reading view, with safe defaults and restoration of the game background when removed or invalid.
+
 ## [2.8.2] - 2026-09-11
 
 ### Changed
@@ -57,6 +74,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add responsive two-column reading layouts for Urban Shadows and Monsterhearts, with a per-note `pbta-one-column` opt-out.
 - Add Drowned Lake-specific title outlining backed by tokens from the installed game pack.
+
+## [2.7.2] - 2026-09-10
+
+### Added
+
+- Show the features exposed by the active game pack in the settings interface.
+
+### Fixed
+
+- Surface schema installation failures, hide settings for inactive games and make installed game-source controls clearer.
 
 ## [2.7.1] - 2026-09-10
 
@@ -241,6 +268,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The Style Settings presets, `themes/city-of-mist.settings.json` and `themes/legend-in-the-mist.settings.json`, and the border presets that fed them. Style Settings is no longer needed to see a game's rendering (0904137).
 
+## [1.0.0-beta] - 2026-09-07
+
+### Added
+
+- Add City of Mist theme-card and Danger-profile blocks, typed tag rendering and an optional game-coloured workspace theme.
+- Copy Legend in the Mist theme cards as TOML and keep their tags legible.
+
+### Changed
+
+- Detach the original fork and publish the plugin under the Handbook name.
+
 ## [2.1.0-beta] - 2026-09-06
 
 ### Added
@@ -257,3 +295,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - The `story-theme` block id. It still renders the same card and logs a single deprecation warning per session; use `theme-card` in new notes. The `features.storyThemeParser` setting key is unchanged, so saved vaults keep their toggle (6124927).
+
+## [2.0.0-beta] - 2026-04-21
+
+### Added
+
+- Turn the original theme into an Obsidian plugin with settings, per-game feature separation and a release workflow.
+- Add Legend in the Mist tags, statuses, limits, callouts, story themes, tables, checkboxes, context-menu actions, mountain cards and a Lantern ribbon tool.
+- Add City of Mist typography, headings, links, tags, statuses, spectrums, clues, moves, asides, tables, callouts and iceberg cards.
+
+### Changed
+
+- Split the implementation into focused source and stylesheet modules and add linting, build tooling, bundled font licences and release metadata.
+
+### Fixed
+
+- Correct game-specific styling for icons, spacing, dividers, presets, colours and immune limits.
+
+## [1.0.0] - 2023-10-03
+
+### Added
+
+- Publish the original Brumes theme with complete light and dark editor and interface palettes.
+- Add iceberg and move callout styles, documentation, screenshots and a demonstration vault.
+
+### Changed
+
+- Package the theme for Obsidian, add its licence and introduce the Grunt stylesheet build.
