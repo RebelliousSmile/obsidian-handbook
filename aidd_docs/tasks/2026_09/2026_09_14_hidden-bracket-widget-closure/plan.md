@@ -1,6 +1,6 @@
 ---
 objective: "L’issue #13 est fermée avec des preuves reproductibles que le correctif, l’assertion de non-régression et la release 2.2.1 sont déjà livrés."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Clôture de la régression HiddenBracketWidget
