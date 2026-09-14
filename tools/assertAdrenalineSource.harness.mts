@@ -18,7 +18,7 @@ const handbookVersion = (
 const pluginResult = readGamePluginManifest(pluginSource, handbookVersion);
 assert.ok(pluginResult.manifest, pluginResult.error);
 const gamePlugin = pluginResult.manifest;
-assert.equal(gamePlugin.version, "0.2.0");
+assert.equal(gamePlugin.version, "0.3.0");
 assert.equal(gamePlugin.minimumHandbookVersion, "2.7.0");
 assert.deepEqual(gamePlugin.requires, [
 	"block:adrenaline-pj",

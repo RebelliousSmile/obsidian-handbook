@@ -2,69 +2,68 @@
 status: pending
 ---
 
-<!-- Fill or omit these sections; never add, rename, or reorder one. -->
-
-# Instruction: Recette visuelle croisée sur les quatre jeux
+# Instruction: Recette croisée et archivage
 
 ## Architecture projection
 
-> Tree of the final files. ✅ create · ✏️ modify · ❌ delete
-
 ```txt
-obsidian-handbook/
-└── aidd_docs/tasks/2026_09/2026_09_12_print-export-theme-fidelity/
-    └── evidence/
-        ├── print-city-of-mist.pdf          ✅
-        ├── print-legend-in-the-mist.pdf    ✅
-        ├── print-otherscape.pdf            ✅
-        └── print-adrenaline.pdf            ✅
+aidd_docs/tasks/2026_09/2026_09_12_print-export-theme-fidelity/evidence/
+├── city-of-mist-light.pdf             ✅ preuve City light
+├── city-of-mist-dark.pdf              ✅ preuve City dark
+├── legend-in-the-mist.pdf             ✅ preuve Legend mono-claire
+├── otherscape-<variant>.pdf           ✅ preuve de variante
+└── adrenaline-<polarity>.pdf          ✅ preuve de polarité
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Coffre de test par jeu, thème du coffre forcé en sombre] --> B[Ouvrir la note témoin du jeu]
-  B --> C[Exporter au format PDF]
-  C --> D[Comparer : couleurs light du pack, une colonne, fond uni]
-  D -->|conforme| E[Capture archivée dans evidence/]
-  D -->|non conforme| F[Retour phase 2 ou 3 selon l'écart observé]
+  A[Choisir jeu et polarité] --> B[Exporter note témoin]
+  B --> C[Comparer à la référence]
+  C --> D{Pack actif respecté ?}
+  D -->|oui| E[Archiver preuve]
+  D -->|non| F[Retour au contrat ou à la feuille du pack]
+```
+
+## Test Scope
+
+```mermaid
+---
+title: Test scope
+---
+journey
+  section Setup
+    Ouvrir les coffres et notes témoins => Jeu, variante et polarité sont consignés: 5: system
+  section Happy path
+    Exporter puis inspecter => Style et polarité actifs survivent: 5: system
+  section Edge case - City double polarité
+    Exporter City clair et sombre => Les deux couches City restent distinctes: 3: system
+  section Teardown
+    Archiver les preuves approuvées => Recette reproductible: 5: system
 ```
 
 ## Tasks to do
 
-### `1)` Exporter un PDF réel par jeu, coffre en thème sombre
+### `1)` Préparer la matrice de recette
 
-> Vérifier que la polarité light est bien forcée indépendamment du thème du coffre.
+1. Consigner jeu, variante, polarité et référence pour chaque export.
+2. Tester City en clair et sombre; ne jamais inventer une polarité Legend.
 
-1. Pour chacun des quatre jeux (City of Mist, Legend in the Mist, Otherscape, Adrenaline), dans le coffre de test correspondant, forcer le thème du coffre en sombre.
-2. Ouvrir la note témoin du jeu (bancs `Handbook - Test blocs *.md` ou équivalent), lancer "Exporter au format PDF".
+### `2)` Exporter et inspecter
 
-### `2)` Vérifier la fidélité du PDF produit
+1. Vérifier fond, contraste, polices, callouts, cartes, colonnes et absence de fuite entre jeux.
+2. Retourner vers la phase propriétaire du contrat en cas d’écart.
 
-> Juger sur le PDF réel, pas sur le rendu écran.
+### `3)` Archiver les preuves conformes
 
-1. Couleurs et police du thème présentes, en polarité light (pas dark, pas la valeur par défaut d'Obsidian).
-2. Callouts et blocs de jeu (statblocks/fiches/cartes) fidèles à leur habillage habituel.
-3. Une seule colonne (là où le jeu en avait deux à l'écran) et un fond uni sans texture.
-
-### `3)` Confirmer ou ajuster le choix de fond
-
-> La Decision actée (fond = couleur light du pack) doit rester lisible sur les quatre jeux.
-
-1. Si un jeu produit un fond illisible ou surprenant, ne pas corriger localement : remonter l'ajustement à la Decision du plan (ex. si un pack a une couleur light trop saturée pour un usage de fond de page imprimée).
-
-### `4)` Archiver les preuves
-
-> Une preuve par jeu, pas une captée à l'écran.
-
-1. Enregistrer chaque PDF produit dans `evidence/` sous ce dossier de tâche, nommé `print-<jeu>.pdf`.
+1. Nommer chaque PDF avec le réglage effectivement utilisé.
+2. Ne conserver dans `evidence/` que les exports approuvés.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
-| ---- | -------------------- |
-| 1 | Un PDF réel a été produit pour chacun des quatre jeux, coffre en thème sombre au moment de l'export. |
-| 2 | Chaque PDF montre les couleurs/police en polarité light du pack, les callouts et blocs de jeu fidèles, une seule colonne et un fond uni. |
-| 3 | Le choix de fond reste lisible sur les quatre jeux sans correctif ad hoc ; tout ajustement nécessaire est tracé comme une révision de la Decision, pas un patch local. |
-| 4 | `evidence/` contient les quatre PDF, un par jeu. |
+| --- | --- |
+| 1 | Chaque preuve indique le réglage réellement utilisé. |
+| 2 | Les PDFs respectent leur pack et ne confondent pas City, Legend, Otherscape et Adrenaline. |
+| 3 | Les preuves archivées sont reproductibles et nommées sans ambiguïté. |

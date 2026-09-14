@@ -1,67 +1,152 @@
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
+import assert from "node:assert/strict";
 import { MIST_ENGINE_CODECS } from "schema-in-the-mist";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
+import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
+import {
+	loadMistContractCases,
+	MIST_BLOCK_IDS,
+	MIST_TARGET_TO_BLOCK,
+	MIST_TARGETS,
+	mistCaseById,
+} from "./mistContractCorpus.mts";
 
 class El {
-    textContent = "";
-    children: El[] = [];
-    dataset: Record<string, string> = {};
-    classes: string[] = [];
-    classList = { add: (...names: string[]) => this.classes.push(...names) };
-    constructor(public tagName: string) {}
-    appendChild(child: El): El { this.children.push(child); return child; }
+	textContent = "";
+	children: El[] = [];
+	dataset: Record<string, string> = {};
+	classes: string[] = [];
+	classList = { add: (...names: string[]) => this.classes.push(...names) };
+	constructor(public tagName: string) {}
+	appendChild(child: El): El {
+		this.children.push(child);
+		return child;
+	}
 }
+
 const doc = { createElement: (tagName: string) => new El(tagName) };
-const text = (element: El): string => element.textContent + element.children.map(text).join("");
 
-const renderers: Record<string, string> = {
-    "city-of-mist/danger": "com-danger",
-    "city-of-mist/theme-card": "com-theme-card",
-    "legend-in-the-mist/challenge": "litm-challenge",
-    "legend-in-the-mist/journey": "litm-journey",
-    "legend-in-the-mist/story-theme": "theme-card",
-    "legend-in-the-mist/theme-kit": "litm-theme-kit",
-    "otherscape/challenge": "os-challenge",
-    "otherscape/character-trope": "os-character-trope",
-    "otherscape/loadout-item": "os-loadout-item",
-    "otherscape/power-set": "os-power-set",
-    "otherscape/theme": "os-theme",
-    "otherscape/theme-kit": "os-theme-kit",
-};
-if (Object.keys(renderers).length !== 12) throw new Error("Expected 12 rendered Mist formats");
+function renderedText(element: El): string {
+	return element.textContent + element.children.map(renderedText).join("");
+}
 
-const manifestFile = join(process.cwd(), "node_modules/schema-in-the-mist/corpus/contract/cases.json");
-const corpusRoot = dirname(manifestFile);
-const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+const blocks = new Map(BRUMES_BLOCKS.map((block) => [block.id, block]));
+const exportsByBlock = new Map(TOML_EXPORTS.map((spec) => [spec.block.id, spec]));
+const cases = loadMistContractCases();
+
+assert.equal(cases.length, 31, "Mist v1.0.0 must expose 31 contract cases");
+assert.equal(MIST_TARGETS.length, 14, "Mist must expose 14 public targets");
+assert.equal(MIST_BLOCK_IDS.length, 12, "Handbook must keep 12 Mist renderers");
+
 let canonicalAccepted = 0;
 let canonicalRejected = 0;
 let rendered = 0;
+let degraded = 0;
+let nullCases = 0;
+let validatedOutputs = 0;
+const exercisedBlocks = new Set<string>();
+const exercisedExports = new Set<string>();
 
-for (const entry of manifest.cases) {
-    const source = readFileSync(join(corpusRoot, entry.file), "utf8");
-    const codec = MIST_ENGINE_CODECS[entry.target as keyof typeof MIST_ENGINE_CODECS];
-    if (entry.canonical === "accept") {
-        const value = codec.parseToml(source);
-        const after = codec.parseToml(codec.stringifyToml(value as never));
-        if (JSON.stringify(value) !== JSON.stringify(after)) throw new Error(`${entry.id}: canonical round-trip`);
-        canonicalAccepted += 1;
-    } else {
-        let failed = false;
-        try { codec.parseToml(source); } catch { failed = true; }
-        if (!failed) throw new Error(`${entry.id}: canonical rejection expected`);
-        canonicalRejected += 1;
-    }
+for (const entry of cases) {
+	const codec = MIST_ENGINE_CODECS[entry.target];
+	assert.ok(codec, `${entry.id}: codec is exported`);
 
-    const blockId = renderers[entry.target];
-    if (!blockId || entry.canonical !== "accept") continue;
-    const block = BRUMES_BLOCKS.find((candidate) => candidate.id === blockId);
-    if (!block) throw new Error(`${entry.target}: renderer not registered`);
-    const data = block.parse(source);
-    if (data === null) throw new Error(`${entry.id}: accepted witness returned null`);
-    const element = block.render(data, doc as unknown as Document) as unknown as El;
-    if (!text(element).trim()) throw new Error(`${entry.id}: renderer returned no text`);
-    rendered += 1;
+	if (entry.canonical === "accept") {
+		const value = codec.parseToml(entry.source);
+		assert.deepEqual(
+			codec.parseToml(codec.stringifyToml(value as never)),
+			value,
+			`${entry.id}: canonical semantic round-trip`,
+		);
+		canonicalAccepted += 1;
+	} else {
+		assert.throws(
+			() => codec.parseToml(entry.source),
+			undefined,
+			`${entry.id}: canonical rejection expected`,
+		);
+		canonicalRejected += 1;
+	}
+
+	const blockId = MIST_TARGET_TO_BLOCK[entry.target];
+	if (entry.handbook === "null") {
+		assert.equal(blockId, null, `${entry.id}: no Handbook renderer expected`);
+		nullCases += 1;
+		continue;
+	}
+
+	assert.notEqual(blockId, null, `${entry.id}: Handbook renderer expected`);
+	const block = blocks.get(blockId);
+	assert.ok(block, `${entry.target}: renderer is registered`);
+	let data: unknown;
+	assert.doesNotThrow(() => {
+		data = block.parse(entry.source);
+	}, `${entry.id}: Handbook projection must tolerate the document`);
+	exercisedBlocks.add(blockId);
+
+	if (entry.handbook === "degraded" && data === null) {
+		assert.ok(
+			`Invalid ${blockId} block.`.trim(),
+			`${entry.id}: the host fallback must contain text`,
+		);
+		degraded += 1;
+		continue;
+	}
+
+	assert.notEqual(data, null, `${entry.id}: Handbook projection returned null`);
+	const before = renderedText(
+		block.render(data, doc as unknown as Document) as unknown as El,
+	);
+	assert.ok(before.trim(), `${entry.id}: renderer returned no text`);
+
+	if (entry.handbook === "degraded") {
+		degraded += 1;
+		continue;
+	}
+
+	rendered += 1;
+	const exporter = exportsByBlock.get(blockId);
+	assert.ok(exporter, `${entry.target}: TOML exporter is registered`);
+	const output = exporter.toToml(data);
+	codec.parseToml(output);
+	const afterData = block.parse(output);
+	assert.notEqual(afterData, null, `${entry.id}: exported TOML no longer parses`);
+	const after = renderedText(
+		block.render(afterData, doc as unknown as Document) as unknown as El,
+	);
+	assert.equal(after, before, `${entry.id}: exported TOML changed the rendering`);
+	exercisedExports.add(blockId);
+	validatedOutputs += 1;
 }
 
-console.log(`Mist contract: ${canonicalAccepted} accepted, ${canonicalRejected} rejected, ${rendered} rendered.`);
+const extensions = MIST_ENGINE_CODECS["city-of-mist/danger"].parseToml(
+	mistCaseById(cases, "city-danger-extensions").source,
+);
+assert.equal(extensions.rating, 0, "zero must survive canonical parsing");
+assert.equal(
+	extensions.spectrums?.[0]?.is_immune,
+	false,
+	"false must survive canonical parsing",
+);
+assert.deepEqual(extensions.soft_moves, [], "empty lists must survive parsing");
+assert.equal(
+	"name" in (extensions.custom_moves?.[0] ?? {}),
+	false,
+	"absent optional fields must stay absent",
+);
+assert.deepEqual(
+	MIST_ENGINE_CODECS["legend-in-the-mist/challenge"].parseToml(
+		mistCaseById(cases, "litm-challenge-secrets").source,
+	).roles,
+	[],
+	"empty nested lists must survive parsing",
+);
+
+assert.equal(exercisedBlocks.size, 12, "all 12 Mist renderers must be exercised");
+assert.equal(exercisedExports.size, 12, "all 12 Mist exporters must be exercised");
+
+console.log(
+	`Mist contract: ${cases.length} cases, ${MIST_TARGETS.length} targets, ` +
+		`${canonicalAccepted} accepted, ${canonicalRejected} rejected, ` +
+		`${rendered} rendered, ${degraded} degraded, ${nullCases} null, ` +
+		`${validatedOutputs} Handbook outputs validated.`,
+);

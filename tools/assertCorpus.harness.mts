@@ -20,6 +20,12 @@ import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
 import type { BrumesBlock } from "../src/features/blocks/types";
 import { log } from "../src/utils/logger";
+import {
+	loadMistContractCases,
+	MIST_BLOCK_IDS,
+	MIST_TARGET_TO_BLOCK,
+	MIST_TARGETS,
+} from "./mistContractCorpus.mts";
 
 /**
  * The blocks that do not yet honour the guideline.
@@ -34,6 +40,7 @@ const BLOCKS_IN_DEBT: string[] = [];
 // pnpm runs its scripts from the repo root, so the corpus is right there.
 const CORPUS = join(process.cwd(), "corpus");
 const failures: string[] = [];
+const mistCases = loadMistContractCases();
 
 function fail(file: string, reason: string): void {
 	failures.push(`${file}: ${reason}`);
@@ -131,6 +138,16 @@ function listCorpus(camp: string): string[] {
 	return readdirSync(join(CORPUS, camp)).filter(
 		(file) => file.slice(-5) === ".toml",
 	);
+}
+
+function assertNoMistDuplicates(): void {
+	for (const camp of ["temoins", "refus"]) {
+		for (const file of listCorpus(camp)) {
+			if (MIST_BLOCK_IDS.includes(blockIdOf(file))) {
+				fail(file, "Mist corpus cases belong in schema-in-the-mist v1");
+			}
+		}
+	}
 }
 
 function assertTemoins(): void {
@@ -248,6 +265,10 @@ function hasWitness(id: string): boolean {
 	return listCorpus("temoins").indexOf(`${id}.toml`) !== -1;
 }
 
+function hasCorpus(id: string): boolean {
+	return hasWitness(id) || MIST_BLOCK_IDS.includes(id);
+}
+
 /**
  * What `aidd_docs/guidelines/schema-design.md` demands of every format, checked
  * rather than merely written down: a TOML document it can read — proved by a
@@ -259,10 +280,10 @@ function assertRule(): void {
 			continue;
 		}
 
-		if (!hasWitness(block.id)) {
+		if (!hasCorpus(block.id)) {
 			fail(
 				block.id,
-				"no witness in corpus/temoins, so nothing proves it reads a schema document",
+				"no local or installed contract case proves it reads a schema document",
 			);
 		}
 
@@ -283,44 +304,69 @@ function assertRule(): void {
  */
 function assertAllerRetour(): void {
 	for (const spec of TOML_EXPORTS) {
-		const file = `${spec.block.id}.toml`;
-
-		if (!hasWitness(spec.block.id)) {
-			continue;
-		}
-
-		const source = readFileSync(join(CORPUS, "temoins", file), "utf8");
-		const first = spec.block.parse(source);
-
-		if (first === null) {
-			// assertTemoins has already said so; nothing to add here.
-			continue;
-		}
-
-		let second: unknown;
-
-		try {
-			second = spec.block.parse(spec.toToml(first));
-		} catch (error) {
-			fail(file, `the round trip threw: ${String(error)}`);
-			continue;
-		}
-
-		if (second === null) {
-			fail(file, "what the copy command wrote no longer parses");
-			continue;
-		}
-
-		const before = renderedText(
-			spec.block.render(first, doc as unknown as Document) as unknown as El,
+		const target = MIST_TARGETS.find(
+			(candidate) => MIST_TARGET_TO_BLOCK[candidate] === spec.block.id,
 		);
-		const after = renderedText(
-			spec.block.render(second, doc as unknown as Document) as unknown as El,
-		);
+		const sources = target
+			? mistCases
+					.filter(
+						(entry) =>
+							entry.target === target && entry.handbook === "render",
+					)
+					.map((entry) => ({ file: entry.id, source: entry.source }))
+			: hasWitness(spec.block.id)
+				? [
+						{
+							file: `${spec.block.id}.toml`,
+							source: readFileSync(
+								join(CORPUS, "temoins", `${spec.block.id}.toml`),
+								"utf8",
+							),
+						},
+					]
+				: [];
 
-		if (before !== after) {
-			fail(file, "the copy and the original do not draw the same thing");
+		for (const { file, source } of sources) {
+			assertRoundTrip(spec, file, source);
 		}
+	}
+}
+
+function assertRoundTrip(
+	spec: (typeof TOML_EXPORTS)[number],
+	file: string,
+	source: string,
+): void {
+	const first = spec.block.parse(source);
+
+	if (first === null) {
+		fail(file, "the round-trip source did not parse");
+		return;
+	}
+
+	let second: unknown;
+
+	try {
+		second = spec.block.parse(spec.toToml(first));
+	} catch (error) {
+		fail(file, `the round trip threw: ${String(error)}`);
+		return;
+	}
+
+	if (second === null) {
+		fail(file, "what the copy command wrote no longer parses");
+		return;
+	}
+
+	const before = renderedText(
+		spec.block.render(first, doc as unknown as Document) as unknown as El,
+	);
+	const after = renderedText(
+		spec.block.render(second, doc as unknown as Document) as unknown as El,
+	);
+
+	if (before !== after) {
+		fail(file, "the copy and the original do not draw the same thing");
 	}
 }
 
@@ -348,6 +394,7 @@ function reportDebt(): void {
 // measures silence and takes it for a failure.
 log.setLevel("warn");
 
+assertNoMistDuplicates();
 assertTemoins();
 assertRefus();
 assertRule();

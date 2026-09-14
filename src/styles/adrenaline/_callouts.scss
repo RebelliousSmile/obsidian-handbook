@@ -23,6 +23,25 @@
 		}
 	}
 
+	// Note: pinned index card. A tack marks the corner, the surface behaves
+	// like a loose sheet of paper rather than a coloured block.
+	.callout[data-callout="note"] {
+		background: var(--adrenaline-callout-surface);
+		box-shadow: 0.12rem 0.12rem 0 rgba(0, 0, 0, 0.18);
+
+		&::after {
+			content: "";
+			position: absolute;
+			top: -0.3rem;
+			left: 0.9rem;
+			width: 0.6rem;
+			height: 0.6rem;
+			border-radius: 50%;
+			background: var(--adrenaline-signal);
+			box-shadow: 0 0.08rem 0.12rem rgba(0, 0, 0, 0.35);
+		}
+	}
+
 	.callout[data-callout="summary"],
 	.callout[data-callout="abstract"],
 	.callout[data-callout="tldr"],
@@ -44,12 +63,24 @@
 		background: var(--adrenaline-callout-success);
 	}
 
+	// Question/interroger: rule panel. No fill, a thick rule carries the
+	// intent instead of a coloured background.
 	.callout[data-callout="question"],
 	.callout[data-callout="help"],
 	.callout[data-callout="faq"] {
 		background: var(--adrenaline-callout-question);
+		border: none;
+		border-inline-start: 0.35rem solid var(--adrenaline-rule);
+		border-radius: 0;
+
+		.callout-content {
+			padding-inline-start: 0.5rem;
+		}
 	}
 
+	// Warning/danger family: banner cartouche. The title band takes the same
+	// dark cartouche treatment as h1/inline-title so the alert reads as a
+	// stamped banner, not a coloured card.
 	.callout[data-callout="warning"],
 	.callout[data-callout="caution"],
 	.callout[data-callout="attention"],
@@ -63,7 +94,13 @@
 		background-position: top;
 		background-size: 7rem 0.4rem;
 
-		.callout-title,
+		.callout-title {
+			margin: 0 0 0.4rem;
+			padding: 0.2rem 0.5rem;
+			color: var(--adrenaline-callout-cartouche-ink);
+			background: var(--adrenaline-callout-cartouche-bg);
+		}
+
 		.callout-content {
 			background: var(--adrenaline-text-backplate);
 		}
@@ -82,7 +119,11 @@
 		background: var(--adrenaline-callout-danger);
 	}
 
+	// Example: dashed box. No fill beyond the paper tint, the dashed frame
+	// marks it as a worked case rather than a rule statement.
 	.callout[data-callout="example"] {
+		border-style: dashed;
+		border-width: 2px;
 		background: var(--adrenaline-callout-example);
 	}
 }

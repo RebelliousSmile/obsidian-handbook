@@ -14,6 +14,10 @@
 import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
+import {
+	loadMistContractCases,
+	MIST_TARGET_TO_BLOCK,
+} from "./mistContractCorpus.mts";
 
 class El {
 	tagName: string;
@@ -122,4 +126,32 @@ for (const folder of ["temoins", "refus"]) {
 			dump(block.render(data, doc as unknown as Document) as unknown as El, 0),
 		);
 	}
+}
+
+for (const entry of loadMistContractCases().sort((left, right) =>
+	left.id.localeCompare(right.id),
+)) {
+	console.log(`### mist/${entry.id}`);
+	const blockId = MIST_TARGET_TO_BLOCK[entry.target];
+
+	if (entry.handbook === "null") {
+		console.log("null");
+		continue;
+	}
+
+	const block = blockId === null ? null : blockOf(blockId);
+	if (!block) {
+		console.log("no block");
+		continue;
+	}
+
+	const data = block.parse(entry.source);
+	if (data === null) {
+		console.log("null");
+		continue;
+	}
+
+	process.stdout.write(
+		dump(block.render(data, doc as unknown as Document) as unknown as El, 0),
+	);
 }

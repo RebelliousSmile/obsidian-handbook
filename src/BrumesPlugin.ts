@@ -13,7 +13,6 @@ import {
 } from "./features/modes/domModeClass";
 import {
 	buildGameStyle,
-	buildPrintOverride,
 	GameStyleWriter,
 } from "./features/modes/styleElement";
 import {
@@ -334,18 +333,8 @@ export default class BrumesPlugin extends Plugin {
 			this.settings.colourScheme,
 		);
 
-		// Printing always forces light polarity, independently of the vault's
-		// live theme or colour-scheme override — see buildPrintOverride.
-		const printOverride = buildPrintOverride(
-			pack.id,
-			mergedValues,
-			this.settings.features.workspaceTheme,
-			polarities,
-		);
-		const withPrint = printOverride ? `${block}\n\n${printOverride}` : block;
-
 		const calloutCss = buildCalloutStyleCss(this.settings.callouts);
-		const withCallouts = calloutCss ? `${withPrint}\n\n${calloutCss}` : withPrint;
+		const withCallouts = calloutCss ? `${block}\n\n${calloutCss}` : block;
 
 		this.gameStyle.applyGameStyle(
 			fontCss ? `${fontCss}\n\n${withCallouts}` : withCallouts,

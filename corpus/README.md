@@ -1,87 +1,62 @@
-# Le corpus
+# Les corpus de contrat
 
-Des documents qui prouvent. Deux camps les lisent, et ils ne leur demandent pas
-la même chose.
+Handbook exerce chaque format depuis le corpus du dépôt qui possède son
+contrat. Il ne recopie plus les documents Mist : le package immuable
+`schema-in-the-mist` v1.0.0 est leur source unique.
 
-| Camp                         | Sur un témoin          | Sur un refus                          |
-| ---------------------------- | ---------------------- | ------------------------------------- |
-| Le schéma (hors `handbook`)  | ajv l'accepte          | ajv le rejette                        |
-| Handbook                     | le bloc le rend entier | le bloc perd le champ fautif et rend le reste |
+| Famille | Source des cas | Attentes |
+| --- | --- | --- |
+| Mist Engine | `schema-in-the-mist/corpus/contract/cases.json` installé | `canonical` pour le codec strict, `handbook` pour la projection tolérante |
+| Adrenaline et PbtA | `corpus/temoins/` et `corpus/refus/` dans ce dépôt | témoin rendu ou directive locale `# attend:` |
 
-Le schéma **rejette**, le consommateur **dégrade**. Ce n'est pas une
-contradiction, c'est la répartition du travail : un document se tape dans une
-note et il est faux la plupart du temps où on le regarde.
+`pnpm assert:corpus` combine les deux sources et exige qu’un bloc enregistré
+ait un document qu’il sait lire ainsi qu’une commande de copie TOML. Il échoue
+si un fichier local reprend l’id d’un format Mist, afin que les deux corpus ne
+puissent plus dériver.
 
-## Pourquoi les deux moitiés
+## Corpus Mist installé
 
-> « Sans le témoin, une série de refus ne prouve rien — un schéma qui rejette
-> tout les passerait tous. »
->
-> — `schema-adrenaline`, `tools/audit-schemas.ts`
+Le manifeste partagé couvre les 14 cibles publiques du contrat Mist Engine.
+Handbook en rend 12 ; `city-of-mist/custom-move` et
+`city-of-mist/theme-kit` restent volontairement sans renderer.
 
-Un corpus qui n'aurait que des refus certifierait un schéma cassé. Un corpus qui
-n'aurait que des témoins ne mesurerait aucune borne.
+Chaque entrée porte deux verdicts indépendants :
 
-## `temoins/`
+- `canonical: accept|reject` contrôle le codec publié ;
+- `handbook: render|degraded|null` contrôle le consommateur.
 
-Un document **complet** par format : tous les champs renseignés, y compris ceux
-qui sont à nous et que l'amont ne décrit pas encore — `is_countdown` et `on_max`
-pour un Danger, `secrets` pour un défi.
+`render` exige une projection complète. `degraded` garantit qu’un document
+refusé par le codec ne fait pas jeter Handbook : selon la grammaire concernée,
+il produit une projection partielle ou le fallback contrôlé du bloc invalide.
+`null` désigne une cible que Handbook ne rend pas.
 
-Un témoin sert de référence de rendu : s'il cesse de se rendre entièrement, un
-parser a régressé.
+Un nouveau cas Mist se corrige et se publie dans `schema-in-the-mist`, jamais
+dans ce dossier. `pnpm assert:mist-contract` vérifie le manifeste entier, les
+aller-retours sémantiques des codecs et les sorties des 12 exporters Handbook.
 
-## `refus/`
+## Corpus local
 
-**Un fichier par faute réelle**, nommé par la faute qu'il porte — jamais par un
-numéro. Les fautes viennent de ce qui arrive vraiment quand on tape un document :
-un champ requis absent, un type erroné, un tableau écrit comme une table, une
-valeur hors de l'énumération.
+Les dossiers `temoins/` et `refus/` restent la source des contrats possédés par
+Handbook ou par une intégration qui ne publie pas encore ce type de manifeste.
 
-Chaque refus s'ouvre sur une directive que le harnais lit :
+Un témoin est un document complet qui doit se parser et rendre du texte. Un
+refus porte une faute réelle et commence par l’une des directives suivantes :
 
 ```toml
 # attend: null
 ```
 
-ou
-
 ```toml
 # attend: dégradé
 ```
 
-- **`null`** — la faute empêche le document d'exister (le nom manque). Le
-  lecteur rend `null` et la grammaire terse reprend la main.
-- **`dégradé`** — la faute ne coûte que son propre champ. Le document se rend,
-  amputé de ce seul champ.
-
-La ligne suivante dit en clair de quoi il s'agit. Un refus se lit sans ouvrir le
-harnais.
-
-## Les formats couverts
-
-Le corpus couvre chaque bloc inscrit dans `BRUMES_BLOCKS`. Il comprend notamment
-les trois documents Adrenaline publiés : `adrenaline-pj`, `adrenaline-pnj` et
-`adrenaline-monstre`. Chacun a son témoin, ses refus pertinents et sa commande
-de copie ; aucun total fragile n'est recopié ici.
-
-Le harnais garde la liste des blocs en dette **vide**. Un bloc neuf qui n'y
-figure pas et n'a ni témoin ni commande de copie fait échouer
-`pnpm assert:corpus` — c'est ainsi que la règle se tient toute seule.
-
-### Tout bloc ne sait pas rendre `null`
-
-`com-theme-card` n'a que des refus **dégradés**. Ce n'est pas un oubli : quand
-le lecteur de document renonce, la grammaire terse reprend la main, et celle de
-la carte de thème City of Mist lit la deuxième ligne venue comme un titre. Elle
-rend donc quelque chose là où les cinq autres grammaires ne trouvent rien.
-
-Le harnais mesure ce que `block.parse` renvoie, pas ce que le seul lecteur de
-document aurait renvoyé. Écrire `# attend: null` sur un bloc dont la grammaire
-rattrape tout ferait passer une assertion pour un contrôle.
+`null` signifie que la faute empêche la projection. `dégradé` signifie que le
+champ fautif se perd mais que le reste se rend. Un format local nouveau ajoute
+au moins un témoin, ses refus pertinents et une commande de copie TOML.
 
 ## Lancer
 
 ```bash
+pnpm assert:mist-contract
 pnpm assert:corpus
 ```
