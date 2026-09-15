@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2026-09-15
+
+### Added
+
+- Consume the canonical `schema-pbta` v1.0.0 `move` and `playbook` corpus in Handbook projection assertions and DOM dumps.
+
+### Changed
+
+- Remove the duplicated local PbtA contract witnesses while retaining capability-based block activation.
+
+### Fixed
+
+- Treat an absent local `corpus/refus/` directory as an empty corpus and preserve Handbook-specific Adrenaline age-degradation coverage.
+
 ## [2.10.0] - 2026-09-15
 
 ### Added
