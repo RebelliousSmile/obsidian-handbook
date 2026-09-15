@@ -1,5 +1,5 @@
 ---
-status: pending
+status: in-progress
 ---
 
 # Instruction: Verrouiller les rendus de référence

@@ -78,6 +78,21 @@ base = 23
 solidite = 6
 [protections.mentales]
 solidite = 6
+[[formations]]
+nom = "Survie urbaine"
+type = "Terrain"
+pourcentage = 55
+[[formations.competences]]
+nom = "Escalade"
+pourcentage = 45
+caracteristique = "dex"
+[equipement]
+possessions = ["Radio", "Trousse de secours"]
+equipementFavori = "Multitool"
+[[equipement.armesPhysiques]]
+nom = "Pied-de-biche"
+pourcentage = 55
+desDeDegats = 2
 ```
 
 ## Contact
@@ -89,6 +104,32 @@ description = "Responsable de quart, précis et peu loquace."
 [narratif]
 role = "Contact de la station"
 attitude = "Coopère si le protocole est respecté."
+[caracteristiques]
+for = 35
+con = 40
+dex = 45
+rap = 40
+log = 55
+vol = 50
+per = 45
+cha = 60
+[sante.physique.superficiel]
+base = 5
+[sante.physique.leger]
+base = 10
+[sante.physique.grave]
+base = 15
+[sante.physique.profond]
+base = 20
+[protections.physiques]
+solidite = 3
+[[competences]]
+nom = "Mécanique"
+pourcentage = 60
+caracteristique = "log"
+[equipement]
+possessions = ["Trousseau de clés"]
+equipementFavori = "Lampe d'atelier"
 ```
 
 ## Menace
@@ -108,4 +149,32 @@ for = 45
 con = 55
 dex = 50
 rap = 60
+per = 55
+[[competences]]
+nom = "Discrétion"
+pourcentage = 70
+caracteristique = "dex"
+[etatAlternatif]
+nom = "Surchargé"
+declencheurs = ["Entend une alarme"]
+zoneDeDetection = "80 m"
+deplacement = "12 m par action"
+actionsParRound = 3
+[equipement]
+possessions = ["Harnais de grimpe"]
+[[equipement.armesPhysiques]]
+nom = "Griffes"
+pourcentage = 80
+desDeDegats = 3
+[contagion]
+agent = "Souche A-7"
+delaiAvantEffet = "6 à 12 heures"
+issue = "La victime devient un rôdeur."
+[[contagion.vecteurs]]
+nom = "Morsure"
+probabilite = 80
+[narratif]
+role = "Prédateur de maintenance"
+attitude = "Hostile mais territorial."
+personnalite = ["Patient", "Territorial"]
 ```

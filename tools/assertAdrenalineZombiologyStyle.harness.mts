@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
+import { adrenalineMonsterBlock } from "../src/features/adrenalineMonstre/block";
 import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 
 // 1. The content partial exists and is wired into the Adrenaline index.
@@ -23,6 +24,13 @@ assert.doesNotMatch(
 	/(?:^|[\s:(])(black|white|red|yellow)(?:[\s;,)])/i,
 	"host SCSS must not name a Zombiology colour directly",
 );
+const pj = scssByFile.get("_pj.scss") ?? "";
+const pnj = scssByFile.get("_pnj.scss") ?? "";
+const monstre = scssByFile.get("_monstre.scss") ?? "";
+assert.match(pj, /grid-template-areas:[\s\S]*?"formations competences"/, "PJ must retain its two-column consultation layout");
+assert.match(pj, /@media \(max-width: 520px\)[\s\S]*?"formations"[\s\S]*?"competences"/, "PJ must stack consultation zones on mobile");
+assert.match(pnj, /brumes-adrenaline-pnj--description/, "PNJ must keep a dedicated narrative treatment");
+assert.match(monstre, /brumes-adrenaline-monstre--capability-group/, "monster capabilities must remain visually grouped");
 
 // 2. Task 1 acceptance criteria: h3 cartouche, h4 red rule, italics, lists, tables, statuses.
 const content = scssByFile.get("_content.scss") ?? "";
@@ -107,5 +115,14 @@ assert.ok(minimal, "a name-only PNJ must still parse");
 const minimalRendered = adrenalinePnjBlock.render(minimal, doc) as unknown as El;
 assert.equal(minimalRendered.children.length, 1, "a minimal PNJ must render only its header, no empty panel");
 assert.equal(minimalRendered.children[0]!.tagName, "header");
+
+const groupedMonster = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\ntraitsSpeciaux = ["Traque"]\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);
+assert.ok(groupedMonster, "a grouped monster must parse");
+const groupedRendered = adrenalineMonsterBlock.render(groupedMonster, doc) as unknown as El;
+const groups = groupedRendered.children
+	.flatMap((child) => child.children)
+	.filter((child) => child.classes.includes("brumes-adrenaline-monstre--capability-group"));
+assert.equal(groups.length, 1, "a monster must render only its populated capability group");
+assert.equal(groups[0]!.children[0]!.textContent, "Traits", "the populated group must be labelled");
 
 console.log("Adrenaline Zombiology style assertions passed.");
