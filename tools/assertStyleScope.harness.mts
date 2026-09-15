@@ -86,29 +86,68 @@ assert.match(forcedDarkCss, /--forced-dark: dark/);
 assert.doesNotMatch(forcedDarkCss, /\.theme-dark/);
 assert.doesNotMatch(forcedDarkCss, /--forced-light/);
 
+interface StyleHead {
+	appendChild(element: StyleElement): StyleElement;
+	insertBefore(element: StyleElement, reference: StyleElement | null): StyleElement;
+	removeChild(element: StyleElement): StyleElement;
+}
+
 class StyleElement {
 	id = "";
 	textContent = "";
+	parentNode: StyleHead | null = null;
 	remove(): void {
-		styleElements.delete(this.id);
+		this.parentNode?.removeChild(this);
 	}
 }
 
-const styleElements = new Map<string, StyleElement>();
 (globalThis as { HTMLStyleElement?: unknown }).HTMLStyleElement = StyleElement;
-const styleDocument = {
-	getElementById: (id: string) => styleElements.get(id) ?? null,
-	createElement: () => new StyleElement(),
-	head: {
-		appendChild: (element: StyleElement) => {
-			styleElements.set(element.id, element);
+function createStyleDocument() {
+	const elements = new Map<string, StyleElement>();
+	const order: string[] = [];
+	const head: StyleHead = {
+		appendChild: (element) => {
+			element.parentNode?.removeChild(element);
+			element.parentNode = head;
+			elements.set(element.id, element);
+			order.push(element.id);
+			return element;
 		},
-	},
-};
+		insertBefore: (element, reference) => {
+			if (!reference) return head.appendChild(element);
+			element.parentNode?.removeChild(element);
+			element.parentNode = head;
+			elements.set(element.id, element);
+			const index = order.indexOf(reference.id);
+			if (index === -1) order.push(element.id);
+			else order.splice(index, 0, element.id);
+			return element;
+		},
+		removeChild: (element) => {
+			elements.delete(element.id);
+			const index = order.indexOf(element.id);
+			if (index !== -1) order.splice(index, 1);
+			element.parentNode = null;
+			return element;
+		},
+	};
+	return {
+		document: {
+			getElementById: (id: string) => elements.get(id) ?? null,
+			createElement: () => new StyleElement(),
+			head,
+		},
+		elements,
+		order,
+	};
+}
+
+const mainStyles = createStyleDocument();
+const detachedStyles = createStyleDocument();
 const writer = new GameStyleWriter();
-writer.addDocument(styleDocument as unknown as Document);
+writer.addDocument(mainStyles.document as unknown as Document);
 writer.applyGameStyle(workspaceCss);
-const styleElement = styleElements.get("brumes-game-style");
+const styleElement = mainStyles.elements.get("brumes-game-style");
 assert.equal(styleElement?.textContent, workspaceCss);
 writer.applyGameStyle(".brumes--city-of-mist { --city-only: true; }");
 assert.equal(
@@ -116,6 +155,18 @@ assert.equal(
 	".brumes--city-of-mist { --city-only: true; }",
 );
 assert.doesNotMatch(styleElement?.textContent ?? "", /test-note/);
+writer.applyPackStyle("body.brumes--city-of-mist .inline-title { text-decoration: underline; }");
+assert.deepEqual(mainStyles.order, ["brumes-game-style", "brumes-pack-style"]);
+assert.match(mainStyles.elements.get("brumes-pack-style")?.textContent ?? "", /body\.brumes--city-of-mist/);
+writer.addDocument(detachedStyles.document as unknown as Document);
+assert.deepEqual(detachedStyles.order, ["brumes-game-style", "brumes-pack-style"]);
+assert.equal(detachedStyles.elements.get("brumes-pack-style")?.textContent, mainStyles.elements.get("brumes-pack-style")?.textContent);
+writer.applyPackStyle("");
+assert.equal(mainStyles.elements.has("brumes-pack-style"), false);
+assert.equal(detachedStyles.elements.has("brumes-pack-style"), false);
+writer.removeGameStyle();
+assert.equal(mainStyles.elements.size, 0);
+assert.equal(detachedStyles.elements.size, 0);
 
 const adrenalinePage = readFileSync(
 	"src/styles/adrenaline/_page.scss",

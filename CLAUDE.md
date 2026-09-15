@@ -178,9 +178,9 @@ Le pack les nomme **par rôle**, jamais par image : `assets.images["iceberg-grou
 
 Les **polices restent embarquées** (libres, redistribuables) ; seules les illustrations sortent. `dist/styles.css` est passé de 6,21 Mo à **3,64 Mo**, dont l'essentiel est désormais les fontes.
 
-### Le format est publié, mais rien ne le télécharge
+### Le format d’apparence est local, mais rien ne le télécharge
 
-Les six schémas de contenu :Otherscape vivent dans le dépôt frère `schema-in-the-mist` v0.4.0. Le dépôt ne publie pas de schéma d'apparence : les variantes de registre restent internes à Handbook et ne passent jamais par `fromSchema.ts`.
+Les six schémas de contenu :Otherscape vivent dans le dépôt frère `schema-in-the-mist`. Le contrat d’apparence `GamePack`, lui, appartient à Handbook dans `schemas/appearance/game-pack.schema.json` et les manifests de packs installés sont validés localement avant d’entrer dans le registre.
 
 **Aucune dépendance à l'exécution** : ni fetch, ni import du dépôt distant. Le contrat est honoré par la forme de la donnée. Un pack charge réseau coupé.
 

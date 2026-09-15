@@ -7,8 +7,8 @@
  * custom property cannot express.
  *
  * These types are the published shape, read the way TypeScript reads it. The
- * contract lives beside the content schemas, in schema-in-the-mist, as
- * `appearance/game-pack.schema.json`; `fromSchema.ts` turns a document of that
+ * contract lives in Handbook as `schemas/appearance/game-pack.schema.json`;
+ * `fromSchema.ts` turns a document of that
  * shape into the types below. Nothing at runtime reaches for that repository —
  * the schema describes the format, it does not serve it.
  *

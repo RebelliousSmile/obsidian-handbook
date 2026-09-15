@@ -1,0 +1,25 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://github.com/RebelliousSmile/obsidian-handbook/blob/main/schemas/appearance/game-pack.schema.json",
+	"title": "Handbook game appearance pack",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["id", "label", "style"],
+	"properties": {
+		"id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+		"label": { "type": "string", "minLength": 1 },
+		"style": { "$ref": "#/definitions/style" },
+		"polarities": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["light", "dark"] } },
+		"assets": { "$ref": "#/definitions/assets" },
+		"shapes": { "$ref": "#/definitions/shapes" }
+	},
+	"definitions": {
+		"tokens": { "type": "object", "propertyNames": { "pattern": "^--[a-zA-Z0-9-]+$" }, "additionalProperties": { "type": "string" } },
+		"layer": { "type": "object", "additionalProperties": false, "properties": { "note": { "$ref": "#/definitions/tokens" }, "workspace": { "$ref": "#/definitions/tokens" } } },
+		"style": { "type": "object", "additionalProperties": false, "properties": { "base": { "$ref": "#/definitions/layer" }, "light": { "$ref": "#/definitions/layer" }, "dark": { "$ref": "#/definitions/layer" } } },
+		"fontFace": { "type": "object", "additionalProperties": false, "required": ["file"], "properties": { "file": { "type": "string", "minLength": 1 }, "weight": { "type": "string", "minLength": 1 }, "style": { "type": "string", "minLength": 1 } } },
+		"assets": { "type": "object", "additionalProperties": false, "properties": { "root": { "type": "string", "minLength": 1 }, "images": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1 } }, "fonts": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string", "minLength": 1 }, { "$ref": "#/definitions/fontFace" }] } }, "stylesheets": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } } },
+		"zoneOverride": { "type": "object", "minProperties": 1, "additionalProperties": false, "properties": { "holds": { "type": "string", "minLength": 1 }, "heading": { "type": "string", "minLength": 1 }, "family": { "type": "string", "minLength": 1 }, "image": { "type": "string", "minLength": 1 }, "optional": { "type": "boolean" }, "hidden": { "type": "boolean" } } },
+		"shapes": { "type": "object", "propertyNames": { "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }, "additionalProperties": { "type": "object", "propertyNames": { "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }, "additionalProperties": { "$ref": "#/definitions/zoneOverride" } } }
+	}
+}
