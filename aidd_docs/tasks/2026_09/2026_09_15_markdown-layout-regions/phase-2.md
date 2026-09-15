@@ -2,7 +2,7 @@
 status: pending
 ---
 
-# Instruction: Interpréter et grouper les régions Markdown
+# Instruction: Grouper les sections rendues par leurs lignes
 
 ## Architecture projection
 
@@ -11,21 +11,20 @@ status: pending
 ```txt
 .
 ├── src/features/layoutRegions/
-│   ├── parser.ts                              ✅ reconnaît les bornes et valide `columns=N`
-│   ├── postProcessor.ts                       ✅ groupe les frères DOM situés entre deux bornes
-│   └── index.ts                               ✅ enregistre le post-processeur auprès du plugin
+│   ├── sectionMapper.ts                       ✅ associe un intervalle source aux sections Markdown sœurs
+│   ├── postProcessor.ts                       ✅ lit la note et crée une région unique
+│   └── index.ts                               ✅ enregistre le post-processeur
 ├── src/BrumesPlugin.ts                        ✏️ active la fonctionnalité au chargement
-├── tools/layoutRegions.harness.mts            ✅ prouve la transformation DOM et les refus sûrs
-├── tools/assert-layout-regions.mjs            ✅ bundle et lance l’assertion durable
-└── package.json                               ✏️ expose l’assertion de régions Markdown
+└── tools/layoutRegions.harness.mts            ✏️ prouve mapping, ordre et refus sûrs
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Bornes commentées dans une note] --> B[Éléments Markdown rendus]
-  B --> C[Handbook regroupe les frères]
+  A[Source lue] --> B[Sections avec lineStart et lineEnd]
+  B --> C[Sections entièrement dans la région]
+  C --> D[Conteneur Handbook unique]
 ```
 
 ## Test Scope
@@ -36,54 +35,44 @@ title: Test scope
 ---
 journey
   section Setup
-    system: préparer un fragment rendu avec deux bornes et trois éléments frères => fragment prêt: 5: cli
+    system: préparer des sections sœurs munies de plages de lignes => parent rendu disponible: 5: cli
   section Happy path
-    system: appliquer le post-processeur => les trois éléments deviennent les enfants d’une région qui porte columns=3: 5: cli
-  section Edge case - borne incomplète ou invalide
-    system: appliquer le post-processeur => le contenu reste intact et un diagnostic unique est produit: 5: cli
+    system: mapper une région columns=3 puis la transformer => un conteneur garde exactement les sections ciblées: 5: cli
+  section Edge case - section incertaine
+    system: fournir une section sans lignes ou à cheval sur une borne => DOM conservé sans conteneur: 5: cli
+  section Edge case - régions successives
+    system: transformer deux intervalles disjoints => deux conteneurs indépendants sans voisin capturé: 5: cli
 ```
-
-## Wireframe
-
-```txt
-┌──────────── Note rendue ────────────┐
-│ (1) ┌───┐ ┌───┐ ┌───┐                │
-│     │ A │ │ B │ │ C │                │
-│     └───┘ └───┘ └───┘                │
-└──────────────────────────────────────┘
-```
-
-1. Région : le conteneur devient l’unique parent des frères situés entre les bornes.
 
 ## Tasks to do
 
-### `1)` Définir la grammaire locale
+### `1)` Associer sans ambiguïté source et rendu
 
-> Lire les deux bornes et refuser les formes ambiguës avant toute mutation du DOM.
+> Ne sélectionner que les enfants directs strictement compris entre les deux marqueurs.
 
-1. Accepter uniquement `<!-- handbook-layout: columns=N -->` où `N` est un entier positif, et `<!-- /handbook-layout -->` comme fermeture exacte.
-2. Ignorer une ouverture sans fermeture, une fermeture isolée, des régions qui se chevauchent et une valeur invalide, sans déplacer le contenu.
-3. Journaliser chaque diagnostic au plus une fois par région/source pour ne pas polluer le rendu.
+1. Obtenir le `TFile` depuis `context.sourcePath`, le lire avec `vault.cachedRead`, puis analyser les régions une fois par rendu.
+2. Consulter `context.getSectionInfo()` juste avant le mapping et sélectionner les sections sœurs complètes et contiguës de l’intervalle.
+3. Abandonner lorsque fichier, sections, parent commun ou frontière sont indisponibles; journaliser une fois.
 
-### `2)` Grouper les éléments rendus
+### `2)` Créer le seul conteneur de mise en page
 
-> Construire une région DOM autour des frères compris entre les deux bornes.
+> Déplacer uniquement les sections Markdown déjà rendues, sans changer leur contenu interne.
 
-1. Parcourir les nœuds de commentaire du fragment Markdown, exiger que les bornes aient le même parent, puis déplacer seulement les éléments entre elles dans un conteneur Handbook.
-2. Retirer les bornes après succès et conserver hors région tout ce qui est avant ou après.
-3. Enregistrer le post-processeur global au chargement du plugin, sans modifier les processeurs des blocs fencés ni l’éditeur source.
+1. Insérer `div.handbook-layout-region`, lui écrire `--handbook-layout-columns`, puis y déplacer les sections dans leur ordre initial.
+2. Marquer parent et région pour empêcher une exécution asynchrone concurrente.
+3. Enregistrer le processeur après les rendus structurels existants, sans toucher aux blocs fencés ni à la vue source.
 
-### `3)` Ajouter une assertion durable
+### `3)` Étendre le harnais de transformation
 
-> Mesurer les mutations attendues et les refus sans dépendre d’Obsidian lancé.
+> Mesurer la mutation, l’isolement et l’absence de perte de contenu.
 
-1. Réutiliser le motif esbuild des harnais `tools/` avec un DOM minimal adapté aux commentaires, parents et déplacements de nœuds.
-2. Affirmer une région à une et trois colonnes, plusieurs régions indépendantes, et les formes incomplètes ou invalides sans perte de contenu.
+1. Construire un DOM minimal pour parents, sections, attributs et déplacements.
+2. Affirmer colonnes, ordre, régions indépendantes et refus sûrs.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | Les seules directives reconnues sont les bornes convenues avec un entier positif ; une note mal formée garde ses éléments rendus inchangés. |
-| 2 | Les blocs et tableaux frères entre deux bornes deviennent les enfants d’un unique conteneur de région ; les blocs ne sont jamais imbriqués dans la syntaxe Markdown. |
-| 3 | `pnpm assert:layout-regions` vérifie le groupement, l’isolement de régions successives et la conservation du contenu dans les cas fautifs. |
+| 1 | Les commentaires supprimés du DOM n’empêchent pas le mapping : les lignes source et `getSectionInfo()` suffisent à identifier les sections sœurs. |
+| 2 | Un conteneur unique entoure seulement les sections entre les marqueurs; aucun tableau, bloc interne ou voisin n’est restructuré. |
+| 3 | L’assertion prouve groupements à une et trois colonnes et conservation du DOM dans les cas incertains. |

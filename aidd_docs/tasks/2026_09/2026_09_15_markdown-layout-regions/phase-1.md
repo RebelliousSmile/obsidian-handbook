@@ -1,8 +1,8 @@
 ---
-status: blocked
+status: done
 ---
 
-# Instruction: Prouver les bornes dans Obsidian
+# Instruction: Cartographier les régions dans la source
 
 ## Architecture projection
 
@@ -10,22 +10,20 @@ status: blocked
 
 ```txt
 .
-├── tools/e2e/
-│   ├── layout-regions-journey.ps1             ✅ crée un coffre temporaire et lance Obsidian Windows isolé
-│   ├── layout-regions-cdp.py                  ✅ inspecte les bornes et capture le rendu via CDP
-│   └── README.md                              ✏️ décrit le parcours Windows et ses captures
-└── aidd_docs/tasks/2026_09/2026_09_15_markdown-layout-regions/
-    └── phase-1.md                             ✏️ porte le verdict de faisabilité
+├── src/features/layoutRegions/
+│   └── parser.ts                              ✅ reconnaît les marqueurs et retourne des intervalles de lignes sûrs
+├── tools/layoutRegions.harness.mts            ✅ exécute les assertions de grammaire compilées
+├── tools/assert-layout-regions.mjs            ✅ bundle et lance le harnais durable
+└── package.json                               ✏️ expose l’assertion de régions Markdown
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Note avec deux commentaires] --> B[Obsidian rend la note]
-  B --> C{Les bornes restent accessibles ?}
-  C -->|oui| D[Le groupement peut être implémenté]
-  C -->|non| E[Stop et nouvelle syntaxe]
+  A[Note avec marqueurs invisibles] --> B[Handbook lit la source]
+  B --> C[Intervalles de lignes valides]
+  C --> D[Prêts à associer aux sections rendues]
 ```
 
 ## Test Scope
@@ -36,48 +34,35 @@ title: Test scope
 ---
 journey
   section Setup
-    browser: créer un coffre temporaire puis ouvrir sa note de sonde dans une instance Obsidian dédiée => note rendue disponible: 5: browser
+    system: préparer une note avec deux régions et des blocs de code => source disponible: 5: cli
   section Happy path
-    browser: inspecter le DOM du rendu Markdown => les deux commentaires sont distinguables et bornent les mêmes frères: 5: browser
-  section Edge case - commentaire Markdown neutralisé
-    browser: rendre la même note dans chaque vue Markdown prise en charge => le parcours échoue explicitement si une borne disparaît: 5: browser
+    system: analyser les marqueurs seuls sur leurs lignes => intervalles columns=1 et columns=3 ordonnés: 5: cli
+  section Edge case - forme ambiguë
+    system: ouvrir sans fermeture, fermeture isolée, chevauchement ou valeur invalide => aucune région exploitable pour la forme fautive: 5: cli
+  section Edge case - exemple littéral
+    system: placer les marqueurs dans un bloc de code clôturé => aucun marqueur n’est reconnu: 5: cli
 ```
-
-## Wireframe
-
-```txt
-┌──────────────── Note rendue ────────────────┐
-│ Texte ordinaire                              │
-│                                              │
-│ (1) commentaire de début, invisible          │
-│ ┌────────┐ ┌────────┐ ┌────────┐             │
-│ │ bloc   │ │ bloc   │ │ bloc   │             │
-│ └────────┘ └────────┘ └────────┘             │
-│ (2) commentaire de fin, invisible            │
-└──────────────────────────────────────────────┘
-```
-
-1. Début : borne de commentaire que le rendu doit conserver et rendre accessible.
-2. Fin : seconde borne qui délimite la même liste de frères sans modifier leur rendu.
 
 ## Tasks to do
 
-### `1)` Vérifier la faisabilité dans le vrai moteur Markdown
+### `1)` Définir la grammaire et les intervalles source
 
-> Écarter dès le départ une syntaxe que le DOM Obsidian ne permettrait pas de traiter.
+> Produire des régions fiables avant toute mutation du DOM.
 
-1. Créer un lanceur PowerShell qui refuse une instance existante sur son port CDP, prépare un coffre temporaire hors du coffre utilisateur, lance `Obsidian.exe` masqué avec un port dédié, puis ne ferme que le PID qu’il a créé.
-2. Créer le pilote Python CDP à partir du motif existant : il ouvre la note de sonde, contrôle les nœuds de commentaire et capture le rendu ; le lanceur nettoie le coffre et les captures temporaires même en échec.
-3. Arrêter la réalisation si les bornes ne sont pas accessibles comme commentaires frères ; la phase documente alors le constat plutôt que de contourner le moteur avec une pseudo-imbrication.
+1. Accepter les bornes exactes isolées sur leur ligne, avec `columns` entier positif.
+2. Suivre les blocs de code clôturés pour ignorer leurs exemples littéraux, puis retourner les bornes exclusives de chaque paire valide.
+3. Refuser sans effet les ouvertures concurrentes, fermetures orphelines, régions non fermées, valeurs invalides et régions vides.
+
+### `2)` Ajouter l’assertion durable
+
+> Figer la grammaire indépendamment du moteur Obsidian.
+
+1. Reprendre le motif esbuild des harnais `tools/`.
+2. Affirmer les paires valides et successives, les erreurs isolées et les marqueurs dans du code clôturé.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | Obsidian réel expose les deux commentaires comme bornes accessibles autour des éléments rendus, ou la phase s’arrête avant toute implémentation de groupement. |
-
-## Verdict — 2026-09-15
-
-La sonde `layout-regions-probe` a été inspectée dans Obsidian Windows réel par CDP. Son rendu contient les titres `ONE`, `TWO` et `THREE`, mais le parcours complet des commentaires DOM retourne `[]`. Les bornes HTML sont donc supprimées avant que le post-processeur ne puisse les parcourir.
-
-La phase s’arrête ici, sans code de groupement. Une nouvelle planification doit choisir un mécanisme qui relie les bornes de la source Markdown aux éléments rendus, ou une syntaxe dont Obsidian préserve les bornes.
+| 1 | Seules les paires source exactes et non ambiguës produisent des intervalles de lignes et un entier de colonnes positif. |
+| 2 | `pnpm assert:layout-regions` prouve que les formes fautives et les blocs de code ne produisent aucune région. |
