@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Styliser, documenter et vérifier dans Obsidian

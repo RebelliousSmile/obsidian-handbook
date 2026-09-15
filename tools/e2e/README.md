@@ -31,3 +31,25 @@ Optional variables:
 - `HANDBOOK_E2E_OBSIDIAN_LOG`: Obsidian log file; defaults to `$HOME/.config/obsidian/obsidian.log`.
 
 The command writes `REPORT.md`, one screenshot per journey step, downloaded comparison fixtures, and the appended Obsidian log to the output directory.
+
+## Layout regions
+
+`layout-regions-journey.ps1` exercises the note-local column feature on
+Windows. It refuses to run while Obsidian is already open, creates a new vault
+under the system temporary directory, copies the compiled Handbook assets into
+that vault, and opens its probe through the Obsidian URI. It verifies a
+three-column region at 1200 px and the one-column responsive fallback at 600
+px, then stops only the process tree it created and removes the temporary
+vault.
+
+Prerequisites:
+
+- Windows with Obsidian installed at `C:\Program Files\Obsidian\Obsidian.exe`;
+- Python with the `websocket-client` package;
+- built plugin assets in `dist/` (`pnpm build`).
+
+Run, with Obsidian closed:
+
+```powershell
+pnpm e2e:layout-regions
+```

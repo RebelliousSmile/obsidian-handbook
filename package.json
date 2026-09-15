@@ -19,6 +19,7 @@
 		"assert:source-installer": "node tools/assert-source-installer.mjs",
 		"assert:starter-kits": "node tools/assert-starter-kits.mjs",
 		"e2e:request-url": "bash tools/e2e/request-url-journey.sh",
+		"e2e:layout-regions": "powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",
 		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",

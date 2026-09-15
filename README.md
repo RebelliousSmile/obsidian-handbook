@@ -169,6 +169,50 @@ Urban Shadows and Monsterhearts packs use the same responsive reading pattern,
 with a lower breakpoint suited to their denser book layouts. Opt one note out
 with `pbta-one-column` in `cssclasses`.
 
+### Mise en page locale dans une note
+
+Handbook peut aussi mettre des sections Markdown sœurs sur une même rangée,
+sans changer le réglage du coffre ni imbriquer les blocs Markdown. Encadrez-les
+par les deux commentaires, chacun seul sur sa ligne :
+
+```markdown
+<!-- handbook-layout: columns=3 -->
+
+## Première fiche
+
+Son contenu.
+
+## Deuxième fiche
+
+Son contenu.
+
+## Troisième fiche
+
+Son contenu.
+
+<!-- /handbook-layout -->
+```
+
+`columns=3` répartit ces sections sur trois colonnes lorsque la largeur le
+permet, puis revient automatiquement à une seule colonne sur une fenêtre
+étroite. Pour garder un tableau ou un bloc large dans une zone isolée, utilisez
+la même syntaxe avec `columns=1` :
+
+```markdown
+<!-- handbook-layout: columns=1 -->
+
+| Colonne A | Colonne B |
+| --- | --- |
+| Valeur | Valeur |
+
+<!-- /handbook-layout -->
+```
+
+La région organise les sections Markdown de premier niveau déjà rendues, jamais
+les cellules du tableau. Elle ne s’applique pas dans la vue source. Les
+directives mal formées, incomplètes ou montrées dans un bloc de code sont
+ignorées sans modifier la note.
+
 Handbook and Lantern deliberately consume the same `schema-adrenaline`
 repository. The package declares the minimum Handbook release it supports;
 Handbook does not pin a game-specific schema commit. Schema sources records the

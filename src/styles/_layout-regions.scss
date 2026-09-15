@@ -1,0 +1,21 @@
+.handbook-layout-region {
+	--handbook-layout-columns: 1;
+	display: grid;
+	grid-template-columns: repeat(
+		var(--handbook-layout-columns),
+		minmax(0, 1fr)
+	);
+	gap: var(--size-4-4, 1rem);
+	align-items: start;
+}
+
+.handbook-layout-region > .markdown-preview-section {
+	min-width: 0;
+	overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+	.handbook-layout-region {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
