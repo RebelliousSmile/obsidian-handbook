@@ -2,7 +2,7 @@
 status: pending
 ---
 
-# Instruction: Injection isolée et cycle de vie multi-fenêtres
+# Instruction: Valider et appliquer la couche CSS de pack
 
 ## Architecture projection
 
@@ -10,24 +10,22 @@ status: pending
 
 ```txt
 obsidian-handbook/
-├── src/
-│   ├── BrumesPlugin.ts                    ✏️ compose le CSS actif et invalide les ressources périmées
-│   └── features/modes/styleElement.ts     ✏️ conserve l’ordre générique, fontes, CSS de pack et tokens par document
-└── tools/
-    ├── assertStyleScope.harness.mts       ✏️ prouve l’ordre et le remplacement atomique de la feuille possédée
-    └── assert-reload-styles.mjs           ✏️ verrouille changement, déchargement et fenêtres détachées
+├── package.json / pnpm-lock.yaml ✏️ épinglent les parseurs CSS
+├── src/games/assets.ts ✏️ valide, réécrit et compose les feuilles actives
+├── src/features/modes/styleElement.ts ✏️ possède un élément pack-CSS après les tokens
+├── src/BrumesPlugin.ts ✏️ invalide jeu, source, variante et déchargement
+└── tools/{assertStyleScope.harness.mts,assert-reload-styles.mjs} ✏️ verrouillent portée, URLs et cycle de vie
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[jeu, source ou variante change] --> B[état d'assets invalidé]
-  B --> C[CSS du nouveau pack résolu]
-  C --> D[GameStyleWriter remplace sa feuille]
-  D --> E[fenêtre principale]
-  D --> F[fenêtre détachée]
-  G[déchargement] --> H[feuilles supprimées de tous les documents]
+  A[CSS de pack] --> B{parseur : portée, polarité, URL ?}
+  B -->|valide| C[URLs de coffre réécrites]
+  C --> D[élément dédié après tokens]
+  B -->|invalide| E[couche précédente intacte]
+  F[changement ou fermeture] --> G[couche remplacée ou retirée]
 ```
 
 ## Test Scope
@@ -38,35 +36,47 @@ title: Test scope
 ---
 journey
   section Setup
-    Ouvrir le document principal et un document détaché avec un pack stylé => deux feuilles Handbook suivies: 5: cli
+    Ouvrir document principal et détaché avec un pack stylé => éléments tokens et pack-CSS suivis: 5: system
   section Happy path
-    Appliquer le pack actif => CSS générique Handbook puis feuille dynamique validée du pack présents dans chaque document: 5: cli
-  section Edge case - changement d'identité
-    Changer de jeu, source ou variante => aucun sélecteur ni règle du pack précédent ne survit: 5: cli
+    Activer le pack => feuilles concaténées après tokens dans les deux documents: 5: system
+  section Edge case - CSS hostile
+    Fournir sélecteur global, polarité absente, import ou keyframe globale => feuille rejetée sans remplacement partiel: 5: system
+  section Edge case - URL
+    Référencer asset déclaré => URL de coffre; fournir URL distante, data, absolue, sortante ou inconnue => rejet: 5: system
   section Teardown
-    Décharger le plugin ou fermer une fenêtre => les éléments de style Handbook sont retirés des documents concernés: 5: cli
+    Changer de jeu ou décharger => élément pack-CSS absent de chaque document: 5: system
 ```
 
 ## Tasks to do
 
-### `1)` Composer une unique feuille active par document
+### `1)` Valider la grammaire et les ressources CSS
 
-> Écrire les couches dans un ordre déterministe, après le CSS générique livré par Handbook.
+> Le consommateur garde l’autorité d’exécution.
 
-1. Étendre la composition de `BrumesPlugin` afin d’insérer le CSS validé du pack dans l’élément dynamique possédé, après le CSS générique compilé de Handbook, avec un ordre déterministe documenté pour les fontes, tokens et callouts.
-2. Garder `GameStyleWriter` comme unique propriétaire de l’élément de style et vérifier que tout document nouvellement ouvert reçoit exactement le même contenu.
+1. Épingler `postcss` et `postcss-selector-parser`, puis analyser règles et at-rules imbriquées sans regex.
+2. Autoriser seulement les sélecteurs sous `body.brumes--<pack-id>` ou scope local ; rejeter global, autre jeu, thème nu, import et effets globaux non namespacés.
+3. Déduire les polarités autorisées du pack et réécrire uniquement les `url(...)` relatives vers images ou fontes déclarées, avec l’URL de coffre.
 
-### `2)` Invalider et nettoyer toutes les transitions
+### `2)` Écrire et nettoyer la couche dédiée
 
-> Ne laisser aucune feuille de pack devenir une dépendance fantôme.
+> Les tokens et le CSS structurel restent deux couches explicites.
 
-1. Identifier l’état par pack, installation/source et variante effective afin qu’un résultat asynchrone devenu obsolète soit abandonné.
-2. Réappliquer la feuille complète après changement de mode, rechargement des sources, actualisation du registre et changement de variante ; conserver le comportement des packs sans feuille.
-3. Retirer l’élément de style lors de la fermeture d’une fenêtre et du déchargement, dans la fenêtre principale comme dans les fenêtres détachées.
+1. Étendre `GameStyleWriter` avec un élément pack-CSS après les tokens dans chaque document suivi.
+2. Concaténer les fichiers validés dans l’ordre du manifeste ; erreur concise et couche active intacte en cas de refus.
+3. Refaire la résolution sur jeu, source ou variante et nettoyer à la fermeture de fenêtre et au déchargement.
+
+### `3)` Prouver portée et cycle de vie
+
+> Les régressions deviennent observables.
+
+1. Tester ordre, règles imbriquées, polarités, URLs interdites et réécriture d’asset déclaré.
+2. Tester principal/détaché, changement de jeu, rechargement de source, variante, disposal et token-only.
+3. Ajouter l’assertion au check global et documenter le contrat de portée.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | Chaque document suivi reçoit les couches dans le même ordre, et une feuille de pack ne précède jamais les styles génériques Handbook. |
-| 2 | Les transitions et le déchargement retirent tout CSS périmé, sans empêcher les packs à tokens seuls de se rendre. |
+| 1 | Aucun CSS global, mal formé, de polarité absente ou à URL non déclarée ne peut être injecté ; un asset déclaré devient une URL de coffre. |
+| 2 | La couche pack-CSS suit les tokens dans chaque document et disparaît à chaque transition. |
+| 3 | Les assertions prouvent ordre, refus, fenêtres détachées et invariance token-only. |

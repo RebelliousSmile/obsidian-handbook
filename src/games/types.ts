@@ -92,6 +92,8 @@ export interface GameAssets {
 	 * matched as regular and then synthetically emboldened.
 	 */
 	fonts?: Record<string, string | GameFontFace>;
+	/** Ordered CSS resources relative to this pack's asset root. */
+	stylesheets?: string[];
 }
 
 export interface GamePack {

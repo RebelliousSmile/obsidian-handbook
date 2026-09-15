@@ -43,7 +43,7 @@ const log = logScope("Games");
 const PACK_FIELDS = ["id", "label", "style", "polarities", "assets", "shapes"];
 const STYLE_FIELDS = ["base", "light", "dark"];
 const LAYER_FIELDS = ["note", "workspace"];
-const ASSET_FIELDS = ["root", "images", "fonts"];
+const ASSET_FIELDS = ["root", "images", "fonts", "stylesheets"];
 const FONT_FACE_FIELDS = ["file", "weight", "style"];
 
 /**
@@ -388,6 +388,20 @@ function readFonts(
 	return fonts;
 }
 
+function readStylesheets(value: unknown): string[] | undefined {
+	if (!Array.isArray(value)) {
+		if (value !== undefined) log.warn('Ignoring "assets.stylesheets" in a pack document: not a list.');
+		return undefined;
+	}
+
+	const sheets: string[] = [];
+	for (const entry of value) {
+		const path = asText(entry);
+		if (path && sheets.indexOf(path) === -1) sheets.push(path);
+	}
+	return sheets;
+}
+
 function readAssets(value: unknown): GameAssets | undefined {
 	if (!isRecord(value)) {
 		if (value !== undefined) {
@@ -420,6 +434,11 @@ function readAssets(value: unknown): GameAssets | undefined {
 		if (fonts) {
 			assets.fonts = fonts;
 		}
+	}
+
+	if (value.stylesheets !== undefined) {
+		const stylesheets = readStylesheets(value.stylesheets);
+		if (stylesheets) assets.stylesheets = stylesheets;
 	}
 
 	return assets;

@@ -1,8 +1,8 @@
 ---
-status: pending
+status: done
 ---
 
-# Instruction: Contrat lu et ressource installée de façon sûre
+# Instruction: Installer les feuilles déclarées
 
 ## Architecture projection
 
@@ -10,28 +10,18 @@ status: pending
 
 ```txt
 obsidian-handbook/
-├── package.json                  ✏️ expose l’assertion de feuilles au check global
-├── src/games/
-│   ├── types.ts            ✏️ déclare les feuilles de pack résolues
-│   ├── fromSchema.ts       ✏️ lit `assets.stylesheets` avec tolérance contrôlée
-│   ├── assets.ts           ✏️ résout, lit et valide les CSS confinés au pack
-│   └── sourceInstaller.ts  ✏️ télécharge les feuilles explicitement déclarées
-└── tools/
-    ├── customPacks.harness.mts      ✏️ prouve lecture, chemins et refus d’asset
-    └── packStylesheets.harness.mts  ✅ couvre les règles CSS acceptées et refusées
-    └── assert-mist-contract.mjs      ✏️ verrouille la release immuable qui publie le contrat
-    └── sourceInstaller.harness.mts   ✏️ prouve le téléchargement des feuilles déclarées
+├── src/games/{types.ts,fromSchema.ts,assets.ts,sourceInstaller.ts} ✏️ lit, stage et résout les CSS déclarés
+├── tools/{customPacks.harness.mts,sourceInstaller.harness.mts} ✏️ couvre ordre, échecs et packs token-only
+└── tools/dev-schema-source.mjs ✏️ synchronise les feuilles pendant le développement
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[pack.json assets.stylesheets] --> B[lecteur tolérant]
-  B --> C[installateur de source]
-  C --> D[CSS sous le répertoire du pack]
-  D --> E[validation de chemin, URL, import, portée et polarité]
-  E --> F[CSS prêt pour le style du jeu actif]
+  A[source GitHub taguée] --> B[manifest stylesheets]
+  B --> C[staging borné sous le pack]
+  C --> D[source promue ou échec atomique]
 ```
 
 ## Test Scope
@@ -42,38 +32,27 @@ title: Test scope
 ---
 journey
   section Setup
-    Déclarer une feuille locale de pack et son répertoire d'assets => pack installable: 5: cli
+    Enregistrer schema-in-the-mist v1.1.0 comme source => manifest et ressources disponibles: 5: system
   section Happy path
-    Résoudre une feuille scoped du pack actif => son CSS validé est disponible dans l'état d'assets: 5: cli
-  section Edge case - CSS hostile
-    Déclarer un import, une URL non sûre, un sélecteur global ou une polarité absente => la feuille est rejetée sans lecture ou injection: 5: cli
-  section Edge case - pack tokens uniquement
-    Résoudre un pack sans stylesheets => l'état d'assets reste utilisable et ne produit aucun CSS: 5: cli
+    Installer un pack avec plusieurs feuilles => CSS présent sous le pack dans l'ordre déclaré: 5: system
+  section Edge case - ressource invalide
+    Déclarer chemin absent, sortant ou hors limite => promotion entière annulée: 5: system
+  section Edge case - tokens seuls
+    Installer un pack sans feuille => compatibilité inchangée: 5: system
 ```
 
 ## Tasks to do
 
-### `1)` Étendre le contrat consommé et l’installation déclarative
+### `1)` Faire traverser le contrat jusqu’au stockage
 
-> Faire parvenir uniquement les ressources CSS explicitement déclarées depuis une source de schéma jusqu’au répertoire installé du pack.
+> Une feuille déclarée est un asset local et borné avant toute interprétation.
 
-1. Étendre les types et le lecteur de pack pour `assets.stylesheets`, en préservant les packs v1 sans ce champ et les diagnostics tolérants des valeurs mal formées.
-2. Passer à la release immuable de `schema-in-the-mist` qui publie ce champ et actualiser le verrou et l’assertion de contrat ; ne pas implémenter contre une forme d’issue non publiée.
-3. Inclure chaque feuille déclarée dans la liste d’assets sûre de l’installateur, avec les mêmes limites de nombre, taille et confinement que les images et fontes.
-4. Adapter le synchroniseur de développement afin que les changements de feuilles déclarées soient recopiés et déclenchent le rechargement.
-5. Exposer le harnais de validation CSS dans `package.json` afin que `pnpm check` le lance.
-
-### `2)` Résoudre et valider les feuilles avant l’écriture DOM
-
-> Convertir une déclaration installée en CSS inject-able seulement si elle reste dans le périmètre du jeu.
-
-1. Lire les feuilles depuis le dossier d’assets résolu, conserver leur ordre de déclaration et ignorer les absentes sans casser les tokens ou fontes.
-2. Rejeter atomiquement un fichier qui contient un chemin sortant du pack, `@import`, une URL ou une construction CSS dangereuse ; n’accepter que les sélecteurs ancrés sur la classe du pack actif.
-3. Vérifier que les sélecteurs de polarité sont composés avec le jeu et ne nomment que les polarités déclarées ; exposer le CSS validé dans l’état d’assets.
+1. Ajouter `assets.stylesheets` aux types et au lecteur tolérant, avec liste vide pour les manifests existants.
+2. Télécharger chaque chemin déclaré sous les contrôles de chemin, nombre et taille existants ; tout échec précède la promotion.
+3. Synchroniser les feuilles en développement et étendre les harnais pour ordre, traversée, absence et token-only.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | La release immuable qui publie le contrat est verrouillée, une source installe les feuilles explicitement déclarées et un pack sans feuille reste compatible. |
-| 2 | Seul un fichier CSS intégralement local, scoped au jeu et cohérent avec ses polarités peut atteindre l’état prêt à écrire ; un fichier hostile ou global entier est absent. |
+| 1 | Les feuilles sont installées uniquement sous leur pack et dans l’ordre du manifeste ; les échecs n’écrasent jamais la source existante. |
