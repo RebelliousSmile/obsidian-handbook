@@ -1,6 +1,6 @@
 ---
 objective: "Handbook consomme le package immuable schema-adrenaline v1.0.0 et son corpus canonique pour ses trois renderers, sans checkout frère requis par pnpm check ni copies locales du contrat métier."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Contrat Adrenaline v1
