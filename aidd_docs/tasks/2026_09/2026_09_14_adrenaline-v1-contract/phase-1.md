@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Épinglage reproductible et harnais de contrat
@@ -39,7 +39,7 @@ title: Test scope
 ---
 journey
   section Setup
-    Installer le lockfile figé dans un worktree et un store vides => le package v1.0.0 et son corpus sont disponibles: 5: cli
+    Installer le lockfile figé avec accès réseau dans un worktree et un store vides => le package v1.0.0 et son corpus sont disponibles avant le basculement hors ligne: 5: cli
   section Happy path
     Lancer assert:adrenaline-contract => les trois codecs respectent les 35 verdicts canoniques et les trois renderers sont exercés: 5: cli
   section Edge case - refus canonique
@@ -56,9 +56,9 @@ journey
 
 > Déclarer et verrouiller la seule archive publique `schema-adrenaline` v1.0.0.
 
-1. Ajouter `schema-adrenaline` aux dépendances avec l’URL stable `https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz`, puis régénérer les deux lockfiles sans conserver de redirection signée GitHub.
-2. Ajouter `assert:adrenaline-contract` et son lanceur; y vérifier hors ligne que `package.json`, `package-lock.json` et `pnpm-lock.yaml` portent l’URL publique, leur intégrité SRI et aucun domaine `release-assets.githubusercontent.com`.
-3. Vérifier séparément l’archive téléchargée dans un répertoire temporaire contre le digest SHA-256 publié, puis prouver `pnpm install --frozen-lockfile` avec un store vide et nettoyer toutes les ressources temporaires.
+1. Ajouter `schema-adrenaline` aux dépendances avec l’URL stable `https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz`, puis produire sa SRI dans `package-lock.json`.
+2. Normaliser l’entrée équivalente de `pnpm-lock.yaml` sur l’URL publique et la même SRI — sans faire réécrire les autres assets GitHub par pnpm 10.5.2 — et ajouter `assert:adrenaline-contract` pour refuser toute redirection `release-assets.githubusercontent.com` ou intégrité absente dans l’un des lockfiles.
+3. Vérifier séparément l’archive téléchargée dans un répertoire temporaire contre le digest SHA-256 publié, puis prouver `pnpm install --frozen-lockfile` avant de couper le réseau et d’exécuter les assertions ; nettoyer toutes les ressources temporaires.
 
 ### `2)` Centraliser l’accès au corpus et aux codecs installés
 
@@ -80,6 +80,6 @@ journey
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | Les dépendances et lockfiles ne portent que l’URL de release v1.0.0, une SRI vérifiable et aucune URL GitHub temporaire; une installation figée depuis un store vide réussit. |
+| 1 | Les dépendances et lockfiles portent l’URL de release v1.0.0 et une SRI identique et vérifiable, sans URL GitHub temporaire; l’installation figée précède avec succès une exécution hors ligne. |
 | 2 | Le helper charge les 35 entrées publiées, couvre exactement PJ/PNJ/monstre et refuse un manifeste, un chemin ou un verdict invalide. |
 | 3 | Les 10 acceptations et 25 refus sont lus avec leur format canonique; les cas convertibles ne font pas jeter les trois projections, leurs rendus non nuls ont du contenu et tout export Handbook valide conserve son rendu après relecture. |
