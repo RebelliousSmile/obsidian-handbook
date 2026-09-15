@@ -127,6 +127,11 @@ Le corpus a deux moitiés, et les deux sont nécessaires :
 > « Sans le témoin, une série de refus ne prouve rien — un schéma qui rejette
 > tout les passerait tous. » (`schema-adrenaline`, `tools/audit-schemas.ts`)
 
+Adrenaline v1 publie un manifeste mixte JSON/TOML sous
+`schema-adrenaline/corpus/cases.json` : le codec propriétaire décide
+`accept|reject`, puis Handbook vérifie séparément sa projection tolérante et
+son rendu sans dupliquer ces cas métier.
+
 ## Langue
 
 - **L'anglais existant reste.** Le code, les commentaires, le README et les

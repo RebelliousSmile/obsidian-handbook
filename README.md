@@ -173,10 +173,12 @@ Handbook does not pin a game-specific schema commit. Schema sources records the
 generic release, tag or branch selected for each repository and installs its
 catalogue atomically.
 
-Handbook's `npm run check` and release workflow deliberately remain independent
-from optional game repositories. To validate a concrete Adrenaline checkout,
-set `SCHEMA_ADRENALINE_ROOT` and run the dedicated
-`assert:adrenaline-source`, `assert:adrenaline-theme` and
+Handbook's `pnpm check` and release workflow deliberately remain independent
+from optional game repositories. `pnpm assert:adrenaline-contract` validates the
+immutable `schema-adrenaline` v1.0.0 package, including its strict codecs and
+canonical JSON/TOML corpus; Handbook keeps a tolerant projection and renderer.
+To validate a concrete Adrenaline pack checkout, set `SCHEMA_ADRENALINE_ROOT`
+and run the optional `assert:adrenaline-theme` and
 `assert:adrenaline-zombiology-style` scripts. Conversely, schema-adrenaline CI
 derives an immutable Handbook tag from `minimumHandbookVersion`, runs those host
 assertions against its checkout, then verifies catalogue installation through

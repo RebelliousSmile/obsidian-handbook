@@ -11,6 +11,9 @@ importers:
       obsidian:
         specifier: ^1.12.3
         version: 1.13.1(@codemirror/state@6.5.0)(@codemirror/view@6.38.6)
+      schema-adrenaline:
+        specifier: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz
+        version: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz
       schema-in-the-mist:
         specifier: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz
         version: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz
@@ -1478,6 +1481,10 @@ packages:
 
   schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz:
     resolution: {integrity: sha512-6wgDSCKL9I2W/c00IRdIxOdXzrj4O6LE1catb5fztjaF0+QhFbro8Wn2mrvtr3S9koMSvuDRwWiAj+zgWhasiQ==, tarball: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz}
+    version: 1.0.0
+
+  schema-adrenaline@https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz:
+    resolution: {integrity: sha512-zVGJnN7Iv/kAGc8f8c+EsiFD6VXDq728lubld46vEoDikoKl0VAbuO0VA3RSZ1DL0nQ3e7HBdFRDnMpEsziZiw==, tarball: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz}
     version: 1.0.0
 
   schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz:
@@ -3340,6 +3347,11 @@ snapshots:
       '@parcel/watcher': 2.6.0
 
   schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz:
+    dependencies:
+      smol-toml: 1.8.0
+      zod: 4.6.2
+
+  schema-adrenaline@https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz:
     dependencies:
       smol-toml: 1.8.0
       zod: 4.6.2
