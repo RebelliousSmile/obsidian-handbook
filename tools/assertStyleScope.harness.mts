@@ -130,7 +130,20 @@ assert.match(adrenalinePage, /&\.theme-light:not\(\.brumes--colour-dark\)/);
 assert.match(adrenalinePage, /&\.theme-dark:not\(\.brumes--colour-light\)/);
 assert.match(adrenalinePage, /&\.brumes--colour-light/);
 assert.match(adrenalinePage, /&\.brumes--colour-dark/);
-assert.doesNotMatch(adrenalinePage, /brumes--workspace-theme/);
+assert.equal(
+	(adrenalinePage.match(/brumes--workspace-theme/g) ?? []).length,
+	1,
+	"Adrenaline page styles may mention the workspace toggle only once",
+);
+assert.match(
+	adrenalinePage,
+	/&\.brumes--workspace-theme :focus-visible/,
+	"the sole workspace exception must be its keyboard focus indicator",
+);
+assert.doesNotMatch(
+	adrenalinePage,
+	/brumes--workspace-theme[^{}]*\{[^}]*adrenaline-page-texture/,
+);
 assert.doesNotMatch(adrenalineCallouts, /brumes--workspace-theme/);
 assert.doesNotMatch(
 	`${adrenalinePage}\n${adrenalineCallouts}`,
