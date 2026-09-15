@@ -30,12 +30,13 @@ const LAYOUT_PREFIX = "<!-- handbook-layout:";
  * lines and are zero-based so they can be compared to Obsidian section info.
  */
 export function parseLayoutRegions(source: string): LayoutRegionParseResult {
+	const lines = source.split(/\r?\n/);
 	const diagnostics: { line: number; reason: LayoutRegionDiagnostic }[] = [];
 	const regions: LayoutRegion[] = [];
 	let open: OpenRegion | null = null;
 	let fence: { character: "`" | "~"; length: number } | null = null;
 
-	for (const [line, rawLine] of source.split(/\r?\n/).entries()) {
+	for (const [line, rawLine] of lines.entries()) {
 		if (isFenceBoundary(rawLine, fence)) {
 			fence = toggleFence(rawLine, fence);
 			continue;
@@ -66,13 +67,15 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 				continue;
 			}
 
-			if (open.line + 1 === line) {
+			const contentStart = firstContentLine(lines, open.line + 1, line - 1);
+			const contentEnd = lastContentLine(lines, open.line + 1, line - 1);
+			if (contentStart === null || contentEnd === null) {
 				diagnostics.push({ line, reason: "empty" });
 			} else {
 				regions.push({
 					columns: open.columns,
-					lineStart: open.line + 1,
-					lineEnd: line - 1,
+					lineStart: contentStart,
+					lineEnd: contentEnd,
 				});
 			}
 			open = null;
@@ -84,6 +87,28 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 	}
 
 	return { diagnostics, regions };
+}
+
+function firstContentLine(
+	lines: readonly string[],
+	start: number,
+	end: number,
+): number | null {
+	for (let line = start; line <= end; line++) {
+		if (lines[line].trim() !== "") return line;
+	}
+	return null;
+}
+
+function lastContentLine(
+	lines: readonly string[],
+	start: number,
+	end: number,
+): number | null {
+	for (let line = end; line >= start; line--) {
+		if (lines[line].trim() !== "") return line;
+	}
+	return null;
 }
 
 function isFenceBoundary(

@@ -67,6 +67,7 @@ import {
 	clearNoteBackground,
 	refreshNoteBackground,
 } from "./features/noteBackground";
+import { loadLayoutRegions } from "./features/layoutRegions";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -101,6 +102,7 @@ export default class BrumesPlugin extends Plugin {
 		this.addSettingTab(new BrumesSettingTab(this.app, this));
 
 		loadTagFeature(this);
+		loadLayoutRegions(this);
 		loadBrumesBlocks(this);
 		loadTomlExportCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
