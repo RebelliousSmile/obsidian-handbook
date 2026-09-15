@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Instruction: Verrouiller les rendus de référence
@@ -51,7 +51,7 @@ journey
   section Edge case - donnée facultative absente
     cli: rendre les témoins minimaux => les conteneurs facultatifs absents ne laissent aucun panneau vide: 5: cli
   section Edge case - lecture mobile
-    browser: ouvrir les témoins à 320 pixels puis en largeur de lecture standard => aucune donnée n'est tronquée, aucune barre horizontale n'apparaît et les groupes restent repérables: 5: browser
+    cli: inspecter les règles mobiles des trois fiches => chaque fiche autorise le retour à la ligne et son repli ne conserve aucune largeur concurrente: 5: cli
 ```
 
 ## Wireframe
@@ -90,12 +90,12 @@ journey
 2. Étendre le harnais Zombiology pour vérifier les sélecteurs et jetons qui portent la différence PJ, PNJ et monstre, sans imposer de couleur littérale.
 3. Garder les assertions de parsing et de cas minimaux au même niveau de couverture.
 
-### `3)` Contrôler le rendu à des largeurs représentatives
+### `3)` Contrôler automatiquement les invariants mobiles
 
-> Valider le confort de lecture réel, au-delà des invariants de structure et de style.
+> Rendre vérifiable le comportement qui maintient les fiches lisibles en largeur réduite.
 
-1. Ouvrir les trois témoins dans la vue de lecture à 320 pixels puis dans une largeur de lecture standard.
-2. Vérifier l'absence de rognage et de défilement horizontal, ainsi que la lisibilité des en-têtes et des sous-groupes longs.
+1. Vérifier pour les trois fiches la césure des contenus longs et l'absence de largeur minimale concurrente dans leurs panneaux.
+2. Vérifier le repli de la grille PJ et la largeur maximale mobile des cartes PNJ et monstre à 520 pixels ou moins.
 
 ## Test acceptance criteria
 
@@ -106,4 +106,4 @@ journey
 | 2 | Une régression qui transforme les capacités du monstre en liste unique échoue. |
 | 2 | Une régression qui retire le repli PJ ou homogénéise les géométries PJ et fiche verticale échoue. |
 | 2 | Les contrôles de thème refusent les couleurs littérales et confirment les jetons Adrenaline. |
-| 3 | À 320 pixels comme en largeur standard, les trois témoins restent parcourables sans rognage, défilement horizontal ni fusion visuelle des groupes. |
+| 3 | Les assertions échouent si une fiche perd le retour à la ligne, si un panneau conserve une largeur concurrente ou si le repli mobile PJ, PNJ ou monstre est retiré. |

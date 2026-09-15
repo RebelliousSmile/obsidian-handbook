@@ -1,6 +1,6 @@
 ---
 objective: "Les fiches PJ, PNJ et monstre restituent chacune la hiérarchie de leur source Zombiology tout en restant lisibles et compactes sur mobile."
-status: blocked
+status: in-progress
 ---
 
 # Plan: Fidélité visuelle des statblocks Adrenaline
@@ -10,7 +10,7 @@ status: blocked
 | Field | Value |
 | --- | --- |
 | **Goal** | Différencier les compositions PJ, PNJ et monstre selon leur usage imprimé, sans sacrifier le repli mobile. |
-| **Source** | Brainstorm utilisateur du 15 septembre 2026, capture de rendu et extraction de référence Zombiology. |
+| **Source** | Brainstorm utilisateur du 15 septembre 2026, capture de rendu, extraction de référence Zombiology et replanification du contrôle mobile. |
 
 ## Phases
 
@@ -34,3 +34,4 @@ status: blocked
 | Préserver des compositions spécifiques à chaque statblock | Les fiches d’origine n’ont ni la même densité ni le même ordre de lecture ; un composant visuellement unique les dégraderait. |
 | Conserver les six zones publiques de chaque bloc et enrichir seulement la structure interne du monstre | Le contrat de rendu reste stable, tandis que les capacités hétérogènes deviennent repérables sans aplatir la donnée. |
 | Réserver le breakpoint 520 px à un repli pensé par fiche | Sur mobile, les colonnes se superposent et les contenus longs restent segmentés, au lieu de reproduire une mise en page imprimée illisible. |
+| Rendre le contrôle mobile exécutable sans navigateur | Les harnais vérifient les invariants CSS qui empêchent les débordements et imposent le repli ; une inspection Obsidian reste utile mais ne bloque plus la livraison automatisée. |

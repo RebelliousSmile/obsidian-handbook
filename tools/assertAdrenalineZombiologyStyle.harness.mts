@@ -29,8 +29,16 @@ const pnj = scssByFile.get("_pnj.scss") ?? "";
 const monstre = scssByFile.get("_monstre.scss") ?? "";
 assert.match(pj, /grid-template-areas:[\s\S]*?"formations competences"/, "PJ must retain its two-column consultation layout");
 assert.match(pj, /@media \(max-width: 520px\)[\s\S]*?"formations"[\s\S]*?"competences"/, "PJ must stack consultation zones on mobile");
+assert.match(pj, /overflow-wrap:\s*anywhere/, "PJ must wrap long values instead of overflowing");
+assert.match(pj, /\.brumes-adrenaline-pj--panel\s*\{[\s\S]*?min-width:\s*0/, "PJ panels must not impose a competing minimum width");
 assert.match(pnj, /brumes-adrenaline-pnj--description/, "PNJ must keep a dedicated narrative treatment");
+assert.match(pnj, /overflow-wrap:\s*anywhere/, "PNJ must wrap long values instead of overflowing");
+assert.match(pnj, /\.brumes-adrenaline-pnj--panel\s*\{[\s\S]*?min-width:\s*0/, "PNJ panels must not impose a competing minimum width");
+assert.match(pnj, /@media \(max-width: 520px\)[\s\S]*?max-width:\s*100%/, "PNJ must fill, not exceed, the mobile reading width");
 assert.match(monstre, /brumes-adrenaline-monstre--capability-group/, "monster capabilities must remain visually grouped");
+assert.match(monstre, /overflow-wrap:\s*anywhere/, "monster must wrap long values instead of overflowing");
+assert.match(monstre, /\.brumes-adrenaline-monstre--panel\s*\{[\s\S]*?min-width:\s*0/, "monster panels must not impose a competing minimum width");
+assert.match(monstre, /@media \(max-width: 520px\)[\s\S]*?max-width:\s*100%/, "monster must fill, not exceed, the mobile reading width");
 
 // 2. Task 1 acceptance criteria: h3 cartouche, h4 red rule, italics, lists, tables, statuses.
 const content = scssByFile.get("_content.scss") ?? "";
