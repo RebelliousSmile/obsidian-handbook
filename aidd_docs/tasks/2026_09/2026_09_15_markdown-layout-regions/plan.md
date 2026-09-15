@@ -1,6 +1,6 @@
 ---
 objective: "Handbook lets a note author arrange adjacent rendered Markdown sections in a local responsive column region, without nested Markdown blocks or global settings."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Régions de colonnes locales lues depuis la source
