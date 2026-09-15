@@ -50,14 +50,12 @@
 
 	// The toolkit prints the overall rating as a bare numeral beside the name.
 	.brumes-com-danger--rating {
-		font-family: "Bebas Neue", sans-serif;
 		font-size: 1.5em;
 		line-height: 1;
 		color: var(--brumes-com-danger-accent);
 	}
 
 	.brumes-com-danger--name {
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 900;
 		font-size: 1.5em;
 		line-height: 1.1;
@@ -70,7 +68,6 @@
 	.brumes-com-danger--description {
 		p {
 			margin: 0.3em 0 0;
-			font-family: "Courier Prime", monospace;
 			font-size: 0.9em;
 			line-height: 1.4;
 		}
@@ -83,7 +80,6 @@
 	// Bebas Neue stands in for the Rift of the printed toolkit.
 	.brumes-com-danger--section-title {
 		margin: 0 0 0.2em;
-		font-family: "Bebas Neue", sans-serif;
 		font-weight: 400;
 		font-size: 1.5em;
 		line-height: 1;
@@ -143,7 +139,6 @@
 
 	.brumes-com-danger--move-label {
 		margin-right: 0.4em;
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -162,7 +157,6 @@
 	// Attribution, when a schema document carried some.
 	.brumes-com-danger--source {
 		margin-top: 0.8em;
-		font-family: "Courier Prime", monospace;
 		font-size: 0.8em;
 		text-align: right;
 		opacity: 0.6;

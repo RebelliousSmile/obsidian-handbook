@@ -1,6 +1,4 @@
 @use "./workspace";
-@use "./headings";
-@use "./links";
 @use "./lists";
 @use "./hashtags";
 @use "./tags";
@@ -18,12 +16,9 @@
 	// from the game pack in `src/games/`. Nothing here declares a custom
 	// property any more.
 
-	// Headings
-	@include headings.inline-title-underline;
-
-	// Links
-	@include links.internal-links;
-	@include links.external-links;
+	// City-owned heading, link and component typography is loaded from the
+	// active pack stylesheet.  The remaining partials are host geometry,
+	// safety, or editor/iframe compatibility.
 
 	// Lists
 	@include lists.unordered-list;

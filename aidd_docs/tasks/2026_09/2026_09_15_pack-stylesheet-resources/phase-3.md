@@ -1,5 +1,5 @@
 ---
-status: blocked
+status: done
 ---
 
 # Instruction: Migrer City of Mist sans dérive visuelle
@@ -22,7 +22,7 @@ obsidian-handbook/
 
 ```mermaid
 flowchart TD
-  A[release City compatible] --> B[installation et validation]
+  A[feuille City déclarée] --> B[installation et validation]
   B --> C[typographie et structure City]
   C --> D[comparaison claire et sombre]
   E[autre jeu] --> F[aucune règle City survivante]
@@ -52,7 +52,7 @@ journey
 > Une migration de propriété, pas un second moteur de layout.
 
 1. Classer les partials City : typographie/structure City, géométrie partagée, sécurité/accessibilité et compatibilité éditeur.
-2. Dans une release City compatible, déclarer la feuille scoped et y déplacer les seules règles City utilisant les tokens publiés.
+2. Déclarer la feuille scoped, y déplacer les seules règles City portables, puis publier la release City compatible (`schema-in-the-mist@v1.2.0`).
 3. Retirer les doublons du SCSS Handbook et conserver primitives partagées, resets, fallbacks et exceptions documentées.
 
 ### `2)` Comparer et isoler le rendu publié
