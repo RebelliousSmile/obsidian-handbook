@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2026-09-15
+
+### Added
+
+- Make Handbook the owner of the `GamePack` appearance schema, with local fixtures and a durable contract assertion.
+- Validate installed game-pack manifests against the local contract while preserving tolerant reads for legacy flat packs.
+
 ## [2.12.1] - 2026-09-15
 
 ### Fixed
