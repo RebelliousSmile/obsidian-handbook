@@ -1,8 +1,14 @@
 @mixin sheet {
 	.brumes-adrenaline-pj {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.55rem 0.7rem;
+		grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.2fr);
+		grid-template-areas:
+			"header header"
+			"formations competences"
+			"characteristics characteristics"
+			"equipment equipment"
+			"health health";
+		gap: 0.65rem 0.8rem;
 		max-width: 100%;
 		overflow-wrap: anywhere;
 		padding: 0.75rem;
@@ -18,6 +24,13 @@
 	.brumes-adrenaline-pj--health {
 		grid-column: 1 / -1;
 	}
+
+	.brumes-adrenaline-pj--header { grid-area: header; }
+	.brumes-adrenaline-pj--formations { grid-area: formations; }
+	.brumes-adrenaline-pj--competences { grid-area: competences; }
+	.brumes-adrenaline-pj--characteristics { grid-area: characteristics; }
+	.brumes-adrenaline-pj--equipment { grid-area: equipment; }
+	.brumes-adrenaline-pj--health { grid-area: health; }
 
 	.brumes-adrenaline-pj header {
 		display: flex;
@@ -73,6 +86,13 @@
 	@media (max-width: 520px) {
 		.brumes-adrenaline-pj {
 			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas:
+				"header"
+				"formations"
+				"competences"
+				"characteristics"
+				"equipment"
+				"health";
 		}
 
 		.brumes-adrenaline-pj > * {
