@@ -14,7 +14,7 @@
  * Run it with `pnpm assert:corpus`, never with node directly: it needs the
  * esbuild bundle that `tools/assert-corpus.mjs` produces.
  */
-import { readdirSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
@@ -28,6 +28,7 @@ import {
 } from "./mistContractCorpus.mts";
 import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
 import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
+import { loadPbtaRenderCases, PBTA_TARGET_TO_BLOCK } from "./pbtaContractCorpus.mts";
 
 /**
  * The blocks that do not yet honour the guideline.
@@ -45,6 +46,8 @@ const failures: string[] = [];
 const mistCases = loadMistContractCases();
 const adrenalineCases = loadAdrenalineContractCases();
 const ADRENALINE_BLOCK_IDS = ["adrenaline-pj", "adrenaline-pnj", "adrenaline-monstre"];
+const pbtaCases = loadPbtaRenderCases();
+const PBTA_BLOCK_IDS = Object.values(PBTA_TARGET_TO_BLOCK);
 
 function fail(file: string, reason: string): void {
 	failures.push(`${file}: ${reason}`);
@@ -139,7 +142,9 @@ function readExpectation(source: string): string {
 }
 
 function listCorpus(camp: string): string[] {
-	return readdirSync(join(CORPUS, camp)).filter(
+	const directory = join(CORPUS, camp);
+	if (!existsSync(directory)) return [];
+	return readdirSync(directory).filter(
 		(file) => file.slice(-5) === ".toml",
 	);
 }
@@ -159,6 +164,16 @@ function assertNoAdrenalineDuplicates(): void {
 		for (const file of listCorpus(camp)) {
 			if (ADRENALINE_BLOCK_IDS.includes(blockIdOf(file))) {
 				fail(file, "Adrenaline corpus cases belong in schema-adrenaline v1");
+			}
+		}
+	}
+}
+
+function assertNoPbtaDuplicates(): void {
+	for (const camp of ["temoins", "refus"]) {
+		for (const file of listCorpus(camp)) {
+			if (PBTA_BLOCK_IDS.includes(blockIdOf(file))) {
+				fail(file, "PbtA corpus cases belong in schema-pbta v1");
 			}
 		}
 	}
@@ -280,7 +295,7 @@ function hasWitness(id: string): boolean {
 }
 
 function hasCorpus(id: string): boolean {
-	return hasWitness(id) || MIST_BLOCK_IDS.includes(id) || ADRENALINE_BLOCK_IDS.includes(id);
+	return hasWitness(id) || MIST_BLOCK_IDS.includes(id) || ADRENALINE_BLOCK_IDS.includes(id) || PBTA_BLOCK_IDS.includes(id);
 }
 
 /**
@@ -339,6 +354,10 @@ function assertAllerRetour(): void {
 								ADRENALINE_DOCUMENT_CODECS[entry.target].parseJson(entry.source),
 							),
 					}))
+			: PBTA_BLOCK_IDS.includes(spec.block.id)
+				? pbtaCases
+					.filter((entry) => PBTA_TARGET_TO_BLOCK[entry.target] === spec.block.id)
+					.map((entry) => ({ file: `pbta/${entry.path}`, source: entry.source }))
 			: hasWitness(spec.block.id)
 				? [
 						{
@@ -421,6 +440,7 @@ log.setLevel("warn");
 
 assertNoMistDuplicates();
 assertNoAdrenalineDuplicates();
+assertNoPbtaDuplicates();
 assertTemoins();
 assertRefus();
 assertRule();
