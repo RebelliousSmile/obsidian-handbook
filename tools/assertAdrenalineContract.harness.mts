@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
-import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
+import { assertAdrenalineContractVersion, loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
 
@@ -17,6 +17,8 @@ const doc = { createElement: (tag: string) => new El(tag) };
 const text = (element: El): string => element.textContent + element.children.map(text).join("");
 const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre" } as const;
 
+assertAdrenalineContractVersion("1.0.0");
+assert.throws(() => assertAdrenalineContractVersion("1.0.1"), /package version must be 1.0.0/);
 const cases = loadAdrenalineContractCases();
 assert.equal(cases.length, 35);
 for (const entry of cases) {

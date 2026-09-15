@@ -15,10 +15,18 @@ export interface AdrenalineContractCase {
 
 const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
 
+export function assertAdrenalineContractVersion(version: unknown): asserts version is "1.0.0" {
+	if (version !== "1.0.0") {
+		throw new Error(`schema-adrenaline package version must be 1.0.0, received ${String(version)}`);
+	}
+}
+
 export function loadAdrenalineContractCases(): AdrenalineContractCase[] {
 	const requireFromProject = createRequire(resolve(process.cwd(), "package.json"));
 	const manifestPath = requireFromProject.resolve("schema-adrenaline/corpus/cases.json");
 	const root = dirname(dirname(manifestPath));
+	const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as { version?: unknown };
+	assertAdrenalineContractVersion(packageJson.version);
 	const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
 		manifestVersion?: unknown;
 		tomlVersion?: unknown;
