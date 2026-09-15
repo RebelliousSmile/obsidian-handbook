@@ -112,6 +112,13 @@ le verdict tolérant. Handbook ne conserve aucune copie de ces cas. Un format
 possédé ici, ou dont l’intégration ne publie pas encore de manifeste partagé,
 utilise le corpus local sous `corpus/`.
 
+`GamePack` est un cas volontairement local : il décrit le protocole visuel du
+renderer Handbook, pas un format narratif transportable. Son schéma vit dans
+`schemas/appearance/game-pack.schema.json`, ses fixtures dans
+`corpus/game-packs/`, et `pnpm assert:game-pack-contract` exerce le verdict
+strict ainsi que la lecture tolérante. Un dépôt de jeu peut distribuer un
+`pack.json` et ses ressources, mais ne devient pas propriétaire de ce contrat.
+
 Un package distribué comme asset GitHub Release garde dans chaque lockfile
 l’URL publique immuable et une intégrité ; une URL de redirection signée sous
 `release-assets.githubusercontent.com` n’est jamais un verrou, car son jeton

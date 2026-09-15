@@ -52,6 +52,8 @@ installs the declared `schema-in-the-mist` source and activates the selected
 game. All three packs then remain available because that repository publishes
 them together.
 
+The `GamePack` appearance contract itself belongs to Handbook at
+[`schemas/appearance/game-pack.schema.json`](schemas/appearance/game-pack.schema.json).
 The same sources are managed under **Settings → Handbook → Schema sources**.
 Each source can follow its latest release, an explicit tag or a branch. Network
 checks happen only after **Install** or **Check** is clicked. Handbook reads the
