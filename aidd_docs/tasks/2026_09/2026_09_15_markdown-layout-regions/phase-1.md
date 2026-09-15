@@ -11,8 +11,9 @@ status: in-progress
 ```txt
 .
 ├── tools/e2e/
-│   ├── layout-regions-journey.sh              ✅ ouvre une note de sonde dans Obsidian réel
-│   └── README.md                              ✏️ décrit le parcours de sonde et ses captures
+│   ├── layout-regions-journey.ps1             ✅ crée un coffre temporaire et lance Obsidian Windows isolé
+│   ├── layout-regions-cdp.py                  ✅ inspecte les bornes et capture le rendu via CDP
+│   └── README.md                              ✏️ décrit le parcours Windows et ses captures
 └── aidd_docs/tasks/2026_09/2026_09_15_markdown-layout-regions/
     └── phase-1.md                             ✏️ porte le verdict de faisabilité
 ```
@@ -35,7 +36,7 @@ title: Test scope
 ---
 journey
   section Setup
-    browser: ouvrir une note de sonde avec deux commentaires et trois éléments frères => note rendue disponible: 5: browser
+    browser: créer un coffre temporaire puis ouvrir sa note de sonde dans une instance Obsidian dédiée => note rendue disponible: 5: browser
   section Happy path
     browser: inspecter le DOM du rendu Markdown => les deux commentaires sont distinguables et bornent les mêmes frères: 5: browser
   section Edge case - commentaire Markdown neutralisé
@@ -65,8 +66,8 @@ journey
 
 > Écarter dès le départ une syntaxe que le DOM Obsidian ne permettrait pas de traiter.
 
-1. Créer une note de sonde avec `<!-- handbook-layout: columns=3 -->`, trois éléments frères et `<!-- /handbook-layout -->`.
-2. Ouvrir la note dans Obsidian réel, contrôler le DOM des vues Markdown prises en charge et capturer le résultat.
+1. Créer un lanceur PowerShell qui refuse une instance existante sur son port CDP, prépare un coffre temporaire hors du coffre utilisateur, lance `Obsidian.exe` masqué avec un port dédié, puis ne ferme que le PID qu’il a créé.
+2. Créer le pilote Python CDP à partir du motif existant : il ouvre la note de sonde, contrôle les nœuds de commentaire et capture le rendu ; le lanceur nettoie le coffre et les captures temporaires même en échec.
 3. Arrêter la réalisation si les bornes ne sont pas accessibles comme commentaires frères ; la phase documente alors le constat plutôt que de contourner le moteur avec une pseudo-imbrication.
 
 ## Test acceptance criteria

@@ -15,7 +15,7 @@ status: pending
 │   └── styles.scss                            ✏️ inclut la feuille de régions transversale
 ├── README.md                                  ✏️ montre la syntaxe et ses limites dans une note
 ├── tools/assert-layout-regions.mjs            ✏️ affirme les règles compilées et le repli
-└── tools/e2e/layout-regions-journey.sh        ✏️ capture le résultat large et étroit dans Obsidian
+└── tools/e2e/layout-regions-journey.ps1       ✏️ capture le résultat large et étroit dans Obsidian Windows
 ```
 
 ## User Journey

@@ -29,3 +29,4 @@ status: blocked
 | La région dispose les éléments Markdown de premier niveau, jamais les cellules d’un tableau. | Le conteneur règle la composition de la note ; il ne réécrit pas la sémantique ni l’accessibilité d’un tableau. |
 | La grille revient à une colonne sur espace étroit. | Une fiche peut tenir sur une rangée large sans produire de colonnes illisibles sur mobile ou dans une fenêtre étroite. |
 | La première phase valide les marqueurs dans Obsidian réel avant le développement du post-processeur. | Le DOM que reçoit un post-processeur est l’unique preuve que des commentaires Markdown peuvent servir de bornes. |
+| La sonde E2E est native Windows : PowerShell lance un Obsidian dédié et le pilote Python CDP inspecte son DOM. | Le seul parcours existant demande une AppImage Linux ; il ne peut pas prouver le comportement de l’installation Windows disponible. |
