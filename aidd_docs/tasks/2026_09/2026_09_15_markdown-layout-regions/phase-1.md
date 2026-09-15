@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: blocked
 ---
 
 # Instruction: Prouver les bornes dans Obsidian
@@ -75,3 +75,9 @@ journey
 | Task | Acceptance criteria |
 | --- | --- |
 | 1 | Obsidian réel expose les deux commentaires comme bornes accessibles autour des éléments rendus, ou la phase s’arrête avant toute implémentation de groupement. |
+
+## Verdict — 2026-09-15
+
+La sonde `layout-regions-probe` a été inspectée dans Obsidian Windows réel par CDP. Son rendu contient les titres `ONE`, `TWO` et `THREE`, mais le parcours complet des commentaires DOM retourne `[]`. Les bornes HTML sont donc supprimées avant que le post-processeur ne puisse les parcourir.
+
+La phase s’arrête ici, sans code de groupement. Une nouvelle planification doit choisir un mécanisme qui relie les bornes de la source Markdown aux éléments rendus, ou une syntaxe dont Obsidian préserve les bornes.
