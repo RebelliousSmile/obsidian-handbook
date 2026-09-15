@@ -27,12 +27,19 @@ function safeRelativePath(path: string): string | null {
 function assetPaths(manifestPath: string, pack: GamePluginManifest): Array<{ source: string; target: string }> {
 	const root = manifestPath.slice(0, manifestPath.lastIndexOf("/"));
 	const assetRoot = pack.pack.assets?.root ?? "assets";
+	const stylesheets = pack.pack.assets?.stylesheets ?? [];
+	for (const stylesheet of stylesheets) {
+		if (!safeRelativePath(stylesheet)) {
+			throw new Error(`pack "${pack.pack.id}" declares an unsafe stylesheet path`);
+		}
+	}
 	const files = [
 		...Object.keys(pack.pack.assets?.images ?? {}).map((role) => pack.pack.assets?.images?.[role] ?? ""),
 		...Object.keys(pack.pack.assets?.fonts ?? {}).map((family) => {
 			const face = pack.pack.assets?.fonts?.[family];
 			return typeof face === "string" ? face : face?.file ?? "";
 		}),
+		...stylesheets,
 	];
 	return files.map((file) => {
 		const target = safeRelativePath(file);

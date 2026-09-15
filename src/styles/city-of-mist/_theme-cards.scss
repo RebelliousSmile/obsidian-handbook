@@ -45,7 +45,6 @@
 	// the theme; the title is written in by the player, so it takes the
 	// rounded serif the clues and moves use for written words.
 	.brumes-com-theme-card--themebook {
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 900;
 		font-size: 1.6em;
 		line-height: 1.1;
@@ -55,7 +54,6 @@
 	}
 
 	.brumes-com-theme-card--title {
-		font-family: "Averia Serif Libre", serif;
 		font-size: 1em;
 		line-height: 1.2;
 		color: #fff;
@@ -64,14 +62,12 @@
 
 	.brumes-com-theme-card--drive {
 		padding: 0.45em 0.65em;
-		font-family: "Averia Serif Libre", serif;
 		font-size: 0.95em;
 		border-bottom: 2px solid rgba(0, 0, 0, 0.15);
 	}
 
 	.brumes-com-theme-card--drive-label {
 		display: block;
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 800;
 		font-size: 0.8em;
 		letter-spacing: 0.1em;
@@ -110,7 +106,6 @@
 	// so the tags still line up when a card has none.
 	.brumes-com-theme-card--question {
 		flex: 0 0 1.1em;
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 900;
 		font-size: 0.9em;
 		text-align: center;
@@ -126,13 +121,11 @@
 	.brumes-com-theme-card--improvement {
 		margin: 0 0 0.35em;
 		padding: 0;
-		font-family: "Roboto", sans-serif;
 		font-size: 0.85em;
 		line-height: 1.35;
 	}
 
 	.brumes-com-theme-card--improvement-name {
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 800;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
@@ -160,7 +153,6 @@
 	}
 
 	.brumes-com-theme-card--track-label {
-		font-family: "Fira Sans Extra Condensed", sans-serif;
 		font-weight: 800;
 		font-size: 0.8em;
 		letter-spacing: 0.1em;

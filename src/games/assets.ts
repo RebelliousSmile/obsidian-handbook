@@ -1,4 +1,5 @@
 import { Plugin } from "obsidian";
+import postcss from "postcss";
 import { logScope } from "../utils/logger";
 import { GameFontFace, GamePack, GameStyleTokens } from "./types";
 import type { GamePluginInstallation } from "./pluginManifest";
@@ -65,6 +66,8 @@ export interface GameAssetState {
 	families: string[];
 	/** The families whose file is absent, and the path each was looked for at. */
 	missingFonts: { family: string; path: string }[];
+	/** Validated CSS from the active pack, in declaration order. */
+	packCss: string;
 }
 
 export function emptyAssetState(packId: string): GameAssetState {
@@ -77,6 +80,7 @@ export function emptyAssetState(packId: string): GameAssetState {
 		fontCss: "",
 		families: [],
 		missingFonts: [],
+		packCss: "",
 	};
 }
 
@@ -199,8 +203,9 @@ export async function resolveGameAssets(
 	const state = emptyAssetState(pack.id);
 	const images = pack.assets?.images;
 	const fonts = pack.assets?.fonts;
+	const stylesheets = pack.assets?.stylesheets;
 
-	if (!images && !fonts) {
+	if (!images && !fonts && !stylesheets) {
 		return state;
 	}
 
@@ -301,7 +306,70 @@ export async function resolveGameAssets(
 		}
 	}
 
+	if (stylesheets) {
+		const css: string[] = [];
+		for (const stylesheet of stylesheets) {
+			const path = joinVaultPath(root, stylesheet);
+			if (!path || !(await adapter.exists(path))) {
+				log.warn(`Ignoring missing stylesheet "${stylesheet}" for "${pack.id}".`);
+				return state;
+			}
+			try {
+				const source = await adapter.read(path);
+				validatePackCss(source, pack);
+				css.push(await rewritePackUrls(source, stylesheet, root, pack, plugin));
+			} catch (error) {
+				log.warn(`Ignoring stylesheet "${stylesheet}" for "${pack.id}".`, error);
+				return state;
+			}
+		}
+		state.packCss = css.join("\n\n");
+	}
+
 	return state;
+}
+
+function validatePackCss(source: string, pack: GamePack): void {
+	const root = postcss.parse(source);
+	root.walkAtRules((rule) => {
+		if (rule.name === "import") throw new Error("@import is not allowed");
+	});
+	root.walkRules((rule) => {
+		for (const selector of rule.selectors) {
+			if (!selector.trim().startsWith(`body.brumes--${pack.id}`)) {
+				throw new Error(`selector escapes pack scope: ${selector}`);
+			}
+		}
+	});
+}
+
+async function rewritePackUrls(
+	source: string,
+	stylesheet: string,
+	root: string,
+	pack: GamePack,
+	plugin: Plugin,
+): Promise<string> {
+	const declared = new Set<string>();
+	for (const role of Object.keys(pack.assets?.images ?? {})) declared.add(pack.assets!.images![role]);
+	for (const family of Object.keys(pack.assets?.fonts ?? {})) {
+		const face = pack.assets!.fonts![family];
+		declared.add(typeof face === "string" ? face : face.file);
+	}
+	const stylesheetFolder = stylesheet.includes("/") ? stylesheet.slice(0, stylesheet.lastIndexOf("/")) : "";
+	let rewritten = source;
+	const pattern = /url\(\s*(['"]?)([^'"\s)]+)\1\s*\)/gi;
+	let match: RegExpExecArray | null;
+	while ((match = pattern.exec(source)) !== null) {
+		const value = match[2];
+		if (/^(?:[a-z][a-z0-9+.-]*:|\/|\\|\/\/)/i.test(value)) throw new Error(`unsafe URL: ${value}`);
+		const relative = stylesheetFolder ? `${stylesheetFolder}/${value}` : value;
+		if (!declared.has(relative)) throw new Error(`undeclared URL: ${value}`);
+		const path = joinVaultPath(root, relative);
+		if (!path || !(await plugin.app.vault.adapter.exists(path))) throw new Error(`missing URL asset: ${value}`);
+		rewritten = rewritten.replace(match[0], `url("${plugin.app.vault.adapter.getResourcePath(path)}")`);
+	}
+	return rewritten;
 }
 
 function readFontFace(declared: string | GameFontFace): GameFontFace {

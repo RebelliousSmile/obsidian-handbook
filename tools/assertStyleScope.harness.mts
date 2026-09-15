@@ -90,24 +90,25 @@ class StyleElement {
 	id = "";
 	textContent = "";
 	remove(): void {
-		styleElement = null;
+		styleElements.delete(this.id);
 	}
 }
 
-let styleElement: StyleElement | null = null;
+const styleElements = new Map<string, StyleElement>();
 (globalThis as { HTMLStyleElement?: unknown }).HTMLStyleElement = StyleElement;
 const styleDocument = {
-	getElementById: () => styleElement,
+	getElementById: (id: string) => styleElements.get(id) ?? null,
 	createElement: () => new StyleElement(),
 	head: {
 		appendChild: (element: StyleElement) => {
-			styleElement = element;
+			styleElements.set(element.id, element);
 		},
 	},
 };
 const writer = new GameStyleWriter();
 writer.addDocument(styleDocument as unknown as Document);
 writer.applyGameStyle(workspaceCss);
+const styleElement = styleElements.get("brumes-game-style");
 assert.equal(styleElement?.textContent, workspaceCss);
 writer.applyGameStyle(".brumes--city-of-mist { --city-only: true; }");
 assert.equal(
