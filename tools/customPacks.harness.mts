@@ -225,6 +225,42 @@ async function run(): Promise<void> {
 		check("the explicit root image resolves", state.tokens["--brumes-image-portrait"]?.includes("rooted/media/portrait.png") === true);
 	}
 
+	/* A stylesheet is read from the installed pack and remains isolated. */
+	{
+		const css = "body.brumes--city-runtime .inline-title { text-decoration: underline; }\n";
+		const { plugin } = fakePlugin({
+			"city-runtime/pack.json": gamePlugin("city-runtime", {
+				assets: { images: { portrait: "portrait.svg" }, stylesheets: ["styles/city.css"] },
+			}),
+			"city-runtime/assets/portrait.svg": "svg",
+			"city-runtime/assets/styles/city.css": css,
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("an installed City stylesheet resolves unchanged", state.packCss === css);
+		check("stylesheet resolution keeps declared images", state.tokens["--brumes-image-portrait"]?.includes("city-runtime/assets/portrait.svg") === true);
+	}
+
+	/* A stylesheet failure is atomic: no partial pack CSS reaches the writer. */
+	for (const [id, stylesheet] of [
+		["missing-city-css", undefined],
+		["imported-city-css", '@import "https://example.test/foreign.css";'],
+		["unscoped-city-css", ".inline-title { color: red; }"],
+	] as const) {
+		const files: Record<string, string> = {
+			[`${id}/pack.json`]: gamePlugin(id, {
+				assets: { images: { portrait: "portrait.svg" }, stylesheets: ["styles/city.css"] },
+			}),
+			[`${id}/assets/portrait.svg`]: "svg",
+		};
+		if (stylesheet !== undefined) files[`${id}/assets/styles/city.css`] = stylesheet;
+		const { plugin } = fakePlugin(files);
+		const installed = await loadCustomGamePacks(plugin);
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check(`${id} leaves no partial pack CSS`, state.packCss === "");
+		check(`${id} keeps generic image assets available`, state.tokens["--brumes-image-portrait"] !== undefined);
+	}
+
 	/* Variants belong to the versioned plugin envelope, not GamePack itself. */
 	{
 		const { plugin } = fakePlugin({
