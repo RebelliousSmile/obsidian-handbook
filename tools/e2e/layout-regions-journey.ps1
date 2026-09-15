@@ -84,6 +84,9 @@ This heading stays outside every region.
 	$probeUri = "obsidian://open?path=$([uri]::EscapeDataString($probePath))"
 	Start-Process -FilePath $probeUri
 	& python (Join-Path $PSScriptRoot "layout-regions-cdp.py") $Port $outputRoot $vaultRoot
+	if ($LASTEXITCODE -ne 0) {
+		throw "The layout-region CDP assertions failed."
+	}
 } finally {
 	if ($process -and -not $process.HasExited) {
 		Stop-ProcessTree -ProcessId $process.Id
