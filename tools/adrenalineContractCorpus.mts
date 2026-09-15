@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { AdrenalineDocumentTarget } from "schema-adrenaline";
 
 export type ContractFormat = "json" | "toml";
@@ -16,8 +16,10 @@ export interface AdrenalineContractCase {
 const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
 
 export function loadAdrenalineContractCases(): AdrenalineContractCase[] {
-	const root = dirname(dirname(fileURLToPath(import.meta.resolve("schema-adrenaline"))));
-	const manifest = JSON.parse(readFileSync(resolve(root, "corpus", "cases.json"), "utf8")) as {
+	const requireFromProject = createRequire(resolve(process.cwd(), "package.json"));
+	const manifestPath = requireFromProject.resolve("schema-adrenaline/corpus/cases.json");
+	const root = dirname(dirname(manifestPath));
+	const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
 		manifestVersion?: unknown;
 		tomlVersion?: unknown;
 		cases?: unknown;

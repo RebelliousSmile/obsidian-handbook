@@ -26,6 +26,8 @@ import {
 	MIST_TARGET_TO_BLOCK,
 	MIST_TARGETS,
 } from "./mistContractCorpus.mts";
+import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
+import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 
 /**
  * The blocks that do not yet honour the guideline.
@@ -41,6 +43,8 @@ const BLOCKS_IN_DEBT: string[] = [];
 const CORPUS = join(process.cwd(), "corpus");
 const failures: string[] = [];
 const mistCases = loadMistContractCases();
+const adrenalineCases = loadAdrenalineContractCases();
+const ADRENALINE_BLOCK_IDS = ["adrenaline-pj", "adrenaline-pnj", "adrenaline-monstre"];
 
 function fail(file: string, reason: string): void {
 	failures.push(`${file}: ${reason}`);
@@ -145,6 +149,16 @@ function assertNoMistDuplicates(): void {
 		for (const file of listCorpus(camp)) {
 			if (MIST_BLOCK_IDS.includes(blockIdOf(file))) {
 				fail(file, "Mist corpus cases belong in schema-in-the-mist v1");
+			}
+		}
+	}
+}
+
+function assertNoAdrenalineDuplicates(): void {
+	for (const camp of ["temoins", "refus"]) {
+		for (const file of listCorpus(camp)) {
+			if (ADRENALINE_BLOCK_IDS.includes(blockIdOf(file))) {
+				fail(file, "Adrenaline corpus cases belong in schema-adrenaline v1");
 			}
 		}
 	}
@@ -266,7 +280,7 @@ function hasWitness(id: string): boolean {
 }
 
 function hasCorpus(id: string): boolean {
-	return hasWitness(id) || MIST_BLOCK_IDS.includes(id);
+	return hasWitness(id) || MIST_BLOCK_IDS.includes(id) || ADRENALINE_BLOCK_IDS.includes(id);
 }
 
 /**
@@ -314,6 +328,17 @@ function assertAllerRetour(): void {
 							entry.target === target && entry.handbook === "render",
 					)
 					.map((entry) => ({ file: entry.id, source: entry.source }))
+			: ADRENALINE_BLOCK_IDS.includes(spec.block.id)
+				? adrenalineCases
+					.filter((entry) => entry.expect === "accept" && `adrenaline-${entry.target}` === spec.block.id)
+					.map((entry) => ({
+						file: `adrenaline/${entry.path}`,
+						source: entry.format === "toml"
+							? entry.source
+							: ADRENALINE_DOCUMENT_CODECS[entry.target].stringifyToml(
+								ADRENALINE_DOCUMENT_CODECS[entry.target].parseJson(entry.source),
+							),
+					}))
 			: hasWitness(spec.block.id)
 				? [
 						{
@@ -395,6 +420,7 @@ function reportDebt(): void {
 log.setLevel("warn");
 
 assertNoMistDuplicates();
+assertNoAdrenalineDuplicates();
 assertTemoins();
 assertRefus();
 assertRule();

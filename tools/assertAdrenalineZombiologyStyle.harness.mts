@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
+import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 
 // 1. The content partial exists and is wired into the Adrenaline index.
 const stylesDir = join("src", "styles", "adrenaline");
@@ -83,7 +84,10 @@ class El {
 }
 const doc = { createElement: (tagName: string) => new El(tagName) } as unknown as Document;
 
-const witness = readFileSync(join("corpus", "temoins", "adrenaline-pnj.toml"), "utf8");
+const witness = loadAdrenalineContractCases().find(
+	(entry) => entry.target === "pnj" && entry.format === "toml" && entry.expect === "accept",
+)?.source;
+assert.ok(witness, "a canonical PNJ TOML case must be available");
 const parsed = adrenalinePnjBlock.parse(witness);
 assert.ok(parsed, "adrenaline-pnj witness must parse");
 const rendered = adrenalinePnjBlock.render(parsed, doc) as unknown as El;

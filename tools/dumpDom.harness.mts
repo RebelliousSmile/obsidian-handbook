@@ -18,6 +18,8 @@ import {
 	loadMistContractCases,
 	MIST_TARGET_TO_BLOCK,
 } from "./mistContractCorpus.mts";
+import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
+import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 
 class El {
 	tagName: string;
@@ -154,4 +156,24 @@ for (const entry of loadMistContractCases().sort((left, right) =>
 	process.stdout.write(
 		dump(block.render(data, doc as unknown as Document) as unknown as El, 0),
 	);
+}
+
+for (const entry of loadAdrenalineContractCases().sort((left, right) =>
+	left.path.localeCompare(right.path),
+)) {
+	console.log(`### adrenaline/${entry.path}`);
+	if (entry.expect === "reject") {
+		console.log("strict reject");
+		continue;
+	}
+	const source = entry.format === "toml"
+		? entry.source
+		: ADRENALINE_DOCUMENT_CODECS[entry.target].stringifyToml(
+			ADRENALINE_DOCUMENT_CODECS[entry.target].parseJson(entry.source),
+		);
+	const block = blockOf(`adrenaline-${entry.target}`);
+	if (!block) { console.log("no block"); continue; }
+	const data = block.parse(source);
+	if (data === null) { console.log("null"); continue; }
+	process.stdout.write(dump(block.render(data, doc as unknown as Document) as unknown as El, 0));
 }

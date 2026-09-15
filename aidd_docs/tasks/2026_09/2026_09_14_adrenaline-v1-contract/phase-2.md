@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Bascule du corpus et retrait sélectif des doublons
