@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.0] - 2026-09-15
+
+### Added
+
+- Preserve the five historical `schema-appearance` GamePack examples as a locally validated Handbook compatibility corpus.
+- Document Handbook's JSON Schema as the sole active GamePack contract before archiving the former schema repository.
+- Add responsive, per-note Markdown layout regions for one to three sibling sections, including rendered blocks.
+
 ## [2.14.0] - 2026-09-15
 
 ### Added
