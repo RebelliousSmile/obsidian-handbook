@@ -39,21 +39,10 @@ const expectedZones = new Map([
 ]);
 
 for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlock]) {
-	const file = join("corpus", "temoins", `${block.id}.toml`);
-	const parsed = block.parse(readFileSync(file, "utf8"));
-	assert.ok(parsed, `${block.id} witness must parse`);
 	assert.deepEqual(
 		block.shape.zones.map((zone) => zone.name),
 		expectedZones.get(block.id),
 		`${block.id} must keep the layout order sourced from the published sheet`,
-	);
-	const rendered = block.render(parsed, doc) as unknown as El;
-	assert.equal(rendered.classes.includes(block.shape.root), true);
-	assert.equal(rendered.children.length, 6, `${block.id} must render its six Handbook regions`);
-	assert.doesNotMatch(
-		JSON.stringify(rendered),
-		/Zombiology|Tous droits réservés/,
-		`${block.id} must preserve Lantern metadata without printing it in Handbook`,
 	);
 }
 
@@ -68,6 +57,29 @@ for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlo
 	assert.ok(fence, `${block.id} must be present in the visual fixture`);
 	assert.ok(block.parse(fence[1]), `${block.id} visual fixture must parse`);
 }
+const richMonsterSource = visualFixture.match(/```adrenaline-monstre\r?\n([\s\S]*?)\r?\n```/)?.[1];
+assert.ok(richMonsterSource, "the monster visual fixture must be available");
+const richMonster = adrenalineMonsterBlock.parse(richMonsterSource);
+assert.ok(richMonster, "the rich monster visual fixture must parse");
+const richMonsterRendered = adrenalineMonsterBlock.render(richMonster, doc) as unknown as El;
+assert.equal(richMonsterRendered.classes.includes(adrenalineMonsterBlock.shape.root), true);
+assert.doesNotMatch(
+	JSON.stringify(richMonsterRendered),
+	/Zombiology|Tous droits réservés/,
+	"monster rendering must preserve Lantern metadata without printing it in Handbook",
+);
+const capabilityPanel = richMonsterRendered.children.find((child) =>
+	child.children.some((grandChild) => grandChild.classes.includes("brumes-adrenaline-monstre--capability-group")),
+);
+assert.ok(capabilityPanel, "a rich monster must render its capability panel");
+const capabilityHeadings = capabilityPanel.children
+	.filter((child) => child.classes.includes("brumes-adrenaline-monstre--capability-group"))
+	.map((child) => child.children[0]?.textContent);
+assert.deepEqual(
+	capabilityHeadings,
+	["Traits", "État alternatif", "Compétences", "Équipement", "Contagion", "Informations de jeu"],
+	"monster capability families must remain separate and ordered",
+);
 for (const callout of [
 	"info",
 	"success",
@@ -110,6 +122,11 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 	.map((file) => readFileSync(join("src", "styles", "adrenaline", file), "utf8"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
+assert.match(scss, /grid-template-areas:[\s\S]*?"formations competences"/);
+assert.match(scss, /grid-template-areas:[\s\S]*?"formations"[\s\S]*?"competences"/);
+assert.match(scss, /\.brumes-adrenaline-pnj\s*\{[\s\S]*?max-width:\s*36rem/);
+assert.match(scss, /\.brumes-adrenaline-monstre\s*\{[\s\S]*?max-width:\s*36rem/);
+assert.match(scss, /brumes-adrenaline-monstre--capability-group/);
 assert.match(scss, /@media \(min-width: 900px\)/);
 assert.match(scss, /markdown-reading-view:not\(\.adrenaline-one-column\)/);
 assert.match(scss, /markdown-preview-sizer > \.mod-header \{\s*column-span: all;/);

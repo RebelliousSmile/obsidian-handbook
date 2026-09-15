@@ -2,7 +2,7 @@
 	.brumes-adrenaline-pnj {
 		display: flex;
 		flex-direction: column;
-		max-width: 34rem;
+		max-width: 36rem;
 		margin-inline: auto;
 		overflow-wrap: anywhere;
 		border: 1px solid var(--adrenaline-rule);
@@ -30,6 +30,12 @@
 		margin: 0 0 0.3rem;
 		font-style: var(--adrenaline-emphasis-style, italic);
 		color: var(--adrenaline-emphasis-color, inherit);
+	}
+	.brumes-adrenaline-pnj--narrative-list {
+		margin-block-start: 0.4rem;
+	}
+	.brumes-adrenaline-pnj--panel:has(.brumes-adrenaline-pnj--description) {
+		padding-block: 0.55rem;
 	}
 	.brumes-adrenaline-pnj ul { margin-block: 0.22rem 0; padding-inline-start: 1.1rem; }
 	.brumes-adrenaline-pnj--protection-rows > div { margin-block-start: 0.18rem; }
