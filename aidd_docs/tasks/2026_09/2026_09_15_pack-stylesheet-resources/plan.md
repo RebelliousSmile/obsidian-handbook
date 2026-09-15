@@ -1,6 +1,6 @@
 ---
 objective: "Handbook installe, valide et applique une feuille CSS de pack isolée après ses tokens, sans fuite entre jeux ni fenêtres, puis laisse City of Mist posséder ses règles structurelles publiées."
-status: in-progress
+status: blocked
 ---
 
 # Plan: Ressources de feuilles de style des packs
