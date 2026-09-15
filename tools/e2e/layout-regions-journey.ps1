@@ -46,13 +46,22 @@ try {
 
 First section.
 
+> [!info] First block
+> This callout stays in the first column.
+
 ## Two
 
 Second section.
 
+> [!info] Second block
+> This callout stays in the second column.
+
 ## Three
 
 Third section.
+
+> [!info] Third block
+> This callout stays in the third column.
 
 <!-- /handbook-layout -->
 

@@ -138,14 +138,15 @@ wide = evaluate(
     JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({
       children: region.children.length,
       columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length,
-      variable: getComputedStyle(region).getPropertyValue('--handbook-layout-columns').trim()
+      variable: getComputedStyle(region).getPropertyValue('--handbook-layout-columns').trim(),
+      blocks: region.querySelectorAll('.callout').length
     })))
     """
 )
 wide = json.loads(wide)
 if wide != [
-    {"children": 3, "columns": 3, "variable": "3"},
-    {"children": 1, "columns": 1, "variable": "1"},
+    {"children": 3, "columns": 3, "variable": "3", "blocks": 3},
+    {"children": 1, "columns": 1, "variable": "1", "blocks": 0},
 ]:
     raise RuntimeError(f"Unexpected wide layout: {wide}")
 screenshot("layout-regions-wide.png")
@@ -153,11 +154,11 @@ screenshot("layout-regions-wide.png")
 set_width(600)
 narrow = json.loads(
     evaluate(
-        "JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length))"
+        "JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length, blocks: region.querySelectorAll('.callout').length})))"
     )
 )
-if narrow != [1, 1]:
+if narrow != [{"columns": 1, "blocks": 3}, {"columns": 1, "blocks": 0}]:
     raise RuntimeError(f"Unexpected narrow layout: {narrow}")
 screenshot("layout-regions-narrow.png")
 
-print("layout_regions=wide-and-narrow")
+print(json.dumps({"narrow": narrow, "screenshots": ["layout-regions-wide.png", "layout-regions-narrow.png"], "wide": wide}))
