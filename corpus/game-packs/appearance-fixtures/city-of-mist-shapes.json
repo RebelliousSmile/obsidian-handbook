@@ -1,0 +1,47 @@
+{
+  "id": "city-of-mist",
+  "label": "City of Mist",
+  "style": {
+    "base": {
+      "note": {
+        "--brumes-font-heading": "\"Oswald\", sans-serif",
+        "--brumes-color-accent": "#c0392b"
+      },
+      "workspace": {
+        "--brumes-color-workspace-accent": "#c0392b"
+      }
+    },
+    "light": {
+      "note": {
+        "--brumes-color-background": "#f4f1ea"
+      },
+      "workspace": {}
+    },
+    "dark": {
+      "note": {
+        "--brumes-color-background": "#1b1b1b"
+      },
+      "workspace": {}
+    }
+  },
+  "polarities": ["light", "dark"],
+  "assets": {
+    "root": "assets/city-of-mist",
+    "images": {
+      "theme-card-frame": "theme-card-frame.svg",
+      "danger-frame": "danger-frame.svg"
+    },
+    "fonts": {
+      "Oswald": "oswald-regular.woff2",
+      "Oswald Bold": { "file": "oswald-bold.woff2", "weight": "700" }
+    },
+    "stylesheets": ["styles/city-of-mist.css", "styles/shapes.css"]
+  },
+  "shapes": {
+    "com-danger": {
+      "secrets": {
+        "hidden": true
+      }
+    }
+  }
+}

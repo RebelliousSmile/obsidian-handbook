@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { readGamePack } from "../src/games/fromSchema";
@@ -21,6 +21,26 @@ assert.notEqual(projected, null);
 assert.equal(projected!.style.base.note["--font-text-theme"], "Example Serif");
 assert.equal(projected!.assets?.stylesheets?.[0], "styles/example.css");
 assert.equal(projected!.shapes?.["theme-card"]?.title.heading, "Theme");
+
+const historicalFixtures = readdirSync(
+	"corpus/game-packs/appearance-fixtures",
+)
+	.filter((name) => name.endsWith(".json"))
+	.sort();
+
+assert.deepEqual(historicalFixtures, [
+	"adrenaline.json",
+	"city-of-mist-shapes.json",
+	"city-of-mist.json",
+	"legend-in-the-mist.json",
+	"otherscape.json",
+]);
+
+for (const name of historicalFixtures) {
+	const fixture = readJson(`corpus/game-packs/appearance-fixtures/${name}`);
+	assert.equal(validate(fixture), true, `${name}: ${JSON.stringify(validate.errors)}`);
+	assert.notEqual(readGamePack(fixture), null, `${name} did not project`);
+}
 
 const tolerated = readGamePack(unsafeToken);
 assert.notEqual(tolerated, null);

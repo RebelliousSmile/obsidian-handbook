@@ -1,0 +1,144 @@
+{
+  "id": "legend-in-the-mist",
+  "label": "Legend in the Mist",
+  "style": {
+    "base": {
+      "note": {
+        "--font-text-theme": "\"Labrada\", sans-serif",
+        "--font-header-theme": "\"PragRoman\", sans-serif",
+        "--inline-title-font": "\"PragRoman\", sans-serif",
+        "--inline-title-text-transform": "uppercase",
+        "--inline-title-weight": "700",
+        "--h1-font": "\"PragRoman\", sans-serif",
+        "--h1-text-transform": "uppercase",
+        "--h2-font": "\"PragRoman\", sans-serif",
+        "--h2-text-transform": "none",
+        "--h3-font": "\"PragRoman\", sans-serif",
+        "--h3-text-transform": "uppercase",
+        "--h3-weight": "400",
+        "--h3-size": "1em",
+        "--list-indent": "0em",
+        "--list-spacing": "0.2em",
+        "--list-bullet-size": "0.25em"
+      }
+    },
+    "light": {
+      "note": {
+        "--color-accent": "#752B2B",
+        "--interactive-accent": "#752B2B",
+        "--accent-h": "0",
+        "--accent-s": "46.25%",
+        "--accent-l": "31.37%",
+        "--background-primary": "#EFEAE6",
+        "--background-primary-alt": "#C1353500",
+        "--text-normal": "#000000",
+        "--h1-color": "#752B2B",
+        "--h2-color": "#752B2B",
+        "--h3-color": "#915656",
+        "--color-red": "#762B2C",
+        "--color-red-rgb": "118, 43, 44",
+        "--color-orange": "#7D3C3D",
+        "--color-orange-rgb": "125, 60, 61",
+        "--color-yellow": "#EFD693",
+        "--color-yellow-rgb": "239, 214, 147",
+        "--color-green": "#4D8061",
+        "--color-green-rgb": "77, 128, 97",
+        "--color-blue": "#5C5C92",
+        "--color-blue-rgb": "92, 92, 146",
+        "--color-cyan": "#69ACC6",
+        "--color-cyan-rgb": "105, 172, 198",
+        "--color-purple": "#3A3159",
+        "--color-purple-rgb": "58, 49, 89",
+        "--color-pink": "#A27FA0",
+        "--color-pink-rgb": "162, 127, 160",
+        "--bold-color": "#000000",
+        "--link-color": "#752B2B",
+        "--link-unresolved-color": "#915656",
+        "--link-external-color": "#5C5C91",
+        "--link-external-color-hover": "#5E5EB0",
+        "--list-marker-color": "#000000",
+        "--table-header-color": "#422513"
+      },
+      "workspace": {
+        "--background-secondary": "#DFD7CA",
+        "--background-secondary-alt": "#DACDBC",
+        "--brumes-root-split-background": "#EEEAE1"
+      }
+    },
+    "dark": {
+      "note": {
+        "--color-accent": "#C4776F",
+        "--interactive-accent": "#C4776F",
+        "--accent-h": "5.65",
+        "--accent-s": "41.87%",
+        "--accent-l": "60.2%",
+        "--background-primary": "#1F1B17",
+        "--background-primary-alt": "#00000000",
+        "--text-normal": "#E8DFD2",
+        "--text-muted": "#A99C8A",
+        "--text-faint": "#756A5C",
+        "--h1-color": "#C4776F",
+        "--h2-color": "#C4776F",
+        "--h3-color": "#D19C94",
+        "--color-red": "#C4776F",
+        "--color-red-rgb": "196, 119, 111",
+        "--color-orange": "#C08A70",
+        "--color-orange-rgb": "192, 138, 112",
+        "--color-yellow": "#EFD693",
+        "--color-yellow-rgb": "239, 214, 147",
+        "--color-green": "#7FB08F",
+        "--color-green-rgb": "127, 176, 143",
+        "--color-blue": "#9A9AD4",
+        "--color-blue-rgb": "154, 154, 212",
+        "--color-cyan": "#8FC8DC",
+        "--color-cyan-rgb": "143, 200, 220",
+        "--color-purple": "#8E82BE",
+        "--color-purple-rgb": "142, 130, 190",
+        "--color-pink": "#C6A6C4",
+        "--color-pink-rgb": "198, 166, 196",
+        "--bold-color": "#E8DFD2",
+        "--link-color": "#C4776F",
+        "--link-color-hover": "#D89C93",
+        "--link-unresolved-color": "#A98A86",
+        "--link-external-color": "#9A9AD4",
+        "--link-external-color-hover": "#B0B0E4",
+        "--list-marker-color": "#A99C8A",
+        "--table-header-color": "#D8B78A"
+      },
+      "workspace": {
+        "--background-secondary": "#191512",
+        "--background-secondary-alt": "#14100D",
+        "--brumes-root-split-background": "#16130F"
+      }
+    }
+  },
+  "assets": {
+    "images": {
+      "inline-title-rule": "inline-title-rule.svg",
+      "heading-2-rule": "heading-2-rule.svg",
+      "separator": "separator.svg",
+      "checkbox-minus": "checkbox-minus.svg",
+      "checkbox-plus": "checkbox-plus.svg",
+      "checkbox-tilde": "checkbox-tilde.svg",
+      "weakness-mark": "weakness-mark.svg",
+      "limit-mark": "limit-mark.svg",
+      "limit-mark-empty": "limit-mark-empty.svg",
+      "mountain-might-origin": "mountain-might-origin.svg",
+      "mountain-might-adventure": "mountain-might-adventure.svg",
+      "mountain-might-greatness": "mountain-might-greatness.svg",
+      "card-might-origin": "card-might-origin.svg",
+      "card-might-adventure": "card-might-adventure.svg",
+      "card-might-greatness": "card-might-greatness.svg",
+      "theme-card": "theme-card.png",
+      "theme-card-origin": "theme-card-origin.png",
+      "theme-card-adventure": "theme-card-adventure.png",
+      "theme-card-greatness": "theme-card-greatness.png"
+    },
+    "fonts": {
+      "PragRoman": {
+        "file": "fonts/pragroman.ttf",
+        "weight": "500"
+      }
+    }
+  }
+}
