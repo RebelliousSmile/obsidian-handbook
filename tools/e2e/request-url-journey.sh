@@ -107,13 +107,14 @@ restore() {
   local action expected step
   trap - EXIT INT TERM
   set +e
-  if [[ "$status" -ne 0 && "$CURRENT_STEP" =~ ^[1-4]$ ]]; then
-    for step in $(seq "$((LAST_COMPLETED + 1))" 4); do
+  if [[ "$status" -ne 0 && "$CURRENT_STEP" =~ ^[1-5]$ ]]; then
+    for step in $(seq "$((LAST_COMPLETED + 1))" 5); do
       case "$step" in
         1) action="Open a clean plugin install"; expected="Starter-kit modal offers Mist Engine" ;;
         2) action="Install Mist Engine"; expected="Success notice, City of Mist, and exact text/binary files" ;;
         3) action="Check schema-in-the-mist"; expected="Source editor opens" ;;
         4) action="Save and check tag v1.0.0"; expected="Modal closes, tag revision and files match, no requestUrl errors" ;;
+        5) action="Save and check tag v1.2.0"; expected="City stylesheet is installed byte for byte" ;;
       esac
       if [[ "$step" -eq "$CURRENT_STEP" ]]; then
         record "$step" "$action" "$expected" "Step failed; see command output" "FAIL" "n/a"
@@ -158,6 +159,19 @@ compare_revision() {
   cmp "$OUTPUT_DIR/$label-first-image" "$SOURCE/packs/legend-in-the-mist/$assets_root/$first_image"
 }
 
+compare_city_stylesheet() {
+  local revision="$1" label="$2"
+  local base="https://raw.githubusercontent.com/RebelliousSmile/schema-in-the-mist/$revision"
+  curl -fsSLo "$OUTPUT_DIR/$label-city-pack.json" "$base/handbook/city-of-mist/pack.json"
+  local stylesheet assets_root
+  stylesheet="$(jq -r '.pack.assets.stylesheets[0]' "$OUTPUT_DIR/$label-city-pack.json")"
+  assets_root="$(jq -r '.pack.assets.root // "assets"' "$OUTPUT_DIR/$label-city-pack.json")"
+  [[ "$stylesheet" == "styles/city-of-mist.css" ]]
+  curl -fsSLo "$OUTPUT_DIR/$label-city-stylesheet.css" "$base/handbook/city-of-mist/$assets_root/$stylesheet"
+  cmp "$OUTPUT_DIR/$label-city-pack.json" "$SOURCE/packs/city-of-mist/pack.json"
+  cmp "$OUTPUT_DIR/$label-city-stylesheet.css" "$SOURCE/packs/city-of-mist/$assets_root/$stylesheet"
+}
+
 BACKUP="$(mktemp -d "$VAULT_PARENT/.handbook-request-url-e2e.XXXXXX")"
 snapshot_tree "$PLUGIN" "$OUTPUT_DIR/plugin.before"
 snapshot_tree "$STORAGE" "$OUTPUT_DIR/storage.before"
@@ -196,7 +210,7 @@ record "3" "Check schema-in-the-mist" "Source editor opens" "Source editor opene
 LAST_COMPLETED=3
 
 CURRENT_STEP="4"
-python3 "$REPO_ROOT/tools/e2e/request-url-cdp.py" set-tag
+python3 "$REPO_ROOT/tools/e2e/request-url-cdp.py" set-tag v1.0.0
 for _ in $(seq 1 120); do
   [[ "$(jq -r '.reference.kind // empty' "$SOURCE_JSON" 2>/dev/null)" == "tag" ]] && break
   sleep 0.25
@@ -210,8 +224,24 @@ if [[ -f "$OBSIDIAN_LOG" ]]; then
   tail -c "+$((LOG_OFFSET + 1))" "$OBSIDIAN_LOG" >"$OUTPUT_DIR/obsidian-appended.log"
   ! rg -i 'text is not a function|arrayBuffer is not a function' "$OUTPUT_DIR/obsidian-appended.log"
 fi
-record "4" "Save and check tag v1.0.0" "Modal closes, tag revision and files match, no requestUrl errors" "Revision $TAG_REVISION verified; errors absent" "PASS" "$OUTPUT_DIR/04-tag-updated.png"
+record "4" "Save and check tag v1.0.0" "Modal closes, tag revision and files match, no requestUrl errors" "Revision $TAG_REVISION verified; errors absent" "PASS" "$OUTPUT_DIR/tag-v1.0.0-updated.png"
 LAST_COMPLETED=4
+
+CURRENT_STEP="5"
+python3 "$REPO_ROOT/tools/e2e/request-url-cdp.py" open-source
+python3 "$REPO_ROOT/tools/e2e/request-url-cdp.py" set-tag v1.2.0
+for _ in $(seq 1 120); do
+  [[ "$(jq -r '.reference.value // empty' "$SOURCE_JSON" 2>/dev/null)" == "v1.2.0" ]] && break
+  sleep 0.25
+done
+[[ "$(jq -r '.reference.kind' "$SOURCE_JSON")" == "tag" ]]
+[[ "$(jq -r '.reference.value' "$SOURCE_JSON")" == "v1.2.0" ]]
+CITY_TAG_REVISION="$(jq -r .revision "$SOURCE_JSON")"
+[[ "$(curl -fsSL https://api.github.com/repos/RebelliousSmile/schema-in-the-mist/commits/v1.2.0 | jq -r .sha)" == "$CITY_TAG_REVISION" ]]
+compare_revision "$CITY_TAG_REVISION" city-tag
+compare_city_stylesheet "$CITY_TAG_REVISION" city-tag
+record "5" "Save and check tag v1.2.0" "City stylesheet is installed byte for byte" "Revision $CITY_TAG_REVISION and styles/city-of-mist.css verified" "PASS" "$OUTPUT_DIR/tag-v1.2.0-updated.png"
+LAST_COMPLETED=5
 
 printf '\nResult: PASS\n' >>"$REPORT"
 printf 'E2E PASS\n'

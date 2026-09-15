@@ -86,6 +86,7 @@ def screenshot(filename):
 
 
 action = sys.argv[1]
+tag = sys.argv[2] if len(sys.argv) > 2 else "v1.0.0"
 
 if action == "close":
     call("Browser.close")
@@ -246,13 +247,13 @@ elif action == "set-tag":
             .find(node => node.innerText.trim() === 'Save and check');
           if (!input || !button) return false;
           Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')
-            .set.call(input, 'v1.0.0');
+            .set.call(input, %s);
           input.dispatchEvent(new Event('input', { bubbles: true }));
           input.dispatchEvent(new Event('change', { bubbles: true }));
           button.click();
           return true;
         })()
-        """
+        """ % json.dumps(tag)
     )
     if not saved:
         raise RuntimeError("tag input or Save and check button was not found")
@@ -260,8 +261,8 @@ elif action == "set-tag":
         "![...document.querySelectorAll('.modal')]"
         ".some(node => node.innerText.includes('Edit schema source'))"
     )
-    screenshot("04-tag-updated.png")
-    print("tag=v1.0.0")
+    screenshot(f"tag-{tag}-updated.png")
+    print(f"tag={tag}")
 else:
     raise RuntimeError(f"unknown action: {action}")
 

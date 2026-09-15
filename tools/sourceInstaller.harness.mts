@@ -38,6 +38,24 @@ const rootedContent: Record<string, string> = {
 };
 await installResolvedSchemaSource(plugin, source, { revision: "c".repeat(40), readText: async (path) => rootedContent[path] ?? Promise.reject(new Error(path)), readBinary: async () => new Uint8Array([3]).buffer });
 if (!files.has(`${root}/packs/rooted/media/paper.png`)) throw new Error("custom asset root was not preserved");
+const cityStylesheet = "body.brumes--city-of-mist .inline-title { text-decoration: underline; }\n";
+const cityContent: Record<string, string> = {
+	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "city-of-mist", version: "1.0.0", path: "handbook/city-of-mist/pack.json" }] }),
+	"handbook/city-of-mist/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "city-of-mist", label: "City of Mist", style: {}, assets: { stylesheets: ["styles/city-of-mist.css"] } } }),
+};
+const requested: string[] = [];
+await installResolvedSchemaSource(plugin, source, {
+	revision: "d".repeat(40),
+	readText: async (path) => cityContent[path] ?? Promise.reject(new Error(path)),
+	readBinary: async (path) => {
+		requested.push(path);
+		return new TextEncoder().encode(cityStylesheet).buffer;
+	},
+});
+const installedCityStylesheet = `${root}/packs/city-of-mist/assets/styles/city-of-mist.css`;
+if (!requested.includes("handbook/city-of-mist/assets/styles/city-of-mist.css") || !files.has(installedCityStylesheet)) throw new Error("declared City stylesheet was not staged");
+const installedCityBytes = files.get(installedCityStylesheet);
+if (!(installedCityBytes instanceof ArrayBuffer) || new TextDecoder().decode(installedCityBytes) !== cityStylesheet) throw new Error("City stylesheet bytes changed during staging");
 await removeSchemaSourceStorage(plugin, source.id);
 if ([...files.keys()].some((path) => path.startsWith(`${root}/`))) throw new Error("removed source left installed files behind");
 if ([...folders].some((path) => path === root || path.startsWith(`${root}/`))) throw new Error("removed source left installed folders behind");
