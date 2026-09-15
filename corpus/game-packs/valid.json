@@ -1,0 +1,19 @@
+{
+	"id": "example-game",
+	"label": "Example game",
+	"style": {
+		"base": {
+			"note": { "--font-text-theme": "Example Serif" },
+			"workspace": { "--background-primary": "#f4efe4" }
+		},
+		"dark": { "note": { "--h1-color": "#ffd700" } }
+	},
+	"polarities": ["light", "dark"],
+	"assets": {
+		"root": "assets",
+		"images": { "theme-card-frame": "frame.svg" },
+		"fonts": { "Example Serif": { "file": "example.woff2", "weight": "400" } },
+		"stylesheets": ["styles/example.css"]
+	},
+	"shapes": { "theme-card": { "title": { "heading": "Theme" } } }
+}

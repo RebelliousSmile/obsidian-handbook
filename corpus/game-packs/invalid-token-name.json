@@ -1,0 +1,5 @@
+{
+	"id": "unsafe-token",
+	"label": "Unsafe token",
+	"style": { "base": { "note": { "--safe-token": "kept", "--unsafe;rule": "dropped" } } }
+}
