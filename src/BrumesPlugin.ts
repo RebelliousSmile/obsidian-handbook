@@ -305,6 +305,7 @@ export default class BrumesPlugin extends Plugin {
 		// URL, so the rules are written ahead of the block rather than into
 		// it. They leave with it when the game changes.
 		const fontCss = fresh ? this.assets.fontCss : "";
+		const packCss = fresh ? this.assets.packCss : "";
 
 		// Looking for the files is asynchronous and switching a game is not.
 		// The style is written at once without the images, then again when
@@ -339,6 +340,7 @@ export default class BrumesPlugin extends Plugin {
 		this.gameStyle.applyGameStyle(
 			fontCss ? `${fontCss}\n\n${withCallouts}` : withCallouts,
 		);
+		this.gameStyle.applyPackStyle(packCss);
 
 		for (const doc of this.collectDocuments()) {
 			this.dressDocument(doc);

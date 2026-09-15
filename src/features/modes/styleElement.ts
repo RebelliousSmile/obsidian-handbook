@@ -13,6 +13,7 @@ import {
 } from "./domModeClass";
 
 const STYLE_ELEMENT_ID = "brumes-game-style";
+const PACK_STYLE_ELEMENT_ID = "brumes-pack-style";
 
 /**
  * A value never legitimately closes a declaration or a block. Dropping those
@@ -204,6 +205,7 @@ export function buildGameStyle(
  */
 export class GameStyleWriter {
 	private css = "";
+	private packCss = "";
 	private readonly documents: Document[] = [];
 
 	addDocument(doc: Document) {
@@ -233,6 +235,11 @@ export class GameStyleWriter {
 		}
 	}
 
+	applyPackStyle(css: string) {
+		this.packCss = css;
+		for (const doc of this.documents) this.writePackTo(doc);
+	}
+
 	/** Leave nothing behind when the plugin unloads. */
 	removeGameStyle() {
 		for (const doc of this.documents) {
@@ -241,6 +248,7 @@ export class GameStyleWriter {
 
 		this.documents.length = 0;
 		this.css = "";
+		this.packCss = "";
 	}
 
 	private writeTo(doc: Document) {
@@ -253,6 +261,16 @@ export class GameStyleWriter {
 		if (element.textContent !== this.css) {
 			element.textContent = this.css;
 		}
+		this.writePackTo(doc);
+	}
+
+	private writePackTo(doc: Document) {
+		if (!this.packCss) {
+			doc.getElementById(PACK_STYLE_ELEMENT_ID)?.remove();
+			return;
+		}
+		const element = ensurePackStyleElement(doc);
+		if (element.textContent !== this.packCss) element.textContent = this.packCss;
 	}
 }
 
@@ -272,6 +290,19 @@ function ensureStyleElement(doc: Document): HTMLStyleElement {
 	return element;
 }
 
+function ensurePackStyleElement(doc: Document): HTMLStyleElement {
+	const existing = doc.getElementById(PACK_STYLE_ELEMENT_ID);
+	if (existing instanceof HTMLStyleElement) return existing;
+	existing?.remove();
+	const element = doc.createElement("style");
+	element.id = PACK_STYLE_ELEMENT_ID;
+	const tokens = doc.getElementById(STYLE_ELEMENT_ID);
+	if (tokens?.parentNode) tokens.parentNode.insertBefore(element, tokens.nextSibling);
+	else doc.head.appendChild(element);
+	return element;
+}
+
 export function removeGameStyle(doc: Document) {
 	doc.getElementById(STYLE_ELEMENT_ID)?.remove();
+	doc.getElementById(PACK_STYLE_ELEMENT_ID)?.remove();
 }
