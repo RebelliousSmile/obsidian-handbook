@@ -1,6 +1,6 @@
 ---
 objective: "Handbook refuse tout package schema-adrenaline autre que v1.0.0 tout en conservant son contrôle local hors ligne, et la parité de release avec Lantern est constatée."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Finaliser la preuve du contrat Adrenaline v1
