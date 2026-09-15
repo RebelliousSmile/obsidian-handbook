@@ -5,13 +5,38 @@
 	// reading `obsidian.asar`). `.print .markdown-preview-view` is added
 	// throughout this mixin so page-level styling reaches that container too.
 	.markdown-source-view,
-	.markdown-reading-view,
-	.print .markdown-preview-view {
+	.markdown-reading-view {
+		position: relative;
+		isolation: isolate;
+		background-color: var(--background-primary);
+		background-image: none;
+	}
+
+	.markdown-source-view::before,
+	.markdown-reading-view::before {
+		position: absolute;
+		z-index: -1;
+		inset: 0;
+		content: "";
+		pointer-events: none;
 		background-color: var(--background-primary);
 		background-image: var(--adrenaline-page-texture, none);
 		background-repeat: repeat;
 		background-size: 32rem 32rem;
 		background-blend-mode: soft-light;
+		opacity: var(--adrenaline-page-texture-opacity, 0);
+	}
+
+	.print .markdown-preview-view {
+		background-color: var(--background-primary);
+		background-image: none;
+	}
+
+	.markdown-source-view :focus-visible,
+	.markdown-reading-view :focus-visible,
+	&.brumes--workspace-theme :focus-visible {
+		outline: 2px solid var(--interactive-accent);
+		outline-offset: 2px;
 	}
 
 	.markdown-source-view .inline-title,
@@ -163,6 +188,11 @@
 		.markdown-reading-view,
 		.print .markdown-preview-view {
 			background-image: none;
+		}
+
+		.markdown-source-view::before,
+		.markdown-reading-view::before {
+			content: none;
 		}
 	}
 }

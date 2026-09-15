@@ -157,3 +157,19 @@ Pour une modification limitée à `schema-pbta`, il n'est pas nécessaire de
 lancer `npm run dev` dans Handbook : `dev:schema-pbta` et Hot Reload suffisent.
 `npm run dev` reste nécessaire lorsqu'on modifie aussi le TypeScript ou les SCSS
 propres à Handbook.
+
+## Archiver une recette visuelle reproductible
+
+Pour clore une évolution de thème, utiliser un coffre et un profil Obsidian
+jetables, installer le pack par le même catalogue Schema sources que les
+utilisateurs, puis consigner les versions et commits exacts de l'hôte et du
+schéma. Capturer une matrice aux viewports exacts avec une note, une ancre et un
+zoom constants ; les variantes clair/sombre et workspace activé/désactivé
+doivent partir du même témoin.
+
+Un focus posé par script n'est pas nécessairement `:focus-visible` : établir
+d'abord la modalité clavier, puis focaliser le lien ou le contrôle témoin et
+vérifier sa valeur calculée. Parcourir aussi la note entière séparément des
+captures à ancre fixe afin de voir le contenu virtualisé et de comptabiliser les
+callouts et blocs attendus. Après validation, fermer l'instance de test et
+supprimer uniquement son coffre et son profil temporaires.

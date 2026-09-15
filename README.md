@@ -169,11 +169,20 @@ with `pbta-one-column` in `cssclasses`.
 
 Handbook and Lantern deliberately consume the same `schema-adrenaline`
 repository. The package declares the minimum Handbook release it supports;
-Handbook pins one full schema-adrenaline commit in
-`compat/schema-adrenaline.ref`. For a coordinated release, publish the
-fallback-capable Handbook host first, publish the package against that immutable
-Handbook tag second, then update Handbook's schema commit pin. No reciprocal
-schema SHA is needed.
+Handbook does not pin a game-specific schema commit. Schema sources records the
+generic release, tag or branch selected for each repository and installs its
+catalogue atomically.
+
+Handbook's `npm run check` and release workflow deliberately remain independent
+from optional game repositories. To validate a concrete Adrenaline checkout,
+set `SCHEMA_ADRENALINE_ROOT` and run the dedicated
+`assert:adrenaline-source`, `assert:adrenaline-theme` and
+`assert:adrenaline-zombiology-style` scripts. Conversely, schema-adrenaline CI
+derives an immutable Handbook tag from `minimumHandbookVersion`, runs those host
+assertions against its checkout, then verifies catalogue installation through
+that release. For a coordinated compatibility change, publish a
+fallback-capable Handbook host first, raise `minimumHandbookVersion` and publish
+schema-adrenaline second. No reciprocal schema SHA is required.
 
 ### 5. Illustrations and fonts
 

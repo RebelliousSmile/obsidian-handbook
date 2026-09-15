@@ -1,6 +1,6 @@
 ---
 objective: "Adrenaline est un package déclaratif durable et compatible, dont les présentations claire et sombre reprennent le langage éditorial du livret Police sans laisser de données utilisateur ni de palette de jeu dans le code remplaçable de Handbook."
-status: in-progress
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
