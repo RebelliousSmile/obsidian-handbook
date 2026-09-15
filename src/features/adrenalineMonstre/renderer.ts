@@ -62,17 +62,20 @@ function protectionsSummary(protections: Protections): string[] {
 	];
 }
 
-function capabilities(data: AdrenalineMonsterData): string[] {
-	const lines = [...(data.traitsSpeciaux ?? [])];
-	for (const competence of data.competences ?? []) {
+function competenceLines(data: AdrenalineMonsterData): string[] {
+	return (data.competences ?? []).map((competence) => {
 		const details = [
 			competence.specialite,
 			`${displayedCompetenceTotal(competence, data.caracteristiques) ?? competence.pourcentage} %`,
 			...(competence.avantages ?? []),
 			competence.notes,
 		].filter((value): value is string => Boolean(value));
-		lines.push(`${competence.nom} · ${details.join(" · ")}`);
-	}
+		return `${competence.nom} · ${details.join(" · ")}`;
+	});
+}
+
+function alternateStateLines(data: AdrenalineMonsterData): string[] {
+	const lines: string[] = [];
 	if (data.etatAlternatif) {
 		lines.push(`État : ${data.etatAlternatif.nom}`);
 		lines.push(...(data.etatAlternatif.declencheurs ?? []).map((trigger) => `Déclencheur : ${trigger}`));
@@ -82,12 +85,22 @@ function capabilities(data: AdrenalineMonsterData): string[] {
 		if (data.etatAlternatif.actionsParRound !== undefined) lines.push(`${data.etatAlternatif.actionsParRound} actions par round`);
 		if (data.etatAlternatif.notes) lines.push(data.etatAlternatif.notes);
 	}
+	return lines;
+}
+
+function equipmentLines(data: AdrenalineMonsterData): string[] {
+	const lines: string[] = [];
 	if (data.equipement) {
 		lines.push(...(data.equipement.possessions ?? []));
 		if (data.equipement.equipementFavori) lines.push(`Équipement favori : ${data.equipement.equipementFavori}`);
 		for (const weapon of data.equipement.armesPhysiques ?? []) lines.push(`Arme physique : ${weaponSummary(weapon)}`);
 		for (const weapon of data.equipement.armesMentales ?? []) lines.push(`Arme mentale : ${weaponSummary(weapon)}`);
 	}
+	return lines;
+}
+
+function contagionLines(data: AdrenalineMonsterData): string[] {
+	const lines: string[] = [];
 	if (data.contagion) {
 		if (data.contagion.agent) lines.push(`Agent : ${data.contagion.agent}`);
 		if (data.contagion.delaiAvantEffet) lines.push(data.contagion.delaiAvantEffet);
@@ -95,12 +108,28 @@ function capabilities(data: AdrenalineMonsterData): string[] {
 		for (const vector of data.contagion.vecteurs ?? []) lines.push(`${vector.nom}${vector.probabilite === undefined ? "" : ` · ${vector.probabilite} %`}${vector.notes ? ` · ${vector.notes}` : ""}`);
 		for (const modulation of data.contagion.modulations ?? []) lines.push(`${modulation.profil}${modulation.delaiAvantEffet ? ` · ${modulation.delaiAvantEffet}` : ""}${modulation.issue ? ` · ${modulation.issue}` : ""}`);
 	}
+	return lines;
+}
+
+function narrativeLines(data: AdrenalineMonsterData): string[] {
+	const lines: string[] = [];
 	const narrative = data.narratif;
 	if (narrative) {
 		for (const key of ["role", "attitude", "historique", "evolutionPossible"] as const) if (narrative[key]) lines.push(narrative[key] ?? "");
 		for (const key of ["personnalite", "interpretation", "repliques", "notesMj"] as const) if (narrative[key]) lines.push(...(narrative[key] ?? []));
 	}
 	return lines;
+}
+
+function capabilityGroup(doc: Document, heading: string, lines: string[]): HTMLElement | null {
+	if (lines.length === 0) return null;
+	const group = doc.createElement("section");
+	group.classList.add("brumes-adrenaline-monstre--capability-group");
+	const title = doc.createElement("h5");
+	title.textContent = heading;
+	group.appendChild(title);
+	group.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-monstre--capability-list"));
+	return group;
 }
 
 export function renderAdrenalineMonster(data: AdrenalineMonsterData, doc: Document): HTMLElement {
@@ -154,10 +183,17 @@ export function renderAdrenalineMonster(data: AdrenalineMonsterData, doc: Docume
 			return element;
 		},
 		capabilities: (zone) => {
-			const lines = capabilities(data);
-			if (lines.length === 0) return null;
 			const element = section(doc, zone);
-			element.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-monstre--capability-list"));
+			const groups = [
+				capabilityGroup(doc, "Traits", data.traitsSpeciaux ?? []),
+				capabilityGroup(doc, "État alternatif", alternateStateLines(data)),
+				capabilityGroup(doc, "Compétences", competenceLines(data)),
+				capabilityGroup(doc, "Équipement", equipmentLines(data)),
+				capabilityGroup(doc, "Contagion", contagionLines(data)),
+				capabilityGroup(doc, "Informations de jeu", narrativeLines(data)),
+			];
+			for (const group of groups) if (group) element.appendChild(group);
+			if (element.children.length === 1) return null;
 			return element;
 		},
 	});
