@@ -1,11 +1,8 @@
 import { build } from "esbuild";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-const temporaryDirectory = await mkdtemp(join(tmpdir(), "handbook-variants-"));
-const output = join(temporaryDirectory, "assert-game-variants.mjs");
+const output = "tools/.assert-game-variants.mjs";
 
 try {
 	await build({
@@ -15,9 +12,9 @@ try {
 		format: "esm",
 		outfile: output,
 		logLevel: "silent",
-		external: ["obsidian"],
+		external: ["obsidian", "postcss", "postcss-selector-parser"],
 	});
 	await import(pathToFileURL(output).href);
 } finally {
-	await rm(temporaryDirectory, { recursive: true, force: true });
+	await rm(output, { force: true });
 }

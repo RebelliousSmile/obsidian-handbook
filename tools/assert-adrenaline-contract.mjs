@@ -17,6 +17,6 @@ const bundle = "tools/.assert-adrenaline-contract.mjs";
 const stub = "tools/.obsidian-stub.mjs";
 try {
 	writeFileSync(stub, "export class Notice {} export class Menu {} export class MenuItem {} export class Editor {} export class Plugin {} export class PluginSettingTab {} export class Setting {} export class Modal {} export class ItemView {} export function setIcon() {}\n");
-	buildSync({ entryPoints: ["tools/assertAdrenalineContract.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["schema-adrenaline"], alias: { obsidian: resolve(stub) }, logLevel: "warning" });
+	buildSync({ entryPoints: ["tools/assertAdrenalineContract.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["schema-adrenaline", "postcss", "postcss-selector-parser"], alias: { obsidian: resolve(stub) }, logLevel: "warning" });
 	process.exitCode = spawnSync(process.execPath, [bundle], { stdio: "inherit" }).status ?? 1;
 } finally { rmSync(bundle, { force: true }); rmSync(stub, { force: true }); }
