@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2026-09-15
+
+### Added
+
+- Consume the immutable `schema-adrenaline` v1.0.0 package and its 35-case canonical corpus across strict contract checks, tolerant Handbook renderers, corpus assertions, and DOM dumps.
+
+### Changed
+
+- Remove duplicated local Adrenaline fixtures and the normal sibling-checkout assertion; `pnpm check` now validates the published contract without `../schema-adrenaline`.
+
 ## [2.9.0] - 2026-09-15
 
 ### Added
