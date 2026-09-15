@@ -157,10 +157,12 @@ seule est la bonne. La règle générale est écrite en tête de
   parce que chaque note le porte quoi qu'on y écrive, que ça change d'un jeu à
   l'autre et d'une polarité à l'autre, et qu'un lecteur peut vouloir le changer
   dans `overrides.json` ;
-- **ce qui tient à l'anatomie d'un bloc** — l'accent d'une carte Mythos, la
-  teinte d'un panneau de danger — reste dans le **SCSS**, parce qu'un pack
-  atteint déjà un bloc par `shapes` : deux portes vers le même bloc seraient
-  deux vérités sur lui.
+- **ce qui tient à l'anatomie ou à la typographie d'un jeu** — l'accent d'une
+  carte Mythos, la teinte d'un panneau de danger, une hiérarchie City of Mist —
+  appartient à sa **feuille CSS de pack scoped**, quand le pack la publie. Elle
+  est injectée après les jetons et ne peut atteindre qu'une classe de jeu ; le
+  SCSS Handbook garde la géométrie partagée, les resets et les garde-fous du
+  consommateur.
 
 Trois familles échappent des deux côtés, et c'est mesuré, pas supposé :
 
