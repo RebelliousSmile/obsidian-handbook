@@ -11,7 +11,7 @@
  * into `after.txt`, and diff. It asserts nothing on its own — the diff is the
  * assertion, and it is the reader who reads it.
  */
-import { readdirSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import {
@@ -20,6 +20,7 @@ import {
 } from "./mistContractCorpus.mts";
 import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
 import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
+import { loadPbtaRenderCases, PBTA_TARGET_TO_BLOCK } from "./pbtaContractCorpus.mts";
 
 class El {
 	tagName: string;
@@ -103,6 +104,7 @@ function blockOf(id: string) {
 // block, which is where the optional zones are actually absent. A comparison
 // that only saw complete cards would prove nothing about the missing ones.
 for (const folder of ["temoins", "refus"]) {
+	if (!existsSync(join(CORPUS, folder))) continue;
 	const files = readdirSync(join(CORPUS, folder)).sort();
 
 	for (const file of files) {
@@ -174,6 +176,17 @@ for (const entry of loadAdrenalineContractCases().sort((left, right) =>
 	const block = blockOf(`adrenaline-${entry.target}`);
 	if (!block) { console.log("no block"); continue; }
 	const data = block.parse(source);
+	if (data === null) { console.log("null"); continue; }
+	process.stdout.write(dump(block.render(data, doc as unknown as Document) as unknown as El, 0));
+}
+
+for (const entry of loadPbtaRenderCases().sort((left, right) =>
+	left.path.localeCompare(right.path),
+)) {
+	console.log(`### pbta/${entry.path}`);
+	const block = blockOf(PBTA_TARGET_TO_BLOCK[entry.target]);
+	if (!block) { console.log("no block"); continue; }
+	const data = block.parse(entry.source);
 	if (data === null) { console.log("null"); continue; }
 	process.stdout.write(dump(block.render(data, doc as unknown as Document) as unknown as El, 0));
 }

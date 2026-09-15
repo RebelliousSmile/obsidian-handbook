@@ -132,6 +132,11 @@ Adrenaline v1 publie un manifeste mixte JSON/TOML sous
 `accept|reject`, puis Handbook vérifie séparément sa projection tolérante et
 son rendu sans dupliquer ces cas métier.
 
+PbtA v1 publie de même `schema-pbta/corpus/contract/cases.json`. Handbook
+consomme les cas TOML acceptés de ses seules capacités `move` et `playbook` ;
+les autres cibles canoniques restent sans renderer, sans contrat fondé sur la
+clé `game`.
+
 ## Langue
 
 - **L'anglais existant reste.** Le code, les commentaires, le README et les
