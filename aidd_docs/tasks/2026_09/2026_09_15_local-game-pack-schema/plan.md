@@ -1,6 +1,6 @@
 ---
 objective: "Handbook owns, validates, documents, and tests the GamePack appearance contract locally, without changing how external game sources are installed."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Rapatrier le schéma d’apparence dans Handbook
