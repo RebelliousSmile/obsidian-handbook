@@ -1,3 +1,5 @@
+import Ajv from "ajv";
+import gamePackSchema from "../../schemas/appearance/game-pack.schema.json";
 import { readGamePack } from "./fromSchema";
 import { gamePluginCapabilityIssues } from "./capabilities";
 import { GamePack, GamePolarity } from "./types";
@@ -5,6 +7,9 @@ import { GameVariant } from "./variants";
 import type { InstalledSchemaSource } from "./sources";
 
 export const GAME_PLUGIN_MANIFEST_VERSION = 1;
+
+/** Strict at an installation boundary; legacy loose packs stay tolerant. */
+const validateGamePack = new Ajv({ allErrors: true }).compile(gamePackSchema);
 
 const MANIFEST_FIELDS = [
 	"manifestVersion",
@@ -224,6 +229,10 @@ export function readGamePluginManifest(
 			return { error: '"defaultVariantId" does not name a declared variant' };
 		}
 		defaultVariantId = source.defaultVariantId;
+	}
+
+	if (!validateGamePack(source.pack)) {
+		return { error: '"pack" does not conform to the Handbook game pack schema' };
 	}
 
 	const pack = readGamePack(source.pack);

@@ -2,10 +2,9 @@
  * Reading a game pack written as a document.
  *
  * The shape is the one published beside the content schemas, as
- * `appearance/game-pack.schema.json` in schema-in-the-mist. The plugin depends
+ * `schemas/appearance/game-pack.schema.json` in Handbook. The plugin depends
  * on no remote repository to read it: the contract is honoured by the shape of
- * the data, never by a fetch or an import, so a pack loads with the network
- * down and with the schema repository unreachable.
+ * the data, never by a fetch, so a pack loads with the network down.
  *
  * Nothing here validates in the strict sense. It follows the rule the blocks
  * already follow: a field that arrives wrong loses itself, is reported once,
