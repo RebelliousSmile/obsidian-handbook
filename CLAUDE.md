@@ -45,11 +45,11 @@ pnpm dev              # esbuild --watch
 pnpm lint             # eslint . — pas seulement src/
 pnpm assert:corpus    # chaque bloc lit un témoin, dégrade un refus, et a sa commande de copie
 pnpm assert:adrenaline-documents # lecteurs communs et aller-retour TOML
-pnpm assert:adrenaline-source    # six exemples et témoins réémis contre les cibles Zod
+pnpm assert:adrenaline-contract  # corpus et codecs canoniques schema-adrenaline v1
 pnpm assert:adrenaline-theme     # trois racines, deux polarités et responsive
 pnpm assert:override  # overrides.json : surcharger une zone, la retirer, retrouver le rendu d'origine
 pnpm assert:custom-packs # packs/*.json : pack valide, fichier fautif écarté seul, collision d'id, ordre du cycle de vie
-pnpm dump:dom         # le DOM rendu des six blocs, à comparer d'une phase à l'autre
+pnpm dump:dom         # le DOM rendu des corpus canoniques, à comparer d'une phase à l'autre
 ```
 
 ## Topologie git

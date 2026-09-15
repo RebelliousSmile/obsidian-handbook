@@ -7,11 +7,12 @@ contrat. Il ne recopie plus les documents Mist : le package immuable
 | Famille | Source des cas | Attentes |
 | --- | --- | --- |
 | Mist Engine | `schema-in-the-mist/corpus/contract/cases.json` installé | `canonical` pour le codec strict, `handbook` pour la projection tolérante |
-| Adrenaline et PbtA | `corpus/temoins/` et `corpus/refus/` dans ce dépôt | témoin rendu ou directive locale `# attend:` |
+| Adrenaline | `schema-adrenaline/corpus/cases.json` installé | `accept|reject` strict, puis projection Handbook tolérante |
+| PbtA | `corpus/temoins/` et `corpus/refus/` dans ce dépôt | témoin rendu ou directive locale `# attend:` |
 
 `pnpm assert:corpus` combine les deux sources et exige qu’un bloc enregistré
 ait un document qu’il sait lire ainsi qu’une commande de copie TOML. Il échoue
-si un fichier local reprend l’id d’un format Mist, afin que les deux corpus ne
+si un fichier local reprend l’id d’un format Mist ou Adrenaline, afin que les corpus ne
 puissent plus dériver.
 
 ## Corpus Mist installé
@@ -58,5 +59,6 @@ au moins un témoin, ses refus pertinents et une commande de copie TOML.
 
 ```bash
 pnpm assert:mist-contract
+pnpm assert:adrenaline-contract
 pnpm assert:corpus
 ```
