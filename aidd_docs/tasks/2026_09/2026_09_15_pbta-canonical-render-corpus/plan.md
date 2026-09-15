@@ -1,6 +1,6 @@
 ---
 objective: "Handbook consomme les cas canoniques schema-pbta v1.0.0 pour ses blocs move et playbook, sans témoins contractuels locaux ni contrat fondé sur un identifiant de jeu."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Corpus PbtA canonique dans les harnais de rendu
