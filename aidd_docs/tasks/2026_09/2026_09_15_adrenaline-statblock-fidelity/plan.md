@@ -1,6 +1,6 @@
 ---
 objective: "Les fiches PJ, PNJ et monstre restituent chacune la hiérarchie de leur source Zombiology tout en restant lisibles et compactes sur mobile."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Fidélité visuelle des statblocks Adrenaline
