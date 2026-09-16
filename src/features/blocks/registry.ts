@@ -108,9 +108,10 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 
 				log.debug(`Rendering ${id}:`, parsed);
 				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
-				el.appendChild(block.render(parsed, el.doc));
+				const rendered = block.render(parsed, el.doc);
+				el.appendChild(rendered);
 				const section = ctx.getSectionInfo(el);
-				el.addEventListener("contextmenu", (event) => {
+				rendered.addEventListener("contextmenu", (event) => {
 					const menu = new Menu();
 					if (!contributeRenderedTomlExport(menu, source, block)) {
 						return;
