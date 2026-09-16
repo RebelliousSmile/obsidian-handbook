@@ -163,6 +163,12 @@ if wide != [
     raise RuntimeError(f"Unexpected wide layout: {wide}")
 screenshot("layout-regions-wide.png")
 
+evaluate("document.querySelector('.markdown-preview-section').style.width = '500px'")
+wait_for("getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 1")
+screenshot("layout-regions-narrow-pane.png")
+evaluate("document.querySelector('.markdown-preview-section').style.removeProperty('width')")
+wait_for("getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 3")
+
 set_width(600)
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
 narrow = json.loads(
@@ -174,4 +180,4 @@ if narrow != [{"columns": 1, "blocks": 3}, {"columns": 1, "blocks": 0}]:
     raise RuntimeError(f"Unexpected narrow layout: {narrow}")
 screenshot("layout-regions-narrow.png")
 
-print(json.dumps({"narrow": narrow, "screenshots": ["layout-regions-wide.png", "layout-regions-narrow.png"], "wide": wide}))
+print(json.dumps({"narrow": narrow, "screenshots": ["layout-regions-wide.png", "layout-regions-narrow-pane.png", "layout-regions-narrow.png"], "wide": wide}))

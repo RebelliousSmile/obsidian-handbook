@@ -14,7 +14,11 @@
 	overflow-x: auto;
 }
 
-@media (max-width: 640px) {
+.markdown-preview-section:has(> .handbook-layout-region) {
+	container-type: inline-size;
+}
+
+@container (max-width: 640px) {
 	.handbook-layout-region {
 		grid-template-columns: minmax(0, 1fr);
 	}

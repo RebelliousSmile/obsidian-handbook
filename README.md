@@ -197,10 +197,10 @@ Son contenu.
 <!-- /handbook-layout -->
 ```
 
-`columns=3` répartit ces sections sur trois colonnes lorsque la largeur le
-permet, puis revient automatiquement à une seule colonne sur une fenêtre
-étroite. Pour garder un tableau ou un bloc large dans une zone isolée, utilisez
-la même syntaxe avec `columns=1` :
+`columns=3` répartit ces sections sur trois colonnes lorsque la largeur du
+panneau de lecture le permet, puis revient automatiquement à une seule colonne
+si ce panneau est étroit. Pour garder un tableau ou un bloc large dans une zone
+isolée, utilisez la même syntaxe avec `columns=1` :
 
 ```markdown
 <!-- handbook-layout: columns=1 -->

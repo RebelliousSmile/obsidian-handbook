@@ -35,7 +35,9 @@ try {
 		"--handbook-layout-columns: 1",
 		"grid-template-columns: repeat(var(--handbook-layout-columns), minmax(0, 1fr))",
 		".handbook-layout-region > .handbook-layout-column",
-		"@media (max-width: 640px)",
+		".markdown-preview-section:has(> .handbook-layout-region)",
+		"container-type: inline-size",
+		"@container (max-width: 640px)",
 		"grid-template-columns: minmax(0, 1fr)",
 	]) {
 		if (!css.includes(fragment)) {
