@@ -212,8 +212,9 @@ la même syntaxe avec `columns=1` :
 <!-- /handbook-layout -->
 ```
 
-La région organise les sections Markdown de premier niveau déjà rendues, jamais
-les cellules du tableau. Elle ne s’applique pas dans la vue source. Les
+La région organise les blocs Markdown de premier niveau déjà rendus, jamais
+les cellules du tableau. Les titres de même niveau ouvrent chacun une cellule
+de la grille. Elle ne s’applique pas dans la vue source. Les
 directives mal formées, incomplètes ou montrées dans un bloc de code sont
 ignorées sans modifier la note.
 

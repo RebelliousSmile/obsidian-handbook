@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { parseLayoutRegions } from "../src/features/layoutRegions/parser";
 import {
-	mapRegionToSections,
-	wrapSectionsInRegion,
+	mapRegionToBlocks,
+	wrapBlocksInRegion,
 } from "../src/features/layoutRegions/sectionMapper";
 
 const source = [
@@ -22,8 +22,8 @@ const source = [
 assert.deepEqual(parseLayoutRegions(source), {
 	diagnostics: [],
 	regions: [
-		{ columns: 3, lineStart: 2, lineEnd: 4 },
-		{ columns: 1, lineStart: 8, lineEnd: 9 },
+		{ columns: 3, openLine: 1, closeLine: 5, lineStart: 2, lineEnd: 4 },
+		{ columns: 1, openLine: 7, closeLine: 10, lineStart: 8, lineEnd: 9 },
 	],
 });
 
@@ -60,35 +60,12 @@ const literal = [
 
 assert.deepEqual(parseLayoutRegions(literal), {
 	diagnostics: [],
-	regions: [{ columns: 1, lineStart: 6, lineEnd: 6 }],
+	regions: [{ columns: 1, openLine: 5, closeLine: 7, lineStart: 6, lineEnd: 6 }],
 });
-
-const first = { name: "first" };
-const second = { name: "second" };
-const third = { name: "third" };
-const mapped = mapRegionToSections(
-	{ columns: 3, lineStart: 2, lineEnd: 4 },
-	[
-		{ info: { lineStart: 2, lineEnd: 2 }, section: first },
-		{ info: { lineStart: 3, lineEnd: 3 }, section: second },
-		{ info: { lineStart: 4, lineEnd: 4 }, section: third },
-	],
-);
-assert.deepEqual(mapped, [first, second, third]);
-
-assert.equal(
-	mapRegionToSections(
-		{ columns: 3, lineStart: 2, lineEnd: 4 },
-		[
-			{ info: { lineStart: 2, lineEnd: 3 }, section: first },
-			{ info: { lineStart: 4, lineEnd: 5 }, section: second },
-		],
-	),
-	null,
-);
 
 type FakeElement = {
 	children: FakeElement[];
+	className: string;
 	classList: { add: (...names: string[]) => void; values: Set<string> };
 	name: string;
 	ownerDocument: { createElement: (name: string) => FakeElement };
@@ -98,10 +75,11 @@ type FakeElement = {
 	before: (child: FakeElement) => void;
 };
 
-function fakeElement(name: string): FakeElement {
+function fakeElement(name: string, className = ""): FakeElement {
 	const element: FakeElement = {
 		children: [],
-		classList: { add: (...names) => names.forEach((name) => element.classList.values.add(name)), values: new Set() },
+		className,
+		classList: { add: (...names) => names.forEach((name) => { element.classList.values.add(name); element.className = [...element.classList.values].join(" "); }), values: new Set() },
 		name,
 		ownerDocument: { createElement: fakeElement },
 		parent: null,
@@ -122,16 +100,31 @@ function fakeElement(name: string): FakeElement {
 }
 
 const parent = fakeElement("parent");
-const renderedSections = [fakeElement("one"), fakeElement("two"), fakeElement("three")];
-for (const section of renderedSections) parent.appendChild(section);
-const container = wrapSectionsInRegion(
-	renderedSections as unknown as HTMLElement[],
+const open = fakeElement("open");
+const renderedBlocks = [fakeElement("one", "el-h2"), fakeElement("two", "el-h2"), fakeElement("three", "el-h2")];
+const close = fakeElement("close");
+for (const block of [open, ...renderedBlocks, close]) parent.appendChild(block);
+const region = parseLayoutRegions(source).regions[0];
+const mapped = mapRegionToBlocks(region, [
+	{ block: open as unknown as HTMLElement, info: { lineStart: 1, lineEnd: 1 } },
+	...renderedBlocks.map((block, index) => ({ block: block as unknown as HTMLElement, info: { lineStart: index + 2, lineEnd: index + 2 } })),
+	{ block: close as unknown as HTMLElement, info: { lineStart: 5, lineEnd: 5 } },
+]);
+assert.deepEqual(mapped, renderedBlocks);
+assert.equal(mapRegionToBlocks(region, [
+	{ block: renderedBlocks[0] as unknown as HTMLElement, info: { lineStart: 2, lineEnd: 2 } },
+	{ block: renderedBlocks[1] as unknown as HTMLElement, info: null },
+	{ block: renderedBlocks[2] as unknown as HTMLElement, info: { lineStart: 4, lineEnd: 4 } },
+]), null);
+const container = wrapBlocksInRegion(
+	mapped!,
 	3,
 ) as unknown as FakeElement;
 
 assert.equal(container.classList.values.has("handbook-layout-region"), true);
 assert.equal(container.style.values.get("--handbook-layout-columns"), "3");
-assert.deepEqual(parent.children, [container]);
-assert.deepEqual(container.children, renderedSections);
+assert.deepEqual(parent.children, [open, container, close]);
+assert.equal(container.children.length, 3);
+assert.deepEqual(container.children.map((group) => group.children), renderedBlocks.map((block) => [block]));
 
 console.log("Layout-region source directives accept only safe, non-literal pairs.");

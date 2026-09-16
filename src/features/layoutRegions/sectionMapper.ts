@@ -1,71 +1,57 @@
 import type { LayoutRegion } from "./parser";
 
-export interface SourceSection<T> {
-	info: { lineEnd: number; lineStart: number };
-	section: T;
+export interface SourceBlock<T> {
+	block: T;
+	info: { lineStart: number; lineEnd: number } | null;
 }
 
-/**
- * Selects one contiguous run of rendered sections only when it maps exactly
- * to a source interval. A partial or crossing section is unsafe to move.
- */
-export function mapRegionToSections<T>(
+/** Select a contiguous run of complete rendered blocks inside the directive. */
+export function mapRegionToBlocks(
 	region: LayoutRegion,
-	sections: readonly SourceSection<T>[],
-): readonly T[] | null {
-	const selected: { index: number; value: SourceSection<T> }[] = [];
-
-	for (const [index, value] of sections.entries()) {
-		if (!intersects(region, value.info)) continue;
-		if (!isContained(region, value.info)) return null;
-		selected.push({ index, value });
-	}
-
-	if (selected.length === 0) return null;
-	if (!isContinuous(selected)) return null;
-
-	const first = selected[0].value.info;
-	const last = selected[selected.length - 1]?.value.info;
-	if (first.lineStart !== region.lineStart || last?.lineEnd !== region.lineEnd) {
-		return null;
-	}
-
-	return selected.map(({ value }) => value.section);
+	blocks: readonly SourceBlock<HTMLElement>[],
+): readonly HTMLElement[] | null {
+	const selected = blocks.filter(({ info }) =>
+		info && info.lineStart <= region.lineEnd && info.lineEnd >= region.lineStart,
+	);
+	if (!selected.length) return null;
+	if (selected[0].info?.lineStart !== region.lineStart || selected[selected.length - 1].info?.lineEnd !== region.lineEnd) return null;
+	if (selected.some(({ info }) => !info || info.lineStart < region.lineStart || info.lineEnd > region.lineEnd)) return null;
+	const start = blocks.indexOf(selected[0]);
+	const end = blocks.indexOf(selected[selected.length - 1]);
+	if (end - start + 1 !== selected.length) return null;
+	return selected.map(({ block }) => block);
 }
 
-export function wrapSectionsInRegion(
-	sections: readonly HTMLElement[],
+export function wrapBlocksInRegion(
+	blocks: readonly HTMLElement[],
 	columns: number,
 ): HTMLElement | null {
-	const first = sections[0];
+	const first = blocks[0];
 	if (!first) return null;
 
 	const container = first.ownerDocument.createElement("div");
 	container.classList.add("handbook-layout-region");
 	container.style.setProperty("--handbook-layout-columns", String(columns));
 	first.before(container);
-	for (const section of sections) container.appendChild(section);
+
+	const headingLevel = blocks.map(blockHeadingLevel).find((level) => level !== null);
+	let group: HTMLElement | null = null;
+	let groupHasHeading = false;
+	for (const block of blocks) {
+		const level = blockHeadingLevel(block);
+		if (!group || (groupHasHeading && level !== null && headingLevel != null && level <= headingLevel)) {
+			group = first.ownerDocument.createElement("div");
+			group.classList.add("handbook-layout-column");
+			container.appendChild(group);
+			groupHasHeading = false;
+		}
+		group.appendChild(block);
+		if (level !== null) groupHasHeading = true;
+	}
 	return container;
 }
 
-function intersects(
-	region: LayoutRegion,
-	section: { lineEnd: number; lineStart: number },
-): boolean {
-	return section.lineStart <= region.lineEnd && section.lineEnd >= region.lineStart;
-}
-
-function isContained(
-	region: LayoutRegion,
-	section: { lineEnd: number; lineStart: number },
-): boolean {
-	return section.lineStart >= region.lineStart && section.lineEnd <= region.lineEnd;
-}
-
-function isContinuous<T>(
-	selected: readonly { index: number; value: SourceSection<T> }[],
-): boolean {
-	return selected.every(({ index }, selectedIndex) =>
-		selectedIndex === 0 ? true : index === selected[selectedIndex - 1].index + 1,
-	);
+function blockHeadingLevel(block: HTMLElement): number | null {
+	const match = /^el-h([1-6])$/.exec(block.className);
+	return match ? Number(match[1]) : null;
 }

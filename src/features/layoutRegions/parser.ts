@@ -1,5 +1,7 @@
 export interface LayoutRegion {
 	columns: number;
+	openLine: number;
+	closeLine: number;
 	lineStart: number;
 	lineEnd: number;
 }
@@ -74,6 +76,8 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 			} else {
 				regions.push({
 					columns: open.columns,
+					openLine: open.line,
+					closeLine: line,
 					lineStart: contentStart,
 					lineEnd: contentEnd,
 				});

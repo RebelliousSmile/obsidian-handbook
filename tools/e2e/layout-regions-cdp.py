@@ -106,11 +106,19 @@ def screenshot(filename):
 
 
 def set_width(width):
-    window = call("Browser.getWindowForTarget", {"targetId": target["id"]})
-    call(
-        "Browser.setWindowBounds",
-        {"windowId": window["windowId"], "bounds": {"width": width, "height": 800}},
-    )
+    try:
+        window = call("Browser.getWindowForTarget", {"targetId": target["id"]})
+        call(
+            "Browser.setWindowBounds",
+            {"windowId": window["windowId"], "bounds": {"width": width, "height": 800}},
+        )
+    except RuntimeError as error:
+        if "wasn't found" not in str(error):
+            raise
+        call(
+            "Emulation.setDeviceMetricsOverride",
+            {"width": width, "height": 800, "deviceScaleFactor": 1, "mobile": False},
+        )
     time.sleep(0.5)
 
 
@@ -131,8 +139,12 @@ if not opened:
     )
     raise RuntimeError(f"The layout-region probe could not be opened: {visible}")
 
+if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") != "preview":
+    evaluate("app.commands.executeCommandById('markdown:toggle-preview')")
+
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
 set_width(1200)
+wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
 wide = evaluate(
     """
     JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({
@@ -152,6 +164,7 @@ if wide != [
 screenshot("layout-regions-wide.png")
 
 set_width(600)
+wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
 narrow = json.loads(
     evaluate(
         "JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length, blocks: region.querySelectorAll('.callout').length})))"
