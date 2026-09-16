@@ -1,4 +1,6 @@
+import type { Editor, Menu } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import type { BrumesSettings } from "../../settings/types";
 import { validatedMistSerializer } from "../../contracts/mist-engine";
 import { challengeBlock } from "../challenges/block";
 import { challengeToToml } from "../challenges/schema";
@@ -14,6 +16,9 @@ import { themeKitBlock } from "../themeKits/block";
 import { themeKitToToml } from "../themeKits/schema";
 import {
 	describeMissingPart,
+	canCopyAsToml,
+	contributeCopyAsToml,
+	contributeTomlSource,
 	loadCopyAsTomlCommand,
 	TomlExport,
 } from "./copyAsToml";
@@ -53,6 +58,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-theme-card-as-toml",
 		noun: "theme card",
 		toToml: validatedMistSerializer("legend-in-the-mist/story-theme", themeCardToToml),
+		sourceTarget: "legend-in-the-mist/story-theme",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -64,6 +70,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-challenge-as-toml",
 		noun: "challenge",
 		toToml: validatedMistSerializer("legend-in-the-mist/challenge", challengeToToml),
+		sourceTarget: "legend-in-the-mist/challenge",
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must open with the challenge name"),
 	},
@@ -72,6 +79,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-journey-as-toml",
 		noun: "journey",
 		toToml: validatedMistSerializer("legend-in-the-mist/journey", journeyToToml),
+		sourceTarget: "legend-in-the-mist/journey",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -83,6 +91,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-theme-kit-as-toml",
 		noun: "theme kit",
 		toToml: validatedMistSerializer("legend-in-the-mist/theme-kit", themeKitToToml),
+		sourceTarget: "legend-in-the-mist/theme-kit",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -94,6 +103,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-com-theme-card-as-toml",
 		noun: "city theme card",
 		toToml: validatedMistSerializer("city-of-mist/theme-card", comThemeCardToToml),
+		sourceTarget: "city-of-mist/theme-card",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -105,6 +115,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-danger-as-toml",
 		noun: "danger",
 		toToml: validatedMistSerializer("city-of-mist/danger", comDangerToToml),
+		sourceTarget: "city-of-mist/danger",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -203,4 +214,50 @@ export function loadTomlExportCommands(plugin: BrumesPlugin): void {
 	for (const spec of TOML_EXPORTS) {
 		loadCopyAsTomlCommand(plugin, spec);
 	}
+}
+
+/** Add the single clipboard export that matches the fenced block at the cursor. */
+export function contributeTomlExports(
+	menu: Menu,
+	editor: Editor,
+	settings: BrumesSettings,
+): number {
+	for (const spec of TOML_EXPORTS) {
+		if (contributeCopyAsToml(menu, editor, settings, spec)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/** Whether any available TOML export applies to the fenced block at the cursor. */
+export function hasTomlExportAtCursor(
+	editor: Editor,
+	settings: BrumesSettings,
+): boolean {
+	return TOML_EXPORTS.some((spec) => canCopyAsToml(editor, settings, spec));
+}
+
+/** Add an export for a rendered block, whose processor already owns its source. */
+export function contributeRenderedTomlExport(
+	menu: Menu,
+	source: string,
+	block: TomlExport<unknown>["block"],
+): boolean {
+	for (const spec of TOML_EXPORTS) {
+		if (spec.block === block) {
+			contributeTomlSource(menu, source, spec);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/** Resolve the TOML contract that owns a rendered block. */
+export function tomlExportForBlock(
+	block: TomlExport<unknown>["block"],
+): TomlExport<unknown> | null {
+	return TOML_EXPORTS.find((spec) => spec.block === block) ?? null;
 }

@@ -5,6 +5,10 @@ import {
 	hasBlockInsertions,
 } from "../features/blocks/registry";
 import {
+	contributeTomlExports,
+	hasTomlExportAtCursor,
+} from "../features/blocks/tomlExports";
+import {
 	contributeTagInsertion,
 	hasTagInsertion,
 } from "../features/tags/contextMenu";
@@ -52,9 +56,18 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			if (hasBlockInsertions(plugin.settings) && hasItems) {
 				submenu.addSeparator();
 			}
-			hasItems =
-				contributeBlockInsertions(submenu, editor, plugin.settings) > 0 ||
-				hasItems;
+			const blockItems = contributeBlockInsertions(
+				submenu,
+				editor,
+				plugin.settings,
+			);
+			hasItems = blockItems > 0 || hasItems;
+
+			if (hasTomlExportAtCursor(editor, plugin.settings)) {
+				if (hasItems) submenu.addSeparator();
+				contributeTomlExports(submenu, editor, plugin.settings);
+				hasItems = true;
+			}
 		},
 	);
 }

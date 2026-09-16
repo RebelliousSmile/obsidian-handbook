@@ -1,0 +1,115 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import type { Editor, Menu } from "obsidian";
+import { MIST_SOURCE_CONVERSION_CODECS } from "schema-in-the-mist";
+import {
+	contributeRenderedTomlExport,
+	contributeTomlExports,
+	hasTomlExportAtCursor,
+} from "../src/features/blocks/tomlExports";
+import { themeCardBlock } from "../src/features/themeCards/block";
+import { replaceSectionBody } from "../src/features/blocks/pasteToml";
+import { normalizeSettings } from "../src/settings/types";
+
+class FakeEditor {
+	constructor(private readonly source: string, private readonly line: number) {}
+
+	getCursor() { return { line: this.line, ch: 0 }; }
+	getValue() { return this.source; }
+}
+
+class FakeItem {
+	title = "";
+	icon = "";
+	action: (() => void) | undefined;
+
+	setTitle(title: string) { this.title = title; return this; }
+	setIcon(icon: string) { this.icon = icon; return this; }
+	onClick(action: () => void) { this.action = action; return this; }
+}
+
+class FakeMenu {
+	items: FakeItem[] = [];
+
+	addItem(configure: (item: FakeItem) => unknown) {
+		const item = new FakeItem();
+		configure(item);
+		this.items.push(item);
+		return item;
+	}
+}
+
+const settings = normalizeSettings(undefined);
+settings.mode = "legend-in-the-mist";
+const source = [
+	"```theme-card",
+	"origin",
+	"circumstance",
+	"{Born in the marsh}",
+	"{Track by moonlight}",
+	"{Know every hidden trail}",
+	"{!Trust strangers too easily}",
+	"```",
+].join("\n");
+const editor = new FakeEditor(source, 3) as unknown as Editor;
+const copied: string[] = [];
+
+Object.defineProperty(globalThis, "navigator", {
+	configurable: true,
+	value: { clipboard: { writeText: async (text: string) => copied.push(text) } },
+});
+
+assert.equal(hasTomlExportAtCursor(editor, settings), true);
+const menu = new FakeMenu();
+assert.equal(contributeTomlExports(menu as unknown as Menu, editor, settings), 1);
+assert.equal(menu.items.length, 1);
+assert.equal(menu.items[0].title, "Copy theme card as TOML");
+assert.equal(menu.items[0].icon, "copy");
+menu.items[0].action?.();
+assert.match(copied[0], /^title_tag = "Born in the marsh"/);
+
+const renderedMenu = new FakeMenu();
+assert.equal(
+	contributeRenderedTomlExport(
+		renderedMenu as unknown as Menu,
+		source.split("\n").slice(1, -1).join("\n"),
+		themeCardBlock,
+	),
+	true,
+);
+assert.equal(renderedMenu.items[0].title, "Copy theme card as TOML");
+
+const outside = new FakeEditor("plain text", 0) as unknown as Editor;
+assert.equal(hasTomlExportAtCursor(outside, settings), false);
+assert.equal(contributeTomlExports(new FakeMenu() as unknown as Menu, outside, settings), 0);
+
+const note = ["# Before", "```theme-card", "old", "```", "# After"].join("\n");
+assert.equal(
+	replaceSectionBody(note, { text: ["```theme-card", "old", "```"].join("\n"), lineStart: 1, lineEnd: 3 }, "old", "title_tag = \"New\""),
+	["# Before", "```theme-card", "title_tag = \"New\"", "```", "# After"].join("\n"),
+);
+assert.equal(
+	replaceSectionBody(note, { text: "old", lineStart: 1, lineEnd: 3 }, "missing", "next"),
+	null,
+);
+
+const contract = JSON.parse(readFileSync("node_modules/schema-in-the-mist/corpus/contract/cases.json", "utf8")) as {
+	cases: { target: keyof typeof MIST_SOURCE_CONVERSION_CODECS; file: string; canonical: string }[];
+};
+const sourceTargets = Object.keys(MIST_SOURCE_CONVERSION_CODECS).sort();
+assert.deepEqual(sourceTargets, [
+	"city-of-mist/danger",
+	"city-of-mist/theme-card",
+	"legend-in-the-mist/challenge",
+	"legend-in-the-mist/journey",
+	"legend-in-the-mist/story-theme",
+	"legend-in-the-mist/theme-kit",
+]);
+for (const target of sourceTargets as (keyof typeof MIST_SOURCE_CONVERSION_CODECS)[]) {
+	const entry = contract.cases.find((candidate) => candidate.target === target && candidate.canonical === "accept");
+	assert.ok(entry, `missing canonical fixture for ${target}`);
+	const raw = readFileSync(join("node_modules/schema-in-the-mist/corpus/contract", entry.file), "utf8");
+	assert.equal(MIST_SOURCE_CONVERSION_CODECS[target].convertToSource(raw).kind, "concise");
+	assert.deepEqual(MIST_SOURCE_CONVERSION_CODECS[target].convertToSource(`${raw}\n# keep`).source, `${raw}\n# keep`);
+}

@@ -19,6 +19,11 @@ import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
+import {
+	contributeRenderedTomlExport,
+	tomlExportForBlock,
+} from "./tomlExports";
+import { pasteTomlIntoRenderedBlock } from "./pasteToml";
 
 const log = logScope("Blocks");
 
@@ -104,6 +109,26 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				log.debug(`Rendering ${id}:`, parsed);
 				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
 				el.appendChild(block.render(parsed, el.doc));
+				const section = ctx.getSectionInfo(el);
+				el.addEventListener("contextmenu", (event) => {
+					const menu = new Menu();
+					if (!contributeRenderedTomlExport(menu, source, block)) {
+						return;
+					}
+					const spec = tomlExportForBlock(block);
+					if (spec?.sourceTarget) {
+						menu.addSeparator();
+						menu.addItem((item) => item
+							.setTitle("Paste TOML from clipboard")
+							.setIcon("clipboard-paste")
+							.onClick(() => {
+								void pasteTomlIntoRenderedBlock(plugin, ctx.sourcePath, section, source, spec);
+							}),
+						);
+					}
+					event.preventDefault();
+					menu.showAtMouseEvent(event);
+				});
 			});
 		}
 	}

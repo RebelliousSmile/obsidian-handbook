@@ -629,6 +629,8 @@ The selected game mode changes more than colors. It also switches which callouts
 
 Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` view inside Obsidian. The target URL is configurable from plugin settings.
 
+For the six shared Mist formats, right-click a rendered block and choose `Paste TOML from clipboard` to bring an export back from Lantern. A schema-owned codec writes concise Handbook source only when it can prove that no content changes; TOML with comments, metadata, unknown fields, or transformed values is kept verbatim.
+
 ## License
 
 - Plugin code: [MIT](LICENSE), originally (c) 4rtamis as Brumes, modifications (c) François-Xavier Guillois

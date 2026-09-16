@@ -1,5 +1,7 @@
-import { Editor, Notice } from "obsidian";
+import { Editor, Menu, Notice } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import type { BrumesSettings } from "../../settings/types";
+import type { MistSourceConversionTarget } from "schema-in-the-mist";
 import { logScope } from "../../utils/logger";
 import { BrumesBlock, blockIds } from "./types";
 import { isAvailableBlock } from "./registry";
@@ -98,6 +100,7 @@ export interface TomlExport<T> {
 	/** How the command and the notices name it, e.g. "theme card". */
 	noun: string;
 	toToml(data: T): string;
+	sourceTarget?: MistSourceConversionTarget;
 	/** What the block is missing, so the notice says what to fix. */
 	describeFailure(source: string): string;
 }
@@ -137,6 +140,55 @@ async function copyAsToml<T>(
 		// eslint-disable-next-line obsidianmd/ui/sentence-case
 		new Notice("Could not write the TOML to the clipboard.");
 	}
+}
+
+/** Add an export action for source already supplied by a rendered block. */
+export function contributeTomlSource<T>(
+	menu: Menu,
+	source: string,
+	spec: TomlExport<T>,
+): void {
+	menu.addItem((item) =>
+		item
+			.setTitle(`Copy ${spec.noun} as TOML`)
+			.setIcon("copy")
+			.onClick(() => {
+				void copyAsToml(source, spec);
+			}),
+	);
+}
+
+/**
+ * Add the one TOML export that applies to the fenced block under the cursor.
+ * The context menu intentionally does not list every format: its location is
+ * the format selector, just as it is for the command palette callback.
+ */
+export function contributeCopyAsToml<T>(
+	menu: Menu,
+	editor: Editor,
+	settings: BrumesSettings,
+	spec: TomlExport<T>,
+): boolean {
+	if (!canCopyAsToml(editor, settings, spec)) {
+		return false;
+	}
+
+	const source = getSourceAtCursor(editor, spec.block)!;
+
+	contributeTomlSource(menu, source, spec);
+	return true;
+}
+
+/** Whether this export applies to the available fenced block at the cursor. */
+export function canCopyAsToml<T>(
+	editor: Editor,
+	settings: BrumesSettings,
+	spec: TomlExport<T>,
+): boolean {
+	return (
+		isAvailableBlock(spec.block, settings) &&
+		getSourceAtCursor(editor, spec.block) !== null
+	);
 }
 
 /**
