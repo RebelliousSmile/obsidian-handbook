@@ -18,6 +18,7 @@ import {
 	describeMissingPart,
 	canCopyAsToml,
 	contributeCopyAsToml,
+	contributeTomlSource,
 	loadCopyAsTomlCommand,
 	TomlExport,
 } from "./copyAsToml";
@@ -230,4 +231,20 @@ export function hasTomlExportAtCursor(
 	settings: BrumesSettings,
 ): boolean {
 	return TOML_EXPORTS.some((spec) => canCopyAsToml(editor, settings, spec));
+}
+
+/** Add an export for a rendered block, whose processor already owns its source. */
+export function contributeRenderedTomlExport(
+	menu: Menu,
+	source: string,
+	block: TomlExport<unknown>["block"],
+): boolean {
+	for (const spec of TOML_EXPORTS) {
+		if (spec.block === block) {
+			contributeTomlSource(menu, source, spec);
+			return true;
+		}
+	}
+
+	return false;
 }

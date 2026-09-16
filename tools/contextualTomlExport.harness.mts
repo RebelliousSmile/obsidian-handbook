@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import type { Editor, Menu } from "obsidian";
 import {
+	contributeRenderedTomlExport,
 	contributeTomlExports,
 	hasTomlExportAtCursor,
 } from "../src/features/blocks/tomlExports";
+import { themeCardBlock } from "../src/features/themeCards/block";
 import { normalizeSettings } from "../src/settings/types";
 
 class FakeEditor {
@@ -62,6 +64,17 @@ assert.equal(menu.items[0].title, "Copy theme card as TOML");
 assert.equal(menu.items[0].icon, "copy");
 menu.items[0].action?.();
 assert.match(copied[0], /^title_tag = "Born in the marsh"/);
+
+const renderedMenu = new FakeMenu();
+assert.equal(
+	contributeRenderedTomlExport(
+		renderedMenu as unknown as Menu,
+		source.split("\n").slice(1, -1).join("\n"),
+		themeCardBlock,
+	),
+	true,
+);
+assert.equal(renderedMenu.items[0].title, "Copy theme card as TOML");
 
 const outside = new FakeEditor("plain text", 0) as unknown as Editor;
 assert.equal(hasTomlExportAtCursor(outside, settings), false);

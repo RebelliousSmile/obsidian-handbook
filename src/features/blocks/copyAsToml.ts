@@ -140,6 +140,22 @@ async function copyAsToml<T>(
 	}
 }
 
+/** Add an export action for source already supplied by a rendered block. */
+export function contributeTomlSource<T>(
+	menu: Menu,
+	source: string,
+	spec: TomlExport<T>,
+): void {
+	menu.addItem((item) =>
+		item
+			.setTitle(`Copy ${spec.noun} as TOML`)
+			.setIcon("copy")
+			.onClick(() => {
+				void copyAsToml(source, spec);
+			}),
+	);
+}
+
 /**
  * Add the one TOML export that applies to the fenced block under the cursor.
  * The context menu intentionally does not list every format: its location is
@@ -157,14 +173,7 @@ export function contributeCopyAsToml<T>(
 
 	const source = getSourceAtCursor(editor, spec.block)!;
 
-	menu.addItem((item) =>
-		item
-			.setTitle(`Copy ${spec.noun} as TOML`)
-			.setIcon("copy")
-			.onClick(() => {
-				void copyAsToml(source, spec);
-			}),
-	);
+	contributeTomlSource(menu, source, spec);
 	return true;
 }
 
