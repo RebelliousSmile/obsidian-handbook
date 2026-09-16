@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.15.1] - 2026-09-16
+
+### Fixed
+
+- Render note-local Markdown columns in Obsidian reading view and restore them after Obsidian refreshes the rendered blocks.
+
 ## [2.15.0] - 2026-09-15
 
 ### Added
