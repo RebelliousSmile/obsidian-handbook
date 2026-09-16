@@ -9,7 +9,14 @@ import {
 	hasTomlExportAtCursor,
 } from "../src/features/blocks/tomlExports";
 import { themeCardBlock } from "../src/features/themeCards/block";
-import { replaceSectionBody } from "../src/features/blocks/pasteToml";
+import { themeKitBlock } from "../src/features/themeKits/block";
+import {
+	contributeRenderedTomlPaste,
+	rememberRenderedTomlContext,
+	replaceSectionBody,
+	tomlToBlockSource,
+} from "../src/features/blocks/pasteToml";
+import { tomlExportForBlock } from "../src/features/blocks/tomlExports";
 import { normalizeSettings } from "../src/settings/types";
 
 class FakeEditor {
@@ -79,6 +86,55 @@ assert.equal(
 	true,
 );
 assert.equal(renderedMenu.items[0].title, "Copy theme card as TOML");
+
+const renderedPlugin = {} as BrumesPlugin;
+rememberRenderedTomlContext(renderedPlugin, {
+	sourcePath: "theme-card.md",
+	section: null,
+	renderedSource: source.split("\n").slice(1, -1).join("\n"),
+	spec: tomlExportForBlock(themeCardBlock)!,
+});
+const nativeMenu = new FakeMenu();
+assert.equal(
+	contributeRenderedTomlPaste(nativeMenu as unknown as Menu, renderedPlugin),
+	true,
+);
+assert.equal(nativeMenu.items[0].title, "Paste toml into theme card");
+
+const mismatchedThemeToml = [
+	'title_tag = "The Village I Left Behind"',
+	'level = "origin"',
+	'power_tags = ["knows every face in town"]',
+].join("\n");
+const themeKitSpec = tomlExportForBlock(themeKitBlock)!;
+assert.equal(tomlToBlockSource(mismatchedThemeToml, themeKitSpec), null);
+assert.ok(
+	tomlToBlockSource(
+		mismatchedThemeToml,
+		tomlExportForBlock(themeCardBlock)!,
+	),
+);
+
+const lanternStoryThemeToml = [
+	'title_tag = "The Village I Left Behind"',
+	'level = "origin"',
+	'category = "Past"',
+	'power_tags = [ "knows every face in town", "mother\'s recipes", "reads the weather in the hills" ]',
+	'weakness_tags = [ "they still expect me back" ]',
+	'quest = "Return to the village and face what I owe the people I abandoned."',
+	'improve = 2',
+	"",
+	"[meta]",
+	'publication_type = "homebrew"',
+	'authors = [ "4rtamis" ]',
+].join("\n");
+assert.ok(
+	tomlToBlockSource(
+		lanternStoryThemeToml,
+		tomlExportForBlock(themeCardBlock)!,
+	),
+	"Lantern story-theme TOML must be accepted by a theme-card",
+);
 
 const outside = new FakeEditor("plain text", 0) as unknown as Editor;
 assert.equal(hasTomlExportAtCursor(outside, settings), false);

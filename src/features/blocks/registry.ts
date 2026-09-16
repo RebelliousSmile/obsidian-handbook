@@ -20,10 +20,9 @@ import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
 import {
-	contributeRenderedTomlExport,
 	tomlExportForBlock,
 } from "./tomlExports";
-import { pasteTomlIntoRenderedBlock } from "./pasteToml";
+import { rememberRenderedTomlContext } from "./pasteToml";
 
 const log = logScope("Blocks");
 
@@ -110,26 +109,25 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
 				const rendered = block.render(parsed, el.doc);
 				el.appendChild(rendered);
-				const section = ctx.getSectionInfo(el);
-				rendered.addEventListener("contextmenu", (event) => {
-					const menu = new Menu();
-					if (!contributeRenderedTomlExport(menu, source, block)) {
-						return;
-					}
-					const spec = tomlExportForBlock(block);
-					if (spec?.sourceTarget) {
-						menu.addSeparator();
-						menu.addItem((item) => item
-							.setTitle("Paste toml from clipboard")
-							.setIcon("clipboard-paste")
-							.onClick(() => {
-								void pasteTomlIntoRenderedBlock(plugin, ctx.sourcePath, section, source, spec);
-							}),
-						);
-					}
-					event.preventDefault();
-					menu.showAtMouseEvent(event);
-				});
+				// Older Obsidian builds render the block but do not expose section
+				// metadata. The context menu must still be usable (and visible).
+				const section = typeof ctx.getSectionInfo === "function"
+					? ctx.getSectionInfo(el)
+					: null;
+				const spec = tomlExportForBlock(block);
+				if (spec?.sourceTarget) {
+					const rememberRightClick = (event: MouseEvent) => {
+						if (event.button !== 2 && (event.buttons & 2) === 0) return;
+						rememberRenderedTomlContext(plugin, {
+							sourcePath: ctx.sourcePath,
+							section,
+							renderedSource: source,
+							spec,
+						});
+					};
+					el.addEventListener("pointerdown", rememberRightClick, { capture: true });
+					el.addEventListener("mousedown", rememberRightClick, { capture: true });
+				}
 			});
 		}
 	}

@@ -113,7 +113,7 @@ function hasRegion(parent: HTMLElement, region: LayoutRegion): boolean {
 }
 
 class RegionObserverChild extends MarkdownRenderChild {
-	// eslint-disable-next-line obsidianmd/prefer-active-doc -- false positive on the constructor keyword.
+
 	constructor(containerEl: HTMLElement, private readonly observer: MutationObserver) {
 		super(containerEl);
 	}

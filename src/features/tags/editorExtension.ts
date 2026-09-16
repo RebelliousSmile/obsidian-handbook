@@ -20,7 +20,7 @@ export function brumesEditorExtension(): Extension {
 			class {
 				decorations: DecorationSet = Decoration.none;
 
-				// eslint-disable-next-line obsidianmd/prefer-active-doc
+
 				constructor(view: EditorView) {
 					tagLog.info("Initialized editor decorations for view");
 					this.decorations = this.buildDecorations(view);

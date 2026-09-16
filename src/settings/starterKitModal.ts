@@ -4,7 +4,7 @@ import { STARTER_KITS, StarterKit } from "../games/starterKits";
 
 /** First-run choice for marketplace and core installs with no game pack. */
 export class StarterKitModal extends Modal {
-	// eslint-disable-next-line obsidianmd/prefer-active-doc
+
 	constructor(
 		app: App,
 		private readonly plugin: BrumesPlugin,

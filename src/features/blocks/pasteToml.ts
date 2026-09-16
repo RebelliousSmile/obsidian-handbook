@@ -1,9 +1,69 @@
-import { Notice, TFile } from "obsidian";
+import { Menu, Notice, TFile } from "obsidian";
 import type { MarkdownSectionInformation } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import { MIST_SOURCE_CONVERSION_CODECS } from "schema-in-the-mist";
 import { looksLikeToml } from "./schemaValues";
 import type { TomlExport } from "./copyAsToml";
+
+interface RenderedTomlContext {
+	sourcePath: string;
+	section: MarkdownSectionInformation | null;
+	renderedSource: string;
+	spec: TomlExport<unknown>;
+	rememberedAt: number;
+}
+
+const renderedTomlContexts = new WeakMap<BrumesPlugin, RenderedTomlContext>();
+const RENDERED_TOML_CONTEXT_LIFETIME_MS = 30_000;
+
+/** Remember the card that received the right mouse button before Obsidian opens its editor menu. */
+export function rememberRenderedTomlContext(
+	plugin: BrumesPlugin,
+	context: Omit<RenderedTomlContext, "rememberedAt">,
+): void {
+	renderedTomlContexts.set(plugin, { ...context, rememberedAt: Date.now() });
+}
+
+/** Add the paste action to Obsidian's own menu for the card just right-clicked. */
+export function contributeRenderedTomlPaste(menu: Menu, plugin: BrumesPlugin): boolean {
+	const context = renderedTomlContexts.get(plugin);
+	if (!context || Date.now() - context.rememberedAt > RENDERED_TOML_CONTEXT_LIFETIME_MS) {
+		return false;
+	}
+
+	menu.addItem((item) => item
+		.setTitle(`Paste toml into ${context.spec.noun}`)
+		.setIcon("clipboard-paste")
+		.onClick(() => {
+			void pasteTomlIntoRenderedBlock(
+				plugin,
+				context.sourcePath,
+				context.section,
+				context.renderedSource,
+				context.spec,
+			);
+		}),
+	);
+	return true;
+}
+
+/** Convert a clipboard document only when the target block can render the result. */
+export function tomlToBlockSource<T>(
+	clipboard: string,
+	spec: TomlExport<T>,
+): string | null {
+	if (!spec.sourceTarget || !looksLikeToml(clipboard)) {
+		return null;
+	}
+
+	try {
+		const source = MIST_SOURCE_CONVERSION_CODECS[spec.sourceTarget]
+			.convertToSource(clipboard).source;
+		return spec.block.parse(source) === null ? null : source;
+	} catch {
+		return null;
+	}
+}
 
 export function replaceSectionBody(
 	note: string,
@@ -42,17 +102,9 @@ export async function pasteTomlIntoRenderedBlock<T>(
 		return;
 	}
 
-	if (!spec.sourceTarget || !looksLikeToml(clipboard)) {
-		new Notice(`Clipboard does not contain a valid ${spec.noun} TOML document.`);
-		return;
-	}
-
-	let replacement: string;
-	try {
-		replacement = MIST_SOURCE_CONVERSION_CODECS[spec.sourceTarget]
-			.convertToSource(clipboard).source;
-	} catch {
-		new Notice(`Clipboard does not contain a valid ${spec.noun} TOML document.`);
+	const replacement = tomlToBlockSource(clipboard, spec);
+	if (replacement === null) {
+		new Notice(`Clipboard does not match this ${spec.noun} TOML document.`);
 		return;
 	}
 

@@ -28,7 +28,7 @@ const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
 export class BrumesSettingTab extends PluginSettingTab {
 	plugin: BrumesPlugin;
 
-	// eslint-disable-next-line obsidianmd/prefer-active-doc
+
 	constructor(app: App, plugin: BrumesPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -36,7 +36,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	// Obsidian still invokes this lifecycle method; the replacement API is not
 	// available across Handbook's supported Obsidian range yet.
-	// eslint-disable-next-line @typescript-eslint/no-deprecated
+
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -67,7 +67,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									await this.plugin.saveSettings({
 										refreshMarkdown: true,
 									});
-									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+
 									this.redisplay();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
@@ -167,7 +167,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 								this.plugin.settings.gameVariants[registration.pack.id] =
 									value;
 								await this.plugin.saveSettings({ refreshMarkdown: true });
-								// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+
 								this.redisplay();
 							},
 							SETTINGS_SAVE_LOG_MESSAGE,
@@ -298,7 +298,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 									this.plugin.settings.features.lanternIntegration =
 										value;
 									await this.plugin.saveSettings();
-									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+
 									this.redisplay();
 								},
 								SETTINGS_SAVE_LOG_MESSAGE,
@@ -658,7 +658,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							.setTooltip("Modifier")
 							.onClick(() => {
 								new CalloutsModal(this.app, this.plugin, entry, () => {
-									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+
 									this.redisplay();
 								}).open();
 							}),
@@ -678,7 +678,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 												(c) => c.id !== entry.id,
 										);
 									await this.plugin.saveSettings();
-									// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+
 									this.redisplay();
 									},
 									SETTINGS_SAVE_LOG_MESSAGE,
@@ -693,7 +693,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting.addButton((button) =>
 				button.setButtonText("+ nouveau callout").onClick(() => {
 					new CalloutsModal(this.app, this.plugin, null, () => {
-						// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
+
 						this.redisplay();
 					}).open();
 				}),

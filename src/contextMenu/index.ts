@@ -8,6 +8,7 @@ import {
 	contributeTomlExports,
 	hasTomlExportAtCursor,
 } from "../features/blocks/tomlExports";
+import { contributeRenderedTomlPaste } from "../features/blocks/pasteToml";
 import {
 	contributeTagInsertion,
 	hasTagInsertion,
@@ -53,7 +54,13 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			);
 			hasItems = hasItems || calloutItems > 0;
 
-			if (hasBlockInsertions(plugin.settings) && hasItems) {
+			if (hasItems) {
+				submenu.addSeparator();
+			}
+			const renderedPasteItems = contributeRenderedTomlPaste(submenu, plugin);
+			hasItems = hasItems || renderedPasteItems;
+
+			if (hasBlockInsertions(plugin.settings) && renderedPasteItems) {
 				submenu.addSeparator();
 			}
 			const blockItems = contributeBlockInsertions(
@@ -63,10 +70,10 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			);
 			hasItems = blockItems > 0 || hasItems;
 
-			if (hasTomlExportAtCursor(editor, plugin.settings)) {
+			const hasTomlExport = hasTomlExportAtCursor(editor, plugin.settings);
+			if (hasTomlExport) {
 				if (hasItems) submenu.addSeparator();
 				contributeTomlExports(submenu, editor, plugin.settings);
-				hasItems = true;
 			}
 		},
 	);

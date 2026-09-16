@@ -10,7 +10,7 @@ export class LanternView extends ItemView {
 	private loadingOverlayEl: HTMLDivElement | null = null;
 	private iframeEl: HTMLIFrameElement | null = null;
 
-	// eslint-disable-next-line obsidianmd/prefer-active-doc
+
 	constructor(leaf: WorkspaceLeaf, plugin: BrumesPlugin) {
 		super(leaf);
 		this.plugin = plugin;

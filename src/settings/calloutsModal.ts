@@ -46,7 +46,7 @@ export class CalloutsModal extends Modal {
 
 	private errorEl: HTMLElement | null = null;
 
-	// eslint-disable-next-line obsidianmd/prefer-active-doc -- false positive: the rule matches the literal token "constructor", not a `window` reference.
+
 	constructor(
 		app: App,
 		plugin: BrumesPlugin,

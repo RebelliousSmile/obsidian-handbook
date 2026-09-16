@@ -24,7 +24,7 @@ const LEVEL_STYLES: Record<LogLevel, string> = {
 class Logger {
 	private context: string;
 
-	// eslint-disable-next-line obsidianmd/prefer-active-doc
+
 	constructor(context = "Handbook") {
 		this.context = context;
 	}
