@@ -1,4 +1,6 @@
+import type { Editor, Menu } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import type { BrumesSettings } from "../../settings/types";
 import { validatedMistSerializer } from "../../contracts/mist-engine";
 import { challengeBlock } from "../challenges/block";
 import { challengeToToml } from "../challenges/schema";
@@ -14,6 +16,8 @@ import { themeKitBlock } from "../themeKits/block";
 import { themeKitToToml } from "../themeKits/schema";
 import {
 	describeMissingPart,
+	canCopyAsToml,
+	contributeCopyAsToml,
 	loadCopyAsTomlCommand,
 	TomlExport,
 } from "./copyAsToml";
@@ -203,4 +207,27 @@ export function loadTomlExportCommands(plugin: BrumesPlugin): void {
 	for (const spec of TOML_EXPORTS) {
 		loadCopyAsTomlCommand(plugin, spec);
 	}
+}
+
+/** Add the single clipboard export that matches the fenced block at the cursor. */
+export function contributeTomlExports(
+	menu: Menu,
+	editor: Editor,
+	settings: BrumesSettings,
+): number {
+	for (const spec of TOML_EXPORTS) {
+		if (contributeCopyAsToml(menu, editor, settings, spec)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/** Whether any available TOML export applies to the fenced block at the cursor. */
+export function hasTomlExportAtCursor(
+	editor: Editor,
+	settings: BrumesSettings,
+): boolean {
+	return TOML_EXPORTS.some((spec) => canCopyAsToml(editor, settings, spec));
 }

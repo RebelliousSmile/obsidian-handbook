@@ -1,5 +1,6 @@
-import { Editor, Notice } from "obsidian";
+import { Editor, Menu, Notice } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import type { BrumesSettings } from "../../settings/types";
 import { logScope } from "../../utils/logger";
 import { BrumesBlock, blockIds } from "./types";
 import { isAvailableBlock } from "./registry";
@@ -137,6 +138,46 @@ async function copyAsToml<T>(
 		// eslint-disable-next-line obsidianmd/ui/sentence-case
 		new Notice("Could not write the TOML to the clipboard.");
 	}
+}
+
+/**
+ * Add the one TOML export that applies to the fenced block under the cursor.
+ * The context menu intentionally does not list every format: its location is
+ * the format selector, just as it is for the command palette callback.
+ */
+export function contributeCopyAsToml<T>(
+	menu: Menu,
+	editor: Editor,
+	settings: BrumesSettings,
+	spec: TomlExport<T>,
+): boolean {
+	if (!canCopyAsToml(editor, settings, spec)) {
+		return false;
+	}
+
+	const source = getSourceAtCursor(editor, spec.block)!;
+
+	menu.addItem((item) =>
+		item
+			.setTitle(`Copy ${spec.noun} as TOML`)
+			.setIcon("copy")
+			.onClick(() => {
+				void copyAsToml(source, spec);
+			}),
+	);
+	return true;
+}
+
+/** Whether this export applies to the available fenced block at the cursor. */
+export function canCopyAsToml<T>(
+	editor: Editor,
+	settings: BrumesSettings,
+	spec: TomlExport<T>,
+): boolean {
+	return (
+		isAvailableBlock(spec.block, settings) &&
+		getSourceAtCursor(editor, spec.block) !== null
+	);
 }
 
 /**
