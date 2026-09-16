@@ -58,7 +58,7 @@
 		"postcss": "8.5.6",
 		"postcss-selector-parser": "7.1.0",
 		"schema-adrenaline": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz",
-		"schema-in-the-mist": "https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.0.0/schema-in-the-mist-1.0.0.tgz",
+		"schema-in-the-mist": "https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.3.0/schema-in-the-mist-1.3.0.tgz",
 		"schema-pbta": "https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz",
 		"smol-toml": "^1.8.0"
 	},

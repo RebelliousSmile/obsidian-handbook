@@ -1,6 +1,7 @@
 import { Editor, Menu, Notice } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import type { BrumesSettings } from "../../settings/types";
+import type { MistSourceConversionTarget } from "schema-in-the-mist";
 import { logScope } from "../../utils/logger";
 import { BrumesBlock, blockIds } from "./types";
 import { isAvailableBlock } from "./registry";
@@ -99,6 +100,7 @@ export interface TomlExport<T> {
 	/** How the command and the notices name it, e.g. "theme card". */
 	noun: string;
 	toToml(data: T): string;
+	sourceTarget?: MistSourceConversionTarget;
 	/** What the block is missing, so the notice says what to fix. */
 	describeFailure(source: string): string;
 }

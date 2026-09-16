@@ -58,6 +58,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-theme-card-as-toml",
 		noun: "theme card",
 		toToml: validatedMistSerializer("legend-in-the-mist/story-theme", themeCardToToml),
+		sourceTarget: "legend-in-the-mist/story-theme",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -69,6 +70,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-challenge-as-toml",
 		noun: "challenge",
 		toToml: validatedMistSerializer("legend-in-the-mist/challenge", challengeToToml),
+		sourceTarget: "legend-in-the-mist/challenge",
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must open with the challenge name"),
 	},
@@ -77,6 +79,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-journey-as-toml",
 		noun: "journey",
 		toToml: validatedMistSerializer("legend-in-the-mist/journey", journeyToToml),
+		sourceTarget: "legend-in-the-mist/journey",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -88,6 +91,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-theme-kit-as-toml",
 		noun: "theme kit",
 		toToml: validatedMistSerializer("legend-in-the-mist/theme-kit", themeKitToToml),
+		sourceTarget: "legend-in-the-mist/theme-kit",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -99,6 +103,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-com-theme-card-as-toml",
 		noun: "city theme card",
 		toToml: validatedMistSerializer("city-of-mist/theme-card", comThemeCardToToml),
+		sourceTarget: "city-of-mist/theme-card",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -110,6 +115,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-danger-as-toml",
 		noun: "danger",
 		toToml: validatedMistSerializer("city-of-mist/danger", comDangerToToml),
+		sourceTarget: "city-of-mist/danger",
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -247,4 +253,11 @@ export function contributeRenderedTomlExport(
 	}
 
 	return false;
+}
+
+/** Resolve the TOML contract that owns a rendered block. */
+export function tomlExportForBlock(
+	block: TomlExport<unknown>["block"],
+): TomlExport<unknown> | null {
+	return TOML_EXPORTS.find((spec) => spec.block === block) ?? null;
 }

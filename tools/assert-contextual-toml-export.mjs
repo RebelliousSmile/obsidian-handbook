@@ -15,6 +15,7 @@ export class Menu {}
 export class MenuItem {}
 export class Editor {}
 export class Plugin {}
+export class TFile {}
 `,
 );
 
