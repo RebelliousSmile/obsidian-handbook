@@ -96,7 +96,8 @@ def wait_for(expression, timeout=30):
         if evaluate(expression):
             return
         time.sleep(0.2)
-    raise RuntimeError(f"Timed out waiting for: {expression}")
+    diagnostic = evaluate("JSON.stringify({enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), isEnabled: app.plugins?.isEnabled?.(), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), buttons: [...document.querySelectorAll('.modal-container button')].map(button => button.innerText), files: app.vault.getFiles().map(file => file.path).slice(0, 10)})")
+    raise RuntimeError(f"Timed out waiting for: {expression}; state: {diagnostic}")
 
 
 def screenshot(filename):
@@ -123,6 +124,19 @@ def set_width(width):
 
 
 wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
+wait_for("Boolean(app.vault.getAbstractFileByPath('layout-regions-probe.md'))")
+# Obsidian asks whether to trust a first-time vault that already has plugins.
+# This vault and its only plugin were created by the journey itself.
+wait_for("""
+    (() => {
+      const trustModal = document.querySelector('.mod-trust-folder');
+      const trustButton = [...(trustModal?.querySelectorAll('button') || [])]
+        .find(button => button.textContent?.includes('Trust author and enable plugins'));
+      trustButton?.click();
+      return app.plugins.isEnabled() && !document.querySelector('.mod-trust-folder');
+    })()
+    """)
+wait_for("Boolean(app.plugins.plugins['obsidian-handbook'])")
 opened = evaluate(
     """
     (async () => {
@@ -139,10 +153,16 @@ if not opened:
     )
     raise RuntimeError(f"The layout-region probe could not be opened: {visible}")
 
+if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") == "preview":
+    evaluate("app.commands.executeCommandById('markdown:toggle-preview')")
+    wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'source'")
 if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") != "preview":
     evaluate("app.commands.executeCommandById('markdown:toggle-preview')")
+    wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
+evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
 
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
+wait_for("(() => { document.querySelectorAll('.modal-container .modal-header-button, .modal-container .modal-close-button').forEach(button => button.click()); return !document.querySelector('.modal-container'); })()")
 set_width(1200)
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
 wide = evaluate(
@@ -163,11 +183,60 @@ if wide != [
     raise RuntimeError(f"Unexpected wide layout: {wide}")
 screenshot("layout-regions-wide.png")
 
+# A game theme can also flow the complete note into two editorial columns.
+# A local layout region needs the full note width for its own three columns.
+game_classes = ["brumes--adrenaline", "brumes--urban-shadows", "brumes--monsterhearts"]
+original_game_classes = json.loads(evaluate(
+    "JSON.stringify([...document.body.classList].filter(name => name.startsWith('brumes--')))"
+))
+evaluate("document.body.classList.remove('brumes--adrenaline', 'brumes--urban-shadows', 'brumes--monsterhearts')")
+evaluate("document.body.classList.add('brumes--adrenaline')")
+adrenaline = json.loads(evaluate("""
+    JSON.stringify({
+      editorialColumns: getComputedStyle(document.querySelector('.markdown-preview-sizer')).columnCount,
+      regionColumns: getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length
+    })
+    """))
+if adrenaline != {"editorialColumns": "1", "regionColumns": 3}:
+    raise RuntimeError(f"Adrenaline theme fragmented the three-column region: {adrenaline}")
+evaluate("document.body.classList.remove('brumes--adrenaline')")
+evaluate("document.body.classList.add('brumes--monsterhearts')")
+evaluate("app.workspace.leftSplit.collapse()")
+set_width(750)
+wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
+game_layout = json.loads(evaluate("""
+    JSON.stringify((() => {
+      const sizer = document.querySelector('.markdown-preview-sizer');
+      const region = document.querySelector('.handbook-layout-region');
+      const columns = [...region.children].map(column => ({
+        left: column.getBoundingClientRect().left,
+        top: column.getBoundingClientRect().top
+      }));
+      return {
+        editorialColumns: getComputedStyle(sizer).columnCount,
+        regionColumns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length,
+        sizerWidth: sizer.getBoundingClientRect().width,
+        sectionWidth: region.parentElement.getBoundingClientRect().width,
+        columns
+      };
+    })())
+    """))
+if game_layout["editorialColumns"] != "1" or game_layout["regionColumns"] != 3 or not (
+    game_layout["columns"][0]["left"] < game_layout["columns"][1]["left"] < game_layout["columns"][2]["left"]
+) or len({column["top"] for column in game_layout["columns"]}) != 1:
+    raise RuntimeError(f"Game theme fragmented the three-column region: {game_layout}")
+screenshot("layout-regions-game-theme.png")
+evaluate("document.body.classList.remove('brumes--monsterhearts')")
+for game_class in original_game_classes:
+    if game_class in game_classes:
+        evaluate(f"document.body.classList.add('{game_class}')")
+set_width(1200)
+
 evaluate("document.querySelector('.markdown-preview-section').style.width = '500px'")
-wait_for("getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 1")
+wait_for("document.querySelector('.handbook-layout-region') && getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 1")
 screenshot("layout-regions-narrow-pane.png")
 evaluate("document.querySelector('.markdown-preview-section').style.removeProperty('width')")
-wait_for("getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 3")
+wait_for("document.querySelector('.handbook-layout-region') && getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 3")
 
 set_width(600)
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
@@ -180,4 +249,4 @@ if narrow != [{"columns": 1, "blocks": 3}, {"columns": 1, "blocks": 0}]:
     raise RuntimeError(f"Unexpected narrow layout: {narrow}")
 screenshot("layout-regions-narrow.png")
 
-print(json.dumps({"narrow": narrow, "screenshots": ["layout-regions-wide.png", "layout-regions-narrow-pane.png", "layout-regions-narrow.png"], "wide": wide}))
+print(json.dumps({"adrenaline": adrenaline, "game": game_layout, "narrow": narrow, "screenshots": ["layout-regions-wide.png", "layout-regions-game-theme.png", "layout-regions-narrow-pane.png", "layout-regions-narrow.png"], "wide": wide}))

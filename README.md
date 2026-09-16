@@ -197,9 +197,11 @@ Son contenu.
 <!-- /handbook-layout -->
 ```
 
-`columns=3` répartit ces sections sur trois colonnes lorsque la largeur du
-panneau de lecture le permet, puis revient automatiquement à une seule colonne
-si ce panneau est étroit. Pour garder un tableau ou un bloc large dans une zone
+`columns=3` répartit ces sections sur trois colonnes tant que la zone de contenu
+de la note dépasse 520 px ; à 520 px ou moins, elle revient à une seule colonne.
+Dans les modes Adrenaline, Urban Shadows et Monsterhearts, une note qui contient
+une région explicite utilise toute cette largeur au lieu des deux colonnes
+éditoriales du thème. Pour garder un tableau ou un bloc large dans une zone
 isolée, utilisez la même syntaxe avec `columns=1` :
 
 ```markdown

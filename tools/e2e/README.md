@@ -34,13 +34,12 @@ The command writes `REPORT.md`, one screenshot per journey step, downloaded comp
 
 ## Layout regions
 
-`layout-regions-journey.ps1` exercises the note-local column feature on
-Windows. It refuses to run while Obsidian is already open, creates a new vault
-under the system temporary directory, copies the compiled Handbook assets into
-that vault, and opens its probe through the Obsidian URI. It verifies a
-three-column region at 1200 px and the one-column responsive fallback at 600
-px, then stops only the process tree it created and removes the temporary
-vault.
+`layout-regions-journey.ps1` on Windows and `layout-regions-journey.sh` on Linux
+exercise the same committed Markdown fixture and CDP assertions in a temporary
+vault. They verify three columns at 1200 px with and without the Adrenaline
+editorial theme, three columns in a 750 px window with the Monsterhearts theme,
+and the one-column fallback in a narrow pane and at 600 px. The temporary vault
+is removed after the run.
 
 Prerequisites:
 
@@ -53,3 +52,13 @@ Run, with Obsidian closed:
 ```powershell
 pnpm e2e:layout-regions
 ```
+
+On Linux, set the executable path to an Obsidian AppImage. The screenshots and
+Obsidian log remain in the printed output directory:
+
+```bash
+HANDBOOK_E2E_OBSIDIAN=/absolute/path/to/Obsidian.AppImage pnpm e2e:layout-regions:linux
+```
+
+`HANDBOOK_E2E_CDP_PORT` changes the default port 9232, and
+`HANDBOOK_E2E_OUTPUT_DIR` selects a persistent output directory.

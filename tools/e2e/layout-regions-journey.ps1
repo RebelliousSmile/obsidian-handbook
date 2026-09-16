@@ -37,46 +37,7 @@ try {
 	Copy-Item -LiteralPath (Join-Path $repositoryRoot "dist\manifest.json") -Destination $pluginRoot
 	Copy-Item -LiteralPath (Join-Path $repositoryRoot "dist\styles.css") -Destination $pluginRoot
 	Set-Content -LiteralPath (Join-Path $vaultRoot ".obsidian\community-plugins.json") -Value '["obsidian-handbook"]'
-	Set-Content -LiteralPath $probePath -Value @'
-# Layout regions probe
-
-<!-- handbook-layout: columns=3 -->
-
-## One
-
-First section.
-
-> [!info] First block
-> This callout stays in the first column.
-
-## Two
-
-Second section.
-
-> [!info] Second block
-> This callout stays in the second column.
-
-## Three
-
-Third section.
-
-> [!info] Third block
-> This callout stays in the third column.
-
-<!-- /handbook-layout -->
-
-<!-- handbook-layout: columns=1 -->
-
-| Wide | Table |
-| --- | --- |
-| One | Two |
-
-<!-- /handbook-layout -->
-
-## Outside
-
-This heading stays outside every region.
-'@
+	Copy-Item -LiteralPath (Join-Path $PSScriptRoot "fixtures\layout-regions-probe.md") -Destination $probePath
 
 	$arguments = "--remote-debugging-port=$Port --remote-allow-origins=*"
 	$process = Start-Process -FilePath $ObsidianPath -ArgumentList $arguments -WindowStyle Hidden -PassThru

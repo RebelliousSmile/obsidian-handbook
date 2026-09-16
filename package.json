@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.15.2",
+	"version": "2.15.3",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"scripts": {
@@ -20,6 +20,7 @@
 		"assert:starter-kits": "node tools/assert-starter-kits.mjs",
 		"e2e:request-url": "bash tools/e2e/request-url-journey.sh",
 		"e2e:layout-regions": "powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1",
+		"e2e:layout-regions:linux": "bash tools/e2e/layout-regions-journey.sh",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",
 		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",

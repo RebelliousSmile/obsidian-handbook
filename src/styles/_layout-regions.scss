@@ -18,7 +18,16 @@
 	container-type: inline-size;
 }
 
-@container (max-width: 640px) {
+// The game themes flow the entire note into editorial columns. A note with an
+// explicit layout region needs its full width so the grid can size its columns.
+:is(.brumes--adrenaline, .brumes--urban-shadows, .brumes--monsterhearts)
+	.markdown-reading-view
+	.markdown-preview-sizer:has(> .handbook-layout-region) {
+	column-count: 1;
+	column-rule: none;
+}
+
+@container (max-width: 520px) {
 	.handbook-layout-region {
 		grid-template-columns: minmax(0, 1fr);
 	}
