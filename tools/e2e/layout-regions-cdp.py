@@ -177,7 +177,7 @@ wide = evaluate(
 )
 wide = json.loads(wide)
 if wide != [
-    {"children": 3, "columns": 3, "variable": "3", "blocks": 3},
+    {"children": 6, "columns": 3, "variable": "3", "blocks": 11},
     {"children": 1, "columns": 1, "variable": "1", "blocks": 0},
 ]:
     raise RuntimeError(f"Unexpected wide layout: {wide}")
@@ -223,7 +223,11 @@ game_layout = json.loads(evaluate("""
     """))
 if game_layout["editorialColumns"] != "1" or game_layout["regionColumns"] != 3 or not (
     game_layout["columns"][0]["left"] < game_layout["columns"][1]["left"] < game_layout["columns"][2]["left"]
-) or len({column["top"] for column in game_layout["columns"]}) != 1:
+    and game_layout["columns"][3]["left"] < game_layout["columns"][4]["left"] < game_layout["columns"][5]["left"]
+    and game_layout["columns"][0]["top"] == game_layout["columns"][1]["top"] == game_layout["columns"][2]["top"]
+    and game_layout["columns"][3]["top"] == game_layout["columns"][4]["top"] == game_layout["columns"][5]["top"]
+    and game_layout["columns"][0]["top"] < game_layout["columns"][3]["top"]
+):
     raise RuntimeError(f"Game theme fragmented the three-column region: {game_layout}")
 screenshot("layout-regions-game-theme.png")
 evaluate("document.body.classList.remove('brumes--monsterhearts')")
@@ -245,7 +249,7 @@ narrow = json.loads(
         "JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length, blocks: region.querySelectorAll('.callout').length})))"
     )
 )
-if narrow != [{"columns": 1, "blocks": 3}, {"columns": 1, "blocks": 0}]:
+if narrow != [{"columns": 1, "blocks": 11}, {"columns": 1, "blocks": 0}]:
     raise RuntimeError(f"Unexpected narrow layout: {narrow}")
 screenshot("layout-regions-narrow.png")
 
