@@ -38,7 +38,7 @@ export async function pasteTomlIntoRenderedBlock<T>(
 	try {
 		clipboard = await navigator.clipboard.readText();
 	} catch {
-		new Notice("Could not read TOML from the clipboard.");
+		new Notice("Could not read toml from the clipboard.");
 		return;
 	}
 

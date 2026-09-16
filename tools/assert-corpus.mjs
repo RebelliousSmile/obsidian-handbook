@@ -32,6 +32,7 @@ export class PluginSettingTab {}
 export class Setting {}
 export class Modal {}
 export class ItemView {}
+export class TFile {}
 export function setIcon() {}
 `,
 );

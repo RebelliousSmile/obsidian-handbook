@@ -120,7 +120,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 					if (spec?.sourceTarget) {
 						menu.addSeparator();
 						menu.addItem((item) => item
-							.setTitle("Paste TOML from clipboard")
+							.setTitle("Paste toml from clipboard")
 							.setIcon("clipboard-paste")
 							.onClick(() => {
 								void pasteTomlIntoRenderedBlock(plugin, ctx.sourcePath, section, source, spec);

@@ -236,13 +236,19 @@ class El {
 		this.children.push(child);
 		return child;
 	}
+
+	addEventListener(): void {}
 }
 
 const documentStub = {
 	createElement: () => new El(),
 };
 
-type Processor = (source: string, el: El, ctx: { sourcePath: string }) => void;
+type Processor = (
+	source: string,
+	el: El,
+	ctx: { sourcePath: string; getSectionInfo: (el: El) => undefined },
+) => void;
 const processors = new Map<string, Processor>();
 const plugin = {
 	settings: {
@@ -261,7 +267,7 @@ const container = new El();
 processors.get("theme-card")?.(
 	"adventure\nrelic\n{The Drowned Crown}\n{Commands the tide}\n{!Heavier every day}",
 	container,
-	{ sourcePath: "style-scope.md" },
+	{ sourcePath: "style-scope.md", getSectionInfo: () => undefined },
 );
 
 assert.equal(container.classList.contains(BLOCK_SCOPE_CLASS), true);

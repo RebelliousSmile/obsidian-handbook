@@ -34,6 +34,7 @@ const work = mkdtempSync(join(tmpdir(), "handbook-adrenaline-zombiology-style-")
 const stub = join(work, "obsidian-stub.mjs");
 const bundle = join(work, "assert.cjs");
 writeFileSync(stub, `export class Notice {}
+export class TFile {}
 export class Menu {}
 export class MenuItem {}
 export class Editor {}

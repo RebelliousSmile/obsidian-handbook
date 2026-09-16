@@ -11,6 +11,7 @@ const bundle = join(work, "harness.cjs");
 writeFileSync(
 	stub,
 	`export class Notice { constructor() {} }
+export class TFile {}
 export class Menu {}
 export class MenuItem {}
 export class Editor {}
