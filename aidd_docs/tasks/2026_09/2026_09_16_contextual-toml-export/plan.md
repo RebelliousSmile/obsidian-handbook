@@ -1,6 +1,6 @@
 ---
 objective: "The Handbook context menu copies the TOML export of the supported fenced block under the cursor, without presenting irrelevant export actions."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Contextual TOML export
