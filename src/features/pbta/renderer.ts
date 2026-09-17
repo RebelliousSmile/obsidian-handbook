@@ -2,6 +2,7 @@ import type { Move, Playbook } from "schema-pbta";
 import type { BlockShape, BlockZone } from "../blocks/shape";
 import { renderZones } from "../blocks/shape";
 import { pbtaMoveShape, pbtaPlaybookShape } from "./shape";
+import type { ResolvedPbtaPlaybook } from "./specializedPlaybooks";
 
 function element(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTMLElement {
 	const node = doc.createElement(tag);
@@ -69,7 +70,47 @@ function renderMoveContents(data: Move | Playbook["moves"][number], doc: Documen
 	return card;
 }
 
-export function renderPbtaPlaybook(data: Playbook, doc: Document): HTMLElement {
+function renderEditorial(data: Record<string, unknown>, doc: Document): HTMLElement | null {
+	const editorial = data.editorial;
+	if (!editorial || typeof editorial !== "object" || Array.isArray(editorial)) return null;
+	const node = element(doc, "section");
+	const entries = editorial as Record<string, unknown>;
+	for (const key of Object.keys(entries)) {
+		const value = entries[key];
+		if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+		const entry = value as { heading?: unknown; paragraphs?: unknown };
+		if (typeof entry.heading === "string") node.appendChild(element(doc, "h4", entry.heading));
+		if (Array.isArray(entry.paragraphs)) {
+			for (const paragraph of entry.paragraphs) {
+				if (typeof paragraph === "string") node.appendChild(element(doc, "p", paragraph));
+			}
+		}
+	}
+	return node.children.length > 0 ? node : null;
+}
+
+const SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["target"], "playbook">, string[]> = {
+	"masks-playbook": ["momentOfTruth", "potential", "influence"],
+	"monster-of-the-week-playbook": ["improvements", "luck", "ratings"],
+	"monsterhearts-playbook": ["strings", "conditions", "advances"],
+	"urban-shadows-playbook": ["corruption", "endMove"],
+	"the-sprawl-playbook": ["directives", "missionGear", "cred"],
+};
+
+function renderMechanics(target: ResolvedPbtaPlaybook["target"], data: Record<string, unknown>, doc: Document): HTMLElement | null {
+	if (target === "playbook") return null;
+	const node = element(doc, "section");
+	for (const key of SPECIALIZED_FIELDS[target]) {
+		const value = data[key];
+		if (value === undefined) continue;
+		node.appendChild(labelledValue(doc, key, value));
+	}
+	return node.children.length > 0 ? node : null;
+}
+
+export function renderPbtaPlaybook(resolved: ResolvedPbtaPlaybook, doc: Document): HTMLElement {
+	const data = resolved.data;
+	const raw = resolved.data as unknown as Record<string, unknown>;
 	const root = element(doc, "article");
 	root.classList.add(pbtaPlaybookShape.root);
 	renderZones(root, pbtaPlaybookShape, {
@@ -79,6 +120,12 @@ export function renderPbtaPlaybook(data: Playbook, doc: Document): HTMLElement {
 			node.appendChild(element(doc, "h3", data.name));
 			node.appendChild(element(doc, "p", data.description));
 			if (data.statsDetail) node.appendChild(callout(doc, "pbta-rule", "Starting spread", data.statsDetail));
+			return node;
+		},
+		editorial: (zone) => {
+			const node = renderEditorial(raw, doc);
+			if (!node) return null;
+			node.classList.add(`${pbtaPlaybookShape.root}--${zone.name}`);
 			return node;
 		},
 		stats: (zone) => {
@@ -131,6 +178,12 @@ export function renderPbtaPlaybook(data: Playbook, doc: Document): HTMLElement {
 			if (!data.advancement?.length) return null;
 			const node = section(doc, pbtaPlaybookShape, zone);
 			node.appendChild(stringList(doc, data.advancement));
+			return node;
+		},
+		mechanics: (zone) => {
+			const node = renderMechanics(resolved.target, raw, doc);
+			if (!node) return null;
+			node.classList.add(`${pbtaPlaybookShape.root}--${zone.name}`);
 			return node;
 		},
 	});

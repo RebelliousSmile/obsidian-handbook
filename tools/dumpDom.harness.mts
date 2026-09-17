@@ -183,7 +183,7 @@ for (const entry of loadAdrenalineContractCases().sort((left, right) =>
 for (const entry of loadPbtaRenderCases().sort((left, right) =>
 	left.path.localeCompare(right.path),
 )) {
-	console.log(`### pbta/${entry.path}`);
+	console.log(`### pbta/${entry.target}/${entry.path}`);
 	const block = blockOf(PBTA_TARGET_TO_BLOCK[entry.target]);
 	if (!block) { console.log("no block"); continue; }
 	const data = block.parse(entry.source);

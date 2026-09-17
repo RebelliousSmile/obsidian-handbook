@@ -6,7 +6,20 @@ import { PBTA_TOML_VERSION } from "schema-pbta";
 export const PBTA_TARGET_TO_BLOCK = {
 	move: "pbta-move",
 	playbook: "pbta-playbook",
+	"masks-playbook": "pbta-playbook",
+	"monster-of-the-week-playbook": "pbta-playbook",
+	"monsterhearts-playbook": "pbta-playbook",
+	"urban-shadows-playbook": "pbta-playbook",
+	"the-sprawl-playbook": "pbta-playbook",
 } as const;
+
+export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
+	"masks-playbook",
+	"monster-of-the-week-playbook",
+	"monsterhearts-playbook",
+	"urban-shadows-playbook",
+	"the-sprawl-playbook",
+] as const;
 
 export type PbtaRenderTarget = keyof typeof PBTA_TARGET_TO_BLOCK;
 
@@ -46,5 +59,12 @@ export function loadPbtaRenderCases(): Array<PbtaContractCase & { target: PbtaRe
 	return loadPbtaContractCases().filter(
 		(entry): entry is PbtaContractCase & { target: PbtaRenderTarget } =>
 			entry.expect === "accept" && Object.hasOwn(PBTA_TARGET_TO_BLOCK, entry.target),
+	);
+}
+
+export function loadPbtaSpecializedPlaybookCases(): Array<PbtaContractCase & { target: typeof PBTA_SPECIALIZED_PLAYBOOK_TARGETS[number] }> {
+	return loadPbtaContractCases().filter(
+		(entry): entry is PbtaContractCase & { target: typeof PBTA_SPECIALIZED_PLAYBOOK_TARGETS[number] } =>
+			entry.expect === "accept" && (PBTA_SPECIALIZED_PLAYBOOK_TARGETS as readonly string[]).includes(entry.target),
 	);
 }
