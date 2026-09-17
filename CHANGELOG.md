@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.16.0] - 2026-09-17
+
+### Added
+
+- Consume `schema-pbta` v4.0.0 specialized playbook contracts for Masks, Monster of the Week, Monsterhearts, Urban Shadows and The Sprawl.
+- Render specialized editorial and game-specific playbook regions while keeping the generic `playbook` format as interchange-only input.
+- Add specialized PbtA projection assertions and target-labelled DOM dumps.
+- Add contextual TOML export and paste support for rendered Handbook blocks.
+
+### Fixed
+
+- Scope rendered-block context-menu actions to the block that owns the source TOML.
+
 ## [2.15.3] - 2026-09-16
 
 ### Fixed
