@@ -6,7 +6,7 @@ import {
 } from "schema-pbta";
 
 const releaseUrl =
-	"https://github.com/RebelliousSmile/schema-pbta/releases/download/v1.0.0/schema-pbta-1.0.0.tgz";
+	"https://github.com/RebelliousSmile/schema-pbta/releases/download/v4.0.0/schema-pbta-4.0.0.tgz";
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 assert.equal(packageJson.dependencies["schema-pbta"], releaseUrl);
 
@@ -33,6 +33,16 @@ for (const testCase of manifest.cases) {
 	}
 	const parsed = codec.parseToml(source);
 	assert.deepEqual(codec.parseToml(codec.stringifyToml(parsed)), parsed, testCase.path);
+}
+
+for (const target of [
+	"masks-playbook",
+	"monster-of-the-week-playbook",
+	"monsterhearts-playbook",
+	"urban-shadows-playbook",
+	"the-sprawl-playbook",
+]) {
+	assert.ok(manifest.cases.some((testCase) => testCase.target === target && testCase.expect === "accept"), `missing accepted ${target} case`);
 }
 
 console.log("PbtA release URL, lockfile integrity and shared contract corpus passed.");
