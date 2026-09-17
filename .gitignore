@@ -23,7 +23,6 @@ dist
 data.json
 
 #llms
-.codex
 
 # PragRoman is free to use and free to give away, but its licence forbids
 # including it in a product. It is asked for from the vault, never shipped.
