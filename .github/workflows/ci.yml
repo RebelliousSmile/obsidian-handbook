@@ -20,7 +20,7 @@ jobs:
 
             - name: Install dependencies
               working-directory: handbook
-              run: npm install
+              run: npm ci
 
             - name: Check Handbook
               working-directory: handbook
