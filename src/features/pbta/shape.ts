@@ -5,6 +5,7 @@ export const pbtaPlaybookShape: BlockShape = {
 	root: "handbook-pbta-playbook",
 	zones: [
 		{ name: "identity", holds: "playbook name, game and description" },
+		{ name: "editorial", holds: "canonical playbook editorial sections", optional: true },
 		{ name: "stats", holds: "canonical starting stat values", optional: true },
 		{ name: "attributes", holds: "canonical playbook attributes", optional: true },
 		{ name: "moves", holds: "move references and inline moves", optional: true },
@@ -12,6 +13,7 @@ export const pbtaPlaybookShape: BlockShape = {
 		{ name: "creation", holds: "character creation questions", optional: true },
 		{ name: "gear", holds: "starting and selectable gear", optional: true },
 		{ name: "advancement", holds: "advancement options", optional: true },
+		{ name: "mechanics", holds: "game-specific playbook mechanics", optional: true },
 	],
 };
 
