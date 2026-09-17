@@ -109,7 +109,7 @@ function renderMechanics(target: ResolvedPbtaPlaybook["target"], data: Record<st
 }
 
 export function renderPbtaPlaybook(resolved: ResolvedPbtaPlaybook, doc: Document): HTMLElement {
-	const data = resolved.data as Playbook;
+	const data = resolved.data;
 	const raw = resolved.data as unknown as Record<string, unknown>;
 	const root = element(doc, "article");
 	root.classList.add(pbtaPlaybookShape.root);

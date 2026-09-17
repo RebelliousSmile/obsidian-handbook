@@ -1,6 +1,6 @@
 ---
 objective: "Les cinq aperçus PbtA de Handbook sont issus des TOML spécialisés de schema-pbta v4 et rendent toutes leurs régions éditoriales et mécaniques sans faire du playbook générique une seconde fiche canonique."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Aperçus PbtA spécialisés de schema-pbta v4
