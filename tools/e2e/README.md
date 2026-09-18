@@ -10,7 +10,7 @@ Prerequisites:
 
 - Linux with an Obsidian AppImage;
 - `bash`, `curl`, `jq`, and Python 3;
-- the Python package `websocket-client`;
+- the Python packages `websocket-client` and `pypdf`;
 - built plugin assets in `dist/` (run `pnpm build` first);
 - a disposable or backed-up vault where the `obsidian-handbook` community plugin is enabled.
 
@@ -41,10 +41,25 @@ editorial theme, three columns in a 750 px window with the Monsterhearts theme,
 and the one-column fallback in a narrow pane and at 600 px. The temporary vault
 is removed after the run.
 
+The journey also exports the print probe (`fixtures/layout-regions-print-probe.md`)
+through Obsidian's own export: it captures the export dialog instance, calls
+`print()` on a detached `.print` container and `printToPdf()` with a file path in
+the output directory, so no native dialog opens and nothing is written to a vault.
+It asserts on the print DOM (one `.handbook-layout-region` directly in
+`.markdown-preview-view`, six columns, three grid tracks, one track under 520 px,
+the same result under the Adrenaline and Monsterhearts classes) and on the real
+PDF: `pypdf` must find the six titles on three distinct abscissas and two
+distinct ordinates, while a control note without regions keeps a single one.
+The dialog is not reached through `require("obsidian")`, which is unavailable
+outside plugins, but through the prototypes of live instances. The DOM and PDF
+positions land in `print-dom.json` and `layout-regions-print-*.pdf`.
+`-PrintOnly` (PowerShell) or `HANDBOOK_E2E_PRINT_ONLY=1` runs only this part.
+Only Obsidian's native export is covered, not third-party export plugins.
+
 Prerequisites:
 
 - Windows with Obsidian installed at `C:\Program Files\Obsidian\Obsidian.exe`;
-- Python with the `websocket-client` package;
+- Python with the `websocket-client` and `pypdf` packages;
 - built plugin assets in `dist/` (`pnpm build`).
 
 Run, with Obsidian closed:

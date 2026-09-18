@@ -5,18 +5,19 @@ import {
 	TFile,
 } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
-import { logScope } from "../../utils/logger";
 import { LayoutRegion, LayoutRegionParseResult, parseLayoutRegions } from "./parser";
+import { isPrintExport, printLayoutRegions } from "./printProcessor";
 import { mapRegionToBlocks, SourceBlock, wrapBlocksInRegion } from "./sectionMapper";
+import { warnOnce } from "./warnOnce";
 
-const log = logScope("Layout regions");
 const sourceByParent = new WeakMap<HTMLElement, { text: string; parsed: LayoutRegionParseResult }>();
 const pendingRegions = new WeakMap<HTMLElement, Map<number, number>>();
 const observers = new WeakMap<HTMLElement, { context: MarkdownPostProcessorContext; regions: readonly LayoutRegion[] }>();
-const warnedSources = new Set<string>();
 
 export function layoutRegionsPostProcessor(plugin: BrumesPlugin): MarkdownPostProcessor {
 	return (element, context) => {
+		if (isPrintExport(element, context)) return printLayoutRegions(plugin, element, context);
+
 		const parent = element.parentElement;
 		if (!parent?.classList.contains("markdown-preview-section")) return;
 
@@ -126,11 +127,4 @@ class RegionObserverChild extends MarkdownRenderChild {
 		}
 		pendingRegions.delete(this.containerEl);
 	}
-}
-
-function warnOnce(sourcePath: string, message: string): void {
-	const key = `${sourcePath}:${message}`;
-	if (warnedSources.has(key)) return;
-	warnedSources.add(key);
-	log.warn(message, sourcePath);
 }

@@ -48,6 +48,7 @@ mkdir -p "$plugin_root"
 cp "$repo_root/dist/main.js" "$repo_root/dist/manifest.json" "$repo_root/dist/styles.css" "$plugin_root/"
 printf '["obsidian-handbook"]\n' >"$vault_root/.obsidian/community-plugins.json"
 cp "$repo_root/tools/e2e/fixtures/layout-regions-probe.md" "$vault_root/layout-regions-probe.md"
+cp "$repo_root/tools/e2e/fixtures/layout-regions-print-probe.md" "$vault_root/layout-regions-print-probe.md"
 printf '{"vaults":{"1234567890abcdef":{"path":"%s","ts":%s,"open":true}}}\n' \
 	"$vault_root" "$(date +%s000)" >"$profile_root/obsidian.json"
 

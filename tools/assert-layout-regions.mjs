@@ -36,6 +36,8 @@ try {
 		"grid-template-columns: repeat(var(--handbook-layout-columns), minmax(0, 1fr))",
 		".handbook-layout-region > .handbook-layout-column",
 		".markdown-preview-section:has(> .handbook-layout-region)",
+		".print .markdown-preview-view:has(> .handbook-layout-region)",
+		"break-inside: avoid",
 		"container-type: inline-size",
 		"@container (max-width: 520px)",
 		"grid-template-columns: minmax(0, 1fr)",

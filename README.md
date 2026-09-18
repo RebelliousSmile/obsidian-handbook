@@ -198,7 +198,8 @@ Son contenu.
 ```
 
 `columns=3` répartit ces sections sur trois colonnes tant que la zone de contenu
-de la note dépasse 520 px ; à 520 px ou moins, elle revient à une seule colonne.
+de la note (ou, à l’export PDF, la largeur imprimable) dépasse 520 px ; à 520 px
+ou moins, elle revient à une seule colonne.
 Dans les modes Adrenaline, Urban Shadows et Monsterhearts, une note qui contient
 une région explicite utilise toute cette largeur au lieu des deux colonnes
 éditoriales du thème. Pour garder un tableau ou un bloc large dans une zone
@@ -219,6 +220,16 @@ les cellules du tableau. Les titres de même niveau ouvrent chacun une cellule
 de la grille. Elle ne s’applique pas dans la vue source. Les
 directives mal formées, incomplètes ou montrées dans un bloc de code sont
 ignorées sans modifier la note.
+
+Les régions valent aussi pour l’export PDF natif d’Obsidian (*Exporter au format
+PDF*) : Handbook regroupe les blocs imprimés de la même façon qu’en lecture.
+Ce regroupement s’appuie sur le DOM d’impression d’Obsidian, non documenté
+(mesuré sur Obsidian 1.13.7) ; si ce DOM ne correspond plus à la note, l’export
+reste tel qu’Obsidian le produit, sans colonnes, et un avertissement est
+journalisé une fois. Seul l’export natif est couvert : les plugins d’export
+tiers construisent un autre DOM. Une rangée plus haute qu’une page n’est pas
+découpée : chaque colonne reste d’un seul tenant, et une colonne trop haute
+déborde donc sur la page suivante sans saut de page forcé.
 
 Handbook and Lantern deliberately consume the same `schema-adrenaline`
 repository. The package declares the minimum Handbook release it supports;
