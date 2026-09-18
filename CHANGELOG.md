@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.18.0] - 2026-09-18
+
+### Added
+
+- Apply `handbook-layout` regions to Obsidian's native PDF export: printed blocks are joined to the note's sections by rank and regrouped into columns, with a one-column fallback under 520 px of printable width. When the print DOM no longer matches the note, the export is left untouched and a warning is logged once.
+- Add a PDF export probe to the layout-regions end-to-end journey, measured on the real PDF with `pypdf` (`-PrintOnly` runs it alone).
+- Align the PbtA renderer and its contract assertion with `schema-pbta` contract v5.
+
 ## [2.17.0] - 2026-09-18
 
 ### Added
