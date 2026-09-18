@@ -30,9 +30,18 @@ function labelledValue(doc: Document, label: string, value: unknown): HTMLElemen
 	return row;
 }
 
-function stringList(doc: Document, values: readonly string[]): HTMLElement {
+function stringList(doc: Document, values: readonly unknown[]): HTMLElement {
 	const list = element(doc, "ul");
-	for (const value of values) list.appendChild(element(doc, "li", value));
+	for (const value of values) {
+		const label = typeof value === "string"
+			? value
+			: value && typeof value === "object" && "label" in value && typeof value.label === "string"
+				? value.label
+				: value && typeof value === "object" && "value" in value && typeof value.value === "string"
+					? value.value
+					: String(value);
+		list.appendChild(element(doc, "li", label));
+	}
 	return list;
 }
 
