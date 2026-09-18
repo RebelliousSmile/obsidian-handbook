@@ -53,5 +53,9 @@ export function wrapBlocksInRegion(
 
 function blockHeadingLevel(block: HTMLElement): number | null {
 	const match = /^el-h([1-6])$/.exec(block.className);
-	return match ? Number(match[1]) : null;
+	if (match) return Number(match[1]);
+	// The print export wraps each block in a bare div instead of an `el-hN` section.
+	const only = block.tagName === "DIV" && block.className === "" && block.children.length === 1 ? block.children[0] : null;
+	const heading = /^H([1-6])$/.exec(only?.tagName ?? "");
+	return heading ? Number(heading[1]) : null;
 }

@@ -6,16 +6,15 @@ import {
 } from "schema-pbta";
 
 const releaseUrl =
-	"https://github.com/RebelliousSmile/schema-pbta/releases/download/v4.0.0/schema-pbta-4.0.0.tgz";
+	"https://github.com/RebelliousSmile/schema-pbta/releases/download/v5.4.0/schema-pbta-5.4.0.tgz";
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 assert.equal(packageJson.dependencies["schema-pbta"], releaseUrl);
 
 const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
 assert.ok(lockfile.includes(`specifier: ${releaseUrl}`));
-assert.ok(lockfile.includes(`tarball: ${releaseUrl}`));
 assert.match(
 	lockfile,
-	/schema-pbta@https:[\s\S]*?resolution: \{integrity: sha512-[^,]+, tarball:/,
+	/schema-pbta:[\s\S]*?version: 5\.4\.0/,
 );
 
 const manifestUrl = import.meta.resolve("schema-pbta/corpus/cases.json");

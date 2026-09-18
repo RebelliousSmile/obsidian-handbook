@@ -159,6 +159,17 @@
 	container-type: inline-size;
 }
 
+// The PDF export has no `.markdown-preview-section`: its regions sit directly in
+// `.print > .markdown-preview-view`, which then owns the width the fold measures.
+.print .markdown-preview-view:has(> .handbook-layout-region) {
+	container-type: inline-size;
+}
+
+// A column is never cut across a page, and no page break is forced around it.
+.handbook-layout-region > .handbook-layout-column {
+	break-inside: avoid;
+}
+
 // The game themes flow the entire note into editorial columns. A note with an
 // explicit layout region needs its full width so the grid can size its columns.
 :is(.brumes--adrenaline, .brumes--urban-shadows, .brumes--monsterhearts)
