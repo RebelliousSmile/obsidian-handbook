@@ -116,7 +116,9 @@ async function run(): Promise<void> {
 	/* Adrenaline follows the complete absent, installed, removed lifecycle. */
 	{
 		initGameRegistry([]);
-		const adrenalineBlocks = BRUMES_BLOCKS.filter((block) => block.mode === "adrenaline");
+		const adrenalineBlocks = BRUMES_BLOCKS.filter((block) =>
+			block.capability?.startsWith("block:adrenaline-"),
+		);
 		const savedData = {
 			mode: "adrenaline",
 			features: {
@@ -151,11 +153,11 @@ async function run(): Promise<void> {
 		check("the installed Adrenaline class is registered", gamePackClasses().includes("brumes--adrenaline"));
 		check(
 			"installed Adrenaline processors are always available",
-			adrenalineBlocks.every((block) => isBlockEnabled(block, normalizeSettings({ mode: "adrenaline" }))),
+			adrenalineBlocks.every((block) => isAvailableBlock(block, normalizeSettings({ mode: "adrenaline" }))),
 		);
 		check(
 			"obsolete disabled flags cannot disable reinstalled Adrenaline blocks",
-			adrenalineBlocks.every((block) => isBlockEnabled(block, normalizeSettings(savedData))),
+			adrenalineBlocks.every((block) => isAvailableBlock(block, normalizeSettings(savedData))),
 		);
 
 		initGameRegistry([]);
@@ -404,7 +406,11 @@ async function run(): Promise<void> {
 		const registered = BRUMES_BLOCKS.map((block) => `block:${block.id}`).sort();
 		check("block capabilities match BRUMES_BLOCKS", JSON.stringify(declared) === JSON.stringify(registered));
 		for (const block of BRUMES_BLOCKS) {
-			const gameId = block.capability ? "unknown-pbta-game" : block.mode!;
+			const gameId = block.capability?.startsWith("block:adrenaline-")
+				? "adrenaline"
+				: block.capability
+					? "unknown-pbta-game"
+					: block.mode!;
 			const result = gamePlugin(gameId, { requires: [`block:${block.id}`] });
 			const parsed = JSON.parse(result) as unknown;
 			const manifest = (await import("../src/games/pluginManifest")).readGamePluginManifest(parsed, HOST_VERSION);

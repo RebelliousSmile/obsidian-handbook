@@ -42,7 +42,8 @@
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"assert:mist-contract": "node tools/assert-mist-contract.mjs",
 		"assert:game-pack-contract": "node tools/assert-game-pack-contract.mjs",
-		"assert:contextual-toml-export": "node tools/assert-contextual-toml-export.mjs"
+		"assert:contextual-toml-export": "node tools/assert-contextual-toml-export.mjs",
+		"assert:contextual-pack-blocks": "node tools/assert-contextual-pack-blocks.mjs"
 	},
 	"keywords": [
 		"city of mist",

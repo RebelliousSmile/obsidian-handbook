@@ -5,7 +5,7 @@ import { adrenalinePnjShape } from "./shape";
 
 export const adrenalinePnjBlock: BrumesBlock<AdrenalinePnjData> = {
 	id: "adrenaline-pnj",
-	mode: "adrenaline",
+	capability: "block:adrenaline-pnj",
 	label: "Fiche PNJ Adrenaline",
 	icon: "contact-round",
 	shape: adrenalinePnjShape,
