@@ -98,7 +98,8 @@ function renderEditorial(data: Record<string, unknown>, doc: Document): HTMLElem
 	return node.children.length > 0 ? node : null;
 }
 
-const SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["target"], "playbook">, string[]> = {
+/** The mechanical fields each specialised target prints, asserted against the shared corpus. */
+export const PBTA_SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["target"], "playbook">, string[]> = {
 	"masks-playbook": ["momentOfTruth", "potential", "influence"],
 	"monster-of-the-week-playbook": ["improvements", "luck", "ratings"],
 	"monsterhearts-playbook": ["strings", "conditions", "advances"],
@@ -109,7 +110,7 @@ const SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["target"], "playbo
 function renderMechanics(target: ResolvedPbtaPlaybook["target"], data: Record<string, unknown>, doc: Document): HTMLElement | null {
 	if (target === "playbook") return null;
 	const node = element(doc, "section");
-	for (const key of SPECIALIZED_FIELDS[target]) {
+	for (const key of PBTA_SPECIALIZED_FIELDS[target]) {
 		const value = data[key];
 		if (value === undefined) continue;
 		node.appendChild(labelledValue(doc, key, value));

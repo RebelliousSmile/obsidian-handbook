@@ -17,6 +17,7 @@ import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
 import { ThemeContentsModal } from "./themeContentsModal";
 import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
+import { PbtaCoverageModal, currentPbtaCoverage, pbtaCoverageSummary } from "./pbtaCoverageModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
@@ -126,6 +127,17 @@ export class BrumesSettingTab extends PluginSettingTab {
 						await this.plugin.reloadInstalledSchemaSources();
 						this.redisplay();
 					}, "Failed to reload schema sources", "Failed to reload schema sources.");
+				}));
+		});
+		// The schema build ships one codec per playbook format; which of them this
+		// vault can actually read depends on the packs installed above.
+		section.addSetting((setting) => {
+			const report = currentPbtaCoverage();
+			setting
+				.setName("PbtA playbook coverage") // eslint-disable-line obsidianmd/ui/sentence-case
+				.setDesc(pbtaCoverageSummary(report))
+				.addButton((button) => button.setButtonText("Check coverage").onClick(() => {
+					new PbtaCoverageModal(this.app, currentPbtaCoverage()).open();
 				}));
 		});
 		for (const source of sources) {
