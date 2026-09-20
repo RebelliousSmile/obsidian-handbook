@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Instruction: Prouver capacités et appartenance contre les métadonnées publiées
