@@ -15,18 +15,24 @@ jobs:
               with:
                   path: handbook
 
+            # Same installer as CI: pnpm-lock.yaml is the only lockfile this repo tracks.
+            - name: Use pnpm
+              uses: pnpm/action-setup@v4
+
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20.x"
+                  cache: pnpm
+                  cache-dependency-path: handbook/pnpm-lock.yaml
 
             - name: Install dependencies
               working-directory: handbook
-              run: npm ci
+              run: pnpm install --frozen-lockfile
 
             - name: Check plugin
               working-directory: handbook
-              run: npm run check
+              run: pnpm check
 
             - name: Create release
               working-directory: handbook

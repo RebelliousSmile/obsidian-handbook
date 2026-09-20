@@ -5,17 +5,42 @@ import {
 	PBTA_TOML_VERSION,
 } from "schema-pbta";
 
-const releaseUrl =
-	"https://github.com/RebelliousSmile/schema-pbta/releases/download/v5.4.0/schema-pbta-5.4.0.tgz";
+/* The pin is read, never copied: a producer release is not this repo's to hard-code. What is checked
+   is that every place recording the pin agrees with package.json — the bump stays a one-line edit. */
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
-assert.equal(packageJson.dependencies["schema-pbta"], releaseUrl);
-
-const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
-assert.ok(lockfile.includes(`specifier: ${releaseUrl}`));
-assert.match(
-	lockfile,
-	/schema-pbta:[\s\S]*?version: 5\.4\.0/,
+const releaseUrl = packageJson.dependencies["schema-pbta"];
+assert.ok(
+	releaseUrl.startsWith("https://github.com/") &&
+		releaseUrl.includes("/schema-pbta/releases/download/v") &&
+		releaseUrl.endsWith(".tgz"),
+	`schema-pbta must be pinned to a public release asset, found ${releaseUrl}`,
 );
+const pinnedVersion = releaseUrl.slice(releaseUrl.lastIndexOf("-") + 1, -".tgz".length);
+
+/* Only pnpm-lock.yaml is tracked, so it is the only lockfile a clean checkout has. */
+const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
+assert.ok(lockfile.includes(`specifier: ${releaseUrl}`), `pnpm lockfile must record the pinned specifier ${releaseUrl}`);
+const resolution = lockfile
+	.split("\n")
+	.filter((line) => line.indexOf("resolution: {") >= 0)
+	.filter((line) => line.indexOf(`schema-pbta-${pinnedVersion}.tgz`) >= 0)[0];
+assert.ok(resolution, `pnpm lockfile must resolve the schema-pbta v${pinnedVersion} release asset`);
+assert.ok(
+	resolution.indexOf("integrity: sha512-") >= 0,
+	"the resolved schema-pbta tarball must carry its SRI, or the pin proves nothing about its content",
+);
+/* A signed redirect is recorded without an SRI and expires: a clean checkout then fails on
+   ERR_PNPM_MISSING_TARBALL_INTEGRITY, and --no-frozen-lockfile does not repair it. */
+assert.equal(
+	lockfile.indexOf("release-assets.githubusercontent.com"),
+	-1,
+	"the lockfile records a signed release redirect: rewrite it to the stable releases/download URL and its SRI",
+);
+
+/* schema-pbta does not export ./package.json, so import.meta.resolve fails with
+   ERR_PACKAGE_PATH_NOT_EXPORTED: the installed manifest is read off the install path. */
+const installedPackage = JSON.parse(readFileSync("node_modules/schema-pbta/package.json", "utf8"));
+assert.equal(installedPackage.version, pinnedVersion, "the installed package must be the pinned release");
 
 const manifestUrl = import.meta.resolve("schema-pbta/corpus/cases.json");
 const manifest = JSON.parse(readFileSync(new URL(manifestUrl), "utf8"));

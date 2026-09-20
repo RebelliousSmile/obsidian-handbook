@@ -4,21 +4,27 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 
-const url = "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz";
+/* Read the pin, do not restate it: the lockfiles are checked against package.json, not against a literal. */
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
-assert.equal(packageJson.dependencies["schema-adrenaline"], url);
-for (const lock of ["package-lock.json", "pnpm-lock.yaml"]) {
-	const content = readFileSync(lock, "utf8");
-	const redirectEntry = lock === "pnpm-lock.yaml"
-		? content.slice(
-			content.lastIndexOf("schema-adrenaline@"),
-			content.indexOf("\n  schema-in-the-mist@", content.lastIndexOf("schema-adrenaline@")),
-		)
-		: content;
-	assert.ok(content.includes(url), `${lock} must retain the public URL`);
-	assert.match(content, /integrity:?[\s\S]{0,120}sha512-|sha512-[A-Za-z0-9+/=]+/, `${lock} must retain SRI`);
-	assert.equal(redirectEntry.includes("release-assets.githubusercontent.com"), false, `${lock} must not persist signed redirects for schema-adrenaline`);
-}
+const url = packageJson.dependencies["schema-adrenaline"];
+assert.ok(
+	url.startsWith("https://github.com/") &&
+		url.includes("/schema-adrenaline/releases/download/v") &&
+		url.endsWith(".tgz"),
+	`schema-adrenaline must be pinned to a public release asset, found ${url}`,
+);
+/* pnpm-lock.yaml is the only lockfile this repo tracks, so it is the only one a clean checkout has.
+   Asserting on package-lock.json passed here and could never pass in CI: an untracked file cannot be
+   read by a job that never wrote it. */
+const lock = "pnpm-lock.yaml";
+const content = readFileSync(lock, "utf8");
+const redirectEntry = content.slice(
+	content.lastIndexOf("schema-adrenaline@"),
+	content.indexOf("\n  schema-in-the-mist@", content.lastIndexOf("schema-adrenaline@")),
+);
+assert.ok(content.includes(url), `${lock} must retain the public URL`);
+assert.match(content, /integrity:?[\s\S]{0,120}sha512-|sha512-[A-Za-z0-9+/=]+/, `${lock} must retain SRI`);
+assert.equal(redirectEntry.includes("release-assets.githubusercontent.com"), false, `${lock} must not persist signed redirects for schema-adrenaline`);
 const bundle = "tools/.assert-adrenaline-contract.mjs";
 const stub = "tools/.obsidian-stub.mjs";
 try {

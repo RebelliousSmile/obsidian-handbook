@@ -18,7 +18,10 @@ const text = (element: El): string => element.textContent + element.children.map
 const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre" } as const;
 
 assertAdrenalineContractVersion("1.0.0");
-assert.throws(() => assertAdrenalineContractVersion("1.0.1"), /package version must be 1.0.0/);
+/* An upstream minor or patch is adopted without a code change; the next contract major is not. */
+assertAdrenalineContractVersion("1.4.2");
+assert.throws(() => assertAdrenalineContractVersion("2.0.0"), /must be a 1.x contract/);
+assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 1.x contract/);
 const cases = loadAdrenalineContractCases();
 assert.equal(cases.length, 35);
 for (const entry of cases) {
