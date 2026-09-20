@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.15.3",
+	"version": "2.19.2",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"packageManager": "pnpm@10.5.2",
@@ -12,6 +12,7 @@
 		"lint": "eslint .",
 		"assert:corpus": "node tools/assert-corpus.mjs",
 		"assert:ci-install": "node tools/assert-ci-install.mjs",
+		"assert:release-version": "node tools/assert-release-version.mjs",
 		"dump:dom": "node tools/dump-dom.mjs",
 		"assert:override": "node tools/assert-override.mjs",
 		"assert:game-storage": "node tools/assert-game-storage.mjs",

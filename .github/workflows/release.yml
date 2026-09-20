@@ -39,6 +39,15 @@ jobs:
               working-directory: handbook
               run: pnpm check
 
+            # `pnpm check` proves the four version-bearing files agree with each other. Only here is
+            # the tag known, and only here does a disagreement actually ship: v2.16.0 through v2.19.1
+            # were all published from a manifest declaring 2.15.3.
+            - name: Assert the tag matches the shipped manifest
+              working-directory: handbook
+              env:
+                  RELEASE_TAG: ${{ github.ref_name }}
+              run: node tools/assert-release-version.mjs
+
             - name: Create release
               working-directory: handbook
               env:

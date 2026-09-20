@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.2] - 2026-09-20
+
+### Added
+
+- Add `assert:release-version`, which refuses a build whose version disagrees between `manifest.json`, `package.json`, `versions.json` and the newest `CHANGELOG.md` section. The release workflow runs it a second time with the tag, the one place a disagreement actually ships.
+
+### Fixed
+
+- Fix the version every release since `2.15.3` declared to Obsidian: `manifest.json`, `package.json` and `versions.json` all sat at `2.15.3` while the tags reached `v2.19.1`, so an installed Handbook reported `2.15.3` and no vault was ever offered an update. The four skipped versions are deliberately not backfilled into `versions.json` — no published build ever declared them.
+- Keep the trailing newline on the two files `version-bump.mjs` rewrites, so a bump no longer carries `\ No newline at end of file` into its own release diff.
+
 ## [2.19.1] - 2026-09-20
 
 ### Fixed
