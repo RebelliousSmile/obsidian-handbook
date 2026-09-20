@@ -52,6 +52,27 @@ for (const entry of readdirSync(workflows)) {
 			source.indexOf("pnpm/action-setup") >= 0,
 			`${entry} runs pnpm without installing it first`,
 		);
+		/* A checkout redirected with `path:` moves package.json out of the workspace root, where the
+		   actions still look by default. `pnpm/action-setup` then resolves no version at all and the
+		   job dies before the first install — the failure this file exists to make impossible. */
+		const checkout = /actions\/checkout@[\s\S]*?\bpath:\s*(\S+)/.exec(source);
+		if (checkout) {
+			const root = checkout[1];
+			assert.ok(
+				source.indexOf(`package_json_file: ${root}/package.json`) >= 0,
+				`${entry} checks out into ${root}/ but lets pnpm/action-setup read packageManager from ` +
+					`the workspace root, which that checkout leaves empty`,
+			);
+			for (const line of source.split("\n")) {
+				const cache = /cache-dependency-path:\s*(\S+)/.exec(line);
+				if (cache) {
+					assert.ok(
+						cache[1].indexOf(`${root}/`) === 0,
+						`${entry} caches on ${cache[1]}, which is outside the ${root}/ checkout`,
+					);
+				}
+			}
+		}
 	}
 }
 assert.ok(installs >= 2, `only ${installs} workflow installs dependencies with pnpm, expected the check and the release`);

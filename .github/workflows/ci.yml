@@ -17,6 +17,11 @@ jobs:
             # clean checkout can use. `npm ci` failed on every run for a missing package-lock.json.
             - name: Use pnpm
               uses: pnpm/action-setup@v4
+              with:
+                  # The checkout lands in handbook/, and this action reads `packageManager` from the
+                  # workspace root, not from the checkout: without this it resolves no pnpm version
+                  # at all and the job dies before installing anything.
+                  package_json_file: handbook/package.json
 
             - name: Use Node.js
               uses: actions/setup-node@v4
