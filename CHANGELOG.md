@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.1] - 2026-09-20
+
+### Fixed
+
+- Fix the CI and release workflows, which died on `No pnpm version is specified` before installing anything: both redirect their checkout with `path: handbook`, and `pnpm/action-setup` reads `packageManager` from the workspace root that redirection leaves empty. `assert:ci-install` now refuses a workflow that checks out into a subdirectory without pointing the action at that subdirectory's `package.json`, and a `cache-dependency-path` that falls outside the checkout. No release was published for `2.18.0` or `2.19.0` because of this failure.
+
 ## [2.19.0] - 2026-09-20
 
 ### Added
