@@ -13,15 +13,22 @@ jobs:
               with:
                   path: handbook
 
+            # pnpm-lock.yaml is the only lockfile this repo tracks, so pnpm is the only installer a
+            # clean checkout can use. `npm ci` failed on every run for a missing package-lock.json.
+            - name: Use pnpm
+              uses: pnpm/action-setup@v4
+
             - name: Use Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20.x"
+                  cache: pnpm
+                  cache-dependency-path: handbook/pnpm-lock.yaml
 
             - name: Install dependencies
               working-directory: handbook
-              run: npm ci
+              run: pnpm install --frozen-lockfile
 
             - name: Check Handbook
               working-directory: handbook
-              run: npm run check
+              run: pnpm check

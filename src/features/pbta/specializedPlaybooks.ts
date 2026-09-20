@@ -38,6 +38,14 @@ const SPECIALIZED_PARSERS: Array<{
 	{ target: "the-sprawl-playbook", parse: parseTheSprawlPlaybookToml },
 ];
 
+/**
+ * The specialised targets Handbook resolves from a document alone. A target
+ * whose schema is the portable playbook unchanged cannot join this list: it
+ * would claim every generic playbook before the generic parser is reached.
+ */
+export const PBTA_PROJECTED_TARGETS: readonly Exclude<ResolvedPbtaPlaybook["target"], "playbook">[] =
+	SPECIALIZED_PARSERS.map((candidate) => candidate.target);
+
 export function parsePbtaPlaybookToml(source: string): ResolvedPbtaPlaybook | null {
 	for (const candidate of SPECIALIZED_PARSERS) {
 		try {

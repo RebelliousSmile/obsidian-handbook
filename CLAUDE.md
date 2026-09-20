@@ -8,7 +8,7 @@ Dépôt autonome depuis le **2026-09-07**. Objectif : développer le plugin comm
 - Fork de **Brumes** (`4rtamis/obsidian-brumes`), MIT, détaché le 2026-09-07. Le copyright d'origine reste dans `LICENSE`, l'origine est créditée dans le README.
 - Version : `package.json` et `manifest.json` portent **`2.1.4`**. `minAppVersion: 1.12.7`.
 - Stack : TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), lint ESLint (dont `eslint-plugin-obsidianmd`).
-- Gestionnaire de paquets : **pnpm** (`pnpm-lock.yaml` fait foi ; `package-lock.json` traîne encore et devrait disparaître).
+- Gestionnaire de paquets : **pnpm** et lui seul. `pnpm-lock.yaml` est le **seul lockfile suivi par git** (avec `flake.lock`) ; `package-lock.json` a été sorti de l'arbre de travail le 2026-09-20, plus aucun outil ni workflow ne le lit. `package.json` épingle `packageManager: pnpm@10.5.2`.
 
 ### Nommage : ce qui a changé et ce qui n'a pas bougé
 
@@ -49,6 +49,8 @@ pnpm assert:adrenaline-contract  # corpus et codecs canoniques schema-adrenaline
 pnpm assert:adrenaline-theme     # trois racines, deux polarités et responsive
 pnpm assert:override  # overrides.json : surcharger une zone, la retirer, retrouver le rendu d'origine
 pnpm assert:custom-packs # packs/*.json : pack valide, fichier fautif écarté seul, collision d'id, ordre du cycle de vie
+pnpm assert:pbta-pack-coverage # quels formats de playbook PbtA ce build lit vraiment, et lesquels retombent sur le playbook portable
+pnpm assert:ci-install # ce qu'un checkout propre peut installer : pnpm seul, lockfile gelé, aucun outil ne lit package-lock.json
 pnpm dump:dom         # le DOM rendu des corpus canoniques, à comparer d'une phase à l'autre
 ```
 
@@ -188,6 +190,80 @@ Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans u
 
 **Le nom d'un jeton est validé à la lecture, pas seulement sa valeur** (constaté le 2026-09-09, refactor du contrat `GamePack`). `readPackTokens` (`fromSchema.ts`) n'exigeait que le préfixe `--` sur un nom, sans restreindre les autres caractères, alors que `renderTokens` (`styleElement.ts`) n'assainit que la *valeur* avant d'écrire dans l'élément `<style>` que le plugin possède — un nom contenant `{`, `}` ou `;` pouvait donc fermer sa propre déclaration CSS et injecter des règles dans la feuille de style de confiance. `readPackTokens` exige désormais `/^--[a-zA-Z0-9-]+$/` ; un nom refusé se journalise comme tout champ inconnu, une fois par session. Sans effet observable tant que seul du code ou l'`overrides.json` de l'utilisateur fournissent des noms, mais c'est la frontière exacte qu'un dépôt de schéma tiers traverserait un jour (voir `aidd_docs/tasks/2026_09/2026_09_09_game-schema-repos/discovery-brief.md`).
 
+### Couverture des cibles PbtA : projetée, alias, ou pas encore lue (constaté le 2026-09-20)
+
+`schema-pbta` publie un codec par cible de document (`PBTA_DOCUMENT_CODECS`) : cinq génériques — `game-definition`, `move`, `playbook`, `npc`, `front` — et une cible spécialisée par jeu, préfixée par l'id de son pack. Handbook n'en résout qu'une partie depuis un document seul, et la distinction porte un nom :
+
+- **projetée** : le schéma de la cible refuse le playbook portable, donc un parseur spécialisé peut la reconnaître sans indice extérieur. `SPECIALIZED_PARSERS` (`src/features/pbta/specializedPlaybooks.ts`) les liste, et `PBTA_PROJECTED_TARGETS` en dérive la liste — jamais recopiée à la main.
+- **pas encore lue** (`unresolved`) : la cible refuse le playbook portable — donc elle serait projetable — mais ce build ne la branche pas. C'est une **addition de l'amont**, pas un défaut du coffre : les documents continuent de s'afficher comme des `playbook` génériques, sans ce que le format ajoute.
+- **alias** : la cible *accepte* le playbook portable. La brancher réclamerait tous les playbooks génériques avant que le parseur générique ne soit atteint ; elle reste donc lue comme un `playbook`. C'est le cas de `salvage-run-playbook`, dont le schéma amont est `playbookSchema.meta({…})` — le playbook portable inchangé.
+
+**L'alias n'est pas un accident de schéma : Salvage Run est un jeu du pack Apocalypse World**, pas un jeu à schéma propre. Lantern le montre (`src/core/gamePacks.ts` : `APOCALYPSE_WORLD_PACK_ID = 'apocalypse-world'`) — les templates `playbook` et `game-definition` y sont groupés, et les documents Salvage Run sont **génériques**, avec `game = "salvage-run"`. Un jeu Apocalypse World est décrit par le playbook portable, ses caractéristiques venant de son `game-definition`. Le lire comme un `playbook` est donc le comportement juste ; c'est l'existence de la cible `salvage-run-playbook` en amont qui est de trop (voir `schema-pbta/CLAUDE.md`, où l'alias est mesuré et épinglé dans `KNOWN_ALIAS_TARGETS`). Conséquence pour Handbook : **ne pas chercher à la projeter**, et ne pas prendre son absence de `PBTA_SPECIALIZED_FIELDS` pour un trou à combler.
+
+Le partage projetée/alias n'est **pas écrit** dans le code : `tools/pbtaPackCoverage.harness.mts` le **mesure** en passant le témoin `playbook` accepté dans chaque codec spécialisé, puis confronte le résultat au câblage. Les listes en dur de `tools/assert-pbta-contract.mjs` et `tools/pbtaContractCorpus.mts` sont épinglées sur cette mesure, et `PBTA_ALIAS_TARGETS` (`src/features/pbta/coverage.ts`) l'est aussi — le plugin n'embarque pas de corpus, il ne peut donc que déclarer ses alias, et c'est le harnais qui prouve la déclaration.
+
+**La tolérance est asymétrique** (décidé le 2026-09-20, les trois dépôts avançant à leur rythme) : une cible que l'amont ajoute et que Handbook ne branche pas encore devient un **constat** (`unresolved`), affiché à l'utilisateur, build vert ; une régression de ce que Handbook *déclare* reste un échec dur — un alias qu'on branche, un `PBTA_GENERIC_TARGETS` qui nomme un codec disparu, un champ mécanique qui cesse d'être imprimé, `PBTA_ALIAS_TARGETS` qui ne colle plus à la mesure. Avant, une simple addition amont rendait `pnpm check` rouge sans qu'aucun document ne soit cassé. La même règle a été appliquée au contrat Mist : `assert:mist-contract` épinglait `cases.length === 31` (avec un message resté à « v1.0.0 » alors que le tarball est en v1.3.0), donc tout cas ajouté en amont cassait le build ; c'est maintenant un plancher (`>= 31`), un corpus qui rétrécit échoue toujours. Les compteurs qui portent sur les **déclarations de Handbook** — 14 cibles de `MIST_TARGET_TO_BLOCK`, 12 renderers, 12 exporters exercés — restent des égalités.
+
+⚠ **Un alias ne se déduit pas de la mesure seule** : un schéma spécialisé trop laxiste pour refuser le playbook portable est indiscernable d'un alias. C'est pourquoi `PBTA_ALIAS_TARGETS` est *déclaré* puis épinglé, et non dérivé : un désaccord est une question (addition volontaire ou schéma qui ne contraint plus rien ?), pas une ligne à ajouter. **`schema-pbta` est le plus fragile des trois schémas** — peu de ses schémas sont réellement validés — donc rien de ce contrat ne doit servir de modèle aux deux autres. Le référent est `schema-in-the-mist` (ou `schema-adrenaline`) : là, la couverture est **déclarée** cible par cible (`MIST_TARGET_TO_BLOCK ... satisfies Record<MistEngineDocumentTarget, string | null>`, `null` = pas de renderer attendu, et une attente `render | degraded | null` par cas du corpus), donc une addition amont est une erreur de types à une ligne, pas une mesure à interpréter.
+
+`src/features/pbta/coverage.ts` porte le même calcul côté exécution, sans import d'`obsidian` pour rester bundlable par le harnais, et croise les cibles avec les packs installés : la propriété d'une cible spécialisée se lit sur son nom (`<pack.id>-playbook`). Cette forme n'est plus une convention tacite : `assert:pbta-pack-coverage` l'oppose à chaque `pack-contract.json` publié (voir plus bas), donc une convention rompue en amont casse le build au lieu de rendre ce rapport faux en silence.
+
+**Un champ mécanique optionnel se prouve par cible, pas par témoin** (constaté le 2026-09-20) : `assert:pbta-specialized-projection` exigeait `strings` dans *chaque* témoin monsterhearts accepté, alors que `monsterhearts-playbook-empty-ascendants.toml` — accepté par le schéma — n'a pas de table `strings`. `pnpm check` était donc rouge depuis la montée du corpus. L'assertion vérifie maintenant deux choses distinctes : le champ ne s'affiche **que** si le document le déclare (par témoin), et **au moins un** témoin par cible l'affiche (par cible). Un renderer qui cesse d'imprimer une mécanique échoue toujours.
+
+**Depuis Obsidian** : *Advanced → Schema sources → PbtA playbook coverage → « Check coverage »*. La ligne affiche un résumé, le bouton ouvre le détail — formats lisibles, formats dont le pack manque, formats lus comme un playbook portable, **formats pas encore lus** (« Formats not read yet », l'amont est plus récent que ce build), packs PbtA installés. La source est `GAME_REGISTRATIONS`, pas le disque : ce que `initGameRegistry` a accepté est ce qui est rapporté.
+
+### Ce que le contrôle prouve contre les métadonnées publiées (depuis `schema-pbta` v5.5.0)
+
+**Le tarball publie désormais `cross-tool-provider.json` et `packs/*/pack-contract.json`** — la réserve inverse, vraie jusqu'à v5.4.x, ne l'est plus. `tools/pbtaProviderContract.mts` les lit sur le chemin d'installation et `assert:pbta-pack-coverage` s'en sert pour prouver quatre choses que Handbook ne faisait jusque-là que déclarer :
+
+- **les capacités** : chaque nom de `PORTABLE_GAME_PLUGIN_SUPPORT` (`src/games/capabilities.ts`) est présent dans `capabilities.handbook` du fournisseur. C'est ce qui a permis de supprimer la liste jumelle de `src/features/pbta/coverage.ts` : une seule déclaration, prouvée contre l'amont ;
+- **les exigences des packs** : chaque `requirements.handbook` d'un `pack-contract.json` est inclus dans ce que son propre fournisseur publie pour Handbook ;
+- **l'appartenance** : toute cible publiée est générique ou vaut exactement `<pack.id>-playbook`, la forme que la modale de couverture inverse pour nommer le pack attendu ;
+- **la cohérence interne du tarball** : chaque cible déclarée par un pack existe comme codec, et sa fixture existe dans le corpus du même tarball.
+
+**La règle de tolérance a deux justifications distinctes, et elles ne se confondent pas** :
+
+- **d'une version à l'autre**, un ajout amont est un **constat**, build vert : les trois dépôts avancent à leur rythme et « étendre le schéma avant le travail consommateur » fait de l'amont-en-avance l'ordre attendu. Une capacité offerte et non implémentée s'affiche (`offered upstream and not implemented here`), une cible publiée et non projetée aussi (`unresolved`) ;
+- **à l'intérieur d'un tarball épinglé**, codecs, `pack-contract.json` et corpus sont livrés ensemble : un désaccord entre eux est un **défaut de cette version**, donc un échec dur. De même, une régression de ce que Handbook *déclare* — une capacité déclarée qui disparaît de `capabilities.handbook`, une cible projetée qu'aucun pack ne déclare plus, une appartenance qui cesse de se lire sur le nom — échoue, nommément. Toutes ces mutations ont été vérifiées en modifiant `node_modules/schema-pbta` : enveloppe (`providerVersion`, `contractVersion`), capacité retirée, capacité inconnue ajoutée, cible renommée hors convention, cible projetée retirée, pack ajouté sans son codec.
+
+⚠ **Un ajout amont, c'est trois fichiers, pas un.** Ajouter un `pack-contract.json` seul échoue — à juste titre : sans codec ni témoin, c'est un tarball incohérent, pas une release en avance. La branche « publié et pas encore lu » ne s'exerce qu'en simulant la livraison complète (codec dans `dist/`, `pack-contract.json`, témoin accepté à chemin unique dans le manifeste de corpus) ; ainsi muté, le contrôle sort en 0 et rapporte la cible en observation. C'est la même distinction, vue depuis la mutation : cohérent et en avance → constat ; incohérent → échec.
+
+⚠ **Le lecteur vit dans `tools/`, pas dans le bundle**, et ce n'est pas un détail d'organisation : `packManifest` est un glob, et un bundle ne peut pas l'énumérer. L'adopter côté plugin reviendrait à figer six imports nommés — exactement la liste que ces métadonnées sont là pour remplacer. Handbook continue donc de **déclarer** ce qu'il porte, et le contrôle de build **prouve** la déclaration.
+
+⚠ **L'alias reste hors de portée de ces métadonnées.** Le tarball v5.5.0 ne contient aucune occurrence de « alias », `packs/` et `cross-tool-provider.json` compris, et `packs/salvage-run/pack-contract.json` déclare `salvage-run-playbook` comme une **cible ordinaire** — les métadonnées publiées affirment donc le contraire de ce que la mesure montre. Le raisonnement du dessus tient tel quel : Salvage Run est un jeu du pack Apocalypse World, son document est un playbook portable, et `PBTA_ALIAS_TARGETS` reste une déclaration locale épinglée sur la mesure, à remplacer le jour où l'amont publiera le fait. La comptabilité pack par pack complète vit toujours en amont (`tools/validate-pack-coverage.ts` dans `schema-pbta`).
+
+## CI : un seul installeur, un seul lockfile (corrigé le 2026-09-20)
+
+**Les CI échouaient à chaque push, et pas à cause des comparaisons de version.** `ci.yml` et `release.yml` lançaient `npm ci` alors que `package-lock.json` n'est **pas suivi par git** — `npm error code EUSAGE … can only install with an existing package-lock.json`. Le job mourait avant d'atteindre la moindre assertion : n'importe quel commit, même vide, donnait le même rouge. Aggravant : `tools/assert-mist-contract.mjs` et `tools/assert-adrenaline-contract.mjs` *lisaient* ce même fichier non suivi, donc `pnpm check` n'était vert en local que grâce à un artefact présent sur cette machine et introuvable dans un checkout propre.
+
+Ce qui a changé :
+
+- les deux workflows installent par `pnpm/action-setup@v4` + `pnpm install --frozen-lockfile`, avec `cache: pnpm` et `cache-dependency-path: handbook/pnpm-lock.yaml` ; `npm run check` devient `pnpm check` ;
+- `package.json` déclare `packageManager: "pnpm@10.5.2"` — c'est de ce champ que `pnpm/action-setup` tire la version, sans quoi l'action échoue ;
+- les deux lanceurs ne vérifient plus que `pnpm-lock.yaml` : l'URL publique, le SRI de la résolution épinglée, et l'absence de redirection signée `release-assets.githubusercontent.com` ;
+- `pnpm assert:ci-install` ferme la porte : un `npm ci|install|run` dans un workflow, un `pnpm install` sans `--frozen-lockfile`, un outil qui relit `package-lock.json`, un `packageManager` disparu — quatre régressions, quatre échecs, vérifiés par mutation.
+
+**Les workflows sont la seule partie du build qui ne tourne jamais en local** : c'est pourquoi ils ont pu rester cassés sans que rien ne le remarque. Toute exigence portant sur un checkout propre doit donc être affirmée par un `assert:*`, pas par l'habitude.
+
+### Les épingles de producteur se lisent, elles ne se recopient pas
+
+`assert:mist-contract` et `assert:adrenaline-contract` déduisaient leur version attendue d'un littéral : chaque release amont cassait le build sans que rien ne soit cassé. Désormais l'URL de release est **lue dans `package.json`**, sa forme est validée (`https://github.com/…/<schema>/releases/download/v…tgz`), la version en est extraite, et c'est *cette* valeur qui est confrontée au lockfile et au paquet installé. Un bump reste une édition d'une ligne, dans un seul fichier.
+
+Même principe pour le contrat Adrenaline : `assertAdrenalineContractVersion` figeait `"1.0.0"` ; elle exige maintenant un **major de contrat** (`/^1\.\d+\.\d+$/`). Un minor ou un patch amont est adopté sans toucher au code, `2.0.0` est refusé — c'est là que se situe la vraie rupture. Les versions d'**enveloppe** (`manifestVersion`, `tomlVersion`) restent des égalités : elles décrivent le format du fichier lu, pas la cadence du producteur.
+
+## Règles Codex (`AGENTS.md`, `.codex/rules/`) — elles s'appliquent quel que soit l'agent
+
+`AGENTS.md` renvoie à `.codex/rules/00-architecture/`. Deux règles versionnées dans le dépôt, donc opposables ici comme dans une session Codex :
+
+- **`0-main-only-execution.md`** : tout le travail d'agent se fait sur `main`. Pas de branche, pas de worktree ; les plans restent dans le worktree actif. (Vérifié le 2026-09-20 : `main`, un seul worktree.)
+- **`0-cross-repo-contract-flow.md`** : contrat de document et sémantique de présentation se versionnent dans les paquets `schema-*`, données utilisateur séparées des métadonnées ; blocs, régions, ordre des sections, tokens, assets, variantes et styles sont **publiés** ; **étendre le schéma avant le travail consommateur** et le **publier avant de l'adopter** ; menus de Handbook et formulaires de Lantern pilotés par les **métadonnées publiées** ; **aucun repli sémantique local** ; la sémantique de jeu reste hors des consommateurs, les adaptateurs runtime restent chez eux ; corpus et round trips croisés vérifiés.
+
+**Ce que ces règles tranchent sur la couverture PbtA** (constaté le 2026-09-20) :
+
+- la tolérance asymétrique en est la traduction directe : « extend schema before consumer work » fait de l'amont-en-avance l'ordre **attendu**, pas une panne — d'où un constat et non un échec ;
+- ⚠ `PBTA_ALIAS_TARGETS` est en revanche une **déclaration locale portant sur une sémantique amont**, ce que « keep game semantics outside consumers » et « drive Handbook menus from published metadata » refusent. Le fait est connu en amont (`KNOWN_ALIAS_TARGETS` dans `schema-pbta`) mais toujours **non publié**, y compris depuis que v5.5.0 publie ses `pack-contract.json` : aucune occurrence de « alias » dans le tarball installé, et `packs/salvage-run/pack-contract.json` déclare `salvage-run-playbook` comme une cible ordinaire. La liste en dur est donc un pis-aller assumé, à remplacer par la lecture d'une métadonnée dès que l'amont l'expose ;
+- « verify corpus and cross-tool round trips » n'est tenu qu'à moitié ici : les round trips de corpus le sont, le round trip croisé avec Lantern ne l'est pas.
+
 ## Conventions de travail
 
 - Ne pas commiter ni pousser sans demande explicite.
@@ -225,6 +301,8 @@ Le dépôt n'a toujours ni vitest ni jest, et n'en prendra pas : la convention a
 | --- | --- |
 | `pnpm assert:corpus` | chaque bloc de `BRUMES_BLOCKS` lit un témoin entièrement, dégrade un refus sans exception ni bloc vide, et possède sa commande de copie |
 | `pnpm assert:override` | `overrides.json` surcharge une zone, la retirer restaure le rendu au caractère près, une zone inconnue avertit une fois |
+| `pnpm assert:pbta-pack-coverage` | chaque cible de codec PbtA est comptée (générique ou spécialisée), possède un témoin accepté dans le corpus publié, la liste des cibles que Handbook résout est **mesurée** contre le playbook portable, et les capacités et l'appartenance déclarées sont prouvées contre `cross-tool-provider.json` et les `pack-contract.json` du tarball épinglé |
+| `pnpm assert:ci-install` | les workflows installent avec `pnpm install --frozen-lockfile`, `packageManager` est déclaré, et aucun outil de `tools/` ne lit un lockfile non suivi |
 | `pnpm dump:dom` | rend le DOM des douze blocs — à comparer d'une phase à l'autre : une phase qui ne touche pas au balisage doit le laisser identique |
 
 Le motif : un lanceur `tools/<nom>.mjs` bundle son harnais `tools/<nom>.harness.mts` par `esbuild.buildSync({platform:'node', format:'cjs', external:['obsidian','fs']})`, puis `node` l'exécute. **Aucune dépendance neuve** — `tsx` n'est pas installé et n'a pas à l'être.

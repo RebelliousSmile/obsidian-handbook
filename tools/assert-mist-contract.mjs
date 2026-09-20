@@ -5,29 +5,37 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const releaseUrl =
-	"https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.3.0/schema-in-the-mist-1.3.0.tgz";
-
+/* The pin is read, never copied: a producer release is not this repo's to hard-code. What is checked
+   is that every place recording the pin agrees with package.json — the bump stays a one-line edit. */
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
-assert.equal(packageJson.dependencies["schema-in-the-mist"], releaseUrl);
+const releaseUrl = packageJson.dependencies["schema-in-the-mist"];
+assert.ok(
+	releaseUrl.startsWith("https://github.com/") &&
+		releaseUrl.includes("/schema-in-the-mist/releases/download/v") &&
+		releaseUrl.endsWith(".tgz"),
+	`schema-in-the-mist must be pinned to a public release asset, found ${releaseUrl}`,
+);
+const pinnedVersion = releaseUrl.slice(releaseUrl.lastIndexOf("-") + 1, -".tgz".length);
 
-const npmLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
-const npmPackage = npmLock.packages["node_modules/schema-in-the-mist"];
-assert.equal(npmPackage.resolved, releaseUrl);
-assert.match(npmPackage.integrity, /^sha512-/);
-
+/* Only pnpm-lock.yaml is tracked, so it is the only lockfile a clean checkout has: the former
+   package-lock.json assertion was green here and unreachable in CI. */
 const pnpmLock = readFileSync("pnpm-lock.yaml", "utf8");
 assert.ok(pnpmLock.includes(`specifier: ${releaseUrl}`));
+const resolution = pnpmLock
+	.split("\n")
+	.filter((line) => line.indexOf("resolution: {") >= 0)
+	.filter((line) => line.indexOf(`schema-in-the-mist-${pinnedVersion}.tgz`) >= 0)[0];
+assert.ok(resolution, `pnpm lockfile must resolve the schema-in-the-mist v${pinnedVersion} release asset`);
 assert.ok(
-	pnpmLock.includes("schema-in-the-mist-1.3.0.tgz"),
-	"pnpm lockfile must resolve the schema-in-the-mist v1.3.0 release asset",
+	resolution.indexOf("integrity: sha512-") >= 0,
+	"the resolved schema-in-the-mist tarball must carry its SRI, or the pin proves nothing about its content",
 );
 
 const installedPackageUrl = import.meta.resolve("schema-in-the-mist/package.json");
 const installedPackage = JSON.parse(
 	readFileSync(new URL(installedPackageUrl), "utf8"),
 );
-assert.equal(installedPackage.version, "1.3.0");
+assert.equal(installedPackage.version, pinnedVersion, "the installed package must be the pinned release");
 
 const work = mkdtempSync(join(tmpdir(), "handbook-mist-contract-"));
 const stub = join(work, "obsidian-stub.mjs");

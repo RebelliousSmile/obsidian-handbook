@@ -15,9 +15,13 @@ export interface AdrenalineContractCase {
 
 const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
 
-export function assertAdrenalineContractVersion(version: unknown): asserts version is "1.0.0" {
-	if (version !== "1.0.0") {
-		throw new Error(`schema-adrenaline package version must be 1.0.0, received ${String(version)}`);
+/**
+ * The contract major is the compatibility axis; the producer's patch and minor are its own business.
+ * Freezing the full version made every upstream release a red build here, with nothing broken.
+ */
+export function assertAdrenalineContractVersion(version: unknown): asserts version is string {
+	if (typeof version !== "string" || !/^1\.\d+\.\d+$/.test(version)) {
+		throw new Error(`schema-adrenaline package must be a 1.x contract, received ${String(version)}`);
 	}
 }
 

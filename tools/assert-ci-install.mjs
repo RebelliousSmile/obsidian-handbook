@@ -1,0 +1,59 @@
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+
+/* Why this exists: every CI run failed for weeks on `npm ci` with no package-lock.json to install
+   from, and nothing in the repo could notice — the workflows are the one part of the build that never
+   runs locally. This asserts what a clean checkout has, so a green local check means a green CI run. */
+
+const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+assert.ok(
+	typeof packageJson.packageManager === "string" && packageJson.packageManager.indexOf("pnpm@") === 0,
+	"package.json must declare its pnpm version: pnpm/action-setup resolves the installer from this field",
+);
+
+const tracked = "pnpm-lock.yaml";
+readFileSync(tracked, "utf8");
+
+/* A lockfile that is not committed cannot be read by CI, whatever it proves on a developer machine. */
+const untracked = "package-lock.json";
+for (const entry of readdirSync("tools")) {
+	if (!entry.endsWith(".mjs") && !entry.endsWith(".mts")) continue;
+	const source = readFileSync(join("tools", entry), "utf8");
+	assert.equal(
+		source.indexOf(`readFileSync("${untracked}"`),
+		-1,
+		`tools/${entry} reads ${untracked}, which no clean checkout carries`,
+	);
+}
+
+const workflows = join(".github", "workflows");
+let installs = 0;
+for (const entry of readdirSync(workflows)) {
+	if (!entry.endsWith(".yml") && !entry.endsWith(".yaml")) continue;
+	const source = readFileSync(join(workflows, entry), "utf8");
+	const lines = source.split("\n").filter((line) => line.indexOf("run:") >= 0);
+	for (const line of lines) {
+		assert.equal(
+			/\bnpm (ci|install|run)\b/.test(line),
+			false,
+			`${entry} drives npm: this repo tracks only ${tracked}, so pnpm is its only installer`,
+		);
+		if (line.indexOf("pnpm install") >= 0) {
+			assert.ok(
+				line.indexOf("--frozen-lockfile") >= 0,
+				`${entry} installs without --frozen-lockfile: CI would silently accept a stale lockfile`,
+			);
+			installs += 1;
+		}
+	}
+	if (source.indexOf("pnpm") >= 0) {
+		assert.ok(
+			source.indexOf("pnpm/action-setup") >= 0,
+			`${entry} runs pnpm without installing it first`,
+		);
+	}
+}
+assert.ok(installs >= 2, `only ${installs} workflow installs dependencies with pnpm, expected the check and the release`);
+
+console.log(`CI install passed: ${installs} pnpm installs, ${tracked} is the only lockfile any of them needs.`);
