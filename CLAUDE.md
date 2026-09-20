@@ -6,7 +6,7 @@ Dépôt autonome depuis le **2026-09-07**. Objectif : développer le plugin comm
 
 - Plugin Obsidian **Handbook** (`id: obsidian-handbook`), thèmes + outils pour quatre lignes : City of Mist, Legend in the Mist, :Otherscape et Adrenaline System.
 - Fork de **Brumes** (`4rtamis/obsidian-brumes`), MIT, détaché le 2026-09-07. Le copyright d'origine reste dans `LICENSE`, l'origine est créditée dans le README.
-- Version : `package.json` et `manifest.json` portent **`2.1.4`**. `minAppVersion: 1.12.7`.
+- Version : `package.json`, `manifest.json` et `versions.json` portent **`2.19.2`**, tenus à une seule valeur par `pnpm assert:release-version` (voir plus bas). `minAppVersion: 1.12.7`.
 - Stack : TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), lint ESLint (dont `eslint-plugin-obsidianmd`).
 - Gestionnaire de paquets : **pnpm** et lui seul. `pnpm-lock.yaml` est le **seul lockfile suivi par git** (avec `flake.lock`) ; `package-lock.json` a été sorti de l'arbre de travail le 2026-09-20, plus aucun outil ni workflow ne le lit. `package.json` épingle `packageManager: pnpm@10.5.2`.
 
@@ -250,6 +250,19 @@ Ce qui a changé :
 `assert:mist-contract` et `assert:adrenaline-contract` déduisaient leur version attendue d'un littéral : chaque release amont cassait le build sans que rien ne soit cassé. Désormais l'URL de release est **lue dans `package.json`**, sa forme est validée (`https://github.com/…/<schema>/releases/download/v…tgz`), la version en est extraite, et c'est *cette* valeur qui est confrontée au lockfile et au paquet installé. Un bump reste une édition d'une ligne, dans un seul fichier.
 
 Même principe pour le contrat Adrenaline : `assertAdrenalineContractVersion` figeait `"1.0.0"` ; elle exige maintenant un **major de contrat** (`/^1\.\d+\.\d+$/`). Un minor ou un patch amont est adopté sans toucher au code, `2.0.0` est refusé — c'est là que se situe la vraie rupture. Les versions d'**enveloppe** (`manifestVersion`, `tomlVersion`) restent des égalités : elles décrivent le format du fichier lu, pas la cadence du producteur.
+
+### La version se tient à une seule valeur, et le tag la prouve (corrigé le 2026-09-20)
+
+`manifest.json`, `package.json` et `versions.json` sont restés à **2.15.3** pendant que les tags allaient jusqu'à `v2.19.1`. Obsidian lit le **manifeste**, pas le tag : chacune de ces releases annonçait donc `2.15.3` à un coffre déjà installé, aucune mise à jour n'a jamais été proposée. Rien ne pouvait le remarquer — les trois fichiers étaient d'accord **entre eux**, et ne divergeaient que du tag et du changelog.
+
+`pnpm assert:release-version` tient maintenant la version à une valeur unique sur ses quatre lieux d'écriture : les trois fichiers plus la section la plus récente de `CHANGELOG.md`. Le workflow de release la relance **avec le tag** (`RELEASE_TAG: ${{ github.ref_name }}`, étape posée entre `Check plugin` et `Create release`) : c'est le seul endroit où le tag est connu et le seul où l'écart embarque vraiment. Vérifié par mutation : un `RELEASE_TAG` décalé sort en 1 en nommant ce que le manifeste embarquerait.
+
+Deux corollaires :
+
+- **Passer par `pnpm version <x.y.z>`**, jamais par une édition à la main de `manifest.json` : le script de cycle de vie `version` appelle `version-bump.mjs`, qui réécrit `manifest.json` et `versions.json` puis les stage. Ce script préserve désormais le saut de ligne final des deux fichiers — sans quoi chaque bump traînait un `\ No newline at end of file` dans son propre diff de release.
+- **Les versions sautées ne sont pas rétro-remplies dans `versions.json`** : aucun build publié ne les a jamais déclarées, et inventer une entrée affirmerait une compatibilité que personne n'a mesurée.
+
+Cinq tags n'avaient aucune release, pour cinq pannes distinctes : `v2.10.0` (`ENOENT … corpus/refus`), `v2.12.0` (`Dynamic require of "path" is not supported`), `v2.16.0` (lint `obsidianmd/prefer-active-doc`), `v2.18.0` (`npm ci` sans lockfile suivi), `v2.19.0` (`No pnpm version is specified`). Chacune n'a été corrigée que sur `main`, et **rejouer un run rejoue le workflow tel qu'il était à ce commit** — il n'existe par ailleurs aucun `workflow_dispatch` sur `release.yml`. Ces cinq tags ont donc reçu une release **sans artefact**, notes tirées du changelog et `--latest=false`, la raison écrite en tête des notes. Un build fait à ces tags aurait de toute façon déclaré `2.15.3`.
 
 ## Règles Codex (`AGENTS.md`, `.codex/rules/`) — elles s'appliquent quel que soit l'agent
 

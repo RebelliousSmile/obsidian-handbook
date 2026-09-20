@@ -22,7 +22,7 @@ export const pbtaPlaybookBlock: BrumesBlock<ResolvedPbtaPlaybook> = {
 	shape: pbtaPlaybookShape,
 	parse: parsePbtaPlaybookToml,
 	render: renderPbtaPlaybook,
-	template: () => `\`\`\`pbta-playbook\nslug = "new-playbook"\nname = "New playbook"\ngame = "masks"\ndescription = "Describe this playbook."\nmoves = []\n\n[stats]\ndanger = 0\n\`\`\`\n`,
+	template: (settings) => `\`\`\`pbta-playbook\nslug = "new-playbook"\nname = "New playbook"\ngame = "${settings.mode}"\ndescription = "Describe this playbook."\nmoves = []\n\n[stats]\n\`\`\`\n`,
 };
 
 export const pbtaMoveBlock: BrumesBlock<Move> = {

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import type { Editor, Menu } from "obsidian";
+import { parsePlaybookToml } from "schema-pbta";
 import { contributeBlockInsertions } from "../src/features/blocks/registry";
 import { contributeTomlExports } from "../src/features/blocks/tomlExports";
 import { initGameRegistry } from "../src/games/registry";
@@ -68,5 +69,18 @@ assert.deepEqual(partialMenu.items.map((item) => item.title), ["Fiche PJ Adrenal
 
 const pnjSource = "```adrenaline-pnj\nnom = \"Absent\"\n```";
 assert.equal(contributeTomlExports(new FakeMenu() as unknown as Menu, new FakeEditor(pnjSource) as unknown as Editor, partialSettings), 0);
+
+initGameRegistry([{
+	pack: { id: "monsterhearts", label: "Monsterhearts", style },
+	installation: { root: "packs/monsterhearts", version: "0.3.0", minimumHandbookVersion: "2.7.0", requires: ["block:pbta-playbook"], variants: [] },
+} as unknown as InstalledGamePlugin]);
+const pbtaSettings = normalizeSettings({ mode: "monsterhearts" });
+const pbtaMenu = new FakeMenu();
+const pbtaEditor = new FakeEditor();
+assert.equal(contributeBlockInsertions(pbtaMenu as unknown as Menu, pbtaEditor as unknown as Editor, pbtaSettings), 1);
+pbtaMenu.items[0].action?.();
+assert.match(pbtaEditor.inserted, /^game = "monsterhearts"$/m, "a PbtA playbook insertion uses the active pack id");
+assert.doesNotMatch(pbtaEditor.inserted, /^game = "masks"$/m, "a Monsterhearts insertion never falls back to Masks");
+assert.equal(parsePlaybookToml(pbtaEditor.inserted.slice("```pbta-playbook\n".length, -4)).game, "monsterhearts", "the active-pack template remains a valid portable playbook");
 
 initGameRegistry([]);

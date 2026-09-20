@@ -154,7 +154,7 @@ export function contributeBlockInsertions(
 				.setTitle(block.label)
 				.setIcon(block.icon)
 				.onClick(() =>
-					editor.replaceRange(block.template(), editor.getCursor()),
+					editor.replaceRange(block.template(settings), editor.getCursor()),
 				),
 		);
 		added++;

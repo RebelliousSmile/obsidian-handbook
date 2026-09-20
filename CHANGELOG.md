@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.3] - 2026-09-20
+
+### Fixed
+
+- Seed PbtA playbooks with the active game pack identifier instead of the hard-coded Masks value. A Monsterhearts vault now inserts `game = "monsterhearts"`; the portable template leaves its stats empty rather than supplying Masks' `danger` stat.
+
 ## [2.19.2] - 2026-09-20
 
 ### Added

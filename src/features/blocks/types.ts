@@ -37,7 +37,8 @@ export interface BrumesBlock<T> {
 	shape: BlockShape;
 	parse(source: string): T | null;
 	render(data: T, doc: Document): HTMLElement;
-	template(): string;
+	/** Writes an insertion document using the active pack context. */
+	template(settings: BrumesSettings): string;
 }
 
 export function isBlockEnabled(

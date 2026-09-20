@@ -54,8 +54,8 @@ them together.
 
 The `GamePack` appearance contract itself belongs to Handbook at
 [`schemas/appearance/game-pack.schema.json`](schemas/appearance/game-pack.schema.json).
-Since 2026-09-15, this replaces the separate `schema-appearance` repository:
-its archived raw URL is only a frozen compatibility snapshot. New consumers
+Since 2026-09-15, this replaces the separate `schema-appearance` repository,
+deleted on 2026-09-20: no raw URL of it resolves any more. New consumers
 must use the Handbook contract from the
 [v2.15.0 release](https://github.com/RebelliousSmile/obsidian-handbook/blob/v2.15.0/schemas/appearance/game-pack.schema.json).
 The same sources are managed under **Settings → Handbook → Schema sources**.
