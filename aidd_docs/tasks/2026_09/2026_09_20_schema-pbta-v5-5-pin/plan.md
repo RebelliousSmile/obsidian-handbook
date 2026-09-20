@@ -1,6 +1,6 @@
 ---
 objective: "Handbook installe schema-pbta v5.5.0 depuis une épingle vérifiable, et prouve contre les métadonnées inter-outils que cette release publie ce que le plugin déclare localement sur les capacités PbtA et l'appartenance des cibles aux packs."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Épingle schema-pbta v5.5.0 et preuve contre les métadonnées inter-outils
