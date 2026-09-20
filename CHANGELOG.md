@@ -5,6 +5,28 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.0] - 2026-09-20
+
+### Added
+
+- Report PbtA playbook coverage from the settings tab: which game-specific formats this build reads, which are read as a portable playbook, which are newer than the build, and which installed pack each specialized format expects.
+- Prove Handbook's local PbtA declarations against the metadata `schema-pbta` publishes from v5.5.0 on (`cross-tool-provider.json` and `packs/*/pack-contract.json`): every declared capability is still published for Handbook, every pack requirement is covered by its own provider, every published target is generic or exactly `<pack.id>-playbook`, and every declared target has both a codec and a corpus fixture in the same tarball. The metadata is read by the assertions, never imported into the plugin bundle.
+- Add `assert:ci-install`, which fails on an `npm` install in a workflow, a `pnpm install` without `--frozen-lockfile`, a tool reading the untracked `package-lock.json`, or a missing `packageManager` field.
+
+### Changed
+
+- Bump the `schema-pbta` pin to v5.5.0, and read the pinned version from `package.json` instead of restating it in the contract launchers. The same derivation now covers the Mist and Adrenaline contracts, whose expected version is checked as a contract major rather than an exact literal.
+- Derive the PbtA capability list in `src/features/pbta/coverage.ts` from `PORTABLE_GAME_PLUGIN_SUPPORT` instead of restating it.
+- Install with pnpm in the CI and release workflows (`pnpm/action-setup` plus `pnpm install --frozen-lockfile`).
+
+### Removed
+
+- Remove `package-lock.json` from the working tree: `pnpm-lock.yaml` is the only tracked lockfile.
+
+### Fixed
+
+- Fix the CI and release workflows, which ran `npm ci` against a lockfile that git does not track and failed on every push before reaching any assertion.
+
 ## [2.18.0] - 2026-09-18
 
 ### Added
