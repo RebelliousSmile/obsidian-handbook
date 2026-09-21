@@ -6,6 +6,7 @@ import {
 	mapRegionToBlocks,
 	wrapBlocksInRegion,
 } from "../src/features/layoutRegions/sectionMapper";
+import { applyContractLayout } from "../src/features/layoutRegions/contractLayout";
 
 const source = [
 	"before",
@@ -68,6 +69,7 @@ assert.deepEqual(parseLayoutRegions(literal), {
 type FakeElement = {
 	children: FakeElement[];
 	className: string;
+	dataset: Record<string, string | undefined>;
 	classList: { add: (...names: string[]) => void; contains: (name: string) => boolean; values: Set<string> };
 	name: string;
 	tagName: string;
@@ -82,6 +84,7 @@ function fakeElement(name: string, className = ""): FakeElement {
 	const element: FakeElement = {
 		children: [],
 		className,
+		dataset: {},
 		classList: {
 			add: (...names) => names.forEach((name) => { element.classList.values.add(name); element.className = [...element.classList.values].join(" "); }),
 			contains: (name) => element.className.split(/\s+/).includes(name),
@@ -134,6 +137,27 @@ assert.equal(container.style.values.get("--handbook-layout-columns"), "3");
 assert.deepEqual(parent.children, [open, container, close]);
 assert.equal(container.children.length, 3);
 assert.deepEqual(container.children.map((group) => group.children), renderedBlocks.map((block) => [block]));
+
+// Schema layouts select rendered regions, not source lines. The selected regions
+// may be separated by other content and an optional region may be absent.
+const contractParent = fakeElement("parent");
+const intro = fakeElement("intro");
+const moves = fakeElement("moves");
+moves.dataset.region = "moves";
+const aside = fakeElement("aside");
+const state = fakeElement("state");
+state.dataset.region = "state";
+const gear = fakeElement("gear");
+gear.dataset.region = "gear";
+for (const block of [intro, moves, aside, state, gear]) contractParent.appendChild(block);
+const contractLayout = applyContractLayout(contractParent as unknown as HTMLElement, {
+	regions: ["moves", "state", "gear", "optional"],
+	columns: [["moves"], ["state", "optional"]],
+}) as unknown as FakeElement;
+assert.ok(contractLayout);
+assert.equal(contractLayout.style.values.get("--handbook-layout-columns"), "2");
+assert.deepEqual(contractLayout.children.map((column) => column.children), [[moves], [state]]);
+assert.deepEqual(contractParent.children, [intro, contractLayout, aside, gear]);
 
 // The PDF export: no markers, no section info, one bare wrapper per block.
 // Sections are those Obsidian 1.13.7 reported for the fixture (evidence/print-dom.md).
