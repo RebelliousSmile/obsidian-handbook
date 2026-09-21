@@ -1,4 +1,4 @@
-import type { Move, Playbook } from "schema-pbta";
+import type { MonsterheartsPlaybook, Move, Playbook } from "schema-pbta";
 import type { BlockShape, BlockZone } from "../blocks/shape";
 import { renderZones } from "../blocks/shape";
 import { pbtaMoveShape, pbtaPlaybookShape } from "./shape";
@@ -28,6 +28,53 @@ function labelledValue(doc: Document, label: string, value: unknown): HTMLElemen
 	row.appendChild(element(doc, "dt", label));
 	row.appendChild(element(doc, "dd", formatValue(value)));
 	return row;
+}
+
+function statProfile(doc: Document, profile: NonNullable<Playbook["statProfiles"]>[number]): HTMLElement {
+	const node = element(doc, "section");
+	node.classList.add("handbook-pbta-stat-profile");
+	node.appendChild(element(doc, "h4", profile.label));
+	for (const key of Object.keys(profile.stats)) node.appendChild(labelledValue(doc, key, profile.stats[key]));
+	return node;
+}
+
+function mechanicGroup(doc: Document, title: string): HTMLElement {
+	const node = element(doc, "section");
+	node.classList.add("handbook-pbta-mechanic-group");
+	node.appendChild(element(doc, "h4", title));
+	return node;
+}
+
+function renderMonsterheartsMechanics(data: MonsterheartsPlaybook, doc: Document): HTMLElement | null {
+	const node = element(doc, "section");
+	if (data.strings) {
+		const group = mechanicGroup(doc, "Strings");
+		group.appendChild(labelledValue(doc, "max", data.strings.max));
+		if (data.strings.starting !== undefined) group.appendChild(labelledValue(doc, "starting", data.strings.starting));
+		node.appendChild(group);
+	}
+	if (data.ascendants?.length) {
+		const group = mechanicGroup(doc, "Ascendants");
+		for (const ascendant of data.ascendants) group.appendChild(labelledValue(doc, ascendant.name, ascendant.value));
+		node.appendChild(group);
+	}
+	if (data.conditions?.length) {
+		const group = mechanicGroup(doc, "Conditions");
+		for (const condition of data.conditions) {
+			const entry = element(doc, "article");
+			entry.classList.add("handbook-pbta-mechanic-entry");
+			entry.appendChild(element(doc, "h5", condition.name));
+			if (condition.description) entry.appendChild(element(doc, "p", condition.description));
+			group.appendChild(entry);
+		}
+		node.appendChild(group);
+	}
+	if (data.advances.length) {
+		const group = mechanicGroup(doc, "Advances");
+		for (const advance of data.advances) group.appendChild(labelledValue(doc, advance.label, advance.checked ?? false));
+		node.appendChild(group);
+	}
+	return node.children.length > 0 ? node : null;
 }
 
 function stringList(doc: Document, values: readonly unknown[]): HTMLElement {
@@ -102,13 +149,14 @@ function renderEditorial(data: Record<string, unknown>, doc: Document): HTMLElem
 export const PBTA_SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["target"], "playbook">, string[]> = {
 	"masks-playbook": ["momentOfTruth", "potential", "influence"],
 	"monster-of-the-week-playbook": ["improvements", "luck", "ratings"],
-	"monsterhearts-playbook": ["strings", "conditions", "advances"],
+	"monsterhearts-playbook": ["strings", "ascendants", "conditions", "advances"],
 	"urban-shadows-playbook": ["corruption", "endMove"],
 	"the-sprawl-playbook": ["directives", "missionGear", "cred"],
 };
 
 function renderMechanics(target: ResolvedPbtaPlaybook["target"], data: Record<string, unknown>, doc: Document): HTMLElement | null {
 	if (target === "playbook") return null;
+	if (target === "monsterhearts-playbook") return renderMonsterheartsMechanics(data as MonsterheartsPlaybook, doc);
 	const node = element(doc, "section");
 	for (const key of PBTA_SPECIALIZED_FIELDS[target]) {
 		const value = data[key];
@@ -141,6 +189,7 @@ export function renderPbtaPlaybook(resolved: ResolvedPbtaPlaybook, doc: Document
 		stats: (zone) => {
 			const node = section(doc, pbtaPlaybookShape, zone);
 			for (const key of Object.keys(data.stats)) node.appendChild(labelledValue(doc, key, data.stats[key]));
+			for (const profile of data.statProfiles ?? []) node.appendChild(statProfile(doc, profile));
 			return node;
 		},
 		attributes: (zone) => {
