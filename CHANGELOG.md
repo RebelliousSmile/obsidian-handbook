@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.4] - 2026-09-21
+
+### Fixed
+
+- Render every published PbtA starting-stat profile even when a Monsterhearts playbook has no selected stats, and present its Strings, ascendants, conditions, and advances as structured content instead of object text.
+
 ## [2.19.3] - 2026-09-20
 
 ### Fixed
