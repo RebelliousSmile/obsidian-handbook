@@ -1,6 +1,6 @@
 ---
 objective: "A valid Monsterhearts playbook renders its published starting-stat profiles and every declared specialized mechanic as structured content while retaining the established PbtA region order."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Render Monsterhearts stat profiles and mechanics as structured regions
