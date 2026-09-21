@@ -51,6 +51,21 @@ export function wrapBlocksInRegion(
 	return container;
 }
 
+/** Wrap explicit groups of rendered blocks; contract layouts do not need headings or source markers. */
+export function wrapBlocksInColumns(first: HTMLElement, columns: readonly (readonly HTMLElement[])[]): HTMLElement {
+	const container = first.ownerDocument.createElement("div");
+	container.classList.add("handbook-layout-region");
+	container.style.setProperty("--handbook-layout-columns", String(columns.length));
+	first.before(container);
+	for (const blocks of columns) {
+		const column = first.ownerDocument.createElement("div");
+		column.classList.add("handbook-layout-column");
+		container.appendChild(column);
+		for (const block of blocks) column.appendChild(block);
+	}
+	return container;
+}
+
 function blockHeadingLevel(block: HTMLElement): number | null {
 	const match = /^el-h([1-6])$/.exec(block.className);
 	if (match) return Number(match[1]);
