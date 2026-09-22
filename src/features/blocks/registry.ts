@@ -19,6 +19,8 @@ import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
+import { rollerBlock } from "../rollers/block";
+import { rememberRollerContext } from "../rollers/contextMenu";
 import {
 	tomlExportForBlock,
 } from "./tomlExports";
@@ -45,6 +47,7 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	adrenalineMonsterBlock,
 	pbtaPlaybookBlock,
 	pbtaMoveBlock,
+	rollerBlock,
 ];
 
 function requiredCapabilities(settings: BrumesSettings): readonly string[] {
@@ -109,6 +112,15 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
 				const rendered = block.render(parsed, el.doc, { packId: plugin.settings.mode });
 				el.appendChild(rendered);
+				if (block.id === rollerBlock.id) {
+					const table = rendered.querySelector(".brumes-roller--table");
+					table?.addEventListener("mousedown", (event) => {
+						const mouse = event as MouseEvent;
+						if (mouse.button === 2 || (mouse.buttons & 2) !== 0) {
+							rememberRollerContext(plugin, parsed as import("../rollers/parser").RollerData);
+						}
+					}, { capture: true });
+				}
 				// Older Obsidian builds render the block but do not expose section
 				// metadata. The context menu must still be usable (and visible).
 				const section = typeof ctx.getSectionInfo === "function"

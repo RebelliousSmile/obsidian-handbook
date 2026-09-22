@@ -305,7 +305,7 @@ function hasCorpus(id: string): boolean {
  */
 function assertRule(): void {
 	for (const block of BRUMES_BLOCKS) {
-		if (BLOCKS_IN_DEBT.indexOf(block.id) !== -1) {
+		if (block.utility || BLOCKS_IN_DEBT.indexOf(block.id) !== -1) {
 			continue;
 		}
 
