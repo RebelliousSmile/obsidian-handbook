@@ -1,4 +1,5 @@
 import type { BrumesCalloutAliasesSettings } from "../../settings/types";
+import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { logScope } from "../../utils/logger";
 import { NATIVE_CALLOUTS } from "./nativeCallouts";
 import { sanitizeAliases } from "./sanitizeAlias";
@@ -69,6 +70,25 @@ export function normalizeCallouts(
 			takenIds.add(entry.styleKey);
 			normalized.push(entry);
 		}
+	}
+
+	const usedAliases = new Set<string>();
+	for (const entry of normalized) {
+		for (const alias of entry.aliases) usedAliases.add(alias);
+	}
+	for (const definition of PBTA_VISUAL_CALLOUTS) {
+		if (normalized.some((entry) => entry.id === definition.id)) continue;
+		const native = NATIVE_CALLOUTS.find((entry) => entry.id === definition.id);
+		if (!native) continue;
+		const base = native.aliases[0];
+		let alias = base;
+		let suffix = 2;
+		while (usedAliases.has(alias)) {
+			alias = `${base}-${suffix}`;
+			suffix += 1;
+		}
+		usedAliases.add(alias);
+		normalized.push({ ...native, aliases: [alias] });
 	}
 
 	return normalized;

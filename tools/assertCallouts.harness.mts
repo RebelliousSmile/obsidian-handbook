@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { log } from "../src/utils/logger";
 import { NATIVE_CALLOUTS } from "../src/features/callouts/nativeCallouts";
 import { isCalloutAvailable } from "../src/features/callouts/types";
 import { normalizeSettings } from "../src/settings/types";
+import { getAvailableCalloutInsertions, insertCallout } from "../src/features/callouts/contextMenu";
+import { initGameRegistry } from "../src/games/registry";
+import { EMPTY_STYLE } from "../src/games/types";
 
 log.setLevel("warn");
 
@@ -26,9 +30,54 @@ log.setLevel("warn");
 // Portable callouts follow the manifest capability, independently of game id.
 {
 	const pbta = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:pbta");
-	assert.equal(pbta.length, 4);
+	assert.equal(pbta.length, 8);
+	assert.deepEqual(
+		pbta.filter((entry) => PBTA_VISUAL_CALLOUTS.some((definition) => definition.id === entry.id)).map((entry) => entry.id),
+		PBTA_VISUAL_CALLOUTS.map((definition) => definition.id),
+	);
 	assert.equal(pbta.every((entry) => !isCalloutAvailable(entry, "unknown-game", [])), true);
 	assert.equal(pbta.every((entry) => isCalloutAvailable(entry, "unknown-game", ["style:pbta"])), true);
+}
+
+// Existing saved settings gain the new native entries without changing their
+// aliases. A user alias that already claims a default gets priority.
+{
+	const oldNative = NATIVE_CALLOUTS.filter((entry) => !PBTA_VISUAL_CALLOUTS.some((definition) => definition.id === entry.id));
+	const settings = normalizeSettings({
+		callouts: [
+			...oldNative,
+			{ id: "user-clock", name: "My clock", aliases: ["pbta-clock"], scope: "all", template: "title-body", font: "text", color: { kind: "theme" }, native: false, styleKey: "user-clock" },
+		],
+	});
+	assert.equal(settings.callouts.length, NATIVE_CALLOUTS.length + 1);
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === "user-clock")?.aliases, ["pbta-clock"]);
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === "pbta-clock")?.aliases, ["pbta-clock-2"]);
+	for (const definition of PBTA_VISUAL_CALLOUTS) assert.ok(settings.callouts.some((entry) => entry.id === definition.id));
+}
+
+// The same published catalogue drives insertions for any installed PbtA pack.
+{
+	initGameRegistry([
+		{ pack: { id: "pbta-test", label: "PbtA test", style: EMPTY_STYLE }, installation: { version: "1.0.0", root: "pbta-test", minimumHandbookVersion: "2.8.0", requires: ["style:pbta"] } },
+		{ pack: { id: "other-test", label: "Other test", style: EMPTY_STYLE }, installation: { version: "1.0.0", root: "other-test", minimumHandbookVersion: "2.8.0", requires: [] } },
+	]);
+	const settings = normalizeSettings(undefined);
+	const inPbta = getAvailableCalloutInsertions(settings, "pbta-test");
+	const inOther = getAvailableCalloutInsertions(settings, "other-test");
+	for (const definition of PBTA_VISUAL_CALLOUTS) {
+		const insertion = inPbta.find((entry) => entry.alias === definition.id);
+		assert.ok(insertion, `${definition.id} is missing from a PbtA pack`);
+		assert.equal(insertion.template, "title-body");
+		assert.ok(!inOther.some((entry) => entry.alias === definition.id));
+	}
+	let markdown = "";
+	const editor = {
+		getCursor: () => ({ line: 0, ch: 0 }),
+		replaceRange: (value: string) => { markdown = value; },
+		setSelection: () => undefined,
+	};
+	insertCallout(editor as never, "pbta-clock", "title-body");
+	assert.match(markdown, /^> \[!PBTA-CLOCK\] /);
 }
 
 // Old shape with custom aliases on move and redClue migrates exactly onto

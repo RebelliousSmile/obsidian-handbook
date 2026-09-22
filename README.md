@@ -134,13 +134,12 @@ recover a legacy source that an updater removed before Handbook started, which
 is why the pre-update copy above is required. Reinstalling a game later means
 copying its complete directory back under `<configDir>/handbook/packs/`.
 
-The modern layout is `packs/<id>/pack.json`. Its images and fonts are resolved
+The modern layout is `packs/<id>/pack.json`. Its images, fonts and declared CSS stylesheets are resolved
 inside that plugin directory, from `assets/` by default or from the relative
 root declared by its manifest. Existing personal packs stored as
 `packs/*.json` remain supported.
 
-Game plugins are data only: Handbook does not execute JavaScript, TypeScript or
-external CSS from these directories.
+Game plugins do not execute JavaScript or TypeScript. A declared CSS stylesheet is validated and scoped to its own game before Handbook loads it.
 
 ### 4. Configure Handbook
 
@@ -332,6 +331,19 @@ The plugin also adds a Handbook editor context-menu entry so you can insert star
 ### 2. Callouts
 
 Handbook builds on standard Obsidian callouts, but gives them mode-specific styling and aliases.
+
+Every installed PbtA pack can use `pbta-clock`, `pbta-move`, `pbta-npc-reaction` and `pbta-playbook-change`. They are visual note layouts; editing them does not update a front, NPC, move or playbook. A clock can be used as a GM aid even when the game's rules do not include clocks.
+
+```md
+> [!pbta-clock] Trouble at the party
+> - [x] A rumour spreads
+> - [ ] Someone confronts the character
+
+> [!pbta-npc-reaction] The host intervenes
+> She changes the subject and asks everyone to leave.
+```
+
+The active pack styles these callouts. Custom aliases keep their styling; if an existing alias conflicts with a new native callout, Handbook keeps the old alias and offers a free alias for the new one in the insertion menu.
 
 City of Mist examples:
 
