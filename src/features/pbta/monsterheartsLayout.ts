@@ -200,16 +200,22 @@ export function renderMonsterheartsLayout(data: MonsterheartsPlaybook, doc: Docu
 	const identity = rendered.get("game-identity");
 	if (identity) root.appendChild(identity);
 	const placed = new Set<RegionId>(["game-identity"]);
-	for (const [index, ids] of contract.columns.entries()) {
-		const column = el(doc, "div");
-		column.classList.add("handbook-monsterhearts-column");
-		column.dataset.column = String(index + 1);
-		for (const id of ids) {
-			const region = rendered.get(id);
-			if (region) column.appendChild(region);
-			placed.add(id);
+	for (const [rowIndex, columns] of (contract.rows ?? []).entries()) {
+		const row = el(doc, "div");
+		row.classList.add("handbook-monsterhearts-layout-row");
+		row.dataset.row = String(rowIndex + 1);
+		for (const [columnIndex, ids] of columns.entries()) {
+			const column = el(doc, "div");
+			column.classList.add("handbook-monsterhearts-column");
+			column.dataset.column = String(columnIndex + 1);
+			for (const id of ids) {
+				const region = rendered.get(id);
+				if (region) column.appendChild(region);
+				placed.add(id);
+			}
+			row.appendChild(column);
 		}
-		root.appendChild(column);
+		root.appendChild(row);
 	}
 	for (const id of contract.canonicalOrder) if (!placed.has(id)) {
 		const region = rendered.get(id);

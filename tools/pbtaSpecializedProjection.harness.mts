@@ -110,8 +110,8 @@ const unchanged = JSON.stringify(unselected.data);
 const monsterheartsRendered = pbtaPlaybookBlock.render(unselected, doc as unknown as Document, { packId: "monsterhearts" }) as unknown as El;
 assert.ok(monsterheartsRendered.classes.includes("handbook-monsterhearts-playbook"), "Monsterhearts pack selects its editorial layout");
 const renderedRegions = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-region").map((child) => child.dataset.region);
-const columnOrder = ["game-identity", ...presentation.columns.flat()];
-assert.deepEqual(renderedRegions, columnOrder.filter((id) => renderedRegions.includes(id)), "published column order survives rendering");
+const rowOrder = ["game-identity", ...presentation.rows.flat(2)];
+assert.deepEqual(renderedRegions, rowOrder.filter((id) => renderedRegions.includes(id)), "published row order survives rendering");
 assert.ok(renderedRegions.includes("stat-profiles") && renderedRegions.includes("relationships") && renderedRegions.includes("conditions-and-harm"), "stat, relationship and harm regions are distinct");
 assert.ok(text(monsterheartsRendered).includes("Au quart de tour"), "published stat profiles remain visible");
 assert.ok(!/\b(?:KEY|LABEL|CHECKED|GAME IDENTITY|PLAYBOOK MOVES)\b/.test(text(monsterheartsRendered)), "schema field names do not leak into the playbook");
@@ -119,7 +119,8 @@ assert.equal(elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-mo
 const portrait = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-portrait")[0];
 assert.ok(portrait.classes.includes("handbook-monsterhearts-portrait--empty"), "missing image leaves a reserved portrait frame");
 assert.equal(portrait.children[0]?.textContent, "Portrait à ajouter");
-assert.equal(elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-column")[1].children[0]?.dataset.region, "playbook-portrait", "portrait starts the second column");
+const firstRow = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-layout-row")[0];
+assert.deepEqual(firstRow.children[1].children.map((child) => child.dataset.region), ["playbook-portrait"], "portrait alone occupies the first row's middle cell");
 const withImage = { ...unselected.data, playbookImage: "Selkie.png" };
 const imaged = pbtaPlaybookBlock.render({ ...unselected, data: withImage }, doc as unknown as Document, {
 	packId: "monsterhearts", resolveImage: (path) => path === "Selkie.png" ? "app://vault/Selkie.png" : null,
