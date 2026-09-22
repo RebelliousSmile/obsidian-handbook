@@ -1,6 +1,6 @@
 ---
 objective: "Every Handbook user can enable generic Roller tables, pack diagnostics fail visibly and independently, remote source assets are preflight-bounded, and Dice Roller has an end-to-end CI journey."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Audit remediation
