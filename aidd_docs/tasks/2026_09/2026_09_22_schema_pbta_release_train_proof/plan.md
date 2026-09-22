@@ -1,6 +1,6 @@
 ---
 objective: "Handbook proves that an exact schema-pbta candidate archive is locked, installable, and renderable before the central release train promotes it."
-status: pending
+status: implemented
 ---
 
 # Plan: Preuve d’adoption d’un candidat schema-pbta
