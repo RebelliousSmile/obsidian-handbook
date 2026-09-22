@@ -23,7 +23,7 @@ export const pbtaPlaybookBlock: BrumesBlock<ResolvedPbtaPlaybook> = {
 	shape: pbtaPlaybookShape,
 	parse: parsePbtaPlaybookToml,
 	render: (data, doc, context) => context?.packId === "monsterhearts" && data.target === "monsterhearts-playbook"
-		? renderMonsterheartsLayout(data.data, doc)
+		? renderMonsterheartsLayout(data.data, doc, context?.resolveImage)
 		: renderPbtaPlaybook(data, doc),
 	template: (settings) => `\`\`\`pbta-playbook\nslug = "new-playbook"\nname = "New playbook"\ngame = "${settings.mode}"\ndescription = "Describe this playbook."\nmoves = []\n\n[stats]\n\`\`\`\n`,
 };

@@ -1,104 +1,225 @@
 import type { MonsterheartsPlaybook } from "schema-pbta";
 import contract from "schema-pbta/packs/monsterhearts/presentation-contract.json";
 
-type Region = (typeof contract.regions)[number];
+type RegionId = (typeof contract.regions)[number]["id"];
+type Editorial = MonsterheartsPlaybook["editorial"]["opening"];
+type MoveEntry = MonsterheartsPlaybook["moves"][number];
 
-function node(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTMLElement {
+function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTMLElement {
 	const result = doc.createElement(tag);
 	if (text !== undefined) result.textContent = text;
 	return result;
 }
 
-function title(key: string): string {
-	return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[-_]/g, " ");
+function section(doc: Document, id: RegionId, heading?: string): HTMLElement {
+	const result = el(doc, "section");
+	result.classList.add("handbook-monsterhearts-region");
+	result.dataset.region = id;
+	if (heading) result.appendChild(el(doc, "h3", heading));
+	return result;
 }
 
-function scalar(value: unknown): string {
-	if (typeof value === "boolean") return value ? "Yes" : "No";
-	if (typeof value === "string" || typeof value === "number") return String(value);
-	return "";
+function editorial(doc: Document, id: RegionId, value: Editorial): HTMLElement {
+	const result = section(doc, id, value.heading);
+	for (const paragraph of value.paragraphs) result.appendChild(el(doc, "p", paragraph));
+	return result;
 }
 
-function renderValue(doc: Document, key: string, value: unknown): HTMLElement | null {
-	if (value === undefined || value === null) return null;
-	const block = node(doc, "div");
-	block.classList.add("handbook-monsterhearts-field");
-	if (value && typeof value === "object" && !Array.isArray(value)) {
-		const editorial = value as Record<string, unknown>;
-		if (typeof editorial.heading === "string" && Array.isArray(editorial.paragraphs)) {
-			block.classList.add("handbook-monsterhearts-editorial");
-			block.appendChild(node(doc, "h5", editorial.heading));
-			for (const paragraph of editorial.paragraphs) {
-				if (typeof paragraph === "string") block.appendChild(node(doc, "p", paragraph));
-			}
-			for (const extra of Object.keys(editorial).filter((field) => field !== "heading" && field !== "paragraphs")) {
-				const child = renderValue(doc, extra, editorial[extra]);
-				if (child) block.appendChild(child);
-			}
-			return block;
-		}
+function list(doc: Document, values: readonly string[]): HTMLElement {
+	const result = el(doc, "ul");
+	for (const value of values) result.appendChild(el(doc, "li", value));
+	return result;
+}
+
+function row(doc: Document, label: string, value: string | number): HTMLElement {
+	const result = el(doc, "div");
+	result.classList.add("handbook-monsterhearts-row");
+	result.appendChild(el(doc, "dt", label));
+	result.appendChild(el(doc, "dd", String(value)));
+	return result;
+}
+
+function moveCard(doc: Document, move: MoveEntry, startingMoves: readonly string[]): HTMLElement {
+	const card = el(doc, "article");
+	card.classList.add("handbook-monsterhearts-move");
+	const acquired = move.checked ?? ("ref" in move && startingMoves.includes(move.ref));
+	card.dataset.acquired = String(acquired);
+	const heading = el(doc, "h4");
+	const symbol = el(doc, "span", acquired ? "♥" : "♡");
+	symbol.classList.add("handbook-monsterhearts-move-symbol");
+	symbol.setAttribute("aria-label", acquired ? "Action acquise" : "Action non acquise");
+	heading.appendChild(symbol);
+	heading.appendChild(el(doc, "span", "ref" in move ? move.ref : move.name));
+	card.appendChild(heading);
+	if ("ref" in move) return card;
+	card.appendChild(el(doc, "p", move.description));
+	if (move.trigger) card.appendChild(el(doc, "p", move.trigger));
+	if (move.choices) card.appendChild(el(doc, "p", move.choices));
+	if (move.roll) card.appendChild(el(doc, "p", `Jet : ${move.roll.rollType}${move.roll.rollMod === undefined ? "" : ` ${move.roll.rollMod >= 0 ? "+" : ""}${move.roll.rollMod}`}`));
+	if (move.results) for (const key of Object.keys(move.results)) {
+		const result = move.results[key];
+		const outcome = el(doc, "p");
+		outcome.appendChild(el(doc, "strong", `${result.label} : `));
+		outcome.appendChild(el(doc, "span", result.text));
+		card.appendChild(outcome);
 	}
-	if (key !== "name" && key !== "description") block.appendChild(node(doc, "strong", title(key)));
-	if (Array.isArray(value)) {
-		const list = node(doc, "ul");
-		const entries: unknown[] = value;
-		for (const entry of entries) {
-			const item = node(doc, "li");
-			if (entry && typeof entry === "object") {
-				for (const childKey of Object.keys(entry)) {
-					const childValue = (entry as Record<string, unknown>)[childKey];
-					const child = renderValue(doc, childKey, childValue);
-					if (child) item.appendChild(child);
+	return card;
+}
+
+function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, resolveImage?: (path: string) => string | null): HTMLElement | null {
+	switch (id) {
+		case "game-identity": {
+			const result = section(doc, id);
+			result.appendChild(el(doc, "h2", data.name));
+			result.appendChild(el(doc, "p", data.description));
+			return result;
+		}
+		case "monsterhearts-opening": return editorial(doc, id, data.editorial.opening);
+		case "character-identity": {
+			const result = editorial(doc, id, data.editorial.identity);
+			for (const question of data.creation ?? []) {
+				result.appendChild(el(doc, "h4", question.label));
+				result.appendChild(list(doc, question.options.map((option) => typeof option === "string" ? option : option.label)));
+			}
+			if (data.backstory?.length) {
+				result.appendChild(el(doc, "h4", "Histoire"));
+				result.appendChild(list(doc, data.backstory));
+			}
+			return result;
+		}
+		case "stat-profiles": {
+			if (!Object.keys(data.stats).length && !data.statProfiles?.length) return null;
+			const result = section(doc, id, "Caractéristiques");
+			const renderStats = (stats: Record<string, number>) => {
+				const dl = el(doc, "dl");
+				for (const name of Object.keys(stats)) {
+					const value = stats[name];
+					const bounds = data.statRanges?.[name];
+					dl.appendChild(row(doc, name, bounds ? `${value} (${bounds.min}–${bounds.max})` : value));
 				}
-			} else item.textContent = scalar(entry);
-			list.appendChild(item);
+				return dl;
+			};
+			if (Object.keys(data.stats).length) result.appendChild(renderStats(data.stats));
+			for (const profile of data.statProfiles ?? []) {
+				const group = el(doc, "div");
+				group.classList.add("handbook-monsterhearts-stat-profile");
+				group.appendChild(el(doc, "h4", profile.label));
+				group.appendChild(renderStats(profile.stats));
+				result.appendChild(group);
+			}
+			if (data.statsDetail) result.appendChild(el(doc, "p", data.statsDetail));
+			return result;
 		}
-		block.appendChild(list);
-	} else if (typeof value === "object") {
-		for (const childKey of Object.keys(value)) {
-			const childValue = (value as Record<string, unknown>)[childKey];
-			const child = renderValue(doc, childKey, childValue);
-			if (child) block.appendChild(child);
+		case "playbook-portrait": {
+			const result = section(doc, id);
+			const frame = el(doc, "figure");
+			frame.classList.add("handbook-monsterhearts-portrait");
+			const image = data.playbookImage?.trim();
+			const source = image ? resolveImage?.(image) ?? (/^https:\/\//i.test(image) ? image : null) : null;
+			if (source) {
+				const img = el(doc, "img") as HTMLImageElement;
+				img.src = source;
+				img.alt = `Portrait de ${data.name}`;
+				frame.appendChild(img);
+			} else {
+				frame.classList.add("handbook-monsterhearts-portrait--empty");
+				frame.appendChild(el(doc, "span", "Portrait à ajouter"));
+			}
+			result.appendChild(frame);
+			return result;
 		}
-	} else {
-		block.appendChild(node(doc, key === "name" ? "h3" : "span", scalar(value)));
+		case "playbook-moves": {
+			if (!data.moves.length && !data.choiceSets?.length) return null;
+			const result = section(doc, id, "Actions");
+			for (const move of data.moves) result.appendChild(moveCard(doc, move, data.startingMoves ?? []));
+			for (const group of data.choiceSets ?? []) {
+				result.appendChild(el(doc, "h4", group.title));
+				if (group.description) result.appendChild(el(doc, "p", group.description));
+				result.appendChild(list(doc, group.choices.map((choice) => "ref" in choice ? choice.ref : choice.name)));
+			}
+			return result;
+		}
+		case "relationships": {
+			if (!data.strings && !data.ascendants?.length) return null;
+			const result = section(doc, id, "Relations");
+			if (data.strings) {
+				result.appendChild(el(doc, "h4", "Ascendants"));
+				result.appendChild(el(doc, "p", `${data.strings.starting ?? 0} au départ · ${data.strings.max} maximum`));
+			}
+			if (data.ascendants?.length) {
+				const dl = el(doc, "dl");
+				for (const item of data.ascendants) dl.appendChild(row(doc, item.name, item.value));
+				result.appendChild(dl);
+			}
+			return result;
+		}
+		case "conditions-and-harm": {
+			if (!data.conditions?.length && data.harm === undefined) return null;
+			const result = section(doc, id, "État");
+			if (data.harm !== undefined) result.appendChild(el(doc, "p", `Dégâts : ${data.harm}`));
+			for (const condition of data.conditions ?? []) {
+				result.appendChild(el(doc, "h4", condition.name));
+				if (condition.description) result.appendChild(el(doc, "p", condition.description));
+			}
+			return result;
+		}
+		case "gear": {
+			if (!data.gear?.length) return null;
+			const result = section(doc, id, "Équipement");
+			result.appendChild(list(doc, data.gear.map((item) => `${item.name}${item.quantity ? ` × ${item.quantity}` : ""}${item.description ? ` — ${item.description}` : ""}`)));
+			return result;
+		}
+		case "monsterhearts-darkest-self": return editorial(doc, id, data.editorial.darkestSelf);
+		case "monsterhearts-sex-move": return editorial(doc, id, data.editorial.sexMove);
+		case "monsterhearts-progression": {
+			const result = editorial(doc, id, data.editorial.progression);
+			if (data.advances.length) {
+				result.appendChild(el(doc, "h4", "Avancées"));
+				const ul = el(doc, "ul");
+				for (const advance of data.advances) {
+					const item = el(doc, "li", `${advance.checked ? "☑" : "☐"} ${advance.label}`);
+					ul.appendChild(item);
+				}
+				result.appendChild(ul);
+			}
+			return result;
+		}
 	}
-	return block;
+	return null;
 }
 
-function fieldValue(data: Record<string, unknown>, path: string): unknown {
-	return path.split(".").reduce<unknown>((value, part) =>
-		value && typeof value === "object" ? (value as Record<string, unknown>)[part] : undefined, data);
-}
-
-function renderRegion(doc: Document, data: Record<string, unknown>, region: Region): HTMLElement | null {
-	const section = node(doc, "section");
-	section.classList.add("handbook-monsterhearts-region");
-	section.dataset.region = region.id;
-	section.dataset.primitive = region.primitive;
-	section.appendChild(node(doc, "h4", title(region.id.replace(/^monsterhearts-/, ""))));
-	let populated = false;
-	for (const field of region.fields) {
-		const value = fieldValue(data, field);
-		const rendered = renderValue(doc, field.split(".").pop() ?? field, value);
-		if (!rendered) continue;
-		section.appendChild(rendered);
-		populated = true;
-	}
-	return populated ? section : null;
-}
-
-/** Region identity, order, fields, and primitives come from the published schema. */
-export function renderMonsterheartsLayout(data: MonsterheartsPlaybook, doc: Document): HTMLElement {
-	const root = node(doc, "article");
+/** Region placement follows the published presentation contract. */
+export function renderMonsterheartsLayout(data: MonsterheartsPlaybook, doc: Document, resolveImage?: (path: string) => string | null): HTMLElement {
+	const root = el(doc, "article");
 	root.classList.add("handbook-pbta-playbook", "handbook-monsterhearts-playbook");
-	const values = data as unknown as Record<string, unknown>;
-	const regions = new Map(contract.regions.map((region) => [region.id, region]));
+	const rendered = new Map<RegionId, HTMLElement>();
 	for (const id of contract.canonicalOrder) {
-		const region = regions.get(id);
-		if (!region) throw new Error(`Unknown Monsterhearts presentation region: ${id}`);
-		const rendered = renderRegion(doc, values, region);
-		if (rendered) root.appendChild(rendered);
+		const region = renderRegion(doc, id, data, resolveImage);
+		if (region) rendered.set(id, region);
+	}
+	const identity = rendered.get("game-identity");
+	if (identity) root.appendChild(identity);
+	const placed = new Set<RegionId>(["game-identity"]);
+	for (const [rowIndex, columns] of (contract.rows ?? []).entries()) {
+		const row = el(doc, "div");
+		row.classList.add("handbook-monsterhearts-layout-row");
+		row.dataset.row = String(rowIndex + 1);
+		for (const [columnIndex, ids] of columns.entries()) {
+			const column = el(doc, "div");
+			column.classList.add("handbook-monsterhearts-column");
+			column.dataset.column = String(columnIndex + 1);
+			for (const id of ids) {
+				const region = rendered.get(id);
+				if (region) column.appendChild(region);
+				placed.add(id);
+			}
+			row.appendChild(column);
+		}
+		root.appendChild(row);
+	}
+	for (const id of contract.canonicalOrder) if (!placed.has(id)) {
+		const region = rendered.get(id);
+		if (region) root.appendChild(region);
 	}
 	return root;
 }

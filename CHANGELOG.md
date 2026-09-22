@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.1] - 2026-09-22
+
+### Fixed
+
+- Place the Monsterhearts character portrait alone between the first and third columns of the playbook's first row; reserve the same space when no image is set.
+- Render Monsterhearts regions as playbook content, with filled and empty hearts for acquired and available moves.
+
 ## [2.22.0] - 2026-09-22
 
 ### Added
