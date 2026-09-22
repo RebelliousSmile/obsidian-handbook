@@ -129,6 +129,37 @@ def choose_roll():
     evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.click(); return true; })()")
 
 
+def instrument_dice_roller():
+    evaluate("""(() => {
+        const dice = app.plugins.getPlugin('obsidian-dice-roller');
+        const array = dice?.getArrayRoller?.bind(dice);
+        const lookup = dice?.getRoller?.bind(dice);
+        if (!array || !lookup) throw new Error('Dice Roller APIs were unavailable for the journey');
+        globalThis.__handbookRollerTrace = { array: [], lookup: [] };
+        dice.getArrayRoller = async (...args) => {
+            const roller = await array(...args);
+            const roll = roller.roll.bind(roller);
+            roller.roll = async (...rollArgs) => {
+                const returned = await roll(...rollArgs);
+                globalThis.__handbookRollerTrace.array.push({ result: roller.results?.[0], returned });
+                return returned;
+            };
+            return roller;
+        };
+        dice.getRoller = async (...args) => {
+            const roller = await lookup(...args);
+            const roll = roller.roll.bind(roller);
+            roller.roll = async (...rollArgs) => {
+                const returned = await roll(...rollArgs);
+                globalThis.__handbookRollerTrace.lookup.push({ result: roller.result ?? roller.total ?? roller.results?.[0], returned });
+                return returned;
+            };
+            return roller;
+        };
+        return true;
+    })()""")
+
+
 wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
 wait_for("Boolean(app.vault.getAbstractFileByPath('roller.md'))")
 wait_for("""(() => { const modal = document.querySelector('.mod-trust-folder'); const button = [...(modal?.querySelectorAll('button') || [])].pop(); button?.click(); return app.plugins.isEnabled() && !document.querySelector('.mod-trust-folder'); })()""")
@@ -152,15 +183,16 @@ wait_for_visible_roller_tables()
 
 values = [["First option", "Second option"], ["Low result", "High result"]]
 results = []
+instrument_dice_roller()
 for index, expected in enumerate(values):
-    evaluate("require('electron').clipboard.writeText('roller-sentinel')")
     right_click_table(index)
     screenshot(f"roller-menu-{index + 1}.png")
     choose_roll()
-    wait_for("require('electron').clipboard.readText() !== 'roller-sentinel'")
-    value = evaluate("require('electron').clipboard.readText()")
+    trace_key = "array" if index == 0 else "lookup"
+    wait_for(f"globalThis.__handbookRollerTrace.{trace_key}.length === 1")
+    value = evaluate(f"globalThis.__handbookRollerTrace.{trace_key}[0].result")
     if value not in expected:
-        raise RuntimeError(f"Table {index} copied {value!r}, not one of {expected}")
+        raise RuntimeError(f"Table {index} rolled {value!r}, not one of {expected}")
     results.append(value)
 
 source_before = evaluate("app.vault.adapter.read('roller.md')")

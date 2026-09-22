@@ -22,7 +22,6 @@ export function openRollerContextMenu(plugin: BrumesPlugin, data: RollerData, ev
 
 type DiceRollerPlugin = DiceRollerApi;
 type ElectronClipboard = { writeText(value: string): void };
-type ElectronRuntime = { require?(module: string): unknown };
 
 function diceRoller(plugin: BrumesPlugin): DiceRollerPlugin | null {
 	const app = plugin.app as unknown as { plugins?: { getPlugin?(id: string): unknown } };
@@ -30,17 +29,15 @@ function diceRoller(plugin: BrumesPlugin): DiceRollerPlugin | null {
 }
 
 async function copyResult(value: string): Promise<void> {
-	// eslint-disable-next-line obsidianmd/prefer-active-doc -- Electron exposes its Node bridge on the plugin global, not the document window.
-	const runtime = globalThis as ElectronRuntime;
-	const electron = runtime?.require?.("electron") as { clipboard?: ElectronClipboard } | undefined;
-	if (electron?.clipboard) {
-		electron.clipboard.writeText(value);
-		return;
-	}
-
 	try {
 		await navigator.clipboard.writeText(value);
-	} catch { throw new Error("Clipboard unavailable"); }
+		return;
+	} catch {
+		const runtime = activeDocument.defaultView as (Window & { require?: (module: string) => unknown }) | null;
+		const electron = runtime?.require?.("electron") as { clipboard?: ElectronClipboard } | undefined;
+		if (!electron?.clipboard) throw new Error("Clipboard unavailable");
+		electron.clipboard.writeText(value);
+	}
 }
 
 async function rollAndCopy(plugin: BrumesPlugin, data: RollerData): Promise<void> {
