@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.25.2] - 2026-09-22
+
+### Fixed
+
+- Correct release metadata after the unsuccessful 2.25.0 and 2.25.1 publication attempts.
+
 ## [2.25.1] - 2026-09-22
 
 ### Fixed
