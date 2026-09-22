@@ -23,7 +23,7 @@ export function applyContractLayout(parent: HTMLElement, layout: ContractLayout)
 		byRegion.set(region, child);
 	}
 
-	const assigned = new Set(layout.columns.flat());
+	const assigned = new Set(layout.columns.reduce<string[]>((all, column) => all.concat(column), []));
 	const columns = layout.columns
 		.map((column) => column.map((region) => byRegion.get(region)).filter((element): element is HTMLElement => element !== undefined))
 		.filter((column) => column.length > 0);
@@ -33,7 +33,7 @@ export function applyContractLayout(parent: HTMLElement, layout: ContractLayout)
 		.filter((region) => !assigned.has(region))
 		.map((region) => byRegion.get(region))
 		.filter((element): element is HTMLElement => element !== undefined);
-	const first = columns.flat()[0];
+	const first = columns[0][0];
 	const container = wrapBlocksInColumns(first, columns);
 	for (const region of unassigned) parent.appendChild(region);
 	return container;
