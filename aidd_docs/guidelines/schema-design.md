@@ -14,8 +14,9 @@ ce schéma et son corpus ? ».
 
 ## La checklist d'un format
 
-Un format fencé neuf porte **quatre obligations**. Aucune n'est facultative,
-aucune ne dépend de l'existence d'un amont.
+Un format fencé neuf qui porte un document de jeu ou une valeur métier porte
+**quatre obligations**. Aucune n'est facultative, aucune ne dépend de
+l'existence d'un amont.
 
 1. **Un schéma publié.** La forme du document est décrite dans un dépôt de
    schéma, pas seulement dans un type TypeScript. Un consommateur qui n'est pas
@@ -35,7 +36,7 @@ pour Mist, `pnpm assert:mist-contract`), pas seulement écrites ici. Une règle
 que rien ne contrôle reproduit d'un cran plus haut la défaillance qu'elle
 corrige.
 
-## Zéro exemption
+## Zéro exemption pour les formats, frontière explicite pour les utilitaires
 
 **Un format sans amont invente sa forme ; il n'est pas dispensé.**
 
@@ -46,6 +47,15 @@ inutilisable hors de Handbook.
 
 La dispense accordée hier — « un voyage et un kit n'ont pas de forme en amont,
 donc rien à copier » — est précisément ce qui a produit l'écart mesuré.
+
+Un **utilitaire Markdown générique** n'est pas un format : il ne porte ni
+valeur métier ni document transportable et ne peut pas être activé par un pack.
+Il déclare `utility: true`, conserve une forme de présentation et un harnais
+ciblé, mais n'a ni schéma, ni corpus de contrat, ni commande « copier comme
+TOML ». Son rôle reste borné à l'interaction ou à la présentation de Markdown
+existant ; dès qu'il invente une donnée de jeu, il redevient un format et doit
+la checklist complète. `roller`, qui délègue un tirage d'une table Markdown à
+Dice Roller, est le premier cas de cette frontière.
 
 ## La frontière : valeurs, forme, pixels
 
