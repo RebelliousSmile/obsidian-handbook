@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.24.0] - 2026-09-22
+
+### Added
+
+- Bind generic Roller actions to the rendered table that was right-clicked, and verify ordinary and lookup tables through a real Dice Roller 11.4.2 Obsidian journey in Windows CI.
+- Add a pack integration retry harness and a durable decision record for rendered context actions.
+
+### Changed
+
+- Compose Handbook settings through general, schema-source, game, and callout domains while preserving their existing controls and visibility gates.
+
+### Fixed
+
+- Make the generic Roller setting available in every game mode while retaining its Dice Roller availability gate, and keep pack integration diagnostics useful when one resolver fails.
+- Preflight remote source asset sizes with `HEAD` before issuing a binary download; retain the existing cap for headerless endpoints.
+
 ## [2.23.0] - 2026-09-22
 
 ### Added
