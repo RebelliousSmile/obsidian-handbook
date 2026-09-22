@@ -24,6 +24,10 @@ import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
 } from "./canvasSnippets";
+import { renderGeneralSettingsDomain } from "./generalSettings";
+import { renderSchemaSourceSettingsDomain } from "./schemaSourceSettings";
+import { renderGameSettingsDomain } from "./gameSettings";
+import { renderCalloutSettingsDomain } from "./calloutSettings";
 
 const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Handbook settings";
 const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
@@ -80,32 +84,20 @@ export class BrumesSettingTab extends PluginSettingTab {
 					);
 				});
 		});
-		this.renderGameVariant(generalSection);
-		this.renderPolarities(generalSection);
-		this.renderThemeContents(generalSection);
-		this.renderPersonalOverrides(generalSection);
-		this.renderSchemaSources(generalSection);
-		this.renderGeneralSettings(generalSection);
-
-		if (this.plugin.settings.mode === "city-of-mist" && findGamePack("city-of-mist")) {
-			const section = this.createSection(containerEl);
-			section.setHeading("City of Mist");
-			this.renderCityOfMistSettings(section);
-		}
-		if (this.plugin.settings.mode === "legend-in-the-mist" && findGamePack("legend-in-the-mist")) {
-			const section = this.createSection(containerEl);
-			section.setHeading("Legend in the Mist");
-			this.renderLegendInTheMistSettings(section);
-		}
-		if (this.plugin.settings.mode === "otherscape" && findGamePack("otherscape")) {
-			const section = this.createSection(containerEl);
-			section.setHeading(":Otherscape");
-			this.renderOtherscapeSettings(section);
-		}
+		renderGeneralSettingsDomain(this, generalSection);
+		renderSchemaSourceSettingsDomain(this, generalSection);
+		renderGameSettingsDomain({
+			plugin: this.plugin,
+			createSection: (container) => this.createSection(container),
+			renderCityOfMistSettings: (section) => this.renderCityOfMistSettings(section),
+			renderLegendInTheMistSettings: (section) => this.renderLegendInTheMistSettings(section),
+			renderOtherscapeSettings: (section) => this.renderOtherscapeSettings(section),
+			hasGamePack: (id) => Boolean(findGamePack(id)),
+		}, containerEl);
 
 		const calloutsSection = this.createSection(containerEl);
 		calloutsSection.setHeading("Callouts");
-		this.renderCalloutsSection(calloutsSection);
+		renderCalloutSettingsDomain(this, calloutsSection);
 
 		const advancedSection = this.createSection(containerEl);
 		advancedSection.setHeading("Advanced");
@@ -117,7 +109,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.display();
 	}
 
-	private renderSchemaSources(section: SettingGroup) {
+	renderSchemaSources(section: SettingGroup) {
 		const sources = this.plugin.settings.schemaSources;
 		section.addSetting((setting) => {
 			setting
@@ -193,7 +185,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		}
 	}
 
-	private renderGameVariant(section: SettingGroup) {
+	renderGameVariant(section: SettingGroup) {
 		const registration = resolveGameRegistration(this.plugin.settings.mode);
 		const variants = registration.variants ?? [];
 		if (variants.length < 2) {
@@ -230,7 +222,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 	}
 
 	/** Only offer a choice when the active appearance provides both schemes. */
-	private renderPolarities(section: SettingGroup) {
+	renderPolarities(section: SettingGroup) {
 		const registration = resolveGameRegistration(this.plugin.settings.mode);
 		const variant = resolveGameVariant(
 			registration,
@@ -266,7 +258,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderThemeContents(section: SettingGroup) {
+	renderThemeContents(section: SettingGroup) {
 		const registration = resolveGameRegistration(this.plugin.settings.mode);
 		if (!findGamePack(registration.pack.id)) {
 			return;
@@ -288,7 +280,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderPersonalOverrides(section: SettingGroup) {
+	renderPersonalOverrides(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
 				.setName("Personal overrides")
@@ -308,7 +300,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderGeneralSettings(section: SettingGroup) {
+	renderGeneralSettings(section: SettingGroup) {
 		section.addSetting((setting) => {
 			const diceRollerEnabled = this.diceRollerEnabled();
 			setting
@@ -416,7 +408,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderCityOfMistSettings(section: SettingGroup) {
+	renderCityOfMistSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "city-of-mist";
 
 		section.addSetting((setting) => {
@@ -502,7 +494,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderLegendInTheMistSettings(section: SettingGroup) {
+	renderLegendInTheMistSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "legend-in-the-mist";
 
 		section.addSetting((setting) => {
@@ -642,7 +634,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderOtherscapeSettings(section: SettingGroup) {
+	renderOtherscapeSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "otherscape";
 		this.addOtherscapeToggle(section, "Thèmes", "os-theme", "osThemeParser", isActive);
 		this.addOtherscapeToggle(section, "Kits de thème", "os-theme-kit", "osThemeKitParser", isActive);
@@ -711,7 +703,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private renderCalloutsSection(section: SettingGroup) {
+	renderCalloutsSection(section: SettingGroup) {
 		const required = findGameRegistration(this.plugin.settings.mode)?.installation?.requires ?? [];
 		for (const entry of this.plugin.settings.callouts) {
 			if (!isCalloutAvailable(entry, this.plugin.settings.mode, required)) {
@@ -886,7 +878,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		parent.append(link);
 	}
 
-	private createSection(
+	createSection(
 		containerEl: HTMLElement,
 		inactive = false,
 	): SettingGroup {

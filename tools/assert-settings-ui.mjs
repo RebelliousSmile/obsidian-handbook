@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 
 const source = readFileSync("src/settings/index.ts", "utf8");
+const generalSettingsModule = readFileSync("src/settings/generalSettings.ts", "utf8");
+const schemaSourceSettingsModule = readFileSync("src/settings/schemaSourceSettings.ts", "utf8");
+const gameSettingsModule = readFileSync("src/settings/gameSettings.ts", "utf8");
+const calloutSettingsModule = readFileSync("src/settings/calloutSettings.ts", "utf8");
 const sourceModal = readFileSync("src/settings/sourceModal.ts", "utf8");
 const themeContentsModal = readFileSync("src/settings/themeContentsModal.ts", "utf8");
 const plugin = readFileSync("src/BrumesPlugin.ts", "utf8");
@@ -12,8 +16,20 @@ const richDescriptions = [
 
 const failures = [];
 
-if (!source.includes("this.renderGameVariant(generalSection)")) {
-	failures.push("The general settings do not render the conditional game variant selector.");
+if (!source.includes("renderGeneralSettingsDomain(this, generalSection)") || !generalSettingsModule.includes("renderer.renderGameVariant(section)")) {
+	failures.push("The general settings composition does not render the conditional game variant selector.");
+}
+
+if (!source.includes("renderSchemaSourceSettingsDomain(this, generalSection)") || !schemaSourceSettingsModule.includes("renderer.renderSchemaSources(section)")) {
+	failures.push("Schema-source controls are not composed from their own settings domain.");
+}
+
+if (!source.includes("renderGameSettingsDomain({") || !gameSettingsModule.includes("renderer.hasGamePack")) {
+	failures.push("Game-only settings are not composed through their visibility-gated domain.");
+}
+
+if (!source.includes("renderCalloutSettingsDomain(this, calloutsSection)") || !calloutSettingsModule.includes("renderer.renderCalloutsSection(section)")) {
+	failures.push("Callout settings are not composed from their own domain.");
 }
 
 if (!/if \(GAME_PACKS\.length === 0\) \{\s*drop\.addOption\("none", "No game installed"\);\s*\}/m.test(source)) {
@@ -36,8 +52,8 @@ if (!plugin.includes("removeSchemaSourceStorage(this, source.id)") || !plugin.in
 	failures.push("Removing a schema source does not delete its storage and rebuild the live game registry.");
 }
 
-const generalSettings = source.slice(source.indexOf("private renderGeneralSettings"), source.indexOf("private renderCityOfMistSettings"));
-const legendSettings = source.slice(source.indexOf("private renderLegendInTheMistSettings"), source.indexOf("private renderOtherscapeSettings"));
+const generalSettings = source.slice(source.indexOf("\trenderGeneralSettings("), source.indexOf("\trenderCityOfMistSettings("));
+const legendSettings = source.slice(source.indexOf("\trenderLegendInTheMistSettings("), source.indexOf("\trenderOtherscapeSettings("));
 if (!generalSettings.includes('setName("Roller tables")') || !generalSettings.includes("this.diceRollerEnabled()")) {
 	failures.push("Generic Roller tables are not rendered from general settings with the Dice Roller gate.");
 }
@@ -62,7 +78,7 @@ if (!source.includes('.setName("Univers")')) {
 }
 
 for (const game of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
-	if (!source.includes(`this.plugin.settings.mode === "${game}" && findGamePack("${game}")`)) {
+	if (!gameSettingsModule.includes(`mode === "${game}" && renderer.hasGamePack("${game}")`)) {
 		failures.push(`The ${game} settings section remains visible while another game is active.`);
 	}
 }
@@ -87,7 +103,7 @@ if (source.includes('setName("Tags, statuses and limits")') || source.includes("
 	failures.push("The always-on tag syntax is still exposed as an optional setting.");
 }
 
-if (!source.includes("this.renderPersonalOverrides(generalSection)")) {
+if (!generalSettingsModule.includes("renderer.renderPersonalOverrides(section)")) {
 	failures.push("Removing the migration notice also hid the personal overrides control.");
 }
 
