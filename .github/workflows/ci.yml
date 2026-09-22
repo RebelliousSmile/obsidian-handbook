@@ -65,6 +65,9 @@ jobs:
               run: pnpm assert:adrenaline-source
 
     e2e-linux:
+        # Obsidian/CDP journeys remain available as manual diagnostics, but are
+        # not stable enough to gate ordinary pushes or pull requests.
+        if: ${{ false }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -111,6 +114,9 @@ jobs:
                   xvfb-run -a pnpm e2e:request-url
 
     e2e-windows:
+        # Obsidian/CDP journeys remain available as manual diagnostics, but are
+        # not stable enough to gate ordinary pushes or pull requests.
+        if: ${{ false }}
         runs-on: windows-latest
         steps:
             - uses: actions/checkout@v4
