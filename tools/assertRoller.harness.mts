@@ -105,5 +105,6 @@ assert.match(rollerJourneySource, /== "preview"[\s\S]*toggle-preview[\s\S]*=== '
 assert.match(rollerJourneySource, /getMostRecentLeaf\(\)\?\.view\?\.containerEl/, "the Roller journey scopes tables to the active Markdown view");
 assert.match(rollerJourneySource, /getBoundingClientRect\(\)[\s\S]*rect\.width > 0/, "the Roller journey selects only visible Roller tables");
 assert.doesNotMatch(rollerJourneySource, /querySelectorAll\('\.brumes-roller--table'\)\.length === 2/, "the Roller journey does not treat retained global Roller nodes as authored tables");
+assert.match(rollerJourneySource, /def choose_roll\(\):[\s\S]*Input\.dispatchMouseEvent/, "the Roller journey clicks the menu action through CDP to preserve user activation for the clipboard");
 
 console.log("Roller assertions passed.");

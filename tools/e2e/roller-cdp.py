@@ -126,7 +126,11 @@ def right_click_table(index):
 
 
 def choose_roll():
-    evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.click(); return true; })()")
+    rect = json.loads(evaluate("JSON.stringify((() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const rect = title?.closest('.menu-item')?.getBoundingClientRect(); return rect && {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2}; })())"))
+    if not rect:
+        raise RuntimeError("Roller menu item was not visible")
+    call("Input.dispatchMouseEvent", {"type": "mousePressed", "x": rect["x"], "y": rect["y"], "button": "left", "buttons": 1, "clickCount": 1})
+    call("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": rect["x"], "y": rect["y"], "button": "left", "buttons": 0, "clickCount": 1})
 
 
 wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
