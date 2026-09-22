@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Render Monsterhearts playbooks in the published three-column region layout, with a narrow one-column view and structured fields.
 - Verify all three schema providers' Handbook capabilities, and run the theme assertions and Obsidian journeys in CI.
 - Load the Mist games' bundled fonts from their published pack assets so Handbook's plugin stylesheet stays small.
+- Show installed schema source versions in settings and announce reload progress and version changes.
 
 ### Fixed
 

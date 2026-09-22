@@ -31,10 +31,11 @@ import { loadCustomGamePacks, loadSchemaSourceGamePacks } from "./games/customPa
 import {
 	prepareGameStorage,
 	removeSchemaSourceStorage,
+	schemaSourceStoragePaths,
 } from "./games/storage";
 import { resolveGithubSource } from "./games/githubSources";
 import { installResolvedSchemaSource } from "./games/sourceInstaller";
-import { SchemaSource } from "./games/sources";
+import { InstalledSchemaSource, installedSchemaVersion, SchemaSource } from "./games/sources";
 import { installStarterKitSources, type StarterKit } from "./games/starterKits";
 import {
 	EMPTY_OVERRIDE,
@@ -220,11 +221,35 @@ export default class BrumesPlugin extends Plugin {
 
 	/** Fetch every registered schema source again, then rebuild the live games. */
 	async reloadInstalledSchemaSources() {
+		const results: Array<{ repository: string; before: string | null; after: string; changed: boolean }> = [];
 		for (const source of this.settings.schemaSources) {
-			const resolved = await resolveGithubSource(source);
-			await installResolvedSchemaSource(this, source, resolved);
+			const previous = await this.readInstalledSchemaSource(source);
+			try {
+				const resolved = await resolveGithubSource(source);
+				await installResolvedSchemaSource(this, source, resolved);
+				results.push({
+					repository: source.repository,
+					before: installedSchemaVersion(previous),
+					after: resolved.releaseTag ?? `revision ${resolved.revision.slice(0, 7)}`,
+					changed: previous?.revision !== resolved.revision,
+				});
+			} catch (error) {
+				throw new Error(`${source.repository}: ${error instanceof Error ? error.message : String(error)}`);
+			}
 		}
 		await this.refreshGameRegistry();
+		return results;
+	}
+
+	async readInstalledSchemaSource(source: SchemaSource): Promise<InstalledSchemaSource | null> {
+		const path = `${schemaSourceStoragePaths(this, source.id).root}/source.json`;
+		try {
+			const value = JSON.parse(await this.app.vault.adapter.read(path)) as InstalledSchemaSource;
+			if (value.id !== source.id || value.repository !== source.repository || !/^[0-9a-f]{40}$/i.test(value.revision)) return null;
+			return value;
+		} catch {
+			return null;
+		}
 	}
 
 	async saveSchemaSource(source: SchemaSource, replacingRepository: string | null) {

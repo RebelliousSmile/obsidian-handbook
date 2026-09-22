@@ -19,10 +19,12 @@ const content: Record<string, string> = {
 	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "test", version: "1.0.0", path: "handbook/test/pack.json" }] }),
 	"handbook/test/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "test", label: "Test", style: {}, assets: { images: { paper: "paper.png" }, stylesheets: ["styles/base.css", "styles/print.css"] } } }),
 };
-const resolved: ResolvedGithubSource = { revision: "a".repeat(40), readText: async (path) => { if (!(path in content)) throw new Error(path); return content[path]; }, readBinary: async () => new Uint8Array([1, 2]).buffer };
+const resolved: ResolvedGithubSource = { revision: "a".repeat(40), releaseTag: "v1.3.4", readText: async (path) => { if (!(path in content)) throw new Error(path); return content[path]; }, readBinary: async () => new Uint8Array([1, 2]).buffer };
 await installResolvedSchemaSource(plugin, source, resolved);
 const root = ".obsidian/handbook/sources/owner--repo";
 if (!files.has(`${root}/packs/test/pack.json`) || !files.has(`${root}/packs/test/assets/paper.png`) || !files.has(`${root}/packs/test/assets/styles/base.css`) || !files.has(`${root}/packs/test/assets/styles/print.css`) || !files.has(`${root}/source.json`)) throw new Error("source promotion failed");
+const installedSource = JSON.parse(files.get(`${root}/source.json`) as string) as { releaseTag?: string };
+if (installedSource.releaseTag !== "v1.3.4") throw new Error("installed release tag was not recorded");
 const before = files.get(`${root}/packs/test/pack.json`);
 await installResolvedSchemaSource(plugin, source, { ...resolved, revision: "b".repeat(40), readBinary: async () => { throw new Error("network failed"); } }).catch(() => undefined);
 if (files.get(`${root}/packs/test/pack.json`) !== before) throw new Error("failed installation replaced the previous source");

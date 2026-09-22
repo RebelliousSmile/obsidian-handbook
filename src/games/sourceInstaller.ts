@@ -123,7 +123,7 @@ export async function installResolvedSchemaSource(
 				await adapter.writeBinary(join(targetRoot, segments[segments.length - 1]), binary);
 			}
 		}
-		await adapter.write(join(staging, "source.json"), JSON.stringify({ id: source.id, repository: source.repository, reference: source.reference, revision: resolved.revision, checkedAt: new Date().toISOString() }, null, "\t"));
+		await adapter.write(join(staging, "source.json"), JSON.stringify({ id: source.id, repository: source.repository, reference: source.reference, revision: resolved.revision, releaseTag: resolved.releaseTag, checkedAt: new Date().toISOString() }, null, "\t"));
 	});
 	void schemaSourceStoragePaths;
 }

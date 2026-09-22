@@ -17,6 +17,7 @@ import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
 import { ThemeContentsModal } from "./themeContentsModal";
 import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
+import { installedSchemaVersion } from "../games/sources";
 import { PbtaCoverageModal, currentPbtaCoverage, pbtaCoverageSummary } from "./pbtaCoverageModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
@@ -123,10 +124,33 @@ export class BrumesSettingTab extends PluginSettingTab {
 				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
 				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }))
 				.addButton((button) => button.setButtonText("Reload installed schemas").onClick(() => {
-					this.runTask(async () => {
-						await this.plugin.reloadInstalledSchemaSources();
-						this.redisplay();
-					}, "Failed to reload schema sources", "Failed to reload schema sources.");
+					if (sources.length === 0) {
+						new Notice("No schema sources are registered.");
+						return;
+					}
+					button.setDisabled(true);
+					const progress = new Notice(`Checking and reinstalling ${sources.length} schema ${sources.length === 1 ? "source" : "sources"}…`, 0);
+					void (async () => {
+						try {
+							const results = await this.plugin.reloadInstalledSchemaSources();
+							this.redisplay();
+							const changed = results.filter((result) => result.changed);
+							if (changed.length === 0) {
+								new Notice("Installed schemas are already up to date.");
+							} else {
+								for (const result of changed) {
+									new Notice(`${result.repository}: ${result.before ?? "not installed"} → ${result.after}.`, 10000);
+								}
+							}
+						} catch (error) {
+							log.error("Failed to reload schema sources", error);
+							new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
+							this.redisplay();
+						} finally {
+							progress.hide();
+							button.setDisabled(false);
+						}
+					})();
 				}));
 		});
 		// The schema build ships one codec per playbook format; which of them this
@@ -142,14 +166,20 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 		for (const source of sources) {
 			section.addSetting((setting) => {
+				const reference = source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`;
 				setting
 					.setName(source.repository)
-					.setDesc(source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`)
+					.setDesc(`${reference} · Checking installed version…`)
 					.addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
 					.addButton((button) => {
 						button.buttonEl.classList.add("mod-warning");
 						button.setButtonText("Remove").onClick(() => { new SchemaSourceRemovalModal(this.app, this.plugin, source, () => this.redisplay()).open(); });
 					});
+				void this.plugin.readInstalledSchemaSource(source).then((installed) => {
+					if (!this.containerEl.contains(setting.settingEl)) return;
+					const version = installedSchemaVersion(installed);
+					setting.setDesc(`${reference} · ${version ? `Installed ${version}` : "Not installed"}`);
+				});
 			});
 		}
 	}
