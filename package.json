@@ -43,6 +43,7 @@
 		"assert:tag-widget": "node tools/assert-tag-widget.mjs",
 		"assert:roller": "node tools/assert-roller.mjs",
 		"assert:pack-integration": "node tools/assert-pack-integration.mjs",
+		"assert:pack-integration-modal": "node tools/assert-pack-integration-modal.mjs",
 		"assert:city-v1-theme": "node tools/assert-city-v1-theme.mjs",
 		"assert:callouts": "node tools/assert-callouts.mjs",
 		"assert:note-background": "node tools/assert-note-background.mjs",

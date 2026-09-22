@@ -36,6 +36,15 @@ if (!plugin.includes("removeSchemaSourceStorage(this, source.id)") || !plugin.in
 	failures.push("Removing a schema source does not delete its storage and rebuild the live game registry.");
 }
 
+const generalSettings = source.slice(source.indexOf("private renderGeneralSettings"), source.indexOf("private renderCityOfMistSettings"));
+const legendSettings = source.slice(source.indexOf("private renderLegendInTheMistSettings"), source.indexOf("private renderOtherscapeSettings"));
+if (!generalSettings.includes('setName("Roller tables")') || !generalSettings.includes("this.diceRollerEnabled()")) {
+	failures.push("Generic Roller tables are not rendered from general settings with the Dice Roller gate.");
+}
+if (legendSettings.includes('setName("Roller tables")')) {
+	failures.push("Generic Roller tables remain incorrectly scoped to Legend in the Mist settings.");
+}
+
 if (!source.includes('setButtonText("Reload installed schemas")') || !source.includes("this.plugin.reloadInstalledSchemaSources()")) {
 	failures.push("The schema reload action is not named precisely or does not fetch installed schemas again.");
 }

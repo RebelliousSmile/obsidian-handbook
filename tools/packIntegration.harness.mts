@@ -24,16 +24,18 @@ const report = packIntegrationReport([
 	{ registration: registration("resource-gap", []), assets: missingResource },
 	{ registration: registration("unknown", ["block:unknown"]), assets: emptyPackIntegrationAssets("unknown") },
 	{ registration: registration("legacy", undefined), assets: emptyPackIntegrationAssets("legacy") },
+	{ registration: registration("broken", []), assets: emptyPackIntegrationAssets("broken"), resolutionError: "adapter timed out" },
 ]);
 
-assert.equal(report.packs.length, 4, "every registered pack has a report row");
+assert.equal(report.packs.length, 5, "every registered pack has a report row");
 assert.equal(report.ready, 1, "the supported pack without gaps is ready");
-assert.equal(report.attention, 3, "every named gap needs attention");
+assert.equal(report.attention, 4, "every named gap needs attention");
 assert.deepEqual(report.packs[0].availableBlocks, ["block:pbta-playbook"]);
 assert.deepEqual(report.packs[0].availableStyles, ["style:pbta"]);
 assert.ok(report.packs[1].findings.some((finding) => finding.detail.endsWith("frame.png")), "missing resources name their path");
 assert.ok(report.packs[2].findings.some((finding) => finding.kind === "unsupported-capability" && finding.detail === "block:unknown"), "unknown capabilities name the unsupported declaration");
 assert.ok(report.packs[3].findings.some((finding) => finding.kind === "missing-manifest"), "registrations without a manifest are distinct from installed packs");
+assert.ok(report.packs[4].findings.some((finding) => finding.kind === "resolution-failure" && finding.detail === "adapter timed out"), "a failed resolver remains a named pack row");
 
 const empty = packIntegrationReport([]);
 assert.deepEqual(empty, { packs: [], installed: 0, ready: 0, attention: 0 }, "an empty registry has an empty, explainable report");

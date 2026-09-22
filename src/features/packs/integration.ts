@@ -17,7 +17,8 @@ export type PackIntegrationFindingKind =
 	| "unsupported-capability"
 	| "unavailable-block"
 	| "unavailable-style"
-	| "missing-resource";
+	| "missing-resource"
+	| "resolution-failure";
 
 export interface PackIntegrationFinding {
 	kind: PackIntegrationFindingKind;
@@ -27,6 +28,7 @@ export interface PackIntegrationFinding {
 export interface PackIntegrationInput {
 	registration: GameRegistration;
 	assets: GameAssetState;
+	resolutionError?: string;
 }
 
 export interface PackIntegrationRow {
@@ -63,7 +65,7 @@ function resourceFindings(assets: GameAssetState): PackIntegrationFinding[] {
  * stays independent of the vault so the focused harness can prove every gap.
  */
 export function packIntegrationReport(inputs: PackIntegrationInput[]): PackIntegrationReport {
-	const packs = inputs.map(({ registration, assets }) => {
+	const packs = inputs.map(({ registration, assets, resolutionError }) => {
 		const requires = registration.installation?.requires ?? [];
 		const issues = gamePluginCapabilityIssues(registration.pack.id, requires);
 		const blockCapabilities = requires.filter((capability) => capability.startsWith("block:"));
@@ -76,6 +78,9 @@ export function packIntegrationReport(inputs: PackIntegrationInput[]): PackInteg
 		);
 		const findings: PackIntegrationFinding[] = [];
 		const resources = resourceFindings(assets);
+		if (resolutionError) {
+			findings.push({ kind: "resolution-failure", detail: resolutionError });
+		}
 
 		if (!registration.installation) {
 			findings.push({ kind: "missing-manifest", detail: "No installed plugin manifest." });
@@ -119,10 +124,20 @@ export function packIntegrationReport(inputs: PackIntegrationInput[]): PackInteg
 /** Resolve every registered pack on demand; the active pack cache is not valid here. */
 export async function currentPackIntegration(plugin: Plugin): Promise<PackIntegrationReport> {
 	const inputs = await Promise.all(
-		GAME_REGISTRATIONS.map(async (registration) => ({
-			registration,
-			assets: await resolveGameAssets(plugin, registration.pack, registration.installation),
-		})),
+		GAME_REGISTRATIONS.map(async (registration) => {
+			try {
+				return {
+					registration,
+					assets: await resolveGameAssets(plugin, registration.pack, registration.installation),
+				};
+			} catch (error) {
+				return {
+					registration,
+					assets: emptyAssetState(registration.pack.id),
+					resolutionError: error instanceof Error ? error.message : String(error),
+				};
+			}
+		}),
 	);
 	return packIntegrationReport(inputs);
 }
