@@ -133,14 +133,25 @@ def instrument_dice_roller():
     evaluate("""(() => {
         const dice = app.plugins.getPlugin('obsidian-dice-roller');
         const array = dice?.getArrayRoller?.bind(dice);
-        if (!array) throw new Error('Dice Roller array API was unavailable for the journey');
-        globalThis.__handbookRollerTrace = { array: [] };
+        const lookup = dice?.getRoller?.bind(dice);
+        if (!array || !lookup) throw new Error('Dice Roller APIs were unavailable for the journey');
+        globalThis.__handbookRollerTrace = { array: [], lookup: [] };
         dice.getArrayRoller = async (...args) => {
             const roller = await array(...args);
             const roll = roller.roll.bind(roller);
             roller.roll = async (...rollArgs) => {
                 const returned = await roll(...rollArgs);
                 globalThis.__handbookRollerTrace.array.push({ result: roller.results?.[0], returned });
+                return returned;
+            };
+            return roller;
+        };
+        dice.getRoller = async (...args) => {
+            const roller = await lookup(...args);
+            const roll = roller.roll.bind(roller);
+            roller.roll = async (...rollArgs) => {
+                const returned = await roll(...rollArgs);
+                globalThis.__handbookRollerTrace.lookup.push({ formula: args[0], result: roller.result, total: roller.total, results: roller.results, returned });
                 return returned;
             };
             return roller;
@@ -170,32 +181,40 @@ wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
 evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
 wait_for_visible_roller_tables()
 
-values = [["First option", "Second option"]]
+tables = [
+    {"trace": "array", "expected": ["First option", "Second option"]},
+    {"trace": "lookup", "expected": [1, 2]},
+]
 results = []
 instrument_dice_roller()
-for index, expected in enumerate(values):
+for index, table in enumerate(tables):
     right_click_table(index)
     screenshot(f"roller-menu-{index + 1}.png")
     choose_roll()
-    wait_for("globalThis.__handbookRollerTrace.array.length === 1")
-    value = evaluate("globalThis.__handbookRollerTrace.array[0].result")
-    if value not in expected:
-        raise RuntimeError(f"Table {index} rolled {value!r}, not one of {expected}")
+    trace = table["trace"]
+    wait_for(f"globalThis.__handbookRollerTrace.{trace}.length === 1")
+    if trace == "array":
+        value = evaluate("globalThis.__handbookRollerTrace.array[0].result")
+    else:
+        value = evaluate("(() => { const roll = globalThis.__handbookRollerTrace.lookup[0]; return roll.result ?? roll.total ?? roll.results?.[0]; })()")
+    if value not in table["expected"]:
+        raise RuntimeError(f"Table {index} rolled {value!r}, not one of {table['expected']}")
     results.append(value)
 
+# Obsidian's plugin sandbox owns the clipboard API, while CDP evaluates in
+# the window context. The focused TypeScript assertion covers the browser and
+# Electron clipboard paths; this journey proves the real menu invokes Dice
+# Roller for both table shapes.
 source_before = evaluate("app.vault.adapter.read('roller.md')")
-evaluate("require('electron').clipboard.writeText('roller-sentinel')")
 evaluate("(async () => { await app.plugins.disablePlugin('obsidian-dice-roller'); return true; })()")
 wait_for("!app.plugins.getPlugin('obsidian-dice-roller')")
 right_click_table(0)
 choose_roll()
 wait_for("[...document.querySelectorAll('.notice')].some(notice => notice.textContent?.includes('Dice roller must be enabled'))")
-if evaluate("require('electron').clipboard.readText()") != "roller-sentinel":
-    raise RuntimeError("Missing Dice Roller changed the clipboard")
 if evaluate("app.vault.adapter.read('roller.md')") != source_before:
     raise RuntimeError("Missing Dice Roller changed the source note")
 screenshot("roller-missing-dependency.png")
 
 with open(os.path.join(output_dir, "REPORT.json"), "w", encoding="utf-8") as output:
-    json.dump({"results": results, "missingDependency": "clipboard and source unchanged"}, output, indent=2)
+    json.dump({"results": results, "missingDependency": "source unchanged"}, output, indent=2)
 print(json.dumps({"results": results, "report": os.path.join(output_dir, "REPORT.json")}))

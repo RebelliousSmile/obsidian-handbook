@@ -16,6 +16,17 @@ function Stop-ProcessTree {
 	Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
 }
 
+function Get-Sha256([string]$Path) {
+	$algorithm = [System.Security.Cryptography.SHA256]::Create()
+	$stream = [IO.File]::OpenRead($Path)
+	try {
+		return ([BitConverter]::ToString($algorithm.ComputeHash($stream))).Replace("-", "")
+	} finally {
+		$stream.Dispose()
+		$algorithm.Dispose()
+	}
+}
+
 if (-not (Test-Path -LiteralPath $ObsidianPath -PathType Leaf)) { throw "Obsidian was not found at $ObsidianPath." }
 
 try {
@@ -29,7 +40,7 @@ try {
 	$archivePath = Join-Path ([IO.Path]::GetTempPath()) ("$($lock.id)-$($lock.version)-" + [guid]::NewGuid() + ".zip")
 	New-Item -ItemType Directory -Path $handbookRoot, $diceRoot, $profileRoot, $outputRoot -Force | Out-Null
 	Invoke-WebRequest -Uri $lock.archiveUrl -OutFile $archivePath
-	if ((Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash -ne $lock.sha256) { throw "Dice Roller archive hash did not match the fixture lock." }
+	if ((Get-Sha256 $archivePath) -ne $lock.sha256) { throw "Dice Roller archive hash did not match the fixture lock." }
 	Expand-Archive -LiteralPath $archivePath -DestinationPath $diceRoot -Force
 	$nestedMain = Get-ChildItem -LiteralPath $diceRoot -Filter "main.js" -File -Recurse | Select-Object -First 1
 	if ($nestedMain -and $nestedMain.Directory.FullName -ne (Get-Item -LiteralPath $diceRoot).FullName) {

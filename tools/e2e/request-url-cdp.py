@@ -200,21 +200,24 @@ elif action == "open-source":
     if not switched:
         raise RuntimeError("Handbook settings tab was not found")
     wait_for("document.body.innerText.includes('Schema sources')")
-    clicked = evaluate(
+    source_check_button = evaluate(
         """
         (() => {
           const item = [...document.querySelectorAll('.setting-item')]
             .find(node => node.innerText.includes('RebelliousSmile/schema-in-the-mist'));
           const button = item && [...item.querySelectorAll('button')]
             .find(node => node.innerText.trim() === 'Check');
-          if (!button) return false;
-          button.click();
-          return true;
+          if (!button) return null;
+          const rect = button.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0
+            ? { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
+            : null;
         })()
         """
     )
-    if not clicked:
+    if not source_check_button:
         raise RuntimeError("schema-in-the-mist Check button was not found")
+    click_at(source_check_button)
     wait_for("document.body.innerText.includes('Edit schema source')")
     screenshot("03-source-editor.png")
     print("source_editor=open")
