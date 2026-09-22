@@ -77,3 +77,20 @@ HANDBOOK_E2E_OBSIDIAN=/absolute/path/to/Obsidian.AppImage pnpm e2e:layout-region
 
 `HANDBOOK_E2E_CDP_PORT` changes the default port 9232, and
 `HANDBOOK_E2E_OUTPUT_DIR` selects a persistent output directory.
+
+## Roller tables
+
+`roller-journey.ps1` runs on Windows in a disposable vault. It downloads the
+locked Dice Roller 11.4.2 release, verifies its SHA-256 before extraction, then
+loads it with Handbook and an explicitly enabled generic Roller setting. CDP
+right-clicks each rendered table and verifies that the actual Electron clipboard
+contains only a result from that table. It then unloads Dice Roller and proves
+the table action leaves both clipboard and source note unchanged.
+
+The lock and authored tables live in `fixtures/`. Screenshots and `REPORT.json`
+remain in the printed temporary output directory; the vault and isolated Obsidian
+profile are removed on every exit. Build first and run with Obsidian closed:
+
+```powershell
+pnpm e2e:roller
+```

@@ -19,6 +19,15 @@ export async function requestUrl(options) {
   if (options.url.includes("/git/ref/heads/main")) {
     return { status: 200, json: { object: { sha: "${"a".repeat(40)}", type: "commit" } }, text: "", arrayBuffer: new ArrayBuffer(0) };
   }
+  if (options.method === "HEAD" && options.url.endsWith("head-disabled.png")) {
+    return { status: 405, json: null, text: "", headers: {}, arrayBuffer: new ArrayBuffer(0) };
+  }
+  if (options.method === "HEAD" && options.url.endsWith("invalid-length.png")) {
+    return { status: 200, json: null, text: "", headers: { "content-length": "not-a-number" }, arrayBuffer: new ArrayBuffer(0) };
+  }
+  if (options.method === "HEAD") {
+    return { status: 200, json: null, text: "", headers: { "content-length": "3" }, arrayBuffer: new ArrayBuffer(0) };
+  }
   return { status: 200, json: null, text: "manifest text", arrayBuffer: new Uint8Array([1, 2, 3]).buffer };
 }
 `);

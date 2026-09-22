@@ -3,21 +3,19 @@ import type BrumesPlugin from "../../BrumesPlugin";
 import type { RollerData } from "./parser";
 import { rollTable, type DiceRollerApi } from "./roll";
 
-interface RollerContext { data: RollerData; rememberedAt: number; }
-const contexts = new WeakMap<BrumesPlugin, RollerContext>();
-const LIFETIME = 30_000;
-
-export function rememberRollerContext(plugin: BrumesPlugin, data: RollerData): void {
-	contexts.set(plugin, { data, rememberedAt: Date.now() });
-}
-
-export function contributeRollerAction(menu: Menu, plugin: BrumesPlugin): boolean {
-	const context = contexts.get(plugin);
-	if (!context || Date.now() - context.rememberedAt > LIFETIME) return false;
+export function addRollerAction(menu: Menu, plugin: BrumesPlugin, data: RollerData): boolean {
 	menu.addItem((item) => item.setTitle("Roll and copy result").setIcon("clipboard").onClick(() => {
-		void rollAndCopy(plugin, context.data);
+		void rollAndCopy(plugin, data);
 	}));
 	return true;
+}
+
+/** Open a context menu bound to one rendered table rather than editor-global state. */
+export function openRollerContextMenu(plugin: BrumesPlugin, data: RollerData, event: MouseEvent): void {
+	event.preventDefault();
+	const menu = new Menu();
+	addRollerAction(menu, plugin, data);
+	menu.showAtMouseEvent(event);
 }
 
 type DiceRollerPlugin = DiceRollerApi;

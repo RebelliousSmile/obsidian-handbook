@@ -19,8 +19,12 @@ function describeFinding(finding: PackIntegrationFinding): string {
 			return `Style unavailable: ${finding.detail}.`;
 		case "missing-resource":
 			return `Resource unavailable: ${finding.detail}.`;
+		case "resolution-failure":
+			return `Could not inspect this pack: ${finding.detail}.`;
 	}
 }
+
+type ReportLoader = (plugin: BrumesPlugin) => Promise<PackIntegrationReport>;
 
 /**
  * A live check, deliberately not a persisted diagnostic: resource availability
@@ -29,7 +33,11 @@ function describeFinding(finding: PackIntegrationFinding): string {
 export class PackIntegrationModal extends Modal {
 	private isOpen = true;
 
-	constructor(app: App, private readonly plugin: BrumesPlugin) {
+	constructor(
+		app: App,
+		private readonly plugin: BrumesPlugin,
+		private readonly loadReport: ReportLoader = currentPackIntegration,
+	) {
 		super(app);
 	}
 
@@ -45,9 +53,26 @@ export class PackIntegrationModal extends Modal {
 	}
 
 	private async refresh(): Promise<void> {
-		const report = await currentPackIntegration(this.plugin);
-		if (!this.isOpen) return;
-		this.render(report);
+		this.contentEl.empty();
+		this.contentEl.createEl("p", { text: "Checking every registered pack…" });
+		try {
+			const report = await this.loadReport(this.plugin);
+			if (!this.isOpen) return;
+			this.render(report);
+		} catch (error) {
+			if (!this.isOpen) return;
+			this.renderFailure(error);
+		}
+	}
+
+	private renderFailure(error: unknown): void {
+		this.contentEl.empty();
+		new Setting(this.contentEl)
+			.setName("Pack integration check failed")
+			.setDesc(`Try again. ${error instanceof Error ? error.message : String(error)}`)
+			.addButton((button) => button.setButtonText("Retry").onClick(() => {
+				void this.refresh();
+			}));
 	}
 
 	private render(report: PackIntegrationReport): void {

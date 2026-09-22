@@ -117,6 +117,14 @@ export async function installResolvedSchemaSource(
 					await ensureStorageDirectory(adapter, targetRoot);
 				}
 				await ensureStorageDirectory(adapter, targetRoot);
+				const metadata = await resolved.inspectBinary(asset.source);
+				if (metadata.invalidContentLength !== undefined) {
+					throw new Error(`source asset has invalid Content-Length: ${metadata.invalidContentLength}`);
+				}
+				const remainingBytes = MAX_ASSET_BYTES - assetBytes;
+				if (metadata.contentLength !== undefined && metadata.contentLength > remainingBytes) {
+					throw new Error(`source assets exceed ${MAX_ASSET_BYTES} bytes`);
+				}
 				const binary = await resolved.readBinary(asset.source);
 				assetBytes += binary.byteLength;
 				if (assetBytes > MAX_ASSET_BYTES) throw new Error(`source assets exceed ${MAX_ASSET_BYTES} bytes`);

@@ -5,7 +5,13 @@ export interface ResolvedGithubSource {
 	revision: string;
 	releaseTag?: string;
 	readText(path: string): Promise<string>;
+	inspectBinary(path: string): Promise<BinaryMetadata>;
 	readBinary(path: string): Promise<ArrayBuffer>;
+}
+
+export interface BinaryMetadata {
+	contentLength?: number;
+	invalidContentLength?: string;
 }
 
 function api(repository: string, suffix: string): string {
@@ -45,21 +51,37 @@ async function resolveReference(repository: string, reference: SchemaSourceRefer
 
 export async function resolveGithubSource(source: SchemaSource): Promise<ResolvedGithubSource> {
 	const { revision, releaseTag } = await resolveReference(source.repository, source.reference);
-	const read = async (path: string) => {
+	const read = async (path: string, method = "GET") => {
 		const url = `https://raw.githubusercontent.com/${source.repository}/${revision}/${path}`;
 		let response;
 		try {
-			response = await requestUrl({ url });
+			response = await requestUrl({ url, method });
 		} catch (error) {
 			throw new Error(`GitHub request failed for ${url}: ${String(error)}`);
 		}
 		if (response.status < 200 || response.status >= 300) throw new Error(`GitHub returned ${response.status} for ${path}`);
 		return response;
 	};
+	const inspectBinary = async (path: string): Promise<BinaryMetadata> => {
+		try {
+			const response = await read(path, "HEAD");
+			const headers = response.headers as Record<string, string> | undefined;
+			const header = headers?.["content-length"] ?? headers?.["Content-Length"];
+			if (header === undefined) return {};
+			if (!/^\d+$/.test(header)) return { invalidContentLength: header };
+			const contentLength = Number(header);
+			return Number.isSafeInteger(contentLength) ? { contentLength } : { invalidContentLength: header };
+		} catch {
+			// Some proxies and Git providers disallow HEAD. The installer retains
+			// its post-read cap for this compatibility path.
+			return {};
+		}
+	};
 	return {
 		revision,
 		releaseTag,
 		readText: async (path) => (await read(path)).text,
+		inspectBinary,
 		readBinary: async (path) => (await read(path)).arrayBuffer,
 	};
 }

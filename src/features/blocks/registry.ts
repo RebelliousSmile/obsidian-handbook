@@ -20,7 +20,7 @@ import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
 import { rollerBlock } from "../rollers/block";
-import { rememberRollerContext } from "../rollers/contextMenu";
+import { openRollerContextMenu } from "../rollers/contextMenu";
 import {
 	tomlExportForBlock,
 } from "./tomlExports";
@@ -114,12 +114,9 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 				el.appendChild(rendered);
 				if (block.id === rollerBlock.id) {
 					const table = rendered.querySelector(".brumes-roller--table");
-					table?.addEventListener("mousedown", (event) => {
-						const mouse = event as MouseEvent;
-						if (mouse.button === 2 || (mouse.buttons & 2) !== 0) {
-							rememberRollerContext(plugin, parsed as import("../rollers/parser").RollerData);
-						}
-					}, { capture: true });
+					table?.addEventListener("contextmenu", (event) => {
+						openRollerContextMenu(plugin, parsed as import("../rollers/parser").RollerData, event as MouseEvent);
+					});
 				}
 				// Older Obsidian builds render the block but do not expose section
 				// metadata. The context menu must still be usable (and visible).
