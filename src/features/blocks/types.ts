@@ -22,6 +22,11 @@ export interface BrumesBlock<T> {
 	handout?: boolean;
 	/** Optional user-facing feature flag. Blocks without one follow their game. */
 	flag?: keyof BrumesFeatureSettings;
+	/**
+	 * A Markdown utility with no game-document value of its own. Utilities still
+	 * publish a presentation shape, but are not serialised as TOML contracts.
+	 */
+	utility?: true;
 	/** Context menu entry title. */
 	label: string;
 	/** Context menu entry icon. */

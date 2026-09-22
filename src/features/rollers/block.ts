@@ -6,6 +6,7 @@ import { rollerShape } from "./shape";
 export const rollerBlock: BrumesBlock<RollerData> = {
 	id: "roller",
 	flag: "roller",
+	utility: true,
 	label: "Roller table",
 	icon: "dices",
 	shape: rollerShape,
