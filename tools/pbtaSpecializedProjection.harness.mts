@@ -7,10 +7,12 @@ class El {
 	textContent = "";
 	children: El[] = [];
 	dataset: Record<string, string> = {};
+	attributes: Record<string, string> = {};
 	classes: string[] = [];
 	classList = { add: (...names: string[]) => this.classes.push(...names) };
 	constructor(public tagName: string) {}
 	appendChild(child: El): El { this.children.push(child); return child; }
+	setAttribute(name: string, value: string): void { this.attributes[name] = value; }
 }
 const doc = { createElement: (tagName: string) => new El(tagName) };
 function text(node: El): string { return node.textContent + node.children.map(text).join(""); }
@@ -65,7 +67,10 @@ statProfiles = [
   { key = "au-quart-de-tour", label = "Au quart de tour", stats = { hot = -1, cold = 1, volatile = 2, dark = -1 } },
   { key = "colere-froide", label = "Colere froide", stats = { hot = -1, cold = 2, volatile = -1, dark = 1 } }
 ]
-moves = []
+moves = [
+  { name = "Tether", moveType = "skin", description = "Hold on to someone.", checked = true },
+  { name = "Echo", moveType = "skin", description = "Answer a distant voice.", checked = false }
+]
 advances = [{ label = "Take a new skin move.", checked = false }]
 ascendants = [{ name = "Alex", value = 2 }]
 conditions = [{ name = "Artificial", description = "Someone named what you fear is true." }]
@@ -104,10 +109,25 @@ assert.ok(elementsWithClass(statsRegion, "handbook-pbta-stat-profile").length ==
 const unchanged = JSON.stringify(unselected.data);
 const monsterheartsRendered = pbtaPlaybookBlock.render(unselected, doc as unknown as Document, { packId: "monsterhearts" }) as unknown as El;
 assert.ok(monsterheartsRendered.classes.includes("handbook-monsterhearts-playbook"), "Monsterhearts pack selects its editorial layout");
-const renderedRegions = monsterheartsRendered.children.map((child) => child.dataset.region);
-assert.deepEqual(renderedRegions, presentation.canonicalOrder.filter((id) => renderedRegions.includes(id)), "published region order survives rendering");
+const renderedRegions = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-region").map((child) => child.dataset.region);
+const columnOrder = ["game-identity", ...presentation.columns.flat()];
+assert.deepEqual(renderedRegions, columnOrder.filter((id) => renderedRegions.includes(id)), "published column order survives rendering");
 assert.ok(renderedRegions.includes("stat-profiles") && renderedRegions.includes("relationships") && renderedRegions.includes("conditions-and-harm"), "stat, relationship and harm regions are distinct");
 assert.ok(text(monsterheartsRendered).includes("Au quart de tour"), "published stat profiles remain visible");
+assert.ok(!/\b(?:KEY|LABEL|CHECKED|GAME IDENTITY|PLAYBOOK MOVES)\b/.test(text(monsterheartsRendered)), "schema field names do not leak into the playbook");
+assert.equal(elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-move-symbol").map((symbol) => symbol.textContent).join(""), "♥♡", "acquired moves have filled hearts and available moves have empty hearts");
+const portrait = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-portrait")[0];
+assert.ok(portrait.classes.includes("handbook-monsterhearts-portrait--empty"), "missing image leaves a reserved portrait frame");
+assert.equal(portrait.children[0]?.textContent, "Portrait à ajouter");
+assert.equal(elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-column")[1].children[0]?.dataset.region, "playbook-portrait", "portrait starts the second column");
+const withImage = { ...unselected.data, playbookImage: "Selkie.png" };
+const imaged = pbtaPlaybookBlock.render({ ...unselected, data: withImage }, doc as unknown as Document, {
+	packId: "monsterhearts", resolveImage: (path) => path === "Selkie.png" ? "app://vault/Selkie.png" : null,
+}) as unknown as El;
+const image = elementsWithClass(imaged, "handbook-monsterhearts-portrait")[0].children[0] as El & { src: string; alt: string };
+assert.equal(image.tagName, "img", "provided playbook image renders as an image");
+assert.equal(image.src, "app://vault/Selkie.png");
+assert.equal(image.alt, "Portrait de The Hollow");
 assert.equal(JSON.stringify(unselected.data), unchanged, "presentation does not change the TOML data");
 const otherPackRendered = pbtaPlaybookBlock.render(unselected, doc as unknown as Document, { packId: "masks" }) as unknown as El;
 assert.ok(!otherPackRendered.classes.includes("handbook-monsterhearts-playbook"), "another pack keeps its own presentation");
