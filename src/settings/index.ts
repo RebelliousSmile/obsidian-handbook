@@ -19,6 +19,7 @@ import { ThemeContentsModal } from "./themeContentsModal";
 import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
 import { installedSchemaVersion } from "../games/sources";
 import { PbtaCoverageModal, currentPbtaCoverage, pbtaCoverageSummary } from "./pbtaCoverageModal";
+import { PackIntegrationModal } from "./packIntegrationModal";
 import {
 	ADVANCED_CANVAS_ICEBERG_SNIPPET,
 	ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
@@ -162,6 +163,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 				.setDesc(pbtaCoverageSummary(report))
 				.addButton((button) => button.setButtonText("Check coverage").onClick(() => {
 					new PbtaCoverageModal(this.app, currentPbtaCoverage()).open();
+				}));
+		});
+		section.addSetting((setting) => {
+			setting
+				.setName("Pack integration check")
+				.setDesc("Check whether every registered game pack has its manifest, declared capabilities, and resources available.")
+				.addButton((button) => button.setButtonText("Check packs").onClick(() => {
+					new PackIntegrationModal(this.app, this.plugin).open();
 				}));
 		});
 		for (const source of sources) {

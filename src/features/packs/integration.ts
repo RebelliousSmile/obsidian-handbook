@@ -75,6 +75,7 @@ export function packIntegrationReport(inputs: PackIntegrationInput[]): PackInteg
 			GAME_PLUGIN_STYLE_CAPABILITIES.includes(capability),
 		);
 		const findings: PackIntegrationFinding[] = [];
+		const resources = resourceFindings(assets);
 
 		if (!registration.installation) {
 			findings.push({ kind: "missing-manifest", detail: "No installed plugin manifest." });
@@ -92,7 +93,7 @@ export function packIntegrationReport(inputs: PackIntegrationInput[]): PackInteg
 				findings.push({ kind: "unavailable-style", detail: capability });
 			}
 		}
-		findings.push(...resourceFindings(assets));
+		findings.push(...resources);
 
 		return {
 			id: registration.pack.id,
@@ -101,7 +102,7 @@ export function packIntegrationReport(inputs: PackIntegrationInput[]): PackInteg
 			declaredCapabilities: [...requires],
 			availableBlocks,
 			availableStyles,
-			missingResources: resourceFindings(assets).map((finding) => finding.detail),
+			missingResources: resources.map((finding) => finding.detail),
 			findings,
 			ready: findings.length === 0,
 		};
