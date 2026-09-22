@@ -67,6 +67,10 @@ export interface GameAssetState {
 	families: string[];
 	/** The families whose file is absent, and the path each was looked for at. */
 	missingFonts: { family: string; path: string }[];
+	/** Additional declared files that are not available to a pack stylesheet. */
+	missingResources: string[];
+	/** Pack stylesheets that could not be loaded or validated. */
+	missingStylesheets: { path: string; reason: "missing" | "invalid" }[];
 	/** Validated CSS from the active pack, in declaration order. */
 	packCss: string;
 }
@@ -81,6 +85,8 @@ export function emptyAssetState(packId: string): GameAssetState {
 		fontCss: "",
 		families: [],
 		missingFonts: [],
+		missingResources: [],
+		missingStylesheets: [],
 		packCss: "",
 	};
 }
@@ -204,9 +210,10 @@ export async function resolveGameAssets(
 	const state = emptyAssetState(pack.id);
 	const images = pack.assets?.images;
 	const fonts = pack.assets?.fonts;
+	const resources = pack.assets?.resources;
 	const stylesheets = pack.assets?.stylesheets;
 
-	if (!images && !fonts && !stylesheets) {
+	if (!images && !fonts && !resources && !stylesheets) {
 		return state;
 	}
 
@@ -307,11 +314,23 @@ export async function resolveGameAssets(
 		}
 	}
 
+	if (resources) {
+		for (const resource of resources) {
+			if (!(await locate(resource))) {
+				state.missingResources.push(`${folder}/${resource}`);
+			}
+		}
+	}
+
 	if (stylesheets) {
 		const css: string[] = [];
 		for (const stylesheet of stylesheets) {
 			const path = joinVaultPath(root, stylesheet);
 			if (!path || !(await adapter.exists(path))) {
+				state.missingStylesheets.push({
+					path: `${folder}/${stylesheet}`,
+					reason: "missing",
+				});
 				log.warn(`Ignoring missing stylesheet "${stylesheet}" for "${pack.id}".`);
 				continue;
 			}
@@ -323,6 +342,10 @@ export async function resolveGameAssets(
 				validatePackCss(source, pack, stylesheet);
 				css.push(await rewritePackUrls(source, stylesheet, root, pack, plugin));
 			} catch (error) {
+				state.missingStylesheets.push({
+					path: `${folder}/${stylesheet}`,
+					reason: "invalid",
+				});
 				log.warn(`Ignoring stylesheet "${stylesheet}" for "${pack.id}".`, error);
 				continue;
 			}
