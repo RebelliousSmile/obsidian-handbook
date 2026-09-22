@@ -30,7 +30,8 @@ function diceRoller(plugin: BrumesPlugin): DiceRollerPlugin | null {
 }
 
 async function copyResult(value: string): Promise<void> {
-	const runtime = activeDocument?.defaultView as ElectronRuntime | null;
+	// eslint-disable-next-line obsidianmd/prefer-active-doc -- Electron exposes its Node bridge on the plugin global, not the document window.
+	const runtime = globalThis as ElectronRuntime;
 	const electron = runtime?.require?.("electron") as { clipboard?: ElectronClipboard } | undefined;
 	if (electron?.clipboard) {
 		electron.clipboard.writeText(value);

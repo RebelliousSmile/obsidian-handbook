@@ -99,7 +99,7 @@ Object.defineProperty(globalThis, "require", {
 });
 Object.defineProperty(globalThis, "activeDocument", {
 	configurable: true,
-	value: { defaultView: { require: (module: string) => module === "electron" ? { clipboard: { writeText: (value: string) => fallbackCopied.push(value) } } : undefined } },
+	value: null,
 });
 const fallbackMenu = new FakeMenu();
 assert.equal(addRollerAction(fallbackMenu as unknown as Menu, plugin, ordinary), true);
@@ -127,6 +127,6 @@ assert.match(rollerJourneySource, /== "preview"[\s\S]*toggle-preview[\s\S]*=== '
 assert.match(rollerJourneySource, /getMostRecentLeaf\(\)\?\.view\?\.containerEl/, "the Roller journey scopes tables to the active Markdown view");
 assert.match(rollerJourneySource, /getBoundingClientRect\(\)[\s\S]*rect\.width > 0/, "the Roller journey selects only visible Roller tables");
 assert.doesNotMatch(rollerJourneySource, /querySelectorAll\('\.brumes-roller--table'\)\.length === 2/, "the Roller journey does not treat retained global Roller nodes as authored tables");
-assert.match(readFileSync("src/features/rollers/contextMenu.ts", "utf8"), /activeDocument\?\.defaultView as ElectronRuntime[\s\S]*electron\.clipboard\.writeText/, "the Roller action uses Obsidian's Electron clipboard directly");
+assert.match(readFileSync("src/features/rollers/contextMenu.ts", "utf8"), /globalThis as ElectronRuntime[\s\S]*electron\.clipboard\.writeText/, "the Roller action uses Obsidian's Electron clipboard directly");
 
 console.log("Roller assertions passed.");
