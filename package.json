@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.24.0",
+	"version": "2.25.1",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"packageManager": "pnpm@10.5.2",
