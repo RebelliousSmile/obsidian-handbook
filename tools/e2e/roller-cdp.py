@@ -74,7 +74,9 @@ def wait_for(expression, timeout=30):
         if evaluate(expression):
             return
         time.sleep(0.2)
-    raise RuntimeError(f"Timed out waiting for: {expression}")
+    screenshot("roller-timeout.png")
+    state = evaluate("JSON.stringify({enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, rendered: document.querySelectorAll('.brumes-roller--table').length, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), files: app.vault.getFiles().map(file => file.path).slice(0, 10)})")
+    raise RuntimeError(f"Timed out waiting for: {expression}; state: {state}")
 
 
 def screenshot(name):
@@ -100,8 +102,17 @@ wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
 wait_for("Boolean(app.vault.getAbstractFileByPath('roller.md'))")
 wait_for("""(() => { const modal = document.querySelector('.mod-trust-folder'); const button = [...(modal?.querySelectorAll('button') || [])].pop(); button?.click(); return app.plugins.isEnabled() && !document.querySelector('.mod-trust-folder'); })()""")
 wait_for("Boolean(app.plugins.plugins['obsidian-handbook'] && app.plugins.plugins['obsidian-dice-roller'])")
+# A fresh vault can show Handbook's starter-kit prompt. It swallows editor
+# commands, so dismiss it before deliberately entering reading mode.
+time.sleep(2)
+wait_for("(() => { document.querySelectorAll('.modal-container .modal-header-button, .modal-container .modal-close-button').forEach(button => button.click()); return !document.querySelector('.modal-container'); })()")
 evaluate("(async () => { await app.workspace.getLeaf(false).openFile(app.vault.getAbstractFileByPath('roller.md')); return true; })()")
 wait_for("app.workspace.getMostRecentLeaf()?.view?.file?.path === 'roller.md'")
+# Obsidian 1.13 can retain a stale reading view after URI startup. Force a
+# source -> reading transition so its code-block processors run for this note.
+if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") == "preview":
+    evaluate("app.commands.executeCommandById('markdown:toggle-preview')")
+    wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'source'")
 if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") != "preview":
     evaluate("app.commands.executeCommandById('markdown:toggle-preview')")
 wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")

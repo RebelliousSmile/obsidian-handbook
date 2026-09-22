@@ -13,6 +13,8 @@ export function addRollerAction(menu: Menu, plugin: BrumesPlugin, data: RollerDa
 /** Open a context menu bound to one rendered table rather than editor-global state. */
 export function openRollerContextMenu(plugin: BrumesPlugin, data: RollerData, event: MouseEvent): void {
 	event.preventDefault();
+	event.stopPropagation();
+	event.stopImmediatePropagation();
 	const menu = new Menu();
 	addRollerAction(menu, plugin, data);
 	menu.showAtMouseEvent(event);
