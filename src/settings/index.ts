@@ -552,6 +552,36 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 
 		section.addSetting((setting) => {
+			const diceRollerEnabled = Boolean((this.plugin.app as unknown as {
+				plugins?: { getPlugin?(id: string): unknown };
+			}).plugins?.getPlugin?.("obsidian-dice-roller"));
+			setting
+				.setName("Roller tables")
+				.setDesc(
+					diceRollerEnabled
+						? "Enable generic table rollers that use Dice Roller and copy results."
+						: "Enable Dice Roller first to use generic table rollers.",
+				)
+				.setDisabled(!diceRollerEnabled)
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.features.roller)
+						.setDisabled(!diceRollerEnabled)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									if (!(this.plugin.app as unknown as { plugins?: { getPlugin?(id: string): unknown } }).plugins?.getPlugin?.("obsidian-dice-roller")) return;
+									this.plugin.settings.features.roller = value;
+									await this.plugin.saveSettings({ refreshMarkdown: true });
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+
+		section.addSetting((setting) => {
 			setting
 				.setName("Theme kit parser")
 				.setDesc(

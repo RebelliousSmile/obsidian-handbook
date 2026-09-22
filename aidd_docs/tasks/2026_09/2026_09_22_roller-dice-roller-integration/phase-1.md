@@ -1,33 +1,33 @@
 ---
-status: pending
+status: in-progress
 ---
 
-# Instruction: Publish the roller contract
+# Instruction: Render generic roller tables
 
 ## Architecture projection
 
 > Tree of the final files. ✅ create · ✏️ modify · ❌ delete
 
 ```txt
-schema-roller
-├── src/
-│   └── roller.ts                         ✅ generic roller codec, table-target types, and validation
-├── schemas/
-│   └── roller.schema.json                ✅ generated public schema
-├── corpus/
-│   └── roller/                           ✅ accepted and rejected contract witnesses
-├── packs/<game>/pack-contract.json       ✏️ declare `block:roller` where the pack supports it
-├── handbook/<game>/                      ✏️ publish any pack-owned roller table resource and manifest entry
-└── cross-tool-provider.json              ✏️ publish `block:roller` as a Handbook capability
+.
+├── src/features/rollers/
+│   ├── block.ts                    ✅ globally available `roller` block
+│   ├── parser.ts                   ✅ parse one ordinary or lookup Markdown table
+│   ├── renderer.ts                 ✅ render the parsed table and retain right-click context
+│   ├── contextMenu.ts              ✅ identify the exact rendered roller table
+│   └── shape.ts                    ✅ declare the roller presentation region
+├── src/features/blocks/registry.ts ✏️ register the ungated block
+├── src/contextMenu/index.ts        ✏️ contribute the table action
+└── tools/assertRoller.harness.mts  ✅ exercise parsing, rendering context, and invalid source handling
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Pack author declares a roller] --> B[Schema validates its stable table reference]
-  B --> C[Published pack advertises block:roller]
-  C --> D[Handbook can adopt the released contract]
+  A[Author inserts a roller block] --> B[Author writes a Markdown table]
+  B --> C[Handbook renders the table]
+  C --> D[Reader opens its contextual menu]
 ```
 
 ## Test Scope
@@ -38,34 +38,54 @@ title: Test scope
 ---
 journey
   section Setup
-    A schema-package fixture declares a native Markdown table and a roller reference => a pack fixture is ready: 5: cli
+    A note contains a roller block with a Markdown table => the rendered table is ready: 5: system
   section Happy path
-    Validate the fixture and its pack manifest => the roller document and `block:roller` capability are accepted: 5: cli
-  section Edge case - invalid target
-    A roller omits or malforms its table block reference => validation rejects the fixture with the target defect: 5: cli
+    Open the contextual menu on the rendered table => the roller action is available: 5: system
+  section Edge case - malformed source
+    A roller has no table or more than one table => it renders a clear non-interactive diagnostic: 5: system
 ```
+
+## Wireframe
+
+```txt
+┌──────────────────────────────────────────────┐
+│ (1) Roller block                              │
+│ ┌──────────────────────────────────────────┐ │
+│ │ (2) Markdown table                        │ │
+│ └──────────────────────────────────────────┘ │
+└──────────────────────────────────────────────┘
+              ┌───────────────────────────────┐
+              │ (3) Contextual menu           │
+              │ (4) Roller result action      │
+              └───────────────────────────────┘
+```
+
+1. Roller block: generic container, independent of the active game.
+2. Markdown table: the sole table parsed from this roller block.
+3. Contextual menu: Obsidian’s right-click surface for this table.
+4. Roller result action: the table-specific action added by Handbook.
 
 ## Tasks to do
 
-### `1)` Define the portable roller document
+### `1)` Define and parse the generic block
 
-> Establish the schema-owned syntax for a roller identity, label, and one-or-more Dice Roller table references.
+> Turn one Markdown table inside a fenced `roller` block into validated structured rows.
 
-1. Create `schema-roller` as the dedicated shared contract package; do not place the generic contract in Handbook or in a game-family-specific schema package.
-2. Define and generate the `roller` codec/schema with a non-empty, uniquely identified table list; every entry has a stable vault-relative note reference and required Dice Roller block id.
-3. Add valid and invalid corpus witnesses, including lookup-table and ordinary-table references.
+1. Register `roller` as an always available block and add an insertion template with an ordinary example table.
+2. Parse headers, rows, cells, and the optional Dice Roller lookup header; reject no table, multiple tables, empty result rows, and malformed lookup ranges.
+3. Preserve author text for display and structured values for the rolling adapter.
 
-### `2)` Publish pack activation and resources
+### `2)` Render and scope contextual state
 
-> Let a game pack explicitly opt into the generic roller surface and distribute its own tables.
+> Make only a rendered roller table eligible for the result action.
 
-1. Add `block:roller` to the provider and eligible pack manifests.
-2. Publish table resources as pack content, separate from campaign data and from Handbook runtime code.
-3. Release an immutable schema-package version before changing Handbook’s dependency pin.
+1. Render the parsed table accessibly without coupling it to a game pack or schema.
+2. Record right-click context only when the event originates in that roller’s table, following the rendered-block context pattern.
+3. Contribute a placeholder menu entry through the existing Brumes submenu while the table-specific context is fresh.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | ---- | ------------------- |
-| 1 | A valid roller has one or more uniquely identified, unambiguous native-table targets; a missing, duplicate, malformed, or escaping target is rejected by the owning contract. |
-| 2 | A pack that does not declare `block:roller` cannot activate it, while a published eligible pack can distribute its table resource without consumer-local semantics. |
+| 1 | Any game mode can insert and render a roller containing exactly one valid ordinary or lookup table. Invalid source never becomes an invented table. |
+| 2 | Right-clicking a roller table exposes its action; right-clicking any other rendered block or stale context does not. |

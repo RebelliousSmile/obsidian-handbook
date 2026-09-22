@@ -48,7 +48,7 @@ export function isBlockEnabled(
 ): boolean {
 	const active = block.capability
 		? requiredCapabilities.includes(block.capability)
-		: settings.mode === block.mode;
+		: block.mode === undefined || settings.mode === block.mode;
 	return active && (block.flag === undefined || settings.features[block.flag]);
 }
 

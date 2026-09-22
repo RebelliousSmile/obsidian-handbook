@@ -2,7 +2,7 @@
 status: pending
 ---
 
-# Instruction: Render and roll in Handbook
+# Instruction: Delegate and copy results
 
 ## Architecture projection
 
@@ -10,30 +10,27 @@ status: pending
 
 ```txt
 .
-├── package.json                           ✏️ pin the released shared schema package and add the focused assertion script
-├── src/games/capabilities.ts              ✏️ recognize portable `block:roller`
 ├── src/features/rollers/
-│   ├── block.ts                           ✅ register the capability-gated roller block
-│   ├── schema.ts                          ✅ parse the published roller document; never duplicate its contract
-│   ├── renderer.ts                        ✅ asynchronously resolve and render each exact referenced Markdown table
-│   ├── diceRoller.ts                      ✅ narrow adapter to Dice Roller’s public API and result extraction
-│   ├── contextMenu.ts                     ✅ offer the copy action only for the remembered roller table
-│   └── shape.ts                           ✅ publish the roller’s presentation regions
-├── src/features/blocks/types.ts           ✏️ permit a block renderer to resolve asynchronously with its source and plugin context
-├── src/features/blocks/registry.ts        ✏️ await the shared roller block, then remember right-click context on its rendered table only
-├── src/contextMenu/index.ts               ✏️ contribute the roller action to Obsidian’s existing menu
-├── tools/assertRoller.harness.mts         ✅ exercise parsing, availability, targeting, clipboard, and failure paths
-└── tools/assert-roller.mjs                ✅ bundle and run the focused assertion
+│   ├── diceRoller.ts               ✅ checked adapter for Dice Roller APIs
+│   ├── roll.ts                     ✅ map ordinary and lookup tables to one result
+│   └── contextMenu.ts              ✏️ invoke, copy, and report selected-table results
+├── tools/assertRoller.harness.mts  ✏️ cover API, lookup, clipboard, and failure paths
+├── tools/assert-roller.mjs         ✅ bundle and run the focused assertion
+├── tools/e2e/fixtures/roller.md    ✅ ordinary and lookup authoring fixture
+├── tools/e2e/roller-journey.ps1    ✅ real Obsidian/Dice Roller journey
+├── tools/e2e/README.md             ✏️ document the optional E2E dependency
+└── README.md                       ✏️ document generic roller authoring and copied-result workflow
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Reader opens a pack-declared roller] --> B[Handbook resolves its native table reference]
-  B --> C[Reader opens the table context menu]
-  C --> D[Handbook asks Dice Roller to roll the reference]
-  D --> E[Result is copied to the clipboard]
+  A[Reader opens a roller table menu] --> B{Table kind}
+  B -->|ordinary| C[Dice Roller array roll]
+  B -->|lookup| D[Dice Roller formula roll]
+  C --> E[Copy selected result]
+  D --> E
 ```
 
 ## Test Scope
@@ -44,67 +41,49 @@ title: Test scope
 ---
 journey
   section Setup
-    A pack declares `block:roller`, the note contains a referenced table, and Dice Roller’s API is available => a rendered roller table is ready: 5: system
+    A rendered ordinary or lookup roller table and Dice Roller’s API are available => the selected table is ready: 5: system
   section Happy path
-    Open the contextual menu on that table and choose the roller action => one Dice Roller result is copied and a success notice is observable: 5: system
+    Choose the contextual action then paste into a scratch note => one result from the selected table is pasted: 5: system
   section Edge case - unavailable plugin
-    Dice Roller is not installed or does not expose its public API => the action leaves the clipboard untouched and reports the dependency: 5: system
-  section Edge case - stale table target
-    The referenced note or block no longer resolves => the action leaves the clipboard untouched and reports the unresolved target: 5: system
+    Dice Roller is absent or has no supported API => the note and clipboard remain unchanged and a dependency notice appears: 5: system
+  section Edge case - unmatched lookup
+    A formula value matches no lookup range => the note and clipboard remain unchanged and a lookup notice appears: 5: system
 ```
 
 ## Wireframe
 
 ```txt
-┌──────────────────────────────────────────────┐
-│ (1) Roller block                              │
-│ ┌──────────────────────────────────────────┐ │
-│ │ (2) Native table preview                  │ │
-│ └──────────────────────────────────────────┘ │
-└──────────────────────────────────────────────┘
-              ┌───────────────────────────────┐
-              │ (3) Contextual menu           │
-              │ ───────────────────────────── │
-              │ (4) Roller result action      │
-              └───────────────────────────────┘
+┌───────────────────────────────┐
+│ (1) Contextual menu           │
+│ ───────────────────────────── │
+│ (2) Roller result action      │
+└───────────────────────────────┘
 ```
 
-1. Roller block: the generic, pack-author-provided context around a table target.
-2. Native table preview: the Dice Roller source table identified by the block’s published reference.
-3. Contextual menu: Obsidian’s existing right-click surface.
-4. Roller result action: the one action scoped to the remembered roller table.
+1. Contextual menu: table-scoped surface supplied by phase 1.
+2. Roller result action: delegates, copies, and reports a textual result.
 
 ## Tasks to do
 
-### `1)` Adopt the released contract as a portable capability
+### `1)` Delegate table randomness to Dice Roller
 
-> Make availability flow from a schema provider and pack manifest, never from a game id.
+> Keep all random draws inside the installed Dice Roller plugin.
 
-1. Update the dependency pin and integrity only after the upstream release is available.
-2. Add `block:roller` to the portable capability registry and its provider-capability assertions.
-3. Register the block through the existing capability-gated registry and expose its insertion template only to eligible packs.
+1. Resolve `obsidian-dice-roller` through a checked adapter and handle absence without a fallback random generator.
+2. Send ordinary table rows to its array roller and return exactly one textual row or selected result column.
+3. For a lookup table, ask Dice Roller to roll its declared formula, map the numeric result to one declared range, and return the corresponding result cell.
 
-### `2)` Render a referenced native table safely
+### `2)` Copy and prove the contextual workflow
 
-> Present the pack-declared table within a roller while preserving the exact reference Dice Roller needs.
+> Copy one successful roll without altering the source note.
 
-1. Parse only the upstream roller document and resolve every vault-relative note/block target without guessing alternate paths.
-2. Use Obsidian’s metadata-cache block position to extract each exact source table, then render every Markdown slice asynchronously with its original source path.
-3. Extend the block registry context only as far as necessary to pass the plugin and source path to this asynchronous renderer; preserve synchronous behavior for all existing blocks.
-4. Attach the selected source path, block id, table id, and original roller document to a right-click on each rendered table only; render an explicit non-interactive diagnostic for unavailable or malformed references, never a consumer-local fallback table.
-
-### `3)` Invoke Dice Roller and copy its result
-
-> Delegate randomness to the installed Dice Roller plugin and make the result portable through the clipboard.
-
-1. Isolate lookup of `obsidian-dice-roller` and its documented roller API behind a narrow adapter.
-2. Build the exact table formula from the published note/block target, roll it with the current source file, and extract a plain-text result.
-3. Add the context-menu action only for a remembered rendered roller table; copy after a successful roll and report dependency, target, roll, or clipboard failures without changing vault files.
+1. Replace the placeholder action with an asynchronous invocation that copies a successful result and reports dependency, roll, lookup, or clipboard failure.
+2. Add deterministic harness cases for both table kinds and all failure paths.
+3. Add a disposable real-Obsidian journey with Dice Roller and document the authoring grammar, one-table limit, and no-filtering boundary.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | ---- | ------------------- |
-| 1 | `roller` is available only when the active published pack declares `block:roller`; no game id is special-cased. |
-| 2 | A roller renders only the Markdown slices identified by its exact native table targets, and an invalid target never becomes an invented fallback table. |
-| 3 | The action asks Dice Roller to resolve the referenced table and copies exactly one textual result; all known failure paths preserve the note and clipboard. |
+| 1 | Ordinary and lookup tables draw through Dice Roller; no local random fallback exists. |
+| 2 | The copied value belongs to the selected table, source notes remain untouched, and every known failure reports clearly without a clipboard write. |

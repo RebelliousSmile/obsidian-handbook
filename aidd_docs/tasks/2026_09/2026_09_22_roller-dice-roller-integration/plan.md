@@ -1,35 +1,35 @@
 ---
-objective: "Handbook can render pack-declared rollers backed by native Dice Roller tables and copy one selected table result from its contextual menu."
-status: blocked
+objective: "Handbook can render a generic roller block containing a Markdown table and copy one Dice Roller result from that table’s contextual menu."
+status: in-progress
 ---
 
-# Plan: Pack-declared Dice Roller tables
+# Plan: Generic Dice Roller tables
 
 ## Overview
 
 | Field      | Value                   |
 | ---------- | ----------------------- |
-| **Goal**   | Add a portable `roller` primitive whose one-or-more tables remain native Markdown targets for Dice Roller, then let Handbook roll and copy a selected table result. |
-| **Source** | Conversation of 22 September 2026 and `C:\Users\fxgui\Documents\Perso\RPG\monsterhearts\2026\09\nastya-lebedeva\parallaxe.md` |
+| **Goal**   | Add a generic `roller` block that parses its own Markdown table, delegates randomness to Dice Roller, and copies the selected result. |
+| **Source** | Conversation of 22 September 2026 |
 
 ## Phases
 
 | #   | Phase        | File                         |
 | --- | ------------ | ---------------------------- |
-| 1   | Publish the roller contract | [`phase-1.md`](./phase-1.md) |
-| 2   | Render and roll in Handbook | [`phase-2.md`](./phase-2.md) |
-| 3   | Prove the integration | [`phase-3.md`](./phase-3.md) |
+| 1   | Render generic roller tables | [`phase-1.md`](./phase-1.md) |
+| 2   | Delegate and copy results | [`phase-2.md`](./phase-2.md) |
 
 ## Resources
 
 | Source | Verified |
 | ------ | -------- |
-| https://github.com/obsidian-ttrpg-community/dice-roller | A table roller targets a native Markdown table through a note/block wikilink; the plugin exposes `getRoller(diceString, sourceFile)`. |
+| https://github.com/obsidian-ttrpg-community/dice-roller | The plugin exposes formula rollers and array rollers, which let Handbook delegate a block-contained table’s randomness without a schema-specific target. |
 
 ## Decisions
 
 | Decision | Why |
 | -------- | --- |
-| A new `schema-roller` package owns the shared `roller` capability, while each pack owns its oracle and table content. | Handbook must not hard-code Parallaxe or any game’s semantics, and a PbtA-specific schema cannot own a primitive intended for every game family. |
-| A roller references a native Markdown table by a stable Dice Roller block reference; it does not embed that table in a fenced code block. | Dice Roller reads source tables, not a table produced only by Handbook’s renderer. |
+| `roller` is a Handbook block with no schema or pack capability. | Its table grammar and interaction are invariant across games. |
+| A roller contains one Markdown table and parses it locally. | Authors can write tables where they need them and right-click the rendered table directly. |
+| Ordinary tables use Dice Roller’s array API; lookup tables roll their declared formula through Dice Roller before Handbook selects its matching row. | Both paths retain Dice Roller as the random engine without requiring an external table target. |
 | Copying a result is non-mutating and requires Dice Roller to be installed. | The player chooses where to paste a result and the plugin remains the single roll engine. |
