@@ -30,7 +30,7 @@ export function getAvailableCalloutInsertions(
 		}
 
 		insertions.push({
-			title: `${entry.name} callout`,
+			title: `${entry.name} callout${entry.native && alias !== entry.id ? ` (${alias})` : ""}`,
 			icon: entry.icon ?? "message-square",
 			alias,
 			template: entry.template,

@@ -370,7 +370,7 @@ async function run(): Promise<void> {
 		check("the PbtA move is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-move")!, settings));
 		check("the unknown PbtA game exposes one handout", contents.handouts.map((block) => block.id).join(",") === "pbta-playbook");
 		check("the unknown PbtA game exposes both code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-move,pbta-playbook");
-		check("the unknown PbtA game exposes the four generic callouts", contents.callouts.filter((callout) => callout.capability === "style:pbta").length === 4);
+		check("the unknown PbtA game exposes eight generic callouts", contents.callouts.filter((callout) => callout.capability === "style:pbta").length === 8);
 	}
 
 	/* A plugin asset root is relative and confined to its installation. */
