@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.23.0] - 2026-09-22
+
+### Added
+
+- Add generic Dice Roller tables: right-click a `roller` Markdown table to draw and copy a result without changing the source note.
+- Add a Pack integration check in Settings, reporting each registered pack's manifest, capabilities, available presentation support, and unavailable resources.
+
+### Fixed
+
+- Classify generic Markdown utilities separately from game-document formats, so they are not required to declare a schema or TOML export.
+
 ## [2.22.0] - 2026-09-22
 
 ### Added
