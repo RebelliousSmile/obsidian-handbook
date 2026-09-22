@@ -126,11 +126,11 @@ def right_click_table(index):
 
 
 def choose_roll():
-    rect = json.loads(evaluate("JSON.stringify((() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const rect = title?.closest('.menu-item')?.getBoundingClientRect(); return rect && {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2}; })())"))
-    if not rect:
-        raise RuntimeError("Roller menu item was not visible")
-    call("Input.dispatchMouseEvent", {"type": "mousePressed", "x": rect["x"], "y": rect["y"], "button": "left", "buttons": 1, "clickCount": 1})
-    call("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": rect["x"], "y": rect["y"], "button": "left", "buttons": 0, "clickCount": 1})
+    evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.click(); return true; })()")
+
+
+def bridge_clipboard():
+    evaluate("(() => { const clipboard = navigator.clipboard; const write = async value => { require('electron').clipboard.writeText(value); }; Object.defineProperty(clipboard, 'writeText', { configurable: true, value: write }); return true; })()")
 
 
 wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
@@ -156,6 +156,7 @@ wait_for_visible_roller_tables()
 
 values = [["First option", "Second option"], ["Low result", "High result"]]
 results = []
+bridge_clipboard()
 for index, expected in enumerate(values):
     evaluate("require('electron').clipboard.writeText('roller-sentinel')")
     right_click_table(index)
