@@ -13,16 +13,31 @@ export function addRollerAction(menu: Menu, plugin: BrumesPlugin, data: RollerDa
 /** Open a context menu bound to one rendered table rather than editor-global state. */
 export function openRollerContextMenu(plugin: BrumesPlugin, data: RollerData, event: MouseEvent): void {
 	event.preventDefault();
+	event.stopPropagation();
+	event.stopImmediatePropagation();
 	const menu = new Menu();
 	addRollerAction(menu, plugin, data);
 	menu.showAtMouseEvent(event);
 }
 
 type DiceRollerPlugin = DiceRollerApi;
+type ElectronClipboard = { writeText(value: string): void };
 
 function diceRoller(plugin: BrumesPlugin): DiceRollerPlugin | null {
 	const app = plugin.app as unknown as { plugins?: { getPlugin?(id: string): unknown } };
 	return (app.plugins?.getPlugin?.("obsidian-dice-roller") as DiceRollerPlugin | undefined) ?? null;
+}
+
+async function copyResult(value: string): Promise<void> {
+	try {
+		await navigator.clipboard.writeText(value);
+		return;
+	} catch {
+		const runtime = activeDocument.defaultView as (Window & { require?: (module: string) => unknown }) | null;
+		const electron = runtime?.require?.("electron") as { clipboard?: ElectronClipboard } | undefined;
+		if (!electron?.clipboard) throw new Error("Clipboard unavailable");
+		electron.clipboard.writeText(value);
+	}
 }
 
 async function rollAndCopy(plugin: BrumesPlugin, data: RollerData): Promise<void> {
@@ -34,7 +49,7 @@ async function rollAndCopy(plugin: BrumesPlugin, data: RollerData): Promise<void
 	try {
 		const result = await rollTable(dice, data);
 		if (!result) throw new Error("empty result");
-		await navigator.clipboard.writeText(result);
+		await copyResult(result);
 		new Notice("Roll result copied to clipboard.");
 	} catch {
 		new Notice("Could not roll or copy this table result.");

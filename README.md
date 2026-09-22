@@ -654,6 +654,19 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 
 For the six shared Mist formats, right-click a rendered block and choose `Paste TOML from clipboard` to bring an export back from Lantern. A schema-owned codec writes concise Handbook source only when it can prove that no content changes; TOML with comments, metadata, unknown fields, or transformed values is kept verbatim.
 
+## schema-pbta release-train proof
+
+The central `schema-pbta` release train checks out the selected Handbook ref, then invokes this consumer-owned proof. It does not select candidates or promote releases.
+
+```sh
+SCHEMA_PBTA_CANDIDATE_ARCHIVE="https://github.com/RebelliousSmile/schema-pbta/releases/download/vX.Y.Z/schema-pbta-X.Y.Z.tgz" \
+SCHEMA_PBTA_CANDIDATE_SRI="sha512-…" \
+SCHEMA_PBTA_CANDIDATE_REF="vX.Y.Z" \
+pnpm prove:schema-pbta-candidate
+```
+
+Success emits one JSON object with `ok`, `schemaPbta.version`, `archive`, `integrity`, `ref`, and the completed proofs. Any disagreement with `package.json`, `pnpm-lock.yaml`, or the installed package exits non-zero and emits a JSON error on stderr.
+
 ## License
 
 - Plugin code: [MIT](LICENSE), originally (c) 4rtamis as Brumes, modifications (c) François-Xavier Guillois
