@@ -181,7 +181,7 @@ wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
 evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
 wait_for_visible_roller_tables()
 
-values = [["First option", "Second option"], ["Low result", "High result"]]
+values = [["First option", "Second option"], [1, 2]]
 results = []
 instrument_dice_roller()
 for index, expected in enumerate(values):
