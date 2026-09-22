@@ -8,7 +8,7 @@ const directory = await mkdtemp(join(tmpdir(), "handbook-roller-"));
 const output = join(directory, "assert-roller.mjs");
 const obsidian = join(directory, "obsidian.mjs");
 try {
-	await writeFile(obsidian, "export class Menu {}\nexport class Notice { constructor() {} }\n");
+	await writeFile(obsidian, "export class Menu { addItem() {} showAtMouseEvent() {} }\nexport class Notice { constructor() {} }\n");
 	await build({ entryPoints: ["tools/assertRoller.harness.mts"], bundle: true, platform: "node", format: "esm", outfile: output, alias: { obsidian }, logLevel: "silent" });
 	await import(pathToFileURL(output).href);
 } finally {
