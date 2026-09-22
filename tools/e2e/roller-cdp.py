@@ -105,7 +105,7 @@ def wait_for(expression, timeout=30):
             return
         time.sleep(0.2)
     screenshot("roller-timeout.png")
-    state = evaluate("JSON.stringify((() => { const root = app.workspace.getMostRecentLeaf()?.view?.containerEl; return {enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, rendered: document.querySelectorAll('.brumes-roller--table').length, scoped: root?.querySelectorAll('.brumes-roller--table').length ?? 0, visible: " + ACTIVE_ROLLER_TABLES + ".length, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), notices: [...document.querySelectorAll('.notice')].map(notice => notice.textContent).slice(-5), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), files: app.vault.getFiles().map(file => file.path).slice(0, 10)}; })())")
+    state = evaluate("JSON.stringify((() => { const root = app.workspace.getMostRecentLeaf()?.view?.containerEl; return {enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, rendered: document.querySelectorAll('.brumes-roller--table').length, scoped: root?.querySelectorAll('.brumes-roller--table').length ?? 0, visible: " + ACTIVE_ROLLER_TABLES + ".length, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), menuClicks: globalThis.__handbookRollerMenuClicks || 0, rollerTrace: globalThis.__handbookRollerTrace || null, notices: [...document.querySelectorAll('.notice')].map(notice => notice.textContent).slice(-5), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), files: app.vault.getFiles().map(file => file.path).slice(0, 10)}; })())")
     raise RuntimeError(f"Timed out waiting for: {expression}; state: {state}")
 
 
@@ -126,11 +126,34 @@ def right_click_table(index):
 
 
 def choose_roll():
-    evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.click(); return true; })()")
+    evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.addEventListener('click', () => { globalThis.__handbookRollerMenuClicks = (globalThis.__handbookRollerMenuClicks || 0) + 1; }, { capture: true, once: true }); item.click(); return true; })()")
 
 
 def bridge_clipboard():
     evaluate("(() => { const clipboard = navigator.clipboard; const write = async value => { require('electron').clipboard.writeText(value); }; Object.defineProperty(clipboard, 'writeText', { configurable: true, value: write }); return true; })()")
+
+
+def instrument_array_roller():
+    evaluate("""(() => {
+        const dice = app.plugins.getPlugin('obsidian-dice-roller');
+        const original = dice?.getArrayRoller?.bind(dice);
+        if (!original) throw new Error('Dice Roller array API was unavailable for instrumentation');
+        globalThis.__handbookRollerTrace = { arrayCalls: 0, rollCalls: 0, results: [] };
+        dice.getArrayRoller = async (...args) => {
+            globalThis.__handbookRollerTrace.arrayCalls += 1;
+            const roller = await original(...args);
+            globalThis.__handbookRollerTrace.results.push({ afterCreate: roller.results });
+            const roll = roller.roll.bind(roller);
+            roller.roll = async (...rollArgs) => {
+                globalThis.__handbookRollerTrace.rollCalls += 1;
+                const result = await roll(...rollArgs);
+                globalThis.__handbookRollerTrace.results.push({ afterRoll: roller.results, returned: result });
+                return result;
+            };
+            return roller;
+        };
+        return true;
+    })()""")
 
 
 wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
@@ -157,6 +180,7 @@ wait_for_visible_roller_tables()
 values = [["First option", "Second option"], ["Low result", "High result"]]
 results = []
 bridge_clipboard()
+instrument_array_roller()
 for index, expected in enumerate(values):
     evaluate("require('electron').clipboard.writeText('roller-sentinel')")
     right_click_table(index)
