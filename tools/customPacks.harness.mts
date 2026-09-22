@@ -243,23 +243,36 @@ async function run(): Promise<void> {
 		check("stylesheet resolution keeps declared images", state.tokens["--brumes-image-portrait"]?.includes("city-runtime/assets/portrait.svg") === true);
 	}
 
-	/* A stylesheet failure is atomic: no partial pack CSS reaches the writer. */
+	/* A faulty stylesheet is diagnosed and skipped without discarding its siblings. */
 	for (const [id, stylesheet] of [
 		["missing-city-css", undefined],
 		["imported-city-css", '@import "https://example.test/foreign.css";'],
 		["unscoped-city-css", ".inline-title { color: red; }"],
+		["oversized-city-css", " ".repeat(256 * 1024 + 1)],
 	] as const) {
+		const before = `body.brumes--${id} .before { color: red; }`;
+		const after = `body.brumes--${id} .after { color: blue; }`;
 		const files: Record<string, string> = {
 			[`${id}/pack.json`]: gamePlugin(id, {
-				assets: { images: { portrait: "portrait.svg" }, stylesheets: ["styles/city.css"] },
+				assets: { images: { portrait: "portrait.svg" }, stylesheets: ["styles/before.css", "styles/city.css", "styles/after.css"] },
 			}),
 			[`${id}/assets/portrait.svg`]: "svg",
+			[`${id}/assets/styles/before.css`]: before,
+			[`${id}/assets/styles/after.css`]: after,
 		};
 		if (stylesheet !== undefined) files[`${id}/assets/styles/city.css`] = stylesheet;
 		const { plugin } = fakePlugin(files);
 		const installed = await loadCustomGamePacks(plugin);
+		const warnings: string[] = [];
+		const originalWarn = console.warn;
+		log.setLevel("warn");
+		console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(" ")); };
 		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
-		check(`${id} leaves no partial pack CSS`, state.packCss === "");
+		console.warn = originalWarn;
+		log.setLevel("error");
+		check(`${id} retains both valid stylesheets in order`, state.packCss === `${before}\n\n${after}`);
+		check(`${id} reports its faulty sheet and pack`, warnings.some((warning) => warning.includes("styles/city.css") && warning.includes(id)));
+		if (id === "oversized-city-css") check("oversized CSS fails before parsing", warnings.some((warning) => warning.includes("exceeds 262144 bytes")));
 		check(`${id} keeps generic image assets available`, state.tokens["--brumes-image-portrait"] !== undefined);
 	}
 

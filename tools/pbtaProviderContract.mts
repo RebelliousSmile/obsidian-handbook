@@ -120,8 +120,8 @@ export function loadPbtaProviderContract(): PbtaProviderContract {
 	if (descriptor.providerVersion !== 1) {
 		throw new Error(`cross-tool-provider.json: providerVersion ${String(descriptor.providerVersion)} is not 1`);
 	}
-	if (descriptor.contractVersion !== 5) {
-		throw new Error(`cross-tool-provider.json: contractVersion ${String(descriptor.contractVersion)} is not 5`);
+	if (descriptor.contractVersion !== 8) {
+		throw new Error(`cross-tool-provider.json: contractVersion ${String(descriptor.contractVersion)} is not 8`);
 	}
 	if (typeof descriptor.corpus !== "string" || typeof descriptor.packManifest !== "string") {
 		throw new Error("cross-tool-provider.json: corpus and packManifest must be paths");

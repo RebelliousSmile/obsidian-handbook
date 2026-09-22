@@ -11,6 +11,8 @@ import {
 	readHealth,
 	readIdentity,
 	readNarrative,
+	rememberAdrenalineSource,
+	adrenalineSourceDocument,
 	readProtections,
 	stringifyAdrenalineDocument,
 	warnUnknownKeys,
@@ -50,7 +52,7 @@ export function documentToPnj(value: unknown): AdrenalinePnjData | null {
 	if (equipement) data.equipement = equipement;
 	if (narratif) data.narratif = narratif;
 	if (meta) data.meta = meta;
-	return data;
+	return rememberAdrenalineSource(data, document);
 }
 
 export function parsePnjDocument(source: string): AdrenalinePnjData | null {
@@ -59,6 +61,8 @@ export function parsePnjDocument(source: string): AdrenalinePnjData | null {
 }
 
 export function pnjToDocument(data: AdrenalinePnjData): AdrenalineDocument {
+	const source = adrenalineSourceDocument(data);
+	if (source) return source;
 	const document: AdrenalineDocument = { nom: data.nom };
 	for (const key of ["niveauDeDanger", "description", "identite", "caracteristiques", "sante", "protections", "formations", "competences", "equipement", "narratif", "meta"] as const) {
 		if (data[key] !== undefined) document[key] = data[key];

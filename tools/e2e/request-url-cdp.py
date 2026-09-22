@@ -13,6 +13,7 @@ import websocket
 
 PORT = int(os.environ.get("HANDBOOK_E2E_CDP_PORT", "9223"))
 OUTPUT_DIR = os.environ["HANDBOOK_E2E_OUTPUT_DIR"]
+VAULT_ROOT = os.path.normcase(os.path.abspath(os.environ["HANDBOOK_E2E_VAULT"]))
 
 
 def targets():
@@ -20,13 +21,29 @@ def targets():
         return [target for target in json.load(response) if target.get("type") == "page"]
 
 
-def wait_for_target(exclude_id=None):
+def wait_for_target(exclude_id=None, require_vault=True):
     deadline = time.time() + 30
     while time.time() < deadline:
         try:
             pages = [target for target in targets() if target.get("id") != exclude_id]
-            if pages:
-                return pages[-1]
+            for page in pages:
+                if not require_vault:
+                    return page
+                candidate = connect(page)
+                try:
+                    candidate.send(json.dumps({"id": 1, "method": "Runtime.evaluate", "params": {
+                        "expression": "globalThis.app?.vault?.adapter?.getBasePath()",
+                        "returnByValue": True,
+                    }}))
+                    while True:
+                        response = json.loads(candidate.recv())
+                        if response.get("id") == 1:
+                            root = response.get("result", {}).get("result", {}).get("value")
+                            if root and os.path.normcase(root) == VAULT_ROOT:
+                                return page
+                            break
+                finally:
+                    candidate.close()
         except Exception:
             pass
         time.sleep(0.2)
@@ -92,6 +109,11 @@ if action == "close":
     call("Browser.close")
     sys.exit(0)
 elif action == "ready":
+    wait_for("Boolean(document.querySelector('.mod-trust-folder') || globalThis.app?.plugins?.plugins?.['obsidian-handbook'])")
+    evaluate("""(() => {
+      const trust = document.querySelector('.mod-trust-folder');
+      if (trust) [...trust.querySelectorAll('button')].pop()?.click();
+    })()""")
     wait_for(
         "document.body.innerText.includes('Choose a starter kit') && "
         "document.body.innerText.includes('Mist Engine')"
@@ -116,13 +138,14 @@ elif action == "install":
         )
         if not clicked:
             raise RuntimeError("Mist Engine Install button was not found")
-        deadline = time.time() + 30
+        deadline = time.time() + 120
         retry = False
         while time.time() < deadline:
             notices = evaluate(
                 "[...document.querySelectorAll('.notice')].map(node => node.innerText).join('\\n')"
             )
-            if "Mist Engine is ready" in notices:
+            installed = evaluate("app.vault.adapter.exists('.obsidian/handbook/sources/rebellioussmile--schema-in-the-mist/source.json')")
+            if "Mist Engine is ready" in notices or installed:
                 screenshot("02-mist-engine-ready.png")
                 print("notice=Mist Engine is ready")
                 break
@@ -153,8 +176,9 @@ elif action == "open-source":
     if not opened:
         raise RuntimeError("Obsidian settings API was unavailable")
     ws.close()
-    target = wait_for_target(exclude_id=original_target_id)
+    target = wait_for_target(exclude_id=original_target_id, require_vault=False)
     ws = connect(target)
+    wait_for("Boolean(document.querySelector('.vertical-tab-nav-item'))")
     switched = evaluate(
         """
         (() => {

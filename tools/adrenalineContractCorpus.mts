@@ -20,8 +20,8 @@ const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
  * Freezing the full version made every upstream release a red build here, with nothing broken.
  */
 export function assertAdrenalineContractVersion(version: unknown): asserts version is string {
-	if (typeof version !== "string" || !/^1\.\d+\.\d+$/.test(version)) {
-		throw new Error(`schema-adrenaline package must be a 1.x contract, received ${String(version)}`);
+	if (typeof version !== "string" || !/^2\.\d+\.\d+$/.test(version)) {
+		throw new Error(`schema-adrenaline package must be a 2.x contract, received ${String(version)}`);
 	}
 }
 
@@ -37,7 +37,7 @@ export function loadAdrenalineContractCases(): AdrenalineContractCase[] {
 		cases?: unknown;
 	};
 	if (manifest.manifestVersion !== 1 || manifest.tomlVersion !== "1.0.0" || !Array.isArray(manifest.cases)) {
-		throw new Error("schema-adrenaline v1 contract manifest is invalid");
+		throw new Error("schema-adrenaline v2 contract manifest is invalid");
 	}
 	const ids = new Set<string>();
 	return manifest.cases.map((raw, index) => {

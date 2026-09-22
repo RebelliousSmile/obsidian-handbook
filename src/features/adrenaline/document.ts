@@ -118,6 +118,23 @@ const log = logScope("Adrenaline");
 const warned = new Set<string>();
 const THRESHOLD_KEYS = ["superficiel", "leger", "grave", "profond"];
 const CHARACTERISTIC_SET = new Set<string>(CHARACTERISTIC_KEYS);
+const sourceDocuments = new WeakMap<object, AdrenalineDocument>();
+
+/** Retain the schema document while projecting its values for display. */
+export function rememberAdrenalineSource<T extends object>(data: T, document: AdrenalineDocument): T {
+	sourceDocuments.set(data, document);
+	return data;
+}
+
+export function adrenalineSourceDocument(data: object): AdrenalineDocument | undefined {
+	return sourceDocuments.get(data);
+}
+
+/** Adrenaline 2 publishes bounded values; the display uses their current value. */
+export function readCurrentValue(value: unknown, minimum = 0, maximum = 1000000): number | undefined {
+	const record = asRecord(value);
+	return asInteger(record ? record.current : value, minimum, maximum);
+}
 
 export function asRecord(value: unknown): AdrenalineDocument | undefined {
 	return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -162,7 +179,7 @@ export function readCharacteristics(value: unknown): Characteristics | undefined
 	warnUnknownKeys(record, [...CHARACTERISTIC_KEYS], "caracteristiques");
 	const result: Characteristics = {};
 	for (const key of CHARACTERISTIC_KEYS) {
-		const score = asInteger(record[key], 0, 200);
+		const score = readCurrentValue(record[key], 0, 200);
 		if (score !== undefined) result[key] = score;
 	}
 	return Object.keys(result).length > 0 ? result : undefined;
@@ -171,10 +188,10 @@ export function readCharacteristics(value: unknown): Characteristics | undefined
 function readThreshold(value: unknown): Threshold | undefined {
 	const record = asRecord(value);
 	if (!record) return undefined;
-	const base = asInteger(record.base, 0, 100);
+	const base = readCurrentValue(record.base, 0, 100);
 	if (base === undefined) return undefined;
 	const threshold: Threshold = { base };
-	const covered = asInteger(record.couvert, 0, 100);
+	const covered = readCurrentValue(record.couvert, 0, 100);
 	if (covered !== undefined) threshold.couvert = covered;
 	return threshold;
 }
@@ -218,13 +235,13 @@ function readProtectionSide(value: unknown, mental: boolean): ProtectionSide | u
 		: ["solidite", "armure", "bouclier"];
 	warnUnknownKeys(record, allowed, mental ? "protections.mentales" : "protections.physiques");
 	const result: ProtectionSide = {};
-	const solidite = asInteger(record.solidite, 0, 100);
+	const solidite = readCurrentValue(record.solidite, 0, 100);
 	if (solidite !== undefined) result.solidite = solidite;
 	if (mental) {
 		const character = asRecord(record.caractere);
 		if (character) {
 			const trait = asString(character.trait);
-			const points = asInteger(character.points, 0, 100);
+			const points = readCurrentValue(character.points, 0, 100);
 			const localisations = asStringList(character.localisations);
 			if (trait && points !== undefined && localisations.length > 0) {
 				result.caractere = { trait, points, localisations };
@@ -234,7 +251,7 @@ function readProtectionSide(value: unknown, mental: boolean): ProtectionSide | u
 		const armour = asRecord(record.armure);
 		if (armour) {
 			const nom = asString(armour.nom);
-			const points = asInteger(armour.points, 0, 100);
+			const points = readCurrentValue(armour.points, 0, 100);
 			const localisations = asStringList(armour.localisations);
 			if (points !== undefined && localisations.length > 0) {
 				result.armure = { ...(nom ? { nom } : {}), points, localisations };
@@ -268,7 +285,7 @@ export function readCompetences(value: unknown): Competence[] {
 			"competence",
 		);
 		const nom = asString(record.nom);
-		const pourcentage = asInteger(record.pourcentage, 0, 200);
+		const pourcentage = readCurrentValue(record.pourcentage, 0, 200);
 		if (!nom || pourcentage === undefined) continue;
 		const competence: Competence = { nom, pourcentage };
 		const specialite = asString(record.specialite);
@@ -277,7 +294,7 @@ export function readCompetences(value: unknown): Competence[] {
 		if (CHARACTERISTIC_SET.has(characteristic)) {
 			competence.caracteristique = characteristic as CharacteristicKey;
 		}
-		const total = asInteger(record.total, 0, 200);
+		const total = readCurrentValue(record.total, 0, 200);
 		if (total !== undefined) competence.total = total;
 		const avantages = asStringList(record.avantages);
 		if (avantages.length > 0) competence.avantages = avantages;
@@ -303,7 +320,7 @@ export function readFormations(value: unknown): Formation[] {
 		warnUnknownKeys(record, ["type", "nom", "pourcentage", "competences"], "formation");
 		const type = asString(record.type);
 		const nom = asString(record.nom);
-		const pourcentage = asInteger(record.pourcentage, 0, 200);
+		const pourcentage = readCurrentValue(record.pourcentage, 0, 200);
 		if (!type || !nom || pourcentage === undefined) continue;
 		const formation: Formation = { type, nom, pourcentage };
 		const competences = readCompetences(record.competences);
@@ -319,8 +336,8 @@ function readWeapons(value: unknown): EquipmentWeapon[] {
 		const nom = asString(record.nom);
 		if (!nom) continue;
 		const weapon: EquipmentWeapon = { nom };
-		const pourcentage = asInteger(record.pourcentage, 0, 200);
-		const damage = asInteger(record.desDeDegats, 0, 100);
+		const pourcentage = readCurrentValue(record.pourcentage, 0, 200);
+		const damage = readCurrentValue(record.desDeDegats, 0, 100);
 		const type = asString(record.type);
 		const notes = asString(record.notes);
 		if (pourcentage !== undefined) weapon.pourcentage = pourcentage;

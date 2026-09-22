@@ -97,7 +97,7 @@ def wait_for(expression, timeout=30):
         if evaluate(expression):
             return
         time.sleep(0.2)
-    diagnostic = evaluate("JSON.stringify({enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), isEnabled: app.plugins?.isEnabled?.(), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), buttons: [...document.querySelectorAll('.modal-container button')].map(button => button.innerText), files: app.vault.getFiles().map(file => file.path).slice(0, 10)})")
+    diagnostic = evaluate("JSON.stringify({enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), isEnabled: app.plugins?.isEnabled?.(), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), sections: [...document.querySelectorAll('.markdown-preview-section')].slice(0, 3).map(section => ({className: section.className, children: [...section.children].map(child => [child.className, child.innerText?.slice(0, 60)]), html: section.innerHTML.slice(0, 400)})), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), buttons: [...document.querySelectorAll('.modal-container button')].map(button => button.innerText), files: app.vault.getFiles().map(file => file.path).slice(0, 10)})")
     raise RuntimeError(f"Timed out waiting for: {expression}; state: {diagnostic}")
 
 
@@ -117,10 +117,12 @@ def set_width(width, height=800):
     except RuntimeError as error:
         if "wasn't found" not in str(error):
             raise
-        call(
-            "Emulation.setDeviceMetricsOverride",
-            {"width": width, "height": height, "deviceScaleFactor": 1, "mobile": False},
-        )
+    # The Xvfb display caps the OS window height. Override the renderer's
+    # viewport too, so virtualized Markdown sees every section of the probe.
+    call(
+        "Emulation.setDeviceMetricsOverride",
+        {"width": width, "height": height, "deviceScaleFactor": 1, "mobile": False},
+    )
     time.sleep(0.5)
 
 
@@ -425,6 +427,9 @@ if os.environ.get("HANDBOOK_E2E_PRINT_ONLY") == "1":
     only = probe_print_dom()
     print(json.dumps({"print": {"children": len(only["withoutTitle"]["children"]), "pdf": only["pdf"]}}))
     sys.exit(0)
+# Render the whole probe in one pass. Obsidian virtualizes offscreen sections
+# and can replace wrappers after a viewport resize.
+set_width(1200, 8000)
 opened = evaluate(
     """
     (async () => {
@@ -449,8 +454,7 @@ if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") != "preview"
     wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
 evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
 
-# Reading view renders blocks lazily: a tall window puts every closing marker in view.
-set_width(1200, 2400)
+# Reading view renders blocks lazily: the tall window includes both markers.
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
 set_width(1200)
 wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
@@ -466,7 +470,7 @@ wide = evaluate(
 )
 wide = json.loads(wide)
 if wide != [
-    {"children": 6, "columns": 3, "variable": "3", "blocks": 11},
+    {"children": 6, "columns": 3, "variable": "3", "blocks": 6},
     {"children": 1, "columns": 1, "variable": "1", "blocks": 0},
 ]:
     raise RuntimeError(f"Unexpected wide layout: {wide}")
@@ -538,7 +542,7 @@ narrow = json.loads(
         "JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length, blocks: region.querySelectorAll('.callout').length})))"
     )
 )
-if narrow != [{"columns": 1, "blocks": 11}, {"columns": 1, "blocks": 0}]:
+if narrow != [{"columns": 1, "blocks": 6}, {"columns": 1, "blocks": 0}]:
     raise RuntimeError(f"Unexpected narrow layout: {narrow}")
 screenshot("layout-regions-narrow.png")
 

@@ -157,6 +157,7 @@ export function documentToChallenge(value: unknown): ChallengeData | null {
 	const data: ChallengeData = {
 		name,
 		roles: asStringList(document.roles),
+		rolesDeclared: Array.isArray(document.roles),
 		description: [],
 		limits: [],
 		mights: [],
@@ -228,7 +229,7 @@ export function challengeToDocument(data: ChallengeData): ChallengeDocument {
 		document.rating = data.rating;
 	}
 
-	if (data.roles.length > 0) {
+	if (data.roles.length > 0 || data.rolesDeclared) {
 		document.roles = data.roles.slice();
 	}
 

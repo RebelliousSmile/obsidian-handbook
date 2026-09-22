@@ -57,7 +57,7 @@ function documentToSpectrum(entry: Record<string, unknown>): ComSpectrum {
 	const spectrum: ComSpectrum = {
 		kind,
 		name: asString(entry.name),
-		max: !immune && typeof entry.maximum === "number"
+		max: typeof entry.maximum === "number"
 			? String(entry.maximum)
 			: "",
 		immune,
@@ -122,6 +122,8 @@ export function documentToComDanger(value: unknown): ComDangerData | null {
 		description: [],
 		spectrums: [],
 		moves: documentToMoves(document),
+		softMovesDeclared: Array.isArray(document.soft_moves),
+		hardMovesDeclared: Array.isArray(document.hard_moves),
 	};
 
 	const description = asString(document.description);
@@ -204,11 +206,11 @@ export function comDangerToDocument(data: ComDangerData): ComDangerDocument {
 		}
 	}
 
-	if (soft.length > 0) {
+	if (soft.length > 0 || data.softMovesDeclared) {
 		document.soft_moves = soft;
 	}
 
-	if (hard.length > 0) {
+	if (hard.length > 0 || data.hardMovesDeclared) {
 		document.hard_moves = hard;
 	}
 

@@ -1,5 +1,5 @@
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { asRecordList, asString, asStringList, looksLikeToml } from "../blocks/schemaValues";
+import { asRecordList, asString, asStringList, looksLikeToml, readMeta, SchemaMeta } from "../blocks/schemaValues";
 import { JourneyData, JourneyType, JourneyVignette } from "./parser";
 
 /**
@@ -24,6 +24,7 @@ export interface JourneyDocument {
 	/** The consequences that belong to the journey rather than to a vignette. */
 	consequences?: string[];
 	vignettes?: JourneyVignetteDocument[];
+	meta?: SchemaMeta;
 }
 
 export interface JourneyVignetteDocument {
@@ -99,10 +100,12 @@ export function documentToJourney(value: unknown): JourneyData | null {
 	};
 
 	const benefits = asString(document.benefits);
+	const meta = readMeta(document.meta);
 
 	if (benefits) {
 		data.benefits = benefits;
 	}
+	if (meta) data.meta = meta;
 
 	return data;
 }
@@ -110,6 +113,7 @@ export function documentToJourney(value: unknown): JourneyData | null {
 /** Turn a parsed journey back into a schema-shaped document. */
 export function journeyToDocument(data: JourneyData): JourneyDocument {
 	const document: JourneyDocument = { type: data.type, name: data.name };
+	if (data.meta) document.meta = data.meta;
 
 	if (data.description.length > 0) {
 		document.description = data.description.join("\n\n");

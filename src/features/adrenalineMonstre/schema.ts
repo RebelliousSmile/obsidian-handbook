@@ -9,6 +9,8 @@ import {
 	readEquipment,
 	readHealth,
 	readNarrative,
+	rememberAdrenalineSource,
+	adrenalineSourceDocument,
 	readProtections,
 	stringifyAdrenalineDocument,
 	warnMentalHealthWithoutCharacteristics,
@@ -132,7 +134,7 @@ export function documentToMonster(value: unknown): AdrenalineMonsterData | null 
 	if (narrative) data.narratif = narrative;
 	if (meta) data.meta = meta;
 	warnMentalHealthWithoutCharacteristics(health, characteristics);
-	return data;
+	return rememberAdrenalineSource(data, document);
 }
 
 export function parseMonsterDocument(source: string): AdrenalineMonsterData | null {
@@ -141,6 +143,8 @@ export function parseMonsterDocument(source: string): AdrenalineMonsterData | nu
 }
 
 export function monsterToDocument(data: AdrenalineMonsterData): AdrenalineDocument {
+	const source = adrenalineSourceDocument(data);
+	if (source) return source;
 	const document: AdrenalineDocument = { nom: data.nom, caracteristiques: data.caracteristiques };
 	for (const key of ["typeDeCorps", "instinct", "typeInfecte", "description", "niveauDeDanger", "sante", "protections", "zoneDeDetection", "deplacement", "actionsParRound", "etatAlternatif", "comportement", "traitsSpeciaux", "competences", "equipement", "contagion", "narratif", "meta"] as const) {
 		if (data[key] !== undefined) document[key] = data[key];

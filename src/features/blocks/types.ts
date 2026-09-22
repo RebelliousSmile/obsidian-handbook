@@ -36,7 +36,7 @@ export interface BrumesBlock<T> {
 	 */
 	shape: BlockShape;
 	parse(source: string): T | null;
-	render(data: T, doc: Document): HTMLElement;
+	render(data: T, doc: Document, context?: { packId: string }): HTMLElement;
 	/** Writes an insertion document using the active pack context. */
 	template(settings: BrumesSettings): string;
 }

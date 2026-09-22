@@ -1,6 +1,6 @@
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import { findComThemeType } from "../blocks/comThemebooks";
-import { asRecordList, asString, looksLikeToml } from "../blocks/schemaValues";
+import { asRecordList, asString, looksLikeToml, readMeta, SchemaMeta } from "../blocks/schemaValues";
 import {
 	ComDriveKind,
 	ComThemeCardData,
@@ -35,6 +35,7 @@ export interface ComThemeCardDocument {
 	power_tags?: ComThemeTagDocument[];
 	weakness_tags?: ComThemeTagDocument[];
 	improvements?: ComImprovementDocument[];
+	meta?: SchemaMeta;
 }
 
 export interface ComDriveDocument {
@@ -53,13 +54,17 @@ export interface ComTrackDocument {
 export interface ComThemeTagDocument {
 	text: string;
 	/** The themebook question letter the tag answers. */
+	letter?: string;
 	question?: string;
+	is_burnt?: boolean;
 	burnt?: boolean;
+	is_invoked?: boolean;
 }
 
 export interface ComImprovementDocument {
 	name: string;
 	effect?: string;
+	is_taken?: boolean;
 }
 
 /** Both tracks hold three boxes on a printed card. */
@@ -88,12 +93,23 @@ function readTags(value: unknown, weakness: boolean): ComThemeTag[] {
 		// weakness as burnt loses the mark, not the tag.
 		const tag: ComThemeTag = {
 			text,
-			burnt: !weakness && entry.burnt === true,
+			burnt: !weakness && (entry.is_burnt === true || entry.burnt === true),
 		};
-		const question = asString(entry.question);
+		if (typeof entry.is_burnt === "boolean") tag.burntDeclared = true;
+		if (typeof entry.burnt === "boolean") tag.burntDeclared = true;
+		if (typeof entry.is_burnt === "boolean") tag.rawIsBurnt = entry.is_burnt;
+		if (typeof entry.burnt === "boolean") tag.rawBurnt = entry.burnt;
+		if (typeof entry.is_burnt === "boolean") tag.burntField = "is_burnt";
+		else if (typeof entry.burnt === "boolean") tag.burntField = "burnt";
+		if (typeof entry.is_invoked === "boolean") {
+			tag.invoked = entry.is_invoked;
+			tag.invokedDeclared = true;
+		}
+		const question = asString(entry.letter ?? entry.question);
 
 		if (question) {
 			tag.question = question.toUpperCase();
+			tag.questionField = typeof entry.letter === "string" ? "letter" : "question";
 		}
 
 		tags.push(tag);
@@ -138,7 +154,12 @@ function readImprovements(value: unknown): ComThemeImprovement[] {
 			continue;
 		}
 
-		improvements.push({ name, effect: asString(entry.effect) });
+		const improvement: ComThemeImprovement = { name, effect: asString(entry.effect) };
+		if (typeof entry.is_taken === "boolean") {
+			improvement.taken = entry.is_taken;
+			improvement.takenDeclared = true;
+		}
+		improvements.push(improvement);
 	}
 
 	return improvements;
@@ -169,11 +190,10 @@ export function documentToComThemeCard(
 	const document = value as Record<string, unknown>;
 	const themebook = asString(document.themebook);
 
-	if (!themebook) {
-		return null;
-	}
-
-	const type = findComThemeType(themebook);
+	const declaredType = asString(document.theme_type);
+	const type = findComThemeType(themebook) ??
+		(["mythos", "logos", "extra", "crew"].includes(declaredType) ? declaredType as ComThemeCardData["type"] : null);
+	if (!themebook && !type) return null;
 	const data: ComThemeCardData = {
 		themebook,
 		type,
@@ -182,6 +202,8 @@ export function documentToComThemeCard(
 		weaknessTags: readTags(document.weakness_tags, true),
 		improvements: readImprovements(document.improvements),
 	};
+	const meta = readMeta(document.meta);
+	if (meta) data.meta = meta;
 
 	const motivation = document.motivation ?? document.drive;
 	if (
@@ -229,12 +251,17 @@ function tagToDocument(tag: ComThemeTag): ComThemeTagDocument {
 	const entry: ComThemeTagDocument = { text: tag.text };
 
 	if (tag.question) {
-		entry.question = tag.question;
+		if (tag.questionField === "question") entry.question = tag.question;
+		else entry.letter = tag.question;
 	}
 
-	if (tag.burnt) {
-		entry.burnt = true;
+	if (tag.rawIsBurnt !== undefined) entry.is_burnt = tag.rawIsBurnt;
+	if (tag.rawBurnt !== undefined) entry.burnt = tag.rawBurnt;
+	if (tag.rawIsBurnt === undefined && tag.rawBurnt === undefined && (tag.burnt || tag.burntDeclared)) {
+		if (tag.burntField === "burnt") entry.burnt = tag.burnt;
+		else entry.is_burnt = tag.burnt;
 	}
+	if (tag.invokedDeclared) entry.is_invoked = tag.invoked;
 
 	return entry;
 }
@@ -245,7 +272,7 @@ export function comThemeCardToDocument(
 ): ComThemeCardDocument {
 	const inferred = findComThemeType(data.themebook);
 	const themeType =
-		inferred ?? (data.drive?.kind === "identity" ? "logos" : "mythos");
+		inferred ?? data.type ?? (data.drive?.kind === "identity" ? "logos" : "mythos");
 	const document: ComThemeCardDocument = {
 		themebook: data.themebook || undefined,
 		theme_type: themeType,
@@ -278,8 +305,10 @@ export function comThemeCardToDocument(
 		document.improvements = data.improvements.map((improvement) => ({
 			name: improvement.name,
 			...(improvement.effect ? { effect: improvement.effect } : {}),
+			...(improvement.takenDeclared ? { is_taken: improvement.taken } : {}),
 		}));
 	}
+	if (data.meta) document.meta = data.meta;
 
 	return document;
 }

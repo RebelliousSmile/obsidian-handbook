@@ -5,6 +5,7 @@ import {
 } from "schema-pbta";
 import type { BrumesBlock } from "../blocks/types";
 import { renderPbtaMove, renderPbtaPlaybook } from "./renderer";
+import { renderMonsterheartsLayout } from "./monsterheartsLayout";
 import { pbtaMoveShape, pbtaPlaybookShape } from "./shape";
 import { parsePbtaPlaybookToml, stringifyPbtaPlaybookToml, type ResolvedPbtaPlaybook } from "./specializedPlaybooks";
 
@@ -21,7 +22,9 @@ export const pbtaPlaybookBlock: BrumesBlock<ResolvedPbtaPlaybook> = {
 	icon: "book-user",
 	shape: pbtaPlaybookShape,
 	parse: parsePbtaPlaybookToml,
-	render: renderPbtaPlaybook,
+	render: (data, doc, context) => context?.packId === "monsterhearts" && data.target === "monsterhearts-playbook"
+		? renderMonsterheartsLayout(data.data, doc)
+		: renderPbtaPlaybook(data, doc),
 	template: (settings) => `\`\`\`pbta-playbook\nslug = "new-playbook"\nname = "New playbook"\ngame = "${settings.mode}"\ndescription = "Describe this playbook."\nmoves = []\n\n[stats]\n\`\`\`\n`,
 };
 

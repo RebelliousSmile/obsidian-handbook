@@ -77,4 +77,15 @@ for (const entry of readdirSync(workflows)) {
 }
 assert.ok(installs >= 2, `only ${installs} workflow installs dependencies with pnpm, expected the check and the release`);
 
+const ci = readFileSync(join(workflows, "ci.yml"), "utf8");
+for (const command of [
+	"pnpm check",
+	"pnpm assert:adrenaline-source",
+	"pnpm e2e:layout-regions:linux",
+	"pnpm e2e:request-url",
+	"tools/e2e/layout-regions-journey.ps1",
+]) {
+	assert.ok(ci.includes(command), `CI does not run ${command} on pull requests`);
+}
+
 console.log(`CI install passed: ${installs} pnpm installs, ${tracked} is the only lockfile any of them needs.`);

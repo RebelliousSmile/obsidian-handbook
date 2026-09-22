@@ -12,7 +12,12 @@ function api(repository: string, suffix: string): string {
 }
 
 async function json(url: string): Promise<Record<string, unknown>> {
-	const response = await requestUrl({ url, headers: { Accept: "application/vnd.github+json" } });
+	let response;
+	try {
+		response = await requestUrl({ url, headers: { Accept: "application/vnd.github+json" } });
+	} catch (error) {
+		throw new Error(`GitHub request failed for ${url}: ${String(error)}`);
+	}
 	if (response.status < 200 || response.status >= 300 || !response.json || typeof response.json !== "object") throw new Error(`GitHub returned ${response.status} for ${url}`);
 	return response.json as Record<string, unknown>;
 }
@@ -38,7 +43,13 @@ async function resolveReference(repository: string, reference: SchemaSourceRefer
 export async function resolveGithubSource(source: SchemaSource): Promise<ResolvedGithubSource> {
 	const revision = await resolveReference(source.repository, source.reference);
 	const read = async (path: string) => {
-		const response = await requestUrl({ url: `https://raw.githubusercontent.com/${source.repository}/${revision}/${path}` });
+		const url = `https://raw.githubusercontent.com/${source.repository}/${revision}/${path}`;
+		let response;
+		try {
+			response = await requestUrl({ url });
+		} catch (error) {
+			throw new Error(`GitHub request failed for ${url}: ${String(error)}`);
+		}
 		if (response.status < 200 || response.status >= 300) throw new Error(`GitHub returned ${response.status} for ${path}`);
 		return response;
 	};
