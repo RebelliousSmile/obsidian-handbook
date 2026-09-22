@@ -24,6 +24,7 @@
 		"assert:starter-kits": "node tools/assert-starter-kits.mjs",
 		"e2e:request-url": "bash tools/e2e/request-url-journey.sh",
 		"e2e:layout-regions": "powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1",
+		"e2e:roller": "powershell -ExecutionPolicy Bypass -File tools/e2e/roller-journey.ps1",
 		"e2e:layout-regions:linux": "bash tools/e2e/layout-regions-journey.sh",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",

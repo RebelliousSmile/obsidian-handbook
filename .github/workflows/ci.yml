@@ -150,3 +150,14 @@ jobs:
                   ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
                   if (-not $app) { throw "Obsidian.exe was not installed in an expected location" }
                   powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1 -ObsidianPath $app
+            - name: Roller journey
+              working-directory: handbook
+              shell: pwsh
+              run: |
+                  $app = @(
+                    "$env:LOCALAPPDATA\Programs\Obsidian\Obsidian.exe",
+                    "$env:LOCALAPPDATA\Obsidian\Obsidian.exe",
+                    "C:\Program Files\Obsidian\Obsidian.exe"
+                  ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+                  if (-not $app) { throw "Obsidian.exe was not installed in an expected location" }
+                  powershell -ExecutionPolicy Bypass -File tools/e2e/roller-journey.ps1 -ObsidianPath $app

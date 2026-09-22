@@ -18,7 +18,7 @@ status: in-progress
 | --- | --- | --- |
 | 1 | Make generic settings and pack diagnostics resilient | [`phase-1.md`](./phase-1.md) |
 | 2 | Bound remote source assets before buffering | [`phase-2.md`](./phase-2.md) |
-| 3 | Prove Dice Roller in a real Obsidian journey | [`phase-3.md`](./phase-3.md) |
+| 3 | Bind direct Roller actions and prove them in Obsidian | [`phase-3.md`](./phase-3.md) |
 | 4 | Split Settings composition by domain | [`phase-4.md`](./phase-4.md) |
 
 ## Resources
@@ -33,4 +33,5 @@ status: in-progress
 | --- | --- |
 | A failed pack resolution remains a row in the report rather than rejecting the whole modal. | One broken vault asset must not hide the state of unrelated installed packs. |
 | Remote asset downloads issue a `HEAD` preflight and reject a declared `Content-Length` beyond the remaining source budget before issuing the binary `GET`. | A response returned by `requestUrl` may already be buffered; only a metadata-only request can avoid the subsequent body download. Headerless or unsupported `HEAD` endpoints retain the existing post-read cap. |
+| A Roller table opens its own context menu before the Dice Roller journey exercises it. | `editor-menu` is global and can only use stale remembered state; binding the menu to the rendered table makes the clicked table the sole roll input. |
 | The Dice Roller journey installs an immutable release fixture in an isolated temporary vault. | The fixture lock records the upstream release tag, archive URL, and SHA-256; CI verifies the hash before extraction, so it neither uses a developer’s installed plugins nor follows an unpinned latest release. |

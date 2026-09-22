@@ -18,7 +18,6 @@ import {
 	getAvailableCalloutInsertions,
 } from "../features/callouts/contextMenu";
 import { getOrCreateBrumesSubmenu } from "../utils/contextSubMenu";
-import { contributeRollerAction } from "../features/rollers/contextMenu";
 
 export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 	return plugin.app.workspace.on(
@@ -60,9 +59,6 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			}
 			const renderedPasteItems = contributeRenderedTomlPaste(submenu, plugin);
 			hasItems = hasItems || renderedPasteItems;
-			const rollerItems = contributeRollerAction(submenu, plugin);
-			hasItems = hasItems || rollerItems;
-
 			if (hasBlockInsertions(plugin.settings) && renderedPasteItems) {
 				submenu.addSeparator();
 			}
