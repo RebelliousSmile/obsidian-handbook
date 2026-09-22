@@ -33,6 +33,11 @@ function assetPaths(manifestPath: string, pack: GamePluginManifest): Array<{ sou
 			throw new Error(`pack "${pack.pack.id}" declares an unsafe stylesheet path`);
 		}
 	}
+	for (const resource of pack.pack.assets?.resources ?? []) {
+		if (!safeRelativePath(resource) || !/\.(?:woff2?|ttf|otf)$/i.test(resource)) {
+			throw new Error(`pack "${pack.pack.id}" declares an unsafe stylesheet resource`);
+		}
+	}
 	const files = [
 		...Object.keys(pack.pack.assets?.images ?? {}).map((role) => pack.pack.assets?.images?.[role] ?? ""),
 		...Object.keys(pack.pack.assets?.fonts ?? {}).map((family) => {
@@ -40,6 +45,7 @@ function assetPaths(manifestPath: string, pack: GamePluginManifest): Array<{ sou
 			return typeof face === "string" ? face : face?.file ?? "";
 		}),
 		...stylesheets,
+		...(pack.pack.assets?.resources ?? []),
 	];
 	return files.map((file) => {
 		const target = safeRelativePath(file);

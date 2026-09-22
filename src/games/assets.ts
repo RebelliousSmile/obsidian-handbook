@@ -360,6 +360,9 @@ async function rewritePackUrls(
 		const face = pack.assets!.fonts![family];
 		declared.add(typeof face === "string" ? face : face.file);
 	}
+	for (const resource of pack.assets?.resources ?? []) {
+		if (hasSupportedExtension(resource, FONT_EXTENSIONS)) declared.add(resource);
+	}
 	const stylesheetFolder = stylesheet.includes("/") ? stylesheet.slice(0, stylesheet.lastIndexOf("/")) : "";
 	let rewritten = source;
 	const pattern = /url\(\s*(['"]?)([^'"\s)]+)\1\s*\)/gi;

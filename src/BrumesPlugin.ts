@@ -82,6 +82,8 @@ export default class BrumesPlugin extends Plugin {
 	private readonly gameStyle = new GameStyleWriter();
 	private overrides: GameOverride = EMPTY_OVERRIDE;
 	private assets: GameAssetState = emptyAssetState("");
+	private assetRefreshSequence = 0;
+	private pendingFontPackId: string | null = null;
 	private starterKitPrompted = false;
 
 	async onload() {
@@ -167,6 +169,8 @@ export default class BrumesPlugin extends Plugin {
 
 		for (const doc of this.collectDocuments()) {
 			clearBrumesModeClasses(doc);
+			doc.body.classList.remove("brumes--fonts-pending");
+			this.syncPendingFontStyle(doc, false);
 		}
 		for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
 			if (leaf.view instanceof MarkdownView) {
@@ -314,7 +318,12 @@ export default class BrumesPlugin extends Plugin {
 		// the vault has answered — the blocks fall back for a frame instead
 		// of waiting for the disk.
 		if (!fresh) {
-			void this.refreshAssets(registration);
+			this.setPendingFonts((pack.assets?.resources?.length ?? 0) > 0 ? pack.id : null);
+			const sequence = ++this.assetRefreshSequence;
+			void this.refreshAssets(registration, sequence).catch((error) => {
+				log.warn(`Could not refresh the assets of "${pack.id}".`, error);
+				if (sequence === this.assetRefreshSequence) this.setPendingFonts(null);
+			});
 		}
 
 		const mergedValues = {
@@ -353,7 +362,7 @@ export default class BrumesPlugin extends Plugin {
 	 * Resolve for a given pack and repaint only if that pack is still the
 	 * active one: two quick switches must not let the slower answer win.
 	 */
-	private async refreshAssets(registration: GameRegistration) {
+	private async refreshAssets(registration: GameRegistration, sequence: number) {
 		const pack = registration.pack;
 		const state = await resolveGameAssets(
 			this,
@@ -361,13 +370,44 @@ export default class BrumesPlugin extends Plugin {
 			registration.installation,
 		);
 
-		if (resolveGamePack(this.settings.mode).id !== pack.id) {
+		if (sequence !== this.assetRefreshSequence || resolveGamePack(this.settings.mode).id !== pack.id) {
 			return;
 		}
 
 		this.assets = state;
 		this.applyGameStyle();
 		this.refreshMarkdownViews();
+		if (this.pendingFontPackId === pack.id) {
+			const documents = this.collectDocuments();
+			await Promise.all(documents.map(async (doc) => {
+				await new Promise<void>((resolve) => doc.defaultView?.requestAnimationFrame(() => resolve()) ?? resolve());
+				await doc.fonts.ready;
+			}));
+			if (sequence === this.assetRefreshSequence && resolveGamePack(this.settings.mode).id === pack.id) {
+				this.setPendingFonts(null);
+			}
+		}
+	}
+
+	private setPendingFonts(packId: string | null) {
+		this.pendingFontPackId = packId;
+		for (const doc of this.collectDocuments()) {
+			this.syncPendingFontStyle(doc, packId !== null);
+			doc.body.classList.toggle("brumes--fonts-pending", packId !== null);
+		}
+	}
+
+	private syncPendingFontStyle(doc: Document, pending: boolean) {
+		const id = "handbook-fonts-pending-style";
+		let style = doc.getElementById(id);
+		if (pending && !style) {
+			style = doc.createElement("style");
+			style.id = id;
+			style.textContent = "body.brumes--fonts-pending .markdown-preview-view, body.brumes--fonts-pending .markdown-source-view { visibility: hidden !important; }";
+			doc.head.appendChild(style);
+		} else if (!pending) {
+			style?.remove();
+		}
 	}
 
 	/** What the active game asks for, and what the vault does not have yet. */
@@ -391,7 +431,9 @@ export default class BrumesPlugin extends Plugin {
 			registration,
 			this.settings.gameVariants[registration.pack.id],
 		);
+		this.syncPendingFontStyle(doc, this.pendingFontPackId === registration.pack.id);
 		setBrumesModeClass(registration.pack.id, doc);
+		doc.body.classList.toggle("brumes--fonts-pending", this.pendingFontPackId === registration.pack.id);
 		setBrumesVariantClass(appearance.variant?.id ?? null, doc);
 		setBrumesColourSchemeClass(
 			effectiveColourScheme(
@@ -413,6 +455,8 @@ export default class BrumesPlugin extends Plugin {
 
 	private undressDocument(doc: Document) {
 		clearBrumesModeClasses(doc);
+		doc.body.classList.remove("brumes--fonts-pending");
+		this.syncPendingFontStyle(doc, false);
 		this.gameStyle.forgetDocument(doc);
 	}
 

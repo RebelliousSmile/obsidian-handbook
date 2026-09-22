@@ -41,7 +41,7 @@ if (!files.has(`${root}/packs/rooted/media/paper.png`)) throw new Error("custom 
 const cityStylesheet = "body.brumes--city-of-mist .inline-title { text-decoration: underline; }\n";
 const cityContent: Record<string, string> = {
 	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "city-of-mist", version: "1.0.0", path: "handbook/city-of-mist/pack.json" }] }),
-	"handbook/city-of-mist/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "city-of-mist", label: "City of Mist", style: {}, assets: { stylesheets: ["styles/city-of-mist.css"] } } }),
+	"handbook/city-of-mist/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "city-of-mist", label: "City of Mist", style: {}, assets: { stylesheets: ["styles/city-of-mist.css"], resources: ["styles/fonts/body.woff2"] } } }),
 };
 const requested: string[] = [];
 await installResolvedSchemaSource(plugin, source, {
@@ -54,6 +54,7 @@ await installResolvedSchemaSource(plugin, source, {
 });
 const installedCityStylesheet = `${root}/packs/city-of-mist/assets/styles/city-of-mist.css`;
 if (!requested.includes("handbook/city-of-mist/assets/styles/city-of-mist.css") || !files.has(installedCityStylesheet)) throw new Error("declared City stylesheet was not staged");
+if (!requested.includes("handbook/city-of-mist/assets/styles/fonts/body.woff2") || !files.has(`${root}/packs/city-of-mist/assets/styles/fonts/body.woff2`)) throw new Error("declared font resource was not staged");
 const installedCityBytes = files.get(installedCityStylesheet);
 if (!(installedCityBytes instanceof ArrayBuffer) || new TextDecoder().decode(installedCityBytes) !== cityStylesheet) throw new Error("City stylesheet bytes changed during staging");
 await removeSchemaSourceStorage(plugin, source.id);

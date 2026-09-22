@@ -243,6 +243,32 @@ async function run(): Promise<void> {
 		check("stylesheet resolution keeps declared images", state.tokens["--brumes-image-portrait"]?.includes("city-runtime/assets/portrait.svg") === true);
 	}
 
+	{
+		const css = '@font-face { font-family: "Pack Body"; src: url("fonts/body.woff2") format("woff2"); }';
+		const { plugin } = fakePlugin({
+			"font-resource/pack.json": gamePlugin("font-resource", {
+				assets: { stylesheets: ["styles/fonts.css"], resources: ["styles/fonts/body.woff2"] },
+			}),
+			"font-resource/assets/styles/fonts.css": css,
+			"font-resource/assets/styles/fonts/body.woff2": "font",
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const state = await resolveGameAssets(plugin, installed[0].pack, installed[0].installation);
+		check("font resource URL resolves through the vault", state.packCss.includes("font-resource/assets/styles/fonts/body.woff2"));
+		check("font resource creates no duplicate family", !state.fontCss.includes("Pack Body"));
+	}
+	{
+		const { plugin } = fakePlugin({
+			"unsafe-font-resource/pack.json": gamePlugin("unsafe-font-resource", {
+				assets: { stylesheets: ["styles/fonts.css"], resources: ["styles/fonts/script.js"] },
+			}),
+			"unsafe-font-resource/assets/styles/fonts.css": '@font-face { font-family: "Script"; src: url("fonts/script.js"); }',
+			"unsafe-font-resource/assets/styles/fonts/script.js": "script",
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		check("executable stylesheet resource is rejected by the pack schema", installed.length === 0);
+	}
+
 	/* A faulty stylesheet is diagnosed and skipped without discarding its siblings. */
 	for (const [id, stylesheet] of [
 		["missing-city-css", undefined],
