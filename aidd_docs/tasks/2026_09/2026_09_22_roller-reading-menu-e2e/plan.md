@@ -1,6 +1,6 @@
 ---
 objective: "Roller tables expose their contextual roll action in Obsidian reading mode, and the Windows end-to-end journey selects the two visible tables deterministically."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Fix Roller reading-mode menu and Windows E2E rendering
