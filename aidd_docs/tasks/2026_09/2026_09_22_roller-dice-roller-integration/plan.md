@@ -1,6 +1,6 @@
 ---
 objective: "Handbook can render a generic roller block containing a Markdown table and copy one Dice Roller result from that table’s contextual menu."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Generic Dice Roller tables
