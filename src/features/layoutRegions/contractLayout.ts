@@ -23,7 +23,10 @@ export function applyContractLayout(parent: HTMLElement, layout: ContractLayout)
 		byRegion.set(region, child);
 	}
 
-	const assigned = new Set(layout.columns.reduce<string[]>((all, column) => all.concat(column), []));
+	const assigned = new Set<string>();
+	for (const column of layout.columns) {
+		for (const region of column) assigned.add(region);
+	}
 	const columns = layout.columns
 		.map((column) => column.map((region) => byRegion.get(region)).filter((element): element is HTMLElement => element !== undefined))
 		.filter((column) => column.length > 0);

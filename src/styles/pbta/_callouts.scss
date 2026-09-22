@@ -1,0 +1,40 @@
+// The canonical style key survives a user-defined Markdown alias.
+.callout:is(
+	[data-brumes-callout-style="pbta-clock"],
+	[data-brumes-callout-style="pbta-move"],
+	[data-brumes-callout-style="pbta-npc-reaction"],
+	[data-brumes-callout-style="pbta-playbook-change"]
+) {
+	--callout-color: var(--color-accent-rgb);
+	margin-block: 0.8rem;
+	border: 1px solid var(--background-modifier-border);
+	border-inline-start: 0.25rem solid var(--color-accent);
+	background: var(--background-primary-alt);
+	color: var(--text-normal);
+	break-inside: avoid;
+
+	.callout-title {
+		gap: 0.5rem;
+		font-family: var(--font-header-theme);
+		font-weight: 700;
+	}
+
+	.callout-content {
+		min-width: 0;
+		color: var(--text-normal);
+		overflow-wrap: anywhere;
+	}
+
+	.callout-content > :last-child { margin-block-end: 0; }
+}
+
+@media (max-width: 600px) {
+	.callout:is(
+		[data-brumes-callout-style="pbta-clock"],
+		[data-brumes-callout-style="pbta-move"],
+		[data-brumes-callout-style="pbta-npc-reaction"],
+		[data-brumes-callout-style="pbta-playbook-change"]
+	) {
+		padding: 0.6rem;
+	}
+}

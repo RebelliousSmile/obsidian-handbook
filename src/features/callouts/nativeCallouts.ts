@@ -1,4 +1,12 @@
+import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { CalloutDefinition } from "./types";
+
+const PBTA_VISUAL_ICONS: Record<(typeof PBTA_VISUAL_CALLOUTS)[number]["id"], string> = {
+	"pbta-clock": "clock-3",
+	"pbta-move": "swords",
+	"pbta-npc-reaction": "messages-square",
+	"pbta-playbook-change": "book-open-check",
+};
 
 const PBTA_CALLOUTS: CalloutDefinition[] = [
 	{
@@ -21,6 +29,19 @@ const PBTA_CALLOUTS: CalloutDefinition[] = [
 		template: "title-body", icon: "dice-6", font: "text",
 		color: { kind: "theme" }, native: true, styleKey: "pbta-result", capability: "style:pbta",
 	},
+	...PBTA_VISUAL_CALLOUTS.map((entry): CalloutDefinition => ({
+		id: entry.id,
+		name: entry.label,
+		aliases: [entry.id],
+		scope: "all",
+		template: entry.template,
+		icon: PBTA_VISUAL_ICONS[entry.id],
+		font: "header",
+		color: { kind: "theme" },
+		native: true,
+		styleKey: entry.id,
+		capability: entry.capability,
+	})),
 ];
 
 /**
