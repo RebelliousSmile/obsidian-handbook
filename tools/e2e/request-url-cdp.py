@@ -102,6 +102,11 @@ def screenshot(filename):
         output.write(base64.b64decode(image["data"]))
 
 
+def click_at(rect):
+    call("Input.dispatchMouseEvent", {"type": "mousePressed", "x": rect["x"], "y": rect["y"], "button": "left", "buttons": 1, "clickCount": 1})
+    call("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": rect["x"], "y": rect["y"], "button": "left", "buttons": 0, "clickCount": 1})
+
+
 action = sys.argv[1]
 tag = sys.argv[2] if len(sys.argv) > 2 else "v1.0.0"
 
@@ -123,21 +128,22 @@ elif action == "ready":
 elif action == "install":
     transient_errors = ("ERR_NETWORK_CHANGED", "ERR_TIMED_OUT", "ERR_CONNECTION_RESET")
     for attempt in range(1, 4):
-        clicked = evaluate(
+        install_button = evaluate(
             """
             (() => {
               const modal = [...document.querySelectorAll('.modal')]
                 .find(node => node.innerText.includes('Choose a starter kit'));
               const button = modal && [...modal.querySelectorAll('button')]
                 .find(node => node.innerText.trim() === 'Install');
-              if (!button) return false;
-              button.click();
-              return true;
+              if (!button) return null;
+              const rect = button.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0 ? { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 } : null;
             })()
             """
         )
-        if not clicked:
+        if not install_button:
             raise RuntimeError("Mist Engine Install button was not found")
+        click_at(install_button)
         deadline = time.time() + 120
         retry = False
         while time.time() < deadline:
