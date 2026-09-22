@@ -13,6 +13,28 @@ jobs:
               with:
                   path: handbook
 
+            - name: Checkout Lantern contract pins
+              uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/lantern
+                  path: lantern
+
+            - name: Checkout schema provider descriptors
+              uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/schema-pbta
+                  path: schema-pbta
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/schema-in-the-mist
+                  path: schema-in-the-mist
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/schema-adrenaline
+                  path: schema-adrenaline
+
             # pnpm-lock.yaml is the only lockfile this repo tracks, so pnpm is the only installer a
             # clean checkout can use. `npm ci` failed on every run for a missing package-lock.json.
             - name: Use pnpm
@@ -37,3 +59,94 @@ jobs:
             - name: Check Handbook
               working-directory: handbook
               run: pnpm check
+
+            - name: Check Adrenaline source witnesses
+              working-directory: handbook
+              run: pnpm assert:adrenaline-source
+
+    e2e-linux:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  path: handbook
+            - uses: pnpm/action-setup@v4
+              with:
+                  package_json_file: handbook/package.json
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "20.x"
+                  cache: pnpm
+                  cache-dependency-path: handbook/pnpm-lock.yaml
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+            - name: Install journey dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y jq ripgrep xvfb
+                  python3 -m pip install websocket-client pypdf
+                  curl -fsSL -o /tmp/Obsidian.AppImage https://github.com/obsidianmd/obsidian-releases/releases/download/v1.13.7/Obsidian-1.13.7.AppImage
+                  chmod +x /tmp/Obsidian.AppImage
+                  cd /tmp
+                  ./Obsidian.AppImage --appimage-extract >/dev/null
+            - name: Build plugin
+              working-directory: handbook
+              run: pnpm install --frozen-lockfile && pnpm build
+            - name: Layout region journey
+              working-directory: handbook
+              env:
+                  HANDBOOK_E2E_OBSIDIAN: /tmp/squashfs-root/AppRun
+              run: xvfb-run -a pnpm e2e:layout-regions:linux
+            - name: Request URL journey
+              working-directory: handbook
+              env:
+                  HANDBOOK_E2E_OBSIDIAN: /tmp/squashfs-root/AppRun
+                  HANDBOOK_E2E_VAULT: /tmp/handbook-request-url-vault
+                  HANDBOOK_E2E_ALLOW_MUTATION: "1"
+              run: |
+                  mkdir -p "$HANDBOOK_E2E_VAULT/.obsidian/plugins/obsidian-handbook"
+                  cp dist/main.js dist/manifest.json dist/styles.css "$HANDBOOK_E2E_VAULT/.obsidian/plugins/obsidian-handbook/"
+                  printf '["obsidian-handbook"]\n' > "$HANDBOOK_E2E_VAULT/.obsidian/community-plugins.json"
+                  xvfb-run -a pnpm e2e:request-url
+
+    e2e-windows:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  path: handbook
+            - uses: pnpm/action-setup@v4
+              with:
+                  package_json_file: handbook/package.json
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "20.x"
+                  cache: pnpm
+                  cache-dependency-path: handbook/pnpm-lock.yaml
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+            - name: Install and build
+              working-directory: handbook
+              shell: pwsh
+              run: |
+                  pip install websocket-client pypdf
+                  pnpm install --frozen-lockfile
+                  pnpm build
+            - name: Install Obsidian
+              shell: pwsh
+              run: |
+                  Invoke-WebRequest https://github.com/obsidianmd/obsidian-releases/releases/download/v1.13.7/Obsidian-1.13.7.exe -OutFile "$env:RUNNER_TEMP\Obsidian.exe"
+                  Start-Process -FilePath "$env:RUNNER_TEMP\Obsidian.exe" -ArgumentList "/S" -Wait
+            - name: Layout region journey
+              working-directory: handbook
+              shell: pwsh
+              run: |
+                  $app = @(
+                    "$env:LOCALAPPDATA\Programs\Obsidian\Obsidian.exe",
+                    "$env:LOCALAPPDATA\Obsidian\Obsidian.exe",
+                    "C:\Program Files\Obsidian\Obsidian.exe"
+                  ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+                  if (-not $app) { throw "Obsidian.exe was not installed in an expected location" }
+                  powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1 -ObsidianPath $app

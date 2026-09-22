@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.21.1",
+	"version": "2.22.0",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"packageManager": "pnpm@10.5.2",
@@ -18,6 +18,7 @@
 		"assert:game-storage": "node tools/assert-game-storage.mjs",
 		"assert:github-sources": "node tools/assert-github-sources.mjs",
 		"assert:custom-packs": "node tools/assert-custom-packs.mjs",
+		"assert:mist-font-packs": "node tools/assert-mist-font-packs.mjs",
 		"assert:repository-manifest": "node tools/assert-repository-manifest.mjs",
 		"assert:source-installer": "node tools/assert-source-installer.mjs",
 		"assert:starter-kits": "node tools/assert-starter-kits.mjs",
@@ -29,6 +30,7 @@
 		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",
 		"assert:adrenaline-documents": "node tools/assert-adrenaline-documents.mjs",
 		"assert:adrenaline-contract": "node tools/assert-adrenaline-contract.mjs",
+		"assert:adrenaline-source": "node tools/assert-adrenaline-source.mjs",
 		"assert:adrenaline-theme": "node tools/assert-adrenaline-theme.mjs",
 		"assert:adrenaline-zombiology-style": "node tools/assert-adrenaline-zombiology-style.mjs",
 		"assert:pbta-theme": "node tools/assert-pbta-theme.mjs",
@@ -45,6 +47,8 @@
 		"assert:layout-regions": "node tools/assert-layout-regions.mjs",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"assert:mist-contract": "node tools/assert-mist-contract.mjs",
+		"assert:consumer-schema-pins": "node tools/assert-consumer-schema-pins.mjs",
+		"assert:provider-capabilities": "node tools/assert-provider-capabilities.mjs",
 		"assert:game-pack-contract": "node tools/assert-game-pack-contract.mjs",
 		"assert:contextual-toml-export": "node tools/assert-contextual-toml-export.mjs",
 		"assert:contextual-pack-blocks": "node tools/assert-contextual-pack-blocks.mjs"
@@ -61,10 +65,10 @@
 	"license": "MIT",
 	"dependencies": {
 		"obsidian": "^1.12.3",
-		"postcss": "8.5.6",
-		"postcss-selector-parser": "7.1.0",
-		"schema-adrenaline": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v1.0.0/schema-adrenaline-1.0.0.tgz",
-		"schema-in-the-mist": "https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.3.0/schema-in-the-mist-1.3.0.tgz",
+		"postcss": "8.5.28",
+		"postcss-selector-parser": "7.1.6",
+		"schema-adrenaline": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v2.0.0/schema-adrenaline-2.0.0.tgz",
+		"schema-in-the-mist": "https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.3.4/schema-in-the-mist-1.3.4.tgz",
 		"schema-pbta": "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.1.0/schema-pbta-8.1.0.tgz",
 		"smol-toml": "^1.8.0"
 	},

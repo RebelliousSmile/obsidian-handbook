@@ -17,7 +17,16 @@ export interface InstalledSchemaSource {
 	id: string;
 	reference: SchemaSourceReference;
 	revision: string;
+	/** Published release tag, when the source follows a release or a tag. */
+	releaseTag?: string;
 	checkedAt: string;
+}
+
+export function installedSchemaVersion(source: InstalledSchemaSource | null): string | null {
+	if (!source) return null;
+	if (typeof source.releaseTag === "string" && source.releaseTag.length > 0) return source.releaseTag;
+	if (source.reference.kind === "tag") return source.reference.value;
+	return `revision ${source.revision.slice(0, 7)}`;
 }
 
 export function schemaSourceId(repository: string): string {

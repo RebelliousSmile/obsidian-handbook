@@ -40,6 +40,7 @@ const FONT_FORMATS: Record<string, string> = {
 
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "svg"];
 const FONT_EXTENSIONS = Object.keys(FONT_FORMATS);
+const MAX_PACK_STYLESHEET_BYTES = 256 * 1024;
 
 function fileExtension(file: string): string {
 	return (file.split(".").pop() ?? "").toLowerCase();
@@ -312,15 +313,18 @@ export async function resolveGameAssets(
 			const path = joinVaultPath(root, stylesheet);
 			if (!path || !(await adapter.exists(path))) {
 				log.warn(`Ignoring missing stylesheet "${stylesheet}" for "${pack.id}".`);
-				return state;
+				continue;
 			}
 			try {
 				const source = await adapter.read(path);
-				validatePackCss(source, pack);
+				if (new TextEncoder().encode(source).byteLength > MAX_PACK_STYLESHEET_BYTES) {
+					throw new Error(`stylesheet exceeds ${MAX_PACK_STYLESHEET_BYTES} bytes`);
+				}
+				validatePackCss(source, pack, stylesheet);
 				css.push(await rewritePackUrls(source, stylesheet, root, pack, plugin));
 			} catch (error) {
 				log.warn(`Ignoring stylesheet "${stylesheet}" for "${pack.id}".`, error);
-				return state;
+				continue;
 			}
 		}
 		state.packCss = css.join("\n\n");
@@ -329,8 +333,8 @@ export async function resolveGameAssets(
 	return state;
 }
 
-function validatePackCss(source: string, pack: GamePack): void {
-	const root = postcss.parse(source);
+function validatePackCss(source: string, pack: GamePack, stylesheet: string): void {
+	const root = postcss.parse(source, { from: `pack:${pack.id}/${stylesheet}` });
 	root.walkAtRules((rule) => {
 		if (rule.name === "import") throw new Error("@import is not allowed");
 	});
@@ -355,6 +359,9 @@ async function rewritePackUrls(
 	for (const family of Object.keys(pack.assets?.fonts ?? {})) {
 		const face = pack.assets!.fonts![family];
 		declared.add(typeof face === "string" ? face : face.file);
+	}
+	for (const resource of pack.assets?.resources ?? []) {
+		if (hasSupportedExtension(resource, FONT_EXTENSIONS)) declared.add(resource);
 	}
 	const stylesheetFolder = stylesheet.includes("/") ? stylesheet.slice(0, stylesheet.lastIndexOf("/")) : "";
 	let rewritten = source;

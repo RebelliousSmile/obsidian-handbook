@@ -1,5 +1,5 @@
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { asRecordList, asString, asStringList, looksLikeToml } from "../blocks/schemaValues";
+import { asRecordList, asString, asStringList, looksLikeToml, readMeta, SchemaMeta } from "../blocks/schemaValues";
 import { ThemeKitData, ThemeKitImprovement } from "./parser";
 
 /**
@@ -22,6 +22,7 @@ export interface ThemeKitDocument {
 	weakness_tags?: string[];
 	quest?: string;
 	improvements?: ThemeKitImprovementDocument[];
+	meta?: SchemaMeta;
 }
 
 export interface ThemeKitImprovementDocument {
@@ -90,13 +91,17 @@ export function documentToThemeKit(value: unknown): ThemeKitData | null {
 	}
 
 	const canonicalImprovements = asRecordList(document.improvements);
-	const improvement = readImprovement(
-		document.improvement ?? canonicalImprovements[0],
-	);
+	const improvements = canonicalImprovements
+		.map(readImprovement)
+		.filter((entry): entry is ThemeKitImprovement => entry !== undefined);
+	const improvement = readImprovement(document.improvement) ?? improvements[0];
 
 	if (improvement) {
 		data.improvement = improvement;
 	}
+	if (improvements.length > 0) data.improvements = improvements;
+	const meta = readMeta(document.meta);
+	if (meta) data.meta = meta;
 
 	return data;
 }
@@ -104,6 +109,7 @@ export function documentToThemeKit(value: unknown): ThemeKitData | null {
 /** Turn a parsed kit back into a schema-shaped document. */
 export function themeKitToDocument(data: ThemeKitData): ThemeKitDocument {
 	const document: ThemeKitDocument = { name: data.name };
+	if (data.meta) document.meta = data.meta;
 
 	if (data.category) {
 		document.category = data.category;
@@ -121,16 +127,12 @@ export function themeKitToDocument(data: ThemeKitData): ThemeKitDocument {
 		document.quest = data.quest;
 	}
 
-	if (data.improvement) {
-		const improvement: ThemeKitImprovementDocument = {
-			name: data.improvement.name,
-		};
-
-		if (data.improvement.effect) {
-			improvement.effect = data.improvement.effect;
-		}
-
-		document.improvements = [improvement];
+	const improvements = data.improvements ?? (data.improvement ? [data.improvement] : []);
+	if (improvements.length > 0) {
+		document.improvements = improvements.map((entry) => ({
+			name: entry.name,
+			...(entry.effect ? { effect: entry.effect } : {}),
+		}));
 	}
 
 	return document;

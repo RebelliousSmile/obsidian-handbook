@@ -10,6 +10,12 @@ const output = join(directory, "harness.mjs");
 try {
 	await writeFile(stub, `
 export async function requestUrl(options) {
+  if (options.url.includes("/releases/latest")) {
+    return { status: 200, json: { tag_name: "v1.3.4", target_commitish: "main" }, text: "", arrayBuffer: new ArrayBuffer(0) };
+  }
+  if (options.url.includes("/git/ref/tags/v1.3.4")) {
+    return { status: 200, json: { object: { sha: "${"b".repeat(40)}", type: "commit" } }, text: "", arrayBuffer: new ArrayBuffer(0) };
+  }
   if (options.url.includes("/git/ref/heads/main")) {
     return { status: 200, json: { object: { sha: "${"a".repeat(40)}", type: "commit" } }, text: "", arrayBuffer: new ArrayBuffer(0) };
   }

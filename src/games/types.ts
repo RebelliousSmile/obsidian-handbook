@@ -94,6 +94,8 @@ export interface GameAssets {
 	fonts?: Record<string, string | GameFontFace>;
 	/** Ordered CSS resources relative to this pack's asset root. */
 	stylesheets?: string[];
+	/** Additional font files referenced by a pack stylesheet. */
+	resources?: string[];
 }
 
 export interface GamePack {

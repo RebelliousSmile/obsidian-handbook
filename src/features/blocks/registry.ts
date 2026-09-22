@@ -107,7 +107,7 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 
 				log.debug(`Rendering ${id}:`, parsed);
 				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
-				const rendered = block.render(parsed, el.doc);
+				const rendered = block.render(parsed, el.doc, { packId: plugin.settings.mode });
 				el.appendChild(rendered);
 				// Older Obsidian builds render the block but do not expose section
 				// metadata. The context menu must still be usable (and visible).

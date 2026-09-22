@@ -12,6 +12,13 @@ export interface ComThemeTag {
 	/** The themebook question the tag answers, printed beside it on the card. */
 	question?: string;
 	burnt: boolean;
+	invoked?: boolean;
+	burntDeclared?: boolean;
+	invokedDeclared?: boolean;
+	questionField?: "question" | "letter";
+	burntField?: "burnt" | "is_burnt";
+	rawIsBurnt?: boolean;
+	rawBurnt?: boolean;
 }
 
 export interface ComThemeTrack {
@@ -30,6 +37,8 @@ export interface ComThemeDrive {
 export interface ComThemeImprovement {
 	name: string;
 	effect: string;
+	taken?: boolean;
+	takenDeclared?: boolean;
 }
 
 export interface ComThemeCardData {
@@ -44,6 +53,7 @@ export interface ComThemeCardData {
 	powerTags: ComThemeTag[];
 	weaknessTags: ComThemeTag[];
 	improvements: ComThemeImprovement[];
+	meta?: import("../blocks/schemaValues").SchemaMeta;
 }
 
 /** Both tracks hold three boxes on a printed card. */

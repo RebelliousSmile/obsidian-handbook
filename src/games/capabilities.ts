@@ -6,12 +6,14 @@
 export interface GameSupport {
 	blocks: readonly string[];
 	styles: readonly string[];
+	presentations?: readonly string[];
 }
 
 /** Capabilities any installed pack may opt into without its id being known here. */
 export const PORTABLE_GAME_PLUGIN_SUPPORT: GameSupport = {
 	blocks: ["block:pbta-playbook", "block:pbta-move"],
 	styles: ["style:pbta"],
+	presentations: ["presentation:pbta-layout"],
 };
 
 export const GAME_PLUGIN_SUPPORT: Readonly<Record<string, GameSupport>> = {
@@ -49,7 +51,10 @@ export const GAME_PLUGIN_SUPPORT: Readonly<Record<string, GameSupport>> = {
 	},
 };
 
-function collectCapabilities(field: keyof GameSupport): string[] {
+/** Schema-wide document renderers carried by Handbook. */
+export const DOCUMENT_RENDER_CAPABILITIES = ["render:mist", "render:adrenaline"] as const;
+
+function collectCapabilities(field: "blocks" | "styles"): string[] {
 	const capabilities: string[] = [];
 	for (const id of Object.keys(GAME_PLUGIN_SUPPORT)) {
 		capabilities.push(...GAME_PLUGIN_SUPPORT[id][field]);
@@ -66,6 +71,7 @@ export const GAME_PLUGIN_STYLE_CAPABILITIES: readonly string[] =
 const ALL_CAPABILITIES = [
 	...GAME_PLUGIN_BLOCK_CAPABILITIES,
 	...GAME_PLUGIN_STYLE_CAPABILITIES,
+	...(PORTABLE_GAME_PLUGIN_SUPPORT.presentations ?? []),
 ];
 
 export interface GameCapabilityIssues {
@@ -82,6 +88,7 @@ export function gamePluginCapabilityIssues(
 	const portable = [
 		...PORTABLE_GAME_PLUGIN_SUPPORT.blocks,
 		...PORTABLE_GAME_PLUGIN_SUPPORT.styles,
+		...(PORTABLE_GAME_PLUGIN_SUPPORT.presentations ?? []),
 	];
 
 	return {

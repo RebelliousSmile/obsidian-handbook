@@ -42,7 +42,7 @@ const log = logScope("Games");
 const PACK_FIELDS = ["id", "label", "style", "polarities", "assets", "shapes"];
 const STYLE_FIELDS = ["base", "light", "dark"];
 const LAYER_FIELDS = ["note", "workspace"];
-const ASSET_FIELDS = ["root", "images", "fonts", "stylesheets"];
+const ASSET_FIELDS = ["root", "images", "fonts", "stylesheets", "resources"];
 const FONT_FACE_FIELDS = ["file", "weight", "style"];
 
 /**
@@ -387,9 +387,9 @@ function readFonts(
 	return fonts;
 }
 
-function readStylesheets(value: unknown): string[] | undefined {
+function readAssetPaths(value: unknown, field: "stylesheets" | "resources"): string[] | undefined {
 	if (!Array.isArray(value)) {
-		if (value !== undefined) log.warn('Ignoring "assets.stylesheets" in a pack document: not a list.');
+		if (value !== undefined) log.warn(`Ignoring "assets.${field}" in a pack document: not a list.`);
 		return undefined;
 	}
 
@@ -436,8 +436,12 @@ function readAssets(value: unknown): GameAssets | undefined {
 	}
 
 	if (value.stylesheets !== undefined) {
-		const stylesheets = readStylesheets(value.stylesheets);
+		const stylesheets = readAssetPaths(value.stylesheets, "stylesheets");
 		if (stylesheets) assets.stylesheets = stylesheets;
+	}
+	if (value.resources !== undefined) {
+		const resources = readAssetPaths(value.resources, "resources");
+		if (resources) assets.resources = resources;
 	}
 
 	return assets;

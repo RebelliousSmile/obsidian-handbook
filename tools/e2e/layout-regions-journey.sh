@@ -52,7 +52,7 @@ cp "$repo_root/tools/e2e/fixtures/layout-regions-print-probe.md" "$vault_root/la
 printf '{"vaults":{"1234567890abcdef":{"path":"%s","ts":%s,"open":true}}}\n' \
 	"$vault_root" "$(date +%s000)" >"$profile_root/obsidian.json"
 
-setsid "$obsidian_app" --no-sandbox --user-data-dir="$profile_root" \
+setsid "$obsidian_app" --no-sandbox --disable-gpu --disable-gpu-sandbox --user-data-dir="$profile_root" \
 	--remote-debugging-port="$cdp_port" --remote-allow-origins='*' \
 	"obsidian://open?path=$vault_root/layout-regions-probe.md" \
 	>"$output_root/obsidian.log" 2>&1 &

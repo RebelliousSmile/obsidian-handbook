@@ -40,6 +40,8 @@ export interface ChallengeSecret {
 export interface ChallengeData {
 	name: string;
 	roles: string[];
+	/** An explicitly empty roles list is retained in TOML round trips. */
+	rolesDeclared?: boolean;
 	description: string[];
 	/** How dangerous the profile is overall, 1 to 5, when it says. */
 	rating?: number;

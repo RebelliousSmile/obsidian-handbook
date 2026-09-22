@@ -15,6 +15,28 @@ jobs:
               with:
                   path: handbook
 
+            - name: Checkout Lantern contract pins
+              uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/lantern
+                  path: lantern
+
+            - name: Checkout schema provider descriptors
+              uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/schema-pbta
+                  path: schema-pbta
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/schema-in-the-mist
+                  path: schema-in-the-mist
+
+            - uses: actions/checkout@v4
+              with:
+                  repository: RebelliousSmile/schema-adrenaline
+                  path: schema-adrenaline
+
             # Same installer as CI: pnpm-lock.yaml is the only lockfile this repo tracks.
             - name: Use pnpm
               uses: pnpm/action-setup@v4

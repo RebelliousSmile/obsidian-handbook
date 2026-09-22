@@ -18,19 +18,26 @@ export function layoutRegionsPostProcessor(plugin: BrumesPlugin): MarkdownPostPr
 	return (element, context) => {
 		if (isPrintExport(element, context)) return printLayoutRegions(plugin, element, context);
 
-		const parent = element.parentElement;
-		if (!parent?.classList.contains("markdown-preview-section")) return;
-
 		const sectionInfo = context.getSectionInfo(element);
 		if (!sectionInfo) return;
-
-		const parsed = sourceRegions(plugin, context, parent, sectionInfo.text);
-		observeRegions(parent, context, parsed.regions);
-		for (const region of parsed.regions) {
-			if (sectionInfo.lineStart === region.closeLine && sectionInfo.lineEnd === region.closeLine) {
-				scheduleRegion(parent, context, region);
+		const process = (attempt: number) => {
+			const parent = element.parentElement;
+			// Obsidian may invoke post-processors before it attaches a rendered
+			// section. The source mapping is available now, but its DOM parent is not.
+			if (!parent) {
+				if (attempt < 20) element.win.setTimeout(() => process(attempt + 1), 50);
+				return;
 			}
-		}
+			if (!parent.classList.contains("markdown-preview-section")) return;
+			const parsed = sourceRegions(plugin, context, parent, sectionInfo.text);
+			observeRegions(parent, context, parsed.regions);
+			for (const region of parsed.regions) {
+				if (sectionInfo.lineStart === region.closeLine && sectionInfo.lineEnd === region.closeLine) {
+					scheduleRegion(parent, context, region);
+				}
+			}
+		};
+		process(0);
 	};
 }
 

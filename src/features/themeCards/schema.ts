@@ -1,5 +1,5 @@
 import { parse as parseToml, stringify } from "smol-toml";
-import { asString, asStringList, looksLikeToml } from "../blocks/schemaValues";
+import { asString, asStringList, looksLikeToml, readMeta, SchemaMeta } from "../blocks/schemaValues";
 import { ThemeCardData } from "./parser";
 
 /** The levels a theme card can carry, named as schema-in-the-mist names
@@ -24,6 +24,11 @@ export interface StoryThemeDocument {
 	category?: string;
 	power_tags?: string[];
 	weakness_tags?: string[];
+	quest?: string;
+	improve?: number;
+	abandon?: number;
+	milestone?: boolean;
+	meta?: SchemaMeta;
 }
 
 function toSchemaLevel(level: ThemeCardData["level"]): SchemaLevel {
@@ -58,6 +63,11 @@ export function themeCardToDocument(card: ThemeCardData): StoryThemeDocument {
 	if (card.weaknessTags.length > 0) {
 		document.weakness_tags = [...card.weaknessTags];
 	}
+	if (card.quest) document.quest = card.quest;
+	if (card.improve !== undefined) document.improve = card.improve;
+	if (card.abandon !== undefined) document.abandon = card.abandon;
+	if (card.milestone !== undefined) document.milestone = card.milestone;
+	if (card.meta) document.meta = card.meta;
 
 	return document;
 }
@@ -100,6 +110,13 @@ export function documentToThemeCard(value: unknown): ThemeCardData | null {
 	if (category) {
 		card.category = category;
 	}
+	const quest = asString(document.quest);
+	if (quest) card.quest = quest;
+	if (typeof document.improve === "number") card.improve = document.improve;
+	if (typeof document.abandon === "number") card.abandon = document.abandon;
+	if (typeof document.milestone === "boolean") card.milestone = document.milestone;
+	const meta = readMeta(document.meta);
+	if (meta) card.meta = meta;
 
 	return card;
 }

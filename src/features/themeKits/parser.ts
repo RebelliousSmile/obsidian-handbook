@@ -13,6 +13,8 @@ export interface ThemeKitData {
 	weaknessTags: string[];
 	quest?: string;
 	improvement?: ThemeKitImprovement;
+	improvements?: ThemeKitImprovement[];
+	meta?: import("../blocks/schemaValues").SchemaMeta;
 }
 
 const QUEST_PREFIX = "quest:";

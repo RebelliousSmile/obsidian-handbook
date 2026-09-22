@@ -31,6 +31,8 @@ export interface ComDangerData {
 	rating?: number;
 	spectrums: ComSpectrum[];
 	moves: ComDangerMove[];
+	softMovesDeclared?: boolean;
+	hardMovesDeclared?: boolean;
 	/** Where the profile comes from, when a document said. */
 	meta?: SchemaMeta;
 }

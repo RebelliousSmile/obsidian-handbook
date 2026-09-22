@@ -1,3 +1,4 @@
+import { SchemaMeta } from "../blocks/schemaValues";
 import { parseJourneyDocument } from "./schema";
 
 export type JourneyType = "landscape" | "occasion" | "undertaking";
@@ -11,6 +12,7 @@ export interface JourneyVignette {
 export interface JourneyData {
 	type: JourneyType;
 	name: string;
+	meta?: SchemaMeta;
 	description: string[];
 	tags: string[];
 	benefits?: string;

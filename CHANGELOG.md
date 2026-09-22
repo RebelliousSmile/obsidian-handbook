@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.22.0] - 2026-09-22
+
+### Added
+
+- Render Monsterhearts playbooks in the published three-column region layout, with a narrow one-column view and structured fields.
+- Verify all three schema providers' Handbook capabilities, and run the theme assertions and Obsidian journeys in CI.
+- Load the Mist games' bundled fonts from their published pack assets so Handbook's plugin stylesheet stays small.
+- Show installed schema source versions in settings and announce reload progress and version changes.
+
+### Fixed
+
+- Preserve six Mist fields through the Handbook and Lantern TOML round trip.
+- Read Adrenaline source pack versions from their manifests and align Handbook's schema pins with Lantern.
+- Keep valid pack stylesheets when a sibling is invalid; limit pack CSS size before parsing and update PostCSS.
+
 ## [2.21.1] - 2026-09-22
 
 ### Fixed

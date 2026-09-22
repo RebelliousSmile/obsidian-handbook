@@ -10,6 +10,7 @@ ALLOW_MUTATION="${HANDBOOK_E2E_ALLOW_MUTATION:-0}"
 OUTPUT_DIR="${HANDBOOK_E2E_OUTPUT_DIR:-}"
 APP_PID=""
 BACKUP=""
+PROFILE_ROOT=""
 CURRENT_STEP="setup"
 LAST_COMPLETED=0
 
@@ -21,10 +22,11 @@ require_command() { command -v "$1" >/dev/null || fail "missing command: $1"; }
 [[ -n "$APP" ]] || fail "HANDBOOK_E2E_OBSIDIAN is required"
 [[ -d "$VAULT/.obsidian" ]] || fail "not an Obsidian vault: $VAULT"
 [[ -x "$APP" ]] || fail "Obsidian executable is not executable: $APP"
-for command_name in curl jq python3 sha256sum cmp find sort setsid pgrep realpath rg seq stat tail xargs; do
+for command_name in curl jq python3 sha256sum cmp find sort setsid realpath rg seq stat tail xargs; do
   require_command "$command_name"
 done
 VAULT="$(realpath "$VAULT")"
+export HANDBOOK_E2E_VAULT="$VAULT"
 PLUGIN_ASSETS="$(realpath "$PLUGIN_ASSETS")"
 [[ "$VAULT" != "/" && "$VAULT" != "$HOME" ]] || fail "unsafe vault path"
 COMMUNITY_PLUGINS="$VAULT/.obsidian/community-plugins.json"
@@ -35,9 +37,6 @@ for asset in main.js manifest.json styles.css; do
   [[ -f "$PLUGIN_ASSETS/$asset" ]] || fail "missing plugin asset: $PLUGIN_ASSETS/$asset"
 done
 python3 -c 'import websocket' >/dev/null 2>&1 || fail "Python package websocket-client is required"
-if pgrep -x obsidian >/dev/null || pgrep -x Obsidian-1.13.7 >/dev/null; then
-  fail "Obsidian is already running; close it before starting this isolated journey"
-fi
 if curl -fsS "http://127.0.0.1:$CDP_PORT/json/version" >/dev/null 2>&1; then
   fail "CDP port $CDP_PORT is already in use"
 fi
@@ -47,7 +46,6 @@ STORAGE="$VAULT/.obsidian/handbook"
 DATA_JSON="$PLUGIN/data.json"
 SOURCE="$STORAGE/sources/rebellioussmile--schema-in-the-mist"
 SOURCE_JSON="$SOURCE/source.json"
-OBSIDIAN_LOG="${HANDBOOK_E2E_OBSIDIAN_LOG:-$HOME/.config/obsidian/obsidian.log}"
 VAULT_PARENT="$(dirname "$VAULT")"
 if [[ -z "$OUTPUT_DIR" ]]; then
   OUTPUT_DIR="$(mktemp -d /tmp/handbook-request-url-e2e.XXXXXX)"
@@ -140,6 +138,9 @@ restore() {
       status=90
     fi
   fi
+  if [[ -n "$PROFILE_ROOT" && -d "$PROFILE_ROOT" ]]; then
+    rm -rf -- "$PROFILE_ROOT"
+  fi
   printf 'Journey report: %s\n' "$REPORT"
   exit "$status"
 }
@@ -173,6 +174,10 @@ compare_city_stylesheet() {
 }
 
 BACKUP="$(mktemp -d "$VAULT_PARENT/.handbook-request-url-e2e.XXXXXX")"
+PROFILE_ROOT="$(mktemp -d /tmp/handbook-request-profile.XXXXXX)"
+OBSIDIAN_LOG="${HANDBOOK_E2E_OBSIDIAN_LOG:-$PROFILE_ROOT/obsidian.log}"
+printf '{"vaults":{"1234567890abcdef":{"path":"%s","ts":%s,"open":true}}}\n' \
+  "$VAULT" "$(date +%s000)" >"$PROFILE_ROOT/obsidian.json"
 snapshot_tree "$PLUGIN" "$OUTPUT_DIR/plugin.before"
 snapshot_tree "$STORAGE" "$OUTPUT_DIR/storage.before"
 [[ -d "$PLUGIN" ]] && mv "$PLUGIN" "$BACKUP/plugin"
@@ -182,8 +187,9 @@ cp "$PLUGIN_ASSETS/main.js" "$PLUGIN_ASSETS/manifest.json" "$PLUGIN_ASSETS/style
 
 LOG_OFFSET=0
 [[ -f "$OBSIDIAN_LOG" ]] && LOG_OFFSET="$(stat -c %s "$OBSIDIAN_LOG")"
-setsid "$APP" --no-sandbox --remote-debugging-port="$CDP_PORT" --remote-allow-origins='*' \
-  "obsidian://open?vault=$(basename "$VAULT")" >"$OUTPUT_DIR/obsidian.log" 2>&1 &
+setsid "$APP" --no-sandbox --disable-gpu --disable-gpu-sandbox --user-data-dir="$PROFILE_ROOT" \
+  --remote-debugging-port="$CDP_PORT" --remote-allow-origins='*' \
+  "obsidian://open?path=$VAULT" >"$OUTPUT_DIR/obsidian.log" 2>&1 &
 APP_PID=$!
 
 CURRENT_STEP="1"

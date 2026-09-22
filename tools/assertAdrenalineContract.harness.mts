@@ -17,13 +17,13 @@ const doc = { createElement: (tag: string) => new El(tag) };
 const text = (element: El): string => element.textContent + element.children.map(text).join("");
 const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre" } as const;
 
-assertAdrenalineContractVersion("1.0.0");
+assertAdrenalineContractVersion("2.0.0");
 /* An upstream minor or patch is adopted without a code change; the next contract major is not. */
-assertAdrenalineContractVersion("1.4.2");
-assert.throws(() => assertAdrenalineContractVersion("2.0.0"), /must be a 1.x contract/);
-assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 1.x contract/);
+assertAdrenalineContractVersion("2.4.2");
+assert.throws(() => assertAdrenalineContractVersion("1.0.0"), /must be a 2.x contract/);
+assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 2.x contract/);
 const cases = loadAdrenalineContractCases();
-assert.equal(cases.length, 35);
+assert.equal(cases.length, 44);
 for (const entry of cases) {
 	const codec = ADRENALINE_DOCUMENT_CODECS[entry.target];
 	const parse = entry.format === "json" ? codec.parseJson : codec.parseToml;

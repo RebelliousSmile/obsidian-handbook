@@ -19,10 +19,12 @@ const content: Record<string, string> = {
 	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "test", version: "1.0.0", path: "handbook/test/pack.json" }] }),
 	"handbook/test/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "test", label: "Test", style: {}, assets: { images: { paper: "paper.png" }, stylesheets: ["styles/base.css", "styles/print.css"] } } }),
 };
-const resolved: ResolvedGithubSource = { revision: "a".repeat(40), readText: async (path) => { if (!(path in content)) throw new Error(path); return content[path]; }, readBinary: async () => new Uint8Array([1, 2]).buffer };
+const resolved: ResolvedGithubSource = { revision: "a".repeat(40), releaseTag: "v1.3.4", readText: async (path) => { if (!(path in content)) throw new Error(path); return content[path]; }, readBinary: async () => new Uint8Array([1, 2]).buffer };
 await installResolvedSchemaSource(plugin, source, resolved);
 const root = ".obsidian/handbook/sources/owner--repo";
 if (!files.has(`${root}/packs/test/pack.json`) || !files.has(`${root}/packs/test/assets/paper.png`) || !files.has(`${root}/packs/test/assets/styles/base.css`) || !files.has(`${root}/packs/test/assets/styles/print.css`) || !files.has(`${root}/source.json`)) throw new Error("source promotion failed");
+const installedSource = JSON.parse(files.get(`${root}/source.json`) as string) as { releaseTag?: string };
+if (installedSource.releaseTag !== "v1.3.4") throw new Error("installed release tag was not recorded");
 const before = files.get(`${root}/packs/test/pack.json`);
 await installResolvedSchemaSource(plugin, source, { ...resolved, revision: "b".repeat(40), readBinary: async () => { throw new Error("network failed"); } }).catch(() => undefined);
 if (files.get(`${root}/packs/test/pack.json`) !== before) throw new Error("failed installation replaced the previous source");
@@ -41,7 +43,7 @@ if (!files.has(`${root}/packs/rooted/media/paper.png`)) throw new Error("custom 
 const cityStylesheet = "body.brumes--city-of-mist .inline-title { text-decoration: underline; }\n";
 const cityContent: Record<string, string> = {
 	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "city-of-mist", version: "1.0.0", path: "handbook/city-of-mist/pack.json" }] }),
-	"handbook/city-of-mist/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "city-of-mist", label: "City of Mist", style: {}, assets: { stylesheets: ["styles/city-of-mist.css"] } } }),
+	"handbook/city-of-mist/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "city-of-mist", label: "City of Mist", style: {}, assets: { stylesheets: ["styles/city-of-mist.css"], resources: ["styles/fonts/body.woff2"] } } }),
 };
 const requested: string[] = [];
 await installResolvedSchemaSource(plugin, source, {
@@ -54,6 +56,7 @@ await installResolvedSchemaSource(plugin, source, {
 });
 const installedCityStylesheet = `${root}/packs/city-of-mist/assets/styles/city-of-mist.css`;
 if (!requested.includes("handbook/city-of-mist/assets/styles/city-of-mist.css") || !files.has(installedCityStylesheet)) throw new Error("declared City stylesheet was not staged");
+if (!requested.includes("handbook/city-of-mist/assets/styles/fonts/body.woff2") || !files.has(`${root}/packs/city-of-mist/assets/styles/fonts/body.woff2`)) throw new Error("declared font resource was not staged");
 const installedCityBytes = files.get(installedCityStylesheet);
 if (!(installedCityBytes instanceof ArrayBuffer) || new TextDecoder().decode(installedCityBytes) !== cityStylesheet) throw new Error("City stylesheet bytes changed during staging");
 await removeSchemaSourceStorage(plugin, source.id);

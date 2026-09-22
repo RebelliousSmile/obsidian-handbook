@@ -5,6 +5,11 @@ export type ThemeCardLevel = "origin" | "adventure" | "greatness" | "standard";
 export interface ThemeCardData {
 	level: ThemeCardLevel;
 	category?: string;
+	quest?: string;
+	improve?: number;
+	abandon?: number;
+	milestone?: boolean;
+	meta?: import("../blocks/schemaValues").SchemaMeta;
 	titleTag: string;
 	powerTags: string[];
 	weaknessTags: string[];

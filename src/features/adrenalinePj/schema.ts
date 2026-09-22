@@ -10,6 +10,8 @@ import {
 	readFormations,
 	readHealth,
 	readIdentity,
+	rememberAdrenalineSource,
+	adrenalineSourceDocument,
 	readProtections,
 	stringifyAdrenalineDocument,
 	warnUnknownKeys,
@@ -81,7 +83,7 @@ export function documentToPj(value: unknown): AdrenalinePjData | null {
 	if (equipement) data.equipement = equipement;
 	if (parameters) data.parametresDuJeu = parameters;
 	if (meta) data.meta = meta;
-	return data;
+	return rememberAdrenalineSource(data, document);
 }
 
 export function parsePjDocument(source: string): AdrenalinePjData | null {
@@ -90,6 +92,8 @@ export function parsePjDocument(source: string): AdrenalinePjData | null {
 }
 
 export function pjToDocument(data: AdrenalinePjData): AdrenalineDocument {
+	const source = adrenalineSourceDocument(data);
+	if (source) return source;
 	const document: AdrenalineDocument = {
 		nom: data.nom,
 		caracteristiques: data.caracteristiques,

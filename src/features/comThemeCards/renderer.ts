@@ -105,7 +105,7 @@ export function renderComThemeCard(
 	renderZones(container, comThemeCardShape, {
 		header: () => {
 			const header = doc.createElement("header");
-			addLine(header, doc, "brumes-com-theme-card--themebook", data.themebook);
+			addLine(header, doc, "brumes-com-theme-card--themebook", data.themebook || data.type || "Theme");
 
 			if (data.title) {
 				addLine(header, doc, "brumes-com-theme-card--title", data.title);

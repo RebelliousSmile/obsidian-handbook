@@ -173,7 +173,7 @@ assert.equal(
    - inside one pinned tarball, codecs, pack contracts and corpus ship together, so a disagreement
      between them is a defect of that version and fails here. */
 const contract = loadPbtaProviderContract();
-const published = PORTABLE_GAME_PLUGIN_SUPPORT.blocks.concat(PORTABLE_GAME_PLUGIN_SUPPORT.styles);
+const published = [...PORTABLE_GAME_PLUGIN_SUPPORT.blocks, ...PORTABLE_GAME_PLUGIN_SUPPORT.styles, ...(PORTABLE_GAME_PLUGIN_SUPPORT.presentations ?? [])];
 for (const capability of published) {
 	assert.ok(
 		contract.capabilities.indexOf(capability) >= 0,

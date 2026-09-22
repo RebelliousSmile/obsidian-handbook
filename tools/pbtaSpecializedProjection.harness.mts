@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { pbtaPlaybookBlock } from "../src/features/pbta/block";
 import { loadPbtaSpecializedPlaybookCases } from "./pbtaContractCorpus.mts";
+import presentation from "schema-pbta/packs/monsterhearts/presentation-contract.json";
 
 class El {
 	textContent = "";
@@ -100,4 +101,14 @@ assert.ok(!unselectedOutput.includes("[object Object]"), "structured Monsterhear
 const statsRegion = elementsWithClass(unselectedRendered, "handbook-pbta-playbook--stats")[0];
 assert.ok(statsRegion, "unselected profiles retain the stats region");
 assert.ok(elementsWithClass(statsRegion, "handbook-pbta-stat-profile").length === 2, "every published profile renders in the stats region");
+const unchanged = JSON.stringify(unselected.data);
+const monsterheartsRendered = pbtaPlaybookBlock.render(unselected, doc as unknown as Document, { packId: "monsterhearts" }) as unknown as El;
+assert.ok(monsterheartsRendered.classes.includes("handbook-monsterhearts-playbook"), "Monsterhearts pack selects its editorial layout");
+const renderedRegions = monsterheartsRendered.children.map((child) => child.dataset.region);
+assert.deepEqual(renderedRegions, presentation.canonicalOrder.filter((id) => renderedRegions.includes(id)), "published region order survives rendering");
+assert.ok(renderedRegions.includes("stat-profiles") && renderedRegions.includes("relationships") && renderedRegions.includes("conditions-and-harm"), "stat, relationship and harm regions are distinct");
+assert.ok(text(monsterheartsRendered).includes("Au quart de tour"), "published stat profiles remain visible");
+assert.equal(JSON.stringify(unselected.data), unchanged, "presentation does not change the TOML data");
+const otherPackRendered = pbtaPlaybookBlock.render(unselected, doc as unknown as Document, { packId: "masks" }) as unknown as El;
+assert.ok(!otherPackRendered.classes.includes("handbook-monsterhearts-playbook"), "another pack keeps its own presentation");
 console.log(`Specialized PbtA playbook projections passed: ${targetsSeen.size} targets render their mechanics.`);
