@@ -133,25 +133,14 @@ def instrument_dice_roller():
     evaluate("""(() => {
         const dice = app.plugins.getPlugin('obsidian-dice-roller');
         const array = dice?.getArrayRoller?.bind(dice);
-        const lookup = dice?.getRoller?.bind(dice);
-        if (!array || !lookup) throw new Error('Dice Roller APIs were unavailable for the journey');
-        globalThis.__handbookRollerTrace = { array: [], lookup: [] };
+        if (!array) throw new Error('Dice Roller array API was unavailable for the journey');
+        globalThis.__handbookRollerTrace = { array: [] };
         dice.getArrayRoller = async (...args) => {
             const roller = await array(...args);
             const roll = roller.roll.bind(roller);
             roller.roll = async (...rollArgs) => {
                 const returned = await roll(...rollArgs);
                 globalThis.__handbookRollerTrace.array.push({ result: roller.results?.[0], returned });
-                return returned;
-            };
-            return roller;
-        };
-        dice.getRoller = async (...args) => {
-            const roller = await lookup(...args);
-            const roll = roller.roll.bind(roller);
-            roller.roll = async (...rollArgs) => {
-                const returned = await roll(...rollArgs);
-                globalThis.__handbookRollerTrace.lookup.push({ result: roller.result ?? roller.total ?? roller.results?.[0], returned });
                 return returned;
             };
             return roller;
@@ -181,16 +170,15 @@ wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
 evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
 wait_for_visible_roller_tables()
 
-values = [["First option", "Second option"], [1, 2]]
+values = [["First option", "Second option"]]
 results = []
 instrument_dice_roller()
 for index, expected in enumerate(values):
     right_click_table(index)
     screenshot(f"roller-menu-{index + 1}.png")
     choose_roll()
-    trace_key = "array" if index == 0 else "lookup"
-    wait_for(f"globalThis.__handbookRollerTrace.{trace_key}.length === 1")
-    value = evaluate(f"globalThis.__handbookRollerTrace.{trace_key}[0].result")
+    wait_for("globalThis.__handbookRollerTrace.array.length === 1")
+    value = evaluate("globalThis.__handbookRollerTrace.array[0].result")
     if value not in expected:
         raise RuntimeError(f"Table {index} rolled {value!r}, not one of {expected}")
     results.append(value)

@@ -80,7 +80,7 @@ HANDBOOK_E2E_OBSIDIAN=/absolute/path/to/Obsidian.AppImage pnpm e2e:layout-region
 
 ## Roller tables
 
-`roller-journey.ps1` runs on Windows in a disposable vault. It downloads the
+`roller-journey.ps1` is currently a manual Windows diagnostic in a disposable vault. It downloads the
 locked Dice Roller 11.4.2 release, verifies its SHA-256 before extraction, then
 loads it with Handbook and an explicitly enabled generic Roller setting. CDP
 right-clicks each rendered table and verifies that the actual Electron clipboard
