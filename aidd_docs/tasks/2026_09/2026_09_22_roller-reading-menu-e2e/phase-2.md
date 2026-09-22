@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Instruction: Make Windows Roller rendering assertions visibility-scoped

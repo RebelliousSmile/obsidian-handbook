@@ -68,6 +68,36 @@ def evaluate(expression):
     return result.get("result", {}).get("value")
 
 
+ACTIVE_ROLLER_TABLES = """(() => {
+    const root = app.workspace.getMostRecentLeaf()?.view?.containerEl;
+    if (!root) return [];
+    return [...root.querySelectorAll('.brumes-roller--table')]
+        .map((table) => {
+            const rect = table.getBoundingClientRect();
+            const style = getComputedStyle(table);
+            return {
+                x: rect.left + Math.min(20, rect.width / 2),
+                y: rect.top + Math.min(20, rect.height / 2),
+                visible: rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden',
+            };
+        })
+        .filter((table) => table.visible);
+})()"""
+
+
+def visible_roller_tables():
+    return json.loads(evaluate("JSON.stringify(" + ACTIVE_ROLLER_TABLES + ")"))
+
+
+def wait_for_visible_roller_tables(expected=2, timeout=30):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if len(visible_roller_tables()) == expected:
+            return
+        time.sleep(0.2)
+    wait_for(f"visible Roller table count === {expected}", timeout=0)
+
+
 def wait_for(expression, timeout=30):
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -75,7 +105,7 @@ def wait_for(expression, timeout=30):
             return
         time.sleep(0.2)
     screenshot("roller-timeout.png")
-    state = evaluate("JSON.stringify({enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, rendered: document.querySelectorAll('.brumes-roller--table').length, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), files: app.vault.getFiles().map(file => file.path).slice(0, 10)})")
+    state = evaluate("JSON.stringify((() => { const root = app.workspace.getMostRecentLeaf()?.view?.containerEl; return {enabled: [...(app.plugins?.enabledPlugins || [])], loaded: Object.keys(app.plugins?.plugins || {}), mode: app.workspace.getMostRecentLeaf()?.view?.getMode?.(), activeFile: app.workspace.getMostRecentLeaf()?.view?.file?.path, rendered: document.querySelectorAll('.brumes-roller--table').length, scoped: root?.querySelectorAll('.brumes-roller--table').length ?? 0, visible: " + ACTIVE_ROLLER_TABLES + ".length, preview: document.querySelector('.markdown-preview-sizer')?.innerText.slice(0, 500), modal: document.querySelector('.modal-container')?.innerText.slice(0, 1000), files: app.vault.getFiles().map(file => file.path).slice(0, 10)}; })())")
     raise RuntimeError(f"Timed out waiting for: {expression}; state: {state}")
 
 
@@ -86,9 +116,10 @@ def screenshot(name):
 
 
 def right_click_table(index):
-    rect = json.loads(evaluate("JSON.stringify((() => { const r = document.querySelectorAll('.brumes-roller--table')[%d]?.getBoundingClientRect(); return r && {x: r.left + Math.min(20, r.width / 2), y: r.top + Math.min(20, r.height / 2)}; })())" % index))
-    if not rect:
+    tables = visible_roller_tables()
+    if index >= len(tables):
         raise RuntimeError(f"Roller table {index} has no clickable rectangle")
+    rect = tables[index]
     call("Input.dispatchMouseEvent", {"type": "mousePressed", "x": rect["x"], "y": rect["y"], "button": "right", "buttons": 2, "clickCount": 1})
     call("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": rect["x"], "y": rect["y"], "button": "right", "buttons": 0, "clickCount": 1})
     wait_for("[...document.querySelectorAll('.menu-item-title')].some(item => item.textContent === 'Roll and copy result')")
@@ -117,7 +148,7 @@ if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") != "preview"
     evaluate("app.commands.executeCommandById('markdown:toggle-preview')")
 wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
 evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
-wait_for("document.querySelectorAll('.brumes-roller--table').length === 2")
+wait_for_visible_roller_tables()
 
 values = [["First option", "Second option"], ["Low result", "High result"]]
 results = []

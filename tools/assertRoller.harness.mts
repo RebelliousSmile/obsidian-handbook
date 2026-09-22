@@ -102,5 +102,8 @@ const rollerJourneySource = readFileSync("tools/e2e/roller-cdp.py", "utf8");
 assert.match(registrySource, /table\?\.addEventListener\("contextmenu"/, "rendered Roller tables bind their own context event");
 assert.doesNotMatch(editorMenuSource, /contributeRollerAction/, "the editor-wide menu cannot reuse stale Roller state");
 assert.match(rollerJourneySource, /== "preview"[\s\S]*toggle-preview[\s\S]*=== 'source'/, "the Roller journey forces a fresh reading-mode render");
+assert.match(rollerJourneySource, /getMostRecentLeaf\(\)\?\.view\?\.containerEl/, "the Roller journey scopes tables to the active Markdown view");
+assert.match(rollerJourneySource, /getBoundingClientRect\(\)[\s\S]*rect\.width > 0/, "the Roller journey selects only visible Roller tables");
+assert.doesNotMatch(rollerJourneySource, /querySelectorAll\('\.brumes-roller--table'\)\.length === 2/, "the Roller journey does not treat retained global Roller nodes as authored tables");
 
 console.log("Roller assertions passed.");
