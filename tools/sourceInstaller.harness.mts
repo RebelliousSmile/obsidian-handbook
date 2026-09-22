@@ -19,7 +19,7 @@ const content: Record<string, string> = {
 	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "test", version: "1.0.0", path: "handbook/test/pack.json" }] }),
 	"handbook/test/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "test", label: "Test", style: {}, assets: { images: { paper: "paper.png" }, stylesheets: ["styles/base.css", "styles/print.css"] } } }),
 };
-const resolved: ResolvedGithubSource = { revision: "a".repeat(40), releaseTag: "v1.3.4", readText: async (path) => { if (!(path in content)) throw new Error(path); return content[path]; }, readBinary: async () => new Uint8Array([1, 2]).buffer };
+const resolved: ResolvedGithubSource = { revision: "a".repeat(40), releaseTag: "v1.3.4", readText: async (path) => { if (!(path in content)) throw new Error(path); return content[path]; }, inspectBinary: async () => ({}), readBinary: async () => new Uint8Array([1, 2]).buffer };
 await installResolvedSchemaSource(plugin, source, resolved);
 const root = ".obsidian/handbook/sources/owner--repo";
 if (!files.has(`${root}/packs/test/pack.json`) || !files.has(`${root}/packs/test/assets/paper.png`) || !files.has(`${root}/packs/test/assets/styles/base.css`) || !files.has(`${root}/packs/test/assets/styles/print.css`) || !files.has(`${root}/source.json`)) throw new Error("source promotion failed");
@@ -38,7 +38,7 @@ const rootedContent: Record<string, string> = {
 	"handbook.json": JSON.stringify({ manifestVersion: 1, repository: "owner/repo", packs: [{ id: "rooted", version: "1.0.0", path: "handbook/rooted/pack.json" }] }),
 	"handbook/rooted/pack.json": JSON.stringify({ manifestVersion: 1, version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [], pack: { id: "rooted", label: "Rooted", style: {}, assets: { root: "media", images: { paper: "paper.png" } } } }),
 };
-await installResolvedSchemaSource(plugin, source, { revision: "c".repeat(40), readText: async (path) => rootedContent[path] ?? Promise.reject(new Error(path)), readBinary: async () => new Uint8Array([3]).buffer });
+await installResolvedSchemaSource(plugin, source, { revision: "c".repeat(40), readText: async (path) => rootedContent[path] ?? Promise.reject(new Error(path)), inspectBinary: async () => ({}), readBinary: async () => new Uint8Array([3]).buffer });
 if (!files.has(`${root}/packs/rooted/media/paper.png`)) throw new Error("custom asset root was not preserved");
 const cityStylesheet = "body.brumes--city-of-mist .inline-title { text-decoration: underline; }\n";
 const cityContent: Record<string, string> = {
@@ -49,6 +49,7 @@ const requested: string[] = [];
 await installResolvedSchemaSource(plugin, source, {
 	revision: "d".repeat(40),
 	readText: async (path) => cityContent[path] ?? Promise.reject(new Error(path)),
+	inspectBinary: async () => ({}),
 	readBinary: async (path) => {
 		requested.push(path);
 		return new TextEncoder().encode(cityStylesheet).buffer;
@@ -59,6 +60,36 @@ if (!requested.includes("handbook/city-of-mist/assets/styles/city-of-mist.css") 
 if (!requested.includes("handbook/city-of-mist/assets/styles/fonts/body.woff2") || !files.has(`${root}/packs/city-of-mist/assets/styles/fonts/body.woff2`)) throw new Error("declared font resource was not staged");
 const installedCityBytes = files.get(installedCityStylesheet);
 if (!(installedCityBytes instanceof ArrayBuffer) || new TextDecoder().decode(installedCityBytes) !== cityStylesheet) throw new Error("City stylesheet bytes changed during staging");
+let oversizedGets = 0;
+await installResolvedSchemaSource(plugin, source, {
+	...resolved,
+	revision: "e".repeat(40),
+	inspectBinary: async () => ({ contentLength: 21 * 1024 * 1024 }),
+	readBinary: async () => {
+		oversizedGets += 1;
+		return new ArrayBuffer(1);
+	},
+}).catch(() => undefined);
+if (oversizedGets !== 0) throw new Error("declared oversized asset issued a binary GET");
+if (files.get(`${root}/packs/city-of-mist/pack.json`) === undefined) throw new Error("declared oversized asset replaced the previous source");
+let invalidHeaderGets = 0;
+await installResolvedSchemaSource(plugin, source, {
+	...resolved,
+	revision: "g".repeat(40),
+	inspectBinary: async () => ({ invalidContentLength: "not-a-number" }),
+	readBinary: async () => {
+		invalidHeaderGets += 1;
+		return new ArrayBuffer(1);
+	},
+}).catch(() => undefined);
+if (invalidHeaderGets !== 0) throw new Error("invalid Content-Length issued a binary GET");
+await installResolvedSchemaSource(plugin, source, {
+	...resolved,
+	revision: "f".repeat(40),
+	inspectBinary: async () => ({}),
+	readBinary: async () => new ArrayBuffer(20 * 1024 * 1024 + 1),
+}).catch(() => undefined);
+if (files.get(`${root}/packs/city-of-mist/pack.json`) === undefined) throw new Error("headerless oversized asset replaced the previous source");
 await removeSchemaSourceStorage(plugin, source.id);
 if ([...files.keys()].some((path) => path.startsWith(`${root}/`))) throw new Error("removed source left installed files behind");
 if ([...folders].some((path) => path === root || path.startsWith(`${root}/`))) throw new Error("removed source left installed folders behind");
