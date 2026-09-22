@@ -61,6 +61,10 @@ Object.defineProperty(globalThis, "navigator", {
 	configurable: true,
 	value: { clipboard: { writeText: async (value: string) => copied.push(value) } },
 });
+Object.defineProperty(globalThis, "activeDocument", {
+	configurable: true,
+	value: null,
+});
 const plugin = {
 	app: { plugins: { getPlugin: () => ({
 		getArrayRoller: async (options: string[]) => {
@@ -123,6 +127,6 @@ assert.match(rollerJourneySource, /== "preview"[\s\S]*toggle-preview[\s\S]*=== '
 assert.match(rollerJourneySource, /getMostRecentLeaf\(\)\?\.view\?\.containerEl/, "the Roller journey scopes tables to the active Markdown view");
 assert.match(rollerJourneySource, /getBoundingClientRect\(\)[\s\S]*rect\.width > 0/, "the Roller journey selects only visible Roller tables");
 assert.doesNotMatch(rollerJourneySource, /querySelectorAll\('\.brumes-roller--table'\)\.length === 2/, "the Roller journey does not treat retained global Roller nodes as authored tables");
-assert.match(rollerJourneySource, /def bridge_clipboard\(\):[\s\S]*Object\.defineProperty\(clipboard, 'writeText'/, "the Roller journey bridges clipboard writes deterministically while exercising the menu action");
+assert.match(readFileSync("src/features/rollers/contextMenu.ts", "utf8"), /activeDocument\?\.defaultView as ElectronRuntime[\s\S]*electron\.clipboard\.writeText/, "the Roller action uses Obsidian's Electron clipboard directly");
 
 console.log("Roller assertions passed.");

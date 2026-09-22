@@ -22,6 +22,7 @@ export function openRollerContextMenu(plugin: BrumesPlugin, data: RollerData, ev
 
 type DiceRollerPlugin = DiceRollerApi;
 type ElectronClipboard = { writeText(value: string): void };
+type ElectronRuntime = { require?(module: string): unknown };
 
 function diceRoller(plugin: BrumesPlugin): DiceRollerPlugin | null {
 	const app = plugin.app as unknown as { plugins?: { getPlugin?(id: string): unknown } };
@@ -29,15 +30,16 @@ function diceRoller(plugin: BrumesPlugin): DiceRollerPlugin | null {
 }
 
 async function copyResult(value: string): Promise<void> {
+	const runtime = activeDocument?.defaultView as ElectronRuntime | null;
+	const electron = runtime?.require?.("electron") as { clipboard?: ElectronClipboard } | undefined;
+	if (electron?.clipboard) {
+		electron.clipboard.writeText(value);
+		return;
+	}
+
 	try {
 		await navigator.clipboard.writeText(value);
-		return;
-	} catch {
-		const runtime = activeDocument.defaultView as (Window & { require?: (module: string) => unknown }) | null;
-		const electron = runtime?.require?.("electron") as { clipboard?: ElectronClipboard } | undefined;
-		if (!electron?.clipboard) throw new Error("Clipboard unavailable");
-		electron.clipboard.writeText(value);
-	}
+	} catch { throw new Error("Clipboard unavailable"); }
 }
 
 async function rollAndCopy(plugin: BrumesPlugin, data: RollerData): Promise<void> {
