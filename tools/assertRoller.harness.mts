@@ -84,6 +84,24 @@ secondMenu.items[0].action?.();
 await new Promise<void>((resolve) => setImmediate(resolve));
 assert.deepEqual(tableOptions, [["First", "Second"], ["Third", "Fourth"]], "each table-scoped action passes only its own rows to Dice Roller");
 assert.deepEqual(copied, ["First", "Third"], "each table-scoped action copies its own result");
+const fallbackCopied: string[] = [];
+Object.defineProperty(globalThis, "navigator", {
+	configurable: true,
+	value: { clipboard: { writeText: async () => { throw new Error("clipboard permission denied"); } } },
+});
+Object.defineProperty(globalThis, "require", {
+	configurable: true,
+	value: (module: string) => module === "electron" ? { clipboard: { writeText: (value: string) => fallbackCopied.push(value) } } : undefined,
+});
+Object.defineProperty(globalThis, "activeDocument", {
+	configurable: true,
+	value: { defaultView: { require: (module: string) => module === "electron" ? { clipboard: { writeText: (value: string) => fallbackCopied.push(value) } } : undefined } },
+});
+const fallbackMenu = new FakeMenu();
+assert.equal(addRollerAction(fallbackMenu as unknown as Menu, plugin, ordinary), true);
+fallbackMenu.items[0].action?.();
+await new Promise<void>((resolve) => setImmediate(resolve));
+assert.deepEqual(fallbackCopied, ["First"], "the Electron clipboard fallback copies when the browser clipboard rejects the write");
 const contextEvent = {
 	prevented: false,
 	stopped: false,
