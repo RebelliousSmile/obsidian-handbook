@@ -38,3 +38,119 @@
 		padding: 0.6rem;
 	}
 }
+
+// Monsterhearts callouts follow the printed book's monochrome editorial language.
+// The other PbtA packs retain the shared treatment above.
+.brumes--monsterhearts {
+	--mh-callout-paper: #fff;
+	--mh-callout-ink: #292326;
+	--mh-callout-shade: #f2f2f3;
+
+	.callout:is(
+		[data-brumes-callout-style="pbta-clock"],
+		[data-brumes-callout-style="pbta-move"],
+		[data-brumes-callout-style="pbta-npc-reaction"],
+		[data-brumes-callout-style="pbta-playbook-change"]
+	) {
+		--callout-color: 41, 35, 38;
+		border-radius: 0;
+		box-shadow: none;
+		color: var(--mh-callout-ink);
+		font-family: "IM Fell English", Garamond, Georgia, serif;
+		font-size: 1.08em;
+		line-height: 1.35;
+
+		.callout-icon { display: none; }
+		.callout-title {
+			color: var(--mh-callout-ink);
+			font-family: "Averia Serif Libre", Georgia, serif;
+		}
+		.callout-content { color: var(--mh-callout-ink); }
+	}
+
+	.callout:is(
+		[data-brumes-callout-style="pbta-clock"],
+		[data-brumes-callout-style="pbta-npc-reaction"]
+	) {
+		padding: 1.1rem 1.35rem;
+		border: 8px solid transparent;
+		background:
+			linear-gradient(var(--mh-callout-paper), var(--mh-callout-paper)) padding-box,
+			repeating-linear-gradient(55deg, var(--mh-callout-ink) 0 1px, transparent 1px 4px) border-box;
+
+		.callout-title {
+			justify-content: center;
+			margin-bottom: 0.7rem;
+			font-size: 1.2em;
+			text-align: center;
+		}
+	}
+
+	.callout[data-brumes-callout-style="pbta-move"] {
+		padding: 0;
+		border: 0;
+		background: var(--mh-callout-paper);
+
+		.callout-title {
+			justify-content: center;
+			padding: 0.6rem 0.8rem 0.9rem;
+			font-family: "IM Fell English", Garamond, Georgia, serif;
+			font-size: 1.65em;
+			font-weight: 400;
+			letter-spacing: 0.055em;
+			text-align: center;
+			text-transform: uppercase;
+		}
+		.callout-content {
+			padding: 0.8rem 1.4rem;
+			background: var(--mh-callout-shade);
+		}
+	}
+
+	.callout[data-brumes-callout-style="pbta-playbook-change"] {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 4.2rem;
+		padding: 0;
+		border: 0;
+		background: var(--mh-callout-paper);
+
+		.callout-title {
+			grid-column: 2;
+			grid-row: 1;
+			justify-content: center;
+			padding: 0.65rem 0.3rem;
+			background: var(--mh-callout-ink);
+			color: var(--mh-callout-paper);
+			font-size: 1.15em;
+			letter-spacing: 0.04em;
+			text-align: center;
+			text-transform: uppercase;
+			writing-mode: vertical-rl;
+		}
+		.callout-content {
+			grid-column: 1;
+			grid-row: 1;
+			padding: 0.7rem 1rem;
+			background: var(--mh-callout-shade);
+		}
+	}
+
+	&.brumes--variant-drowned-lake {
+		--mh-callout-paper: #111217;
+		--mh-callout-ink: #ebe8e4;
+		--mh-callout-shade: #25262c;
+	}
+}
+
+@media (max-width: 600px) {
+	.brumes--monsterhearts .callout[data-brumes-callout-style="pbta-playbook-change"] {
+		grid-template-columns: minmax(0, 1fr);
+
+		.callout-title {
+			grid-column: 1;
+			grid-row: 1;
+			writing-mode: horizontal-tb;
+		}
+		.callout-content { grid-row: 2; }
+	}
+}
