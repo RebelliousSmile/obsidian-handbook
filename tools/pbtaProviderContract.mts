@@ -1,9 +1,10 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve, sep } from "node:path";
+import { PBTA_CONTRACT_VERSION } from "schema-pbta";
 
 /**
- * Reads the cross-tool metadata schema-pbta publishes, from v5.5.0 on: the provider descriptor and
+ * Reads the cross-tool metadata schema-pbta publishes: the provider descriptor and
  * the pack contracts its `packManifest` glob names.
  *
  * This lives in tools/ and not in the plugin bundle on purpose. `packManifest` is a glob, and a
@@ -120,8 +121,8 @@ export function loadPbtaProviderContract(): PbtaProviderContract {
 	if (descriptor.providerVersion !== 1) {
 		throw new Error(`cross-tool-provider.json: providerVersion ${String(descriptor.providerVersion)} is not 1`);
 	}
-	if (descriptor.contractVersion !== 5) {
-		throw new Error(`cross-tool-provider.json: contractVersion ${String(descriptor.contractVersion)} is not 5`);
+	if (descriptor.contractVersion !== PBTA_CONTRACT_VERSION) {
+		throw new Error(`cross-tool-provider.json: contractVersion ${String(descriptor.contractVersion)} is not ${PBTA_CONTRACT_VERSION}`);
 	}
 	if (typeof descriptor.corpus !== "string" || typeof descriptor.packManifest !== "string") {
 		throw new Error("cross-tool-provider.json: corpus and packManifest must be paths");

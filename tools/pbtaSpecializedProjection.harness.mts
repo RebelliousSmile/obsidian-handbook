@@ -76,18 +76,12 @@ starting = 0
 [editorial.opening]
 heading = "Opening"
 paragraphs = ["A complete original fixture."]
-[editorial.playAdvice]
-heading = "Advice"
-paragraphs = ["Play the Hollow with uncertainty."]
 [editorial.darkestSelf]
 heading = "Darkest Self"
 paragraphs = ["You are empty until somebody proves otherwise."]
 [editorial.sexMove]
 heading = "Sex Move"
 paragraphs = ["When you share intimacy, take a String on them."]
-[editorial.mcGuidance]
-heading = "For the MC"
-paragraphs = ["Ask who made the Hollow."]
 [editorial.identity]
 heading = "Identity"
 paragraphs = ["Choose a face that almost looks real."]
