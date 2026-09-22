@@ -28,7 +28,7 @@
 	}
 
 	@media (min-width: 720px) {
-		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer:not(:has(.handbook-pbta-playbook)) {
+		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer:not(:has(.handbook-pbta-playbook)):not(:has(> .handbook-layout-region)) {
 			column-count: 2;
 			column-gap: var(--pbta-column-gap, 2.4rem);
 			column-rule: 1px solid var(--pbta-column-rule, var(--color-accent));

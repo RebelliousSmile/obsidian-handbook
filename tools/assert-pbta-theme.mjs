@@ -24,6 +24,7 @@ assert.match(modes, /-webkit-text-fill-color: var\(--monsterhearts-title-ink/);
 assert.match(page, /@media \(min-width: 720px\)/);
 assert.match(page, /markdown-preview-view:not\(\.pbta-one-column\)/);
 assert.match(page, /markdown-preview-sizer:not\(:has\(\.handbook-pbta-playbook\)\)/);
+assert.match(page, /:not\(:has\(> \.handbook-layout-region\)\)/);
 assert.match(page, /column-count: 2/);
 assert.match(page, /column-gap: var\(--pbta-column-gap/);
 assert.match(page, /column-rule: 1px solid var\(--pbta-column-rule/);
