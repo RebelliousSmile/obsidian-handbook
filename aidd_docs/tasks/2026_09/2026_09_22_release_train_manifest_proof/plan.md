@@ -1,6 +1,6 @@
 ---
 objective: "Handbook accepts the central schema-pbta release-train manifest, proves its pinned adoption, and writes only validated provenance evidence."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Exposer la preuve canonique par manifeste du release-train
