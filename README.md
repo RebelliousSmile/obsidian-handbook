@@ -659,13 +659,10 @@ For the six shared Mist formats, right-click a rendered block and choose `Paste 
 The central `schema-pbta` release train checks out the selected Handbook ref, then invokes this consumer-owned proof. It does not select candidates or promote releases.
 
 ```sh
-SCHEMA_PBTA_CANDIDATE_ARCHIVE="https://github.com/RebelliousSmile/schema-pbta/releases/download/vX.Y.Z/schema-pbta-X.Y.Z.tgz" \
-SCHEMA_PBTA_CANDIDATE_SRI="sha512-…" \
-SCHEMA_PBTA_CANDIDATE_REF="vX.Y.Z" \
-pnpm prove:schema-pbta-candidate
+pnpm run release-train:assert -- path/to/release-train-manifest.json
 ```
 
-Success emits one JSON object with `ok`, `schemaPbta.version`, `archive`, `integrity`, `ref`, and the completed proofs. Any disagreement with `package.json`, `pnpm-lock.yaml`, or the installed package exits non-zero and emits a JSON error on stderr.
+The relative manifest supplies `candidate.releaseUrl`, `candidate.sha256`, `candidate.integrity`, `candidate.finalTag`, and the Handbook `consumer` identity. Handbook verifies the downloaded asset SHA-256, active package and lock pin, installed package, resolved checkout ref, published packs, rendering, and source installer. On success it writes `path/to/release-train-manifest.json.evidence.json` with the validated artifact and consumer provenance; any rejected manifest leaves no evidence.
 
 ## License
 
