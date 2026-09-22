@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Read Adrenaline source pack versions from their manifests and align Handbook's schema pins with Lantern.
 - Keep valid pack stylesheets when a sibling is invalid; limit pack CSS size before parsing and update PostCSS.
 
+## [2.21.1] - 2026-09-22
+
+### Fixed
+
+- Give Monsterhearts' four shared PbtA callouts distinct print-inspired layouts with white paper, hatched borders, a move band, and a progression sidebar. Keep the Drowned Lake variant dark.
+
 ## [2.21.0] - 2026-09-22
 
 ### Added
