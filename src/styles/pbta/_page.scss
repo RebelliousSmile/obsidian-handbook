@@ -28,7 +28,7 @@
 	}
 
 	@media (min-width: 720px) {
-		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer {
+		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer:not(:has(.handbook-pbta-playbook)) {
 			column-count: 2;
 			column-gap: var(--pbta-column-gap, 2.4rem);
 			column-rule: 1px solid var(--pbta-column-rule, var(--color-accent));
@@ -36,11 +36,11 @@
 
 		// Obsidian groups the inline title and properties in `.mod-header`.
 		// Keep that complete document header above the editorial columns.
-		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer > .mod-header {
+		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer > .mod-header {
 			column-span: all;
 		}
 
-		.markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer > :is(.inline-title, .el-h1, h1) {
+		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer > :is(.inline-title, .el-h1, h1) {
 			column-span: all;
 		}
 	}

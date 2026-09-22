@@ -160,10 +160,3 @@
 		.handbook-monsterhearts-playbook { display: block; }
 	}
 }
-
-// A whole playbook has its own grid; flowing its parent note into editorial
-// columns clips the sheet before its internal columns can size themselves.
-body.brumes--monsterhearts .markdown-reading-view:not(.pbta-one-column) .markdown-preview-sizer:has(.handbook-monsterhearts-playbook) {
-	column-count: 1;
-	column-rule: none;
-}
