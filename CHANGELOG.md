@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.25.0] - 2026-09-22
+
+### Added
+
+- Add a machine-readable `schema-pbta` candidate-adoption proof for the central release train, validating the active archive, SRI, ref, installed package, PbtA presentation proofs, and source-installer path.
+
+### Fixed
+
+- Make the reading-mode Roller context action bind to the rendered table that was clicked, and make the request-URL journey send a real pointer click to starter-kit installation.
+
 ## [2.24.0] - 2026-09-22
 
 ### Added
