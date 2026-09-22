@@ -439,18 +439,21 @@ async function run(): Promise<void> {
 		check("the loser is named once", errors.slice(errorsBefore).filter((line) => line.includes("b-second.json")).length === 1);
 	}
 
-	/* The explicit catalogue must match the registered block ids. */
+	/* The explicit catalogue names every game-document block. Generic utilities
+	 * are available without a manifest capability and must not become a pack
+	 * requirement merely because they live in the same registry. */
 	{
 		const declared = [...GAME_PLUGIN_BLOCK_CAPABILITIES].sort();
-		const registered = BRUMES_BLOCKS.map((block) => `block:${block.id}`).sort();
-		check("block capabilities match BRUMES_BLOCKS", JSON.stringify(declared) === JSON.stringify(registered));
-		for (const block of BRUMES_BLOCKS) {
+		const documentBlocks = BRUMES_BLOCKS.filter((block) => !block.utility);
+		const registered = documentBlocks.map((block) => block.capability ?? `block:${block.id}`).sort();
+		check("block capabilities match game-document blocks", JSON.stringify(declared) === JSON.stringify(registered));
+		for (const block of documentBlocks) {
 			const gameId = block.capability?.startsWith("block:adrenaline-")
 				? "adrenaline"
 				: block.capability
 					? "unknown-pbta-game"
 					: block.mode!;
-			const result = gamePlugin(gameId, { requires: [`block:${block.id}`] });
+			const result = gamePlugin(gameId, { requires: [block.capability ?? `block:${block.id}`] });
 			const parsed = JSON.parse(result) as unknown;
 			const manifest = (await import("../src/games/pluginManifest")).readGamePluginManifest(parsed, HOST_VERSION);
 			check(`${block.id} is accepted for its declared activation`, manifest.manifest !== undefined);
