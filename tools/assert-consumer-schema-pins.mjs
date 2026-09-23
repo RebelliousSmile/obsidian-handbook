@@ -23,9 +23,6 @@ assert.equal(
 	lanternAdrenaline.split(".")[0],
 	`schema-adrenaline major differs: Handbook ${handbookAdrenaline}, Lantern ${lanternAdrenaline}`,
 );
-assert.equal(
-	releasedVersion(handbook, "schema-in-the-mist"),
-	releasedVersion(lantern, "schema-in-the-mist"),
-	"schema-in-the-mist release differs between Handbook and Lantern",
-);
-console.log(`Consumer schema pins agree: Adrenaline ${handbookAdrenaline}/${lanternAdrenaline}, Mist ${releasedVersion(handbook, "schema-in-the-mist")}.`);
+const handbookMist = releasedVersion(handbook, "schema-in-the-mist");
+const lanternMist = releasedVersion(lantern, "schema-in-the-mist");
+console.log(`Consumer schema pins are published: Adrenaline ${handbookAdrenaline}/${lanternAdrenaline}, Mist ${handbookMist}/${lanternMist}.`);

@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.28.2] - 2026-09-24
+
+### Fixed
+
+- Align shipped version metadata with the latest release-train and protocol-1 changes.
+- Allow Handbook and Lantern to adopt published Mist schema releases independently.
+
 ## [2.28.1] - 2026-09-23
 
 ### Fixed
