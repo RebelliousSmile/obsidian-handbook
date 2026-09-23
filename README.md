@@ -754,7 +754,7 @@ The central `schema-pbta` release train checks out the selected Handbook ref, th
 pnpm run release-train:assert -- path/to/release-train-manifest.json
 ```
 
-The protocol-1 manifest supplies the complete staged PbtA candidate, both Lantern and Handbook immutable consumer refs, and its adjacent evidence path. Handbook validates the protocol before selecting its own SHA-pinned entry from `candidate.provider`, then verifies the downloaded asset SHA-256, active package and pnpm lock pin, installed package, published packs, rendering, and source installer. The schema-pbta runner writes this manifest inside a disposable detached checkout; Handbook does not modify committed package, lock, or source-pack inputs. On success it writes protocol-1 evidence beside the manifest; any rejected manifest leaves no passed evidence.
+The protocol-1 manifest supplies only `protocol`, the complete staged PbtA `candidate`, and both Lantern and Handbook immutable `consumers` refs. Handbook derives its evidence location as `<manifest>.evidence.json`, validates the protocol before selecting its own SHA-pinned entry from `candidate.provider`, then verifies the downloaded asset SHA-256, active package and pnpm lock pin, installed package, published packs, rendering, and source installer. The schema-pbta runner writes this manifest inside a disposable detached checkout; Handbook does not modify committed package, lock, or source-pack inputs. On success it writes protocol-1 evidence beside the manifest; any rejected manifest leaves no passed evidence.
 
 ## License
 

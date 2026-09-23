@@ -20,7 +20,6 @@ export async function assertReleaseTrain(manifestPath) {
 	if (existsSync(defaultEvidencePath)) rmSync(defaultEvidencePath);
 	const manifest = readProtocolManifest(manifestPath);
 	const consumer = resolveHandbookConsumer(manifest);
-	if (manifest.evidencePath !== defaultEvidencePath) throw new Error("evidencePath must be adjacent to the manifest");
 	if (await sha256(manifest.candidate.releaseUrl) !== manifest.candidate.sha256) throw new Error("candidate SHA-256 disagrees with release asset");
 	const proof = proveSchemaPbtaCandidate({ releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity, finalTag: manifest.candidate.finalTag });
 	const evidence = {
