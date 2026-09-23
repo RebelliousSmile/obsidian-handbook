@@ -4,7 +4,6 @@ import { spawnSync } from "node:child_process";
 import { readProtocolManifest, resolveHandbookConsumer, resolveManifestPath } from "./release-train-protocol.mjs";
 
 const manifestArgument = "tools/.release-train-protocol-1-test.json";
-const manifestPath = resolveManifestPath;
 const head = spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim();
 const candidate = {
 	provider: "schema-pbta",
@@ -23,20 +22,21 @@ const manifest = {
 		{ role: "lantern", repository: "RebelliousSmile/lantern", ref: "1234567890abcdef1234567890abcdef12345678" },
 		{ role: "handbook", repository: "RebelliousSmile/obsidian-handbook", ref: head },
 	],
-	evidencePath: `${manifestArgument}.evidence.json`,
 };
 const evidencePath = `${manifestArgument}.evidence.json`;
 
 try {
 	writeFileSync(manifestArgument, JSON.stringify(manifest));
-	const parsed = readProtocolManifest(resolveManifestPath(manifestArgument));
+	const manifestPath = resolveManifestPath(manifestArgument);
+	const parsed = readProtocolManifest(manifestPath);
 	assert.deepEqual(resolveHandbookConsumer(parsed), manifest.consumers[1]);
+	assert.equal(parsed.evidencePath, `${manifestPath}.evidence.json`);
 	for (const invalid of [
 		{ ...manifest, protocol: 2 },
 		{ ...manifest, candidate: { ...candidate, releaseUrl: candidate.releaseUrl.replace("rc.1", "rc.2") } },
 		{ ...manifest, consumers: manifest.consumers.slice(0, 1) },
 		{ ...manifest, consumers: manifest.consumers.map((consumer) => ({ ...consumer, ref: "main" })) },
-		{ ...manifest, evidencePath: "tools/elsewhere.evidence.json" },
+		{ ...manifest, evidencePath: `${manifestArgument}.evidence.json` },
 	]) {
 		writeFileSync(manifestArgument, JSON.stringify(invalid));
 		assert.throws(() => readProtocolManifest(resolveManifestPath(manifestArgument)));

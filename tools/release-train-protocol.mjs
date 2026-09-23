@@ -94,12 +94,14 @@ function gitHead() {
 
 export function readProtocolManifest(manifestPath) {
 	const source = object(JSON.parse(readFileSync(manifestPath, "utf8")), "release train");
-	exactKeys(source, ["protocol", "candidate", "consumers", "evidencePath"], "release train");
+	exactKeys(source, ["protocol", "candidate", "consumers"], "release train");
 	assert.equal(source.protocol, 1, "release train protocol must be 1");
-	const evidencePath = text(source.evidencePath, "evidencePath");
-	const resolvedEvidencePath = resolve(evidencePath);
-	assert.equal(resolvedEvidencePath, `${manifestPath}.evidence.json`, "evidencePath must be adjacent to the manifest");
-	return { protocol: 1, candidate: readCandidate(source.candidate), consumers: readConsumers(source.consumers), evidencePath: resolvedEvidencePath };
+	return {
+		protocol: 1,
+		candidate: readCandidate(source.candidate),
+		consumers: readConsumers(source.consumers),
+		evidencePath: `${manifestPath}.evidence.json`,
+	};
 }
 
 export function resolveHandbookConsumer(manifest) {
