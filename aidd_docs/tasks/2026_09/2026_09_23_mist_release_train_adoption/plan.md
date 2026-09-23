@@ -1,6 +1,6 @@
 ---
 objective: "Handbook proves a committed schema-in-the-mist candidate adoption from a detached checkout through the shared release-train command without mutating that checkout."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Prouver l’adoption release-train de schema-in-the-mist
