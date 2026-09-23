@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.28.0] - 2026-09-23
+
+### Added
+
+- Add release-train proof for the immutable schema-adrenaline candidate.
+- Parse protocol-1 manifests and emit complete, immutable schema-pbta candidate-adoption evidence.
+
+### Fixed
+
+- Accept prerelease schema release assets in release-train validation.
+- Preserve PbtA source-pack asset URLs in rendering and contract assertion harnesses.
+
 ## [2.27.0] - 2026-09-23
 
 ### Added
