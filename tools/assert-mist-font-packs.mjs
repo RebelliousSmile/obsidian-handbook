@@ -15,6 +15,10 @@ for (const id of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
 	const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 	const assets = manifest.pack.assets;
 	const resources = new Set(assets.resources ?? []);
+	assert.deepEqual([...resources].sort(), [
+		"styles/fonts/averia-serif-libre-latin-700-normal.woff2",
+		"styles/fonts/im-fell-english-latin-400-normal.woff2",
+	], `${id}: must publish exactly the two-face WOFF2 contract`);
 	const fontsSheet = assets.stylesheets.find((file) => file === "styles/fonts.css");
 	assert.ok(fontsSheet, `${id}: no declared font stylesheet`);
 	assert.ok(resources.size > 0, `${id}: no declared font files`);
@@ -28,5 +32,5 @@ for (const id of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
 	totalResources += resources.size;
 }
 
-assert.equal(totalResources, 36, "the three Mist packs should carry all 36 external font files");
+assert.equal(totalResources, 6, "the three Mist packs should carry the two-face WOFF2 contract");
 console.log(`Mist font packs: ${totalResources} files; plugin stylesheet: ${bytes} bytes.`);
