@@ -1,6 +1,6 @@
 ---
 objective: "Handbook accepts the canonical three-key protocol-1 manifest and derives adjacent evidence without changing the evidence envelope."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Accept the canonical protocol-1 manifest
