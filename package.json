@@ -36,7 +36,7 @@
 		"assert:adrenaline-zombiology-style": "node tools/assert-adrenaline-zombiology-style.mjs",
 		"assert:pbta-theme": "node tools/assert-pbta-theme.mjs",
 		"assert:pbta-contract": "node tools/assert-pbta-contract.mjs",
-		"release-train:assert": "node tools/release-train-schema-pbta-assert.mjs",
+		"release-train:assert": "node tools/release-train-assert.mjs",
 		"assert:prove-schema-pbta-candidate": "node tools/assert-prove-schema-pbta-candidate.mjs",
 		"assert:release-train-schema-pbta": "node tools/assert-release-train-schema-pbta.mjs",
 		"assert:release-train-schema-in-the-mist": "node tools/assert-release-train-schema-in-the-mist.mjs",
