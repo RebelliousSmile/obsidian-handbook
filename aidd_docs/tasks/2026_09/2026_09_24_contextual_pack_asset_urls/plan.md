@@ -1,6 +1,6 @@
 ---
 objective: "Schema-aware assertion harnesses execute published asset modules without CommonJS import.meta failures, and the complete Handbook check passes."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Resolve contextual pack asset URL check failures
