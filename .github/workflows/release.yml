@@ -1,9 +1,9 @@
 name: Create a new release
 
+# Publishing is an explicit maintainer action; tags alone never create a
+# GitHub release or consume Actions minutes.
 on:
-    push:
-        tags:
-            - "*"
+    workflow_dispatch:
 
 jobs:
     build:

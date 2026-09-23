@@ -1,9 +1,9 @@
 name: CI
 
+# Manual by design: the Obsidian integration is validated locally before an
+# explicit GitHub run, so ordinary commits do not consume Actions minutes.
 on:
-    push:
-        branches: [main]
-    pull_request:
+    workflow_dispatch:
 
 jobs:
     check:
