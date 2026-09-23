@@ -1,6 +1,6 @@
 ---
 objective: "Handbook accepts protocol-1 manifests from schema-pbta commit dfbeaa3182baba698116115e0404e0ababebaac0 and emits complete, immutable candidate-adoption evidence."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Emit protocol-1 Handbook candidate evidence
