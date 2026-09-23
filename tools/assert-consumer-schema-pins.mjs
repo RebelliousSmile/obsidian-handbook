@@ -11,7 +11,7 @@ const lantern = JSON.parse(readFileSync(lanternPackage, "utf8"));
 function releasedVersion(pkg, name) {
 	const url = pkg.dependencies?.[name];
 	assert.equal(typeof url, "string", `${pkg.name}: ${name} pin is missing`);
-	const match = url.match(new RegExp(`^https://github\\.com/RebelliousSmile/${name}/releases/download/v(\\d+\\.\\d+\\.\\d+)/${name}-\\1\\.tgz$`));
+	const match = url.match(new RegExp(`^https://github\\.com/RebelliousSmile/${name}/releases/download/v(\\d+\\.\\d+\\.\\d+)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?/${name}-\\1\\.tgz$`));
 	assert.ok(match, `${pkg.name}: ${name} must point to a versioned public release asset`);
 	return match[1];
 }

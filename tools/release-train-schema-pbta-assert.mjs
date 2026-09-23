@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { proveSchemaPbtaCandidate } from "./prove-schema-pbta-candidate.mjs";
 import { proveSchemaInTheMistCandidate } from "./prove-schema-in-the-mist-candidate.mjs";
 
@@ -25,4 +26,17 @@ export async function assertReleaseTrain(manifestArgument) {
 	writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
 	return { proof, evidencePath };
 }
-const argument = process.argv.slice(2).filter((value) => value !== "--"); if (argument.length !== 1) { console.error("release-train manifest must be one relative path"); process.exitCode = 1; } else assertReleaseTrain(argument[0]).then(({ evidencePath }) => console.log(JSON.stringify({ status: "passed", evidencePath }))).catch((error) => { console.error(error.message); process.exitCode = 1; });
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+	const argument = process.argv.slice(2).filter((value) => value !== "--");
+	if (argument.length !== 1) {
+		console.error("release-train manifest must be one relative path");
+		process.exitCode = 1;
+	} else {
+		assertReleaseTrain(argument[0])
+			.then(({ evidencePath }) => console.log(JSON.stringify({ status: "passed", evidencePath })))
+			.catch((error) => {
+				console.error(error.message);
+				process.exitCode = 1;
+			});
+	}
+}

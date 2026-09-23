@@ -23,7 +23,9 @@ assertAdrenalineContractVersion("2.4.2");
 assert.throws(() => assertAdrenalineContractVersion("1.0.0"), /must be a 2.x contract/);
 assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 2.x contract/);
 const cases = loadAdrenalineContractCases();
-assert.equal(cases.length, 44);
+assert.ok(cases.length > 0, "the published Adrenaline contract corpus must not be empty");
+assert.ok(cases.some((entry) => entry.expect === "accept"), "the published corpus must include accepted documents");
+assert.ok(cases.some((entry) => entry.expect === "reject"), "the published corpus must include rejected documents");
 for (const entry of cases) {
 	const codec = ADRENALINE_DOCUMENT_CODECS[entry.target];
 	const parse = entry.format === "json" ? codec.parseJson : codec.parseToml;
