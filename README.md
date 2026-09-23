@@ -33,6 +33,98 @@ Le vocabulaire de cartes Metro s'inspire de
 [Mist HUD](https://github.com/mordachai/mist-hud), distribué sous licence MIT.
 Handbook ne redistribue aucun de ses assets ni aucune image extraite des livres.
 
+## Architecture technique
+
+Handbook est un plugin Obsidian : son point d’entrée charge les réglages, les
+commandes, les renderers Markdown et la feuille de style du jeu actif. Le
+plugin ne contient pas les règles ni les contenus d’un jeu. Il lit des packs
+déclaratifs déjà installés, les enregistre puis active leurs capacités, leurs
+variantes, leurs styles et leurs ressources.
+
+```text
+Obsidian
+  └─ Handbook
+       ├─ réglages et commandes
+       ├─ registry de packs installés
+       ├─ renderers Markdown et callouts
+       └─ styles et assets du jeu actif
+             ▲
+             │ installe et valide
+             │
+       dépôt de schéma public
+         ├─ handbook.json
+         └─ packs/<id>/pack.json + assets déclarés
+```
+
+Le dépôt de schéma publie les contrats, l’ordre des sections, les variantes,
+les styles et les assets d’un jeu. Handbook reste propriétaire de l’adaptateur
+Obsidian, de l’installation atomique dans le coffre et du rendu. Les données
+personnelles restent dans le coffre : `overrides.json`, packs locaux et notes
+ne sont jamais écrits dans un dépôt de schéma.
+
+## Fonctionnalités
+
+- Installer un catalogue de jeux depuis un dépôt GitHub public, une release,
+  un tag ou une branche, puis changer de jeu sans recharger Obsidian.
+- Appliquer les styles, polices, illustrations, variantes et callouts déclarés
+  par le pack actif, en lecture comme en aperçu en direct.
+- Rendre des blocs Markdown pour City of Mist, Legend in the Mist, :Otherscape
+  et les packs PbtA installés, avec la syntaxe de tags et de statuts de
+  Handbook.
+- Proposer des fiches de thèmes, défis, voyages et des snippets Canvas pour
+  les jeux qui les déclarent.
+- Importer des packs personnels déclaratifs et leurs assets sans exécuter de
+  JavaScript, TypeScript ou feuille CSS externe non validée.
+- Ajuster localement les variables de style avec `overrides.json`, une image
+  de fond de note ou des régions Markdown en colonnes.
+- Ouvrir Lantern in the Mist dans Obsidian et coller du TOML partagé lorsque
+  la conversion peut conserver son contenu.
+
+## FAQ
+
+### Comment ajouter un jeu ?
+
+Ouvre **Settings → Handbook → Schema sources**, choisis **Add source**, puis
+saisis le dépôt GitHub public qui publie le catalogue du jeu. Choisis une
+release, un tag ou une branche, puis utilise **Save and check**. Handbook lit
+le `handbook.json` à la racine, valide les `pack.json` annoncés et installe les
+packs déclarés. Sélectionne ensuite le jeu dans **Game mode**.
+
+### Comment modifier un jeu existant ?
+
+Modifie le dépôt de schéma qui possède ce jeu, pas les fichiers installés par
+Handbook. Les contrats, blocs, styles, variantes et assets du jeu sont publiés
+avec le pack ; Handbook les consomme. Publie ou référence ensuite la version
+du dépôt voulue, puis relance **Save and check** pour réinstaller le catalogue.
+
+Pour une adaptation personnelle limitée aux variables visuelles, crée plutôt
+`<configDir>/handbook/overrides.json`. Ce fichier reste dans le coffre et ne
+change ni le contrat ni les données du jeu.
+
+### Comment créer ou installer un pack personnel ?
+
+Un pack déclaré se place dans
+`<configDir>/handbook/packs/<id>/pack.json`. Le nom du dossier doit être le
+même que l’identifiant déclaré par le manifeste. Les images, polices et feuilles
+de style du pack doivent être déclarées dans ce manifeste et rester dans son
+répertoire. Handbook signale et ignore un manifeste invalide, un identifiant en
+conflit ou une ressource qui sortirait de ce répertoire.
+
+### Pourquoi mon jeu ou ses illustrations ne s’affichent-ils pas ?
+
+Vérifie d’abord que le jeu est sélectionné dans **Game mode** et que la source
+apparaît comme installée dans **Schema sources**. Lance ensuite **Check files**
+dans le réglage **Illustrations**. Sans asset déclaré ou disponible, Handbook
+conserve le contenu et utilise son rendu dégradé ; il ne télécharge ni
+n’exécute de code depuis le dépôt du jeu.
+
+### Comment mettre à jour une source sans perdre mes réglages ?
+
+Utilise **Reload installed schemas** ou réouvre la source et lance
+**Save and check**. L’installation remplace atomiquement le catalogue de la
+source. Les réglages de Handbook et `overrides.json` vivent dans le répertoire
+de données durable du coffre et restent séparés des fichiers du pack.
+
 ## Installation
 
 > [!IMPORTANT]
