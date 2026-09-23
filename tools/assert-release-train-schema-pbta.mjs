@@ -41,7 +41,6 @@ const manifest = {
     { role: "lantern", repository: "RebelliousSmile/lantern", ref: "1234567890abcdef1234567890abcdef12345678" },
     { role: "handbook", repository: "RebelliousSmile/obsidian-handbook", ref },
   ],
-  evidencePath,
 };
 
 function writeManifest(value) {
@@ -71,6 +70,7 @@ try {
   assert.equal(evidence.journey.status, "passed");
 
   for (const invalidManifest of [
+	{ ...manifest, evidencePath },
     { ...manifest, candidate: { ...candidate, sha256: "0".repeat(64) } },
     { ...manifest, candidate: { ...candidate, integrity: "sha512-invalid" } },
     {
