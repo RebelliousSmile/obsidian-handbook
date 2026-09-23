@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { buildSync } from "esbuild";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 /* The pin is read, never copied: a producer release is not this repo's to hard-code. What is checked
    is that every place recording the pin agrees with package.json — the bump stays a one-line edit. */
@@ -40,6 +42,13 @@ assert.equal(installedPackage.version, pinnedVersion, "the installed package mus
 const work = mkdtempSync(join(tmpdir(), "handbook-mist-contract-"));
 const stub = join(work, "obsidian-stub.mjs");
 const bundle = join(work, "harness.cjs");
+const requireFromHere = createRequire(import.meta.url);
+const schemaPresentationUrl = pathToFileURL(
+	join(
+		dirname(requireFromHere.resolve("schema-pbta/cross-tool-provider.json")),
+		"dist/presentation/monsterhearts-appearance-assets.js",
+	),
+).href;
 writeFileSync(
 	stub,
 	`export class Notice { constructor() {} }
@@ -64,6 +73,7 @@ try {
 		platform: "node",
 		format: "cjs",
 		target: "node16",
+		define: { "import.meta.url": JSON.stringify(schemaPresentationUrl) },
 		alias: { obsidian: stub },
 		external: ["fs", "path", "module"],
 		logLevel: "warning",

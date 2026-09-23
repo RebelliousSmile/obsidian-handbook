@@ -4,7 +4,7 @@ import { proveSchemaPbtaCandidate } from "./prove-schema-pbta-candidate.mjs";
 import { readProtocolManifest, resolveHandbookConsumer } from "./release-train-protocol.mjs";
 
 async function sha256(url) {
-	const response = await fetch(url, { redirect: "error" });
+	const response = await fetch(url);
 	if (!response.ok) throw new Error(`candidate release download failed: ${response.status}`);
 	return createHash("sha256").update(Buffer.from(await response.arrayBuffer())).digest("hex");
 }
