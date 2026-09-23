@@ -14,6 +14,7 @@
 
 - Extend schema before consumer work.
 - Release schema packages before consumer adoption.
+- Treat schema-owned orchestration manifests as exact inputs; derive consumer-local evidence paths instead of adding consumer fields.
 - Pin release archives in the lockfile to their canonical release URL and published SRI; verify the pin with a frozen install, never an expiring storage redirect.
 - Drive Handbook menus from published metadata.
 - Drive Lantern forms from published metadata.
