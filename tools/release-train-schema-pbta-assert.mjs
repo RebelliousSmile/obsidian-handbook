@@ -3,6 +3,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 import { proveSchemaPbtaCandidate } from "./prove-schema-pbta-candidate.mjs";
+import { proveSchemaInTheMistCandidate } from "./prove-schema-in-the-mist-candidate.mjs";
 
 const expected = { role: "handbook", repository: "RebelliousSmile/obsidian-handbook" };
 function text(value, name) { if (typeof value !== "string" || !value) throw new Error(`manifest ${name} must be a non-empty string`); return value; }
@@ -19,8 +20,8 @@ export async function assertReleaseTrain(manifestArgument) {
 	if (text(consumer.role, "consumer.role") !== expected.role || text(consumer.repository, "consumer.repository") !== expected.repository) throw new Error("manifest consumer does not identify Handbook");
 	const ref = text(consumer.ref, "consumer.ref"); if (git("rev-parse", "HEAD") !== git("rev-parse", "--verify", `${ref}^{commit}`)) throw new Error("manifest consumer.ref does not resolve to checked-out Handbook HEAD");
 	if (await sha256(releaseUrl) !== digest) throw new Error("candidate SHA-256 disagrees with release asset");
-	const proof = proveSchemaPbtaCandidate({ releaseUrl, integrity, finalTag });
-	const evidence = { status: "passed", artifact: { releaseUrl, sha256: digest, integrity }, consumer: { role: expected.role, repository: expected.repository, ref } };
+	const proof = releaseUrl.includes("/schema-pbta/") ? proveSchemaPbtaCandidate({ releaseUrl, integrity, finalTag }) : releaseUrl.includes("/schema-in-the-mist/") ? proveSchemaInTheMistCandidate({ releaseUrl, integrity, finalTag }) : (() => { throw new Error("manifest candidate provider is unsupported"); })();
+	const evidence = { status: "passed", artifact: { releaseUrl, sha256: digest, integrity, version: proof.version }, consumer: { role: expected.role, repository: expected.repository, ref } };
 	writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
 	return { proof, evidencePath };
 }

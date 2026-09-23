@@ -16,7 +16,7 @@ try {
 	writeFileSync(manifestPath, JSON.stringify(manifest));
 	const passed = spawnSync("pnpm", ["run", "release-train:assert", "--", manifestPath], { encoding: "utf8", shell: process.platform === "win32" });
 	assert.equal(passed.status, 0, passed.stderr);
-	assert.deepEqual(JSON.parse(readFileSync(evidencePath, "utf8")), { status: "passed", artifact: { releaseUrl, sha256, integrity }, consumer: manifest.consumer });
+	assert.deepEqual(JSON.parse(readFileSync(evidencePath, "utf8")), { status: "passed", artifact: { releaseUrl, sha256, integrity, version }, consumer: manifest.consumer });
 	writeFileSync(evidencePath, JSON.stringify({ status: "passed" }));
 	manifest.candidate.integrity = "sha512-forged"; writeFileSync(manifestPath, JSON.stringify(manifest));
 	const rejected = spawnSync("pnpm", ["run", "release-train:assert", "--", manifestPath], { encoding: "utf8", shell: process.platform === "win32" });

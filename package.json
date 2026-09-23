@@ -39,6 +39,7 @@
 		"release-train:assert": "node tools/release-train-schema-pbta-assert.mjs",
 		"assert:prove-schema-pbta-candidate": "node tools/assert-prove-schema-pbta-candidate.mjs",
 		"assert:release-train-schema-pbta": "node tools/assert-release-train-schema-pbta.mjs",
+		"assert:release-train-schema-in-the-mist": "node tools/assert-release-train-schema-in-the-mist.mjs",
 		"assert:pbta-specialized-projection": "node tools/assert-pbta-specialized-projection.mjs",
 		"assert:pbta-pack-coverage": "node tools/assert-pbta-pack-coverage.mjs",
 		"assert:settings-ui": "node tools/assert-settings-ui.mjs",
