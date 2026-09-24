@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.0] - 2026-09-24
+
+### Added
+
+- Accept and prove immutable `schema-adrenaline` candidates through the shared protocol-1 release-train interface, including canonical archive, lockfile, source-catalog capability, and consumer-evidence checks.
+
+### Fixed
+
+- Run the style-scope assertion harness as ESM so published schema assets using `import.meta.url` resolve correctly and temporary artifacts are removed on success or failure.
+
 ## [2.28.2] - 2026-09-24
 
 ### Fixed
