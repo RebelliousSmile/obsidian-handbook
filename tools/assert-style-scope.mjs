@@ -1,12 +1,12 @@
 import { buildSync } from "esbuild";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const work = mkdtempSync(join(tmpdir(), "handbook-style-scope-"));
 const stub = join(work, "obsidian-stub.mjs");
-const bundle = join(work, "harness.cjs");
+const bundle = resolve("tools", ".assert-style-scope.mjs");
 
 writeFileSync(
 	stub,
@@ -30,14 +30,17 @@ try {
 		outfile: bundle,
 		bundle: true,
 		platform: "node",
-		format: "cjs",
+		format: "esm",
 		target: "node16",
+		external: ["postcss", "postcss-selector-parser"],
 		alias: { obsidian: stub },
 		logLevel: "warning",
 	});
 
 	const run = spawnSync(process.execPath, [bundle], { stdio: "inherit" });
-	process.exit(run.status ?? 1);
+	if (run.error) throw run.error;
+	process.exitCode = run.status ?? 1;
 } finally {
+	rmSync(bundle, { force: true });
 	rmSync(work, { recursive: true, force: true });
 }

@@ -18,6 +18,7 @@ status: in-progress
 | --- | --- | --- |
 | 1 | Generalize the declared-provider protocol parser | [phase-1.md](./phase-1.md) |
 | 2 | Pin and prove the Adrenaline candidate adoption | [phase-2.md](./phase-2.md) |
+| 3 | Make the style-scope assertion ESM-safe | [phase-3.md](./phase-3.md) |
 
 ## Resources
 
