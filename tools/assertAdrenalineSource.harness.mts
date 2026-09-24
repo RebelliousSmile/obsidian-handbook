@@ -15,6 +15,11 @@ assert.ok(parsed.manifest, parsed.error);
 assert.match(declared.version, /^\d+\.\d+\.\d+$/, "source pack must declare a release version");
 assert.equal(parsed.manifest.version, declared.version, "pack version must come from the source manifest");
 assert.equal(parsed.manifest.pack.id, "adrenaline");
+assert.deepEqual(
+	[...parsed.manifest.requires].sort(),
+	["block:adrenaline-pj", "block:adrenaline-pnj", "block:adrenaline-monstre", "style:adrenaline"].sort(),
+	"source pack must publish the exact Adrenaline block capabilities",
+);
 
 for (const target of ["pj", "pnj", "monstre"] as const) {
 	const blockId = `adrenaline-${target}`;

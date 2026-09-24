@@ -10,7 +10,7 @@ if (!existsSync(join(sourceRoot, "handbook/adrenaline/pack.json"))) {
 }
 const work = mkdtempSync(join(tmpdir(), "handbook-adrenaline-source-"));
 const stub = join(work, "obsidian-stub.mjs");
-const bundle = join(work, "assert.cjs");
+const bundle = resolve("tools", ".assert-adrenaline-source.mjs");
 writeFileSync(stub, `export class Notice {}
 export class Menu {}
 export class MenuItem {}
@@ -24,9 +24,10 @@ export class ItemView {}
 export function setIcon() {}
 `);
 try {
-	buildSync({ entryPoints: ["tools/assertAdrenalineSource.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "cjs", target: "node16", alias: { obsidian: stub }, logLevel: "warning" });
+	buildSync({ entryPoints: ["tools/assertAdrenalineSource.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["postcss", "postcss-selector-parser"], alias: { obsidian: stub }, logLevel: "warning" });
 	const result = spawnSync(process.execPath, [bundle], { stdio: "inherit", env: { ...process.env, SCHEMA_ADRENALINE_ROOT: sourceRoot } });
 	process.exitCode = result.status ?? 1;
 } finally {
+	rmSync(bundle, { force: true });
 	rmSync(work, { recursive: true, force: true });
 }

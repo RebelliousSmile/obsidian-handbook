@@ -746,15 +746,15 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 
 For the six shared Mist formats, right-click a rendered block and choose `Paste TOML from clipboard` to bring an export back from Lantern. A schema-owned codec writes concise Handbook source only when it can prove that no content changes; TOML with comments, metadata, unknown fields, or transformed values is kept verbatim.
 
-## schema-pbta release-train proof
+## Protocol-1 release-train proof
 
-The central `schema-pbta` release train checks out the selected Handbook ref, then invokes this consumer-owned proof. It does not select candidates or promote releases.
+The central release train checks out the selected Handbook ref, then invokes this consumer-owned proof for a declared `schema-pbta` or `schema-adrenaline` candidate. It does not select candidates or promote releases.
 
 ```sh
 pnpm run release-train:assert -- path/to/release-train-manifest.json
 ```
 
-The protocol-1 manifest supplies only `protocol`, the complete staged PbtA `candidate`, and both Lantern and Handbook immutable `consumers` refs. Handbook derives its evidence location as `<manifest>.evidence.json`, validates the protocol before selecting its own SHA-pinned entry from `candidate.provider`, then verifies the downloaded asset SHA-256, active package and pnpm lock pin, installed package, published packs, rendering, and source installer. The schema-pbta runner writes this manifest inside a disposable detached checkout; Handbook does not modify committed package, lock, or source-pack inputs. On success it writes protocol-1 evidence beside the manifest; any rejected manifest leaves no passed evidence.
+The protocol-1 manifest supplies only `protocol`, the complete staged `candidate`, and both Lantern and Handbook immutable `consumers` refs. Handbook derives its evidence location as `<manifest>.evidence.json`, validates the provider-specific release URL, tags, version, SHA-256, SRI, and commit before dispatching to its matching proof. The PbtA path verifies its active pin, published packs, rendering, and source installer. The Adrenaline path verifies its canonical archive SHA-256, active package and pnpm lock pin, installed corpus/renderer contract, and a separately materialized `SCHEMA_ADRENALINE_ROOT`: its canonical source tag and checked-out commit must equal `candidate.providerCommit`, and its published pack may activate only declared `block:adrenaline-*` capabilities. Source-checkout visual diagnostics are not part of this proof. The runner writes the manifest inside a disposable detached checkout; Handbook does not modify committed package, lock, or source-pack inputs. On success it writes protocol-1 evidence beside the manifest; any rejected manifest leaves no passed evidence.
 
 ## License
 
