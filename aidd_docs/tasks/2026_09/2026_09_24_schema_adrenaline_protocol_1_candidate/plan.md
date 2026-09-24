@@ -1,6 +1,6 @@
 ---
 objective: "Handbook accepts and proves the immutable schema-adrenaline v2.5.0 candidate through the common protocol-1 release-train interface, without a consumer-local fallback."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Accept schema-adrenaline protocol-1 candidates
