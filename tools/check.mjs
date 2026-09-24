@@ -9,6 +9,7 @@ const packageJson = JSON.parse(
 );
 const externalSchemaAssertions = new Set([
 	"assert:adrenaline-source",
+	"assert:release-train-schema-adrenaline",
 ]);
 const commands = [
 	"build",

@@ -8,6 +8,16 @@ const SHA256 = /^[a-f0-9]{64}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
 const FINAL_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 const STAGING_TAG = /^v(\d+)\.(\d+)\.(\d+)-rc\.\d+$/;
+const PROVIDERS = {
+	"schema-pbta": {
+		repository: "RebelliousSmile/schema-pbta",
+		archive: "schema-pbta",
+	},
+	"schema-adrenaline": {
+		repository: "RebelliousSmile/schema-adrenaline",
+		archive: "schema-adrenaline",
+	},
+};
 const CONSUMERS = {
 	lantern: "RebelliousSmile/lantern",
 	handbook: "RebelliousSmile/obsidian-handbook",
@@ -46,7 +56,9 @@ export function resolveManifestPath(argument) {
 function readCandidate(value) {
 	const source = object(value, "candidate");
 	exactKeys(source, ["provider", "releaseUrl", "sha256", "integrity", "version", "stagingTag", "finalTag", "providerCommit"], "candidate");
-	assert.equal(source.provider, "schema-pbta", "candidate.provider must be schema-pbta");
+	const provider = text(source.provider, "candidate.provider");
+	assert.ok(Object.hasOwn(PROVIDERS, provider), "candidate.provider must name a declared provider");
+	const definition = PROVIDERS[provider];
 	const releaseUrl = text(source.releaseUrl, "candidate.releaseUrl");
 	const sha256 = text(source.sha256, "candidate.sha256");
 	const integrity = text(source.integrity, "candidate.integrity");
@@ -63,10 +75,10 @@ function readCandidate(value) {
 	const url = new URL(releaseUrl);
 	assert.equal(url.protocol, "https:", "candidate.releaseUrl must use HTTPS");
 	assert.equal(url.hostname, "github.com", "candidate.releaseUrl must be a GitHub release asset");
-	assert.equal(url.pathname, `/RebelliousSmile/schema-pbta/releases/download/${stagingTag}/schema-pbta-${finalVersion}.tgz`, "candidate.releaseUrl must identify the staged final-version archive");
+	assert.equal(url.pathname, `/${definition.repository}/releases/download/${stagingTag}/${definition.archive}-${finalVersion}.tgz`, "candidate.releaseUrl must identify the declared provider's staged final-version archive");
 	assert.equal(url.search, "", "candidate.releaseUrl must not carry mutable query parameters");
 	assert.equal(url.hash, "", "candidate.releaseUrl must not carry a fragment");
-	return { provider: "schema-pbta", releaseUrl, sha256, integrity, version: candidateVersion, stagingTag, finalTag, providerCommit };
+	return { provider, releaseUrl, sha256, integrity, version: candidateVersion, stagingTag, finalTag, providerCommit };
 }
 
 function readConsumers(value) {
