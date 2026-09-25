@@ -64,99 +64,125 @@
 	container-type: inline-size;
 
 	.handbook-monsterhearts-playbook {
-		gap: 0.7rem;
+		display: grid;
+		gap: 0.8rem;
 		padding: clamp(0.75rem, 2vw, 1.5rem);
 		font-family: var(--font-text-theme, Georgia, serif);
 		border-color: var(--pbta-column-rule, var(--background-modifier-border));
 	}
 
+	.handbook-monsterhearts-column {
+		min-width: 0;
+		display: grid;
+		align-content: start;
+		gap: 1rem;
+	}
+
+	.handbook-monsterhearts-layout-row {
+		min-width: 0;
+		display: grid;
+		gap: var(--pbta-column-gap, 1rem);
+	}
+
 	.handbook-monsterhearts-region {
 		min-width: 0;
-		padding: 0.35rem 0.55rem 0.6rem;
-		border-top: 1px solid var(--pbta-column-rule, var(--color-accent));
+		padding: 0.4rem 0.55rem 0.65rem;
+		border-top: 1px solid var(--pbta-column-rule, var(--background-modifier-border));
 		break-inside: avoid;
 
-		> h4 {
+		> h3 {
 			margin: 0 0 0.4rem;
 			font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
-			font-size: 0.9rem;
-			font-variant: all-small-caps;
-			letter-spacing: 0.08em;
+			font-size: 1.1rem;
+			font-weight: 600;
 			color: var(--monsterhearts-title-ink, var(--text-normal));
 		}
+		h4 { margin: 0.55rem 0 0.2rem; }
+		p { margin: 0 0 0.4rem; line-height: 1.35; }
+		ul { padding-inline-start: 1.2rem; }
+		dl { margin: 0.35rem 0; }
 	}
 
-	.handbook-monsterhearts-field {
-		margin-block: 0.18rem;
-		font-size: 0.9rem;
-
-		> strong {
-			margin-inline-end: 0.45rem;
-			font-variant: small-caps;
-			font-weight: 600;
-		}
-
-		> h3 { margin: 0.1rem 0 0.25rem; }
-		> ul { padding-inline-start: 1.1rem; }
+	.handbook-monsterhearts-region[data-region="game-identity"] {
+		grid-column: 1 / -1;
+		> h2 { margin: 0 0 0.2rem; }
 	}
 
-	.handbook-monsterhearts-editorial {
-		> h5 {
-			margin: 0 0 0.25rem;
-			font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
-			font-size: 1rem;
-			font-weight: 400;
-		}
-		> p { margin: 0 0 0.35rem; line-height: 1.35; }
+	.handbook-monsterhearts-region[data-region="playbook-portrait"] {
+		padding: 0;
+		border: 0;
 	}
 
-	.handbook-monsterhearts-region[data-primitive="stat-spread"] {
-		.handbook-monsterhearts-field:has(> span) {
-			display: flex;
-			justify-content: space-between;
-			border-bottom: 1px solid var(--background-modifier-border);
-		}
-
-		.handbook-monsterhearts-field > .handbook-monsterhearts-field {
-			display: grid;
-			grid-template-columns: minmax(3rem, 1fr) repeat(2, minmax(2rem, auto));
-			gap: 0.35rem;
-		}
-	}
-
-	.handbook-monsterhearts-region[data-primitive="action-list"] li,
-	.handbook-monsterhearts-region[data-primitive="condition-harm-tracker"] li {
-		margin-block: 0.25rem;
-		padding-block: 0.2rem;
+	.handbook-monsterhearts-row {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.2rem 0;
 		border-bottom: 1px solid var(--background-modifier-border);
+		dd { margin: 0; text-align: end; }
+	}
+
+	.handbook-monsterhearts-stat-profile {
+		margin-top: 0.45rem;
+		padding: 0.5rem;
+		background: var(--background-primary-alt);
+	}
+
+	.handbook-monsterhearts-portrait {
+		aspect-ratio: 4 / 5;
+		margin: 0;
+		overflow: hidden;
+		img { display: block; width: 100%; height: 100%; object-fit: contain; }
+		&--empty {
+			display: grid;
+			place-items: center;
+			border: 1px dashed var(--pbta-column-rule, var(--background-modifier-border));
+			background: var(--background-primary-alt);
+			color: var(--text-muted);
+			font-style: italic;
+		}
+	}
+
+	.handbook-monsterhearts-move {
+		padding: 0.45rem 0;
+		border-bottom: 1px solid var(--background-modifier-border);
+		h4 { display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.2rem; }
+		p { margin-inline-start: 1.6rem; }
+	}
+
+	.handbook-monsterhearts-move-symbol {
+		flex: 0 0 1.1rem;
+		font-size: 1.2rem;
+		line-height: 1;
+		color: var(--monsterhearts-title-ink, var(--text-normal));
 	}
 
 	@container (min-width: 840px) {
-		.handbook-monsterhearts-playbook {
-			display: grid;
+		.handbook-monsterhearts-layout-row {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
-			grid-template-areas:
-				"game game game"
-				"opening moves relationships"
-				"character moves harm"
-				"stats moves gear"
-				"darkest sex progression";
-			column-gap: var(--pbta-column-gap, 1rem);
 		}
-		.handbook-monsterhearts-region[data-region="game-identity"] { grid-area: game; }
-		.handbook-monsterhearts-region[data-region="monsterhearts-opening"] { grid-area: opening; }
-		.handbook-monsterhearts-region[data-region="character-identity"] { grid-area: character; }
-		.handbook-monsterhearts-region[data-region="stat-profiles"] { grid-area: stats; }
-		.handbook-monsterhearts-region[data-region="playbook-moves"] { grid-area: moves; }
-		.handbook-monsterhearts-region[data-region="relationships"] { grid-area: relationships; }
-		.handbook-monsterhearts-region[data-region="conditions-and-harm"] { grid-area: harm; }
-		.handbook-monsterhearts-region[data-region="gear"] { grid-area: gear; }
-		.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"] { grid-area: darkest; }
-		.handbook-monsterhearts-region[data-region="monsterhearts-sex-move"] { grid-area: sex; }
-		.handbook-monsterhearts-region[data-region="monsterhearts-progression"] { grid-area: progression; }
 	}
 
+	@container (max-width: 839px) {
+		.handbook-monsterhearts-layout-row,
+		.handbook-monsterhearts-column { display: contents; }
+	}
+
+	.handbook-monsterhearts-region[data-region="monsterhearts-opening"] { order: 1; }
+	.handbook-monsterhearts-region[data-region="character-identity"] { order: 2; }
+	.handbook-monsterhearts-region[data-region="stat-profiles"] { order: 3; }
+	.handbook-monsterhearts-region[data-region="playbook-portrait"] { order: 4; }
+	.handbook-monsterhearts-region[data-region="playbook-moves"] { order: 5; }
+	.handbook-monsterhearts-region[data-region="relationships"] { order: 6; }
+	.handbook-monsterhearts-region[data-region="conditions-and-harm"] { order: 7; }
+	.handbook-monsterhearts-region[data-region="gear"] { order: 8; }
+	.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"] { order: 9; }
+	.handbook-monsterhearts-region[data-region="monsterhearts-sex-move"] { order: 10; }
+	.handbook-monsterhearts-region[data-region="monsterhearts-progression"] { order: 11; }
+
 	@media print {
-		.handbook-monsterhearts-playbook { display: block; }
+		.handbook-monsterhearts-playbook { display: grid; grid-template-columns: 1fr; }
+		.handbook-monsterhearts-layout-row,
+		.handbook-monsterhearts-column { display: contents; }
 	}
 }

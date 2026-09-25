@@ -41,7 +41,7 @@ export interface BrumesBlock<T> {
 	 */
 	shape: BlockShape;
 	parse(source: string): T | null;
-	render(data: T, doc: Document, context?: { packId: string }): HTMLElement;
+	render(data: T, doc: Document, context?: { packId: string; resolveImage?: (path: string) => string | null }): HTMLElement;
 	/** Writes an insertion document using the active pack context. */
 	template(settings: BrumesSettings): string;
 }

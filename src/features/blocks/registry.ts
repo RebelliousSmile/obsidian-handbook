@@ -110,7 +110,15 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 
 				log.debug(`Rendering ${id}:`, parsed);
 				el.classList.add(BLOCK_SCOPE_CLASS, gamePackClass(plugin.settings.mode));
-				const rendered = block.render(parsed, el.doc, { packId: plugin.settings.mode });
+				const rendered = block.render(parsed, el.doc, {
+					packId: plugin.settings.mode,
+					resolveImage: (path) => {
+						const file = plugin.app.metadataCache.getFirstLinkpathDest(path, ctx.sourcePath);
+						return file && /\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(file.path)
+							? plugin.app.vault.getResourcePath(file)
+							: null;
+					},
+				});
 				el.appendChild(rendered);
 				if (block.id === rollerBlock.id) {
 					const table = rendered.querySelector(".brumes-roller--table");
