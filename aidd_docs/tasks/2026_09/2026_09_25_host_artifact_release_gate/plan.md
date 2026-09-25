@@ -1,6 +1,6 @@
 ---
 objective: "Handbook publishes a patch release only after its exact production bundle loads in Obsidian 1.13.7, provider candidate evidence includes that proof, and final schema pins are canonical and integrity checked."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Gate Handbook publication on an Obsidian plugin load
