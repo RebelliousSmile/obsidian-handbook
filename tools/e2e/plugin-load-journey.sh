@@ -17,6 +17,18 @@ fi
 	printf 'Set HANDBOOK_E2E_OBSIDIAN to an executable Obsidian 1.13.7 AppImage.\n' >&2
 	exit 1
 }
+if [[ "$(basename "$obsidian_app")" == "AppRun" ]]; then
+	host_asset="$(dirname "$obsidian_app")/resources/obsidian.asar"
+	expected_host_sha256="a52a7daf1e2460bae03de80f2816604bd16a56cd374fbe5ce8d1a9ef5604059d"
+else
+	host_asset="$obsidian_app"
+	expected_host_sha256="e0d8e0a611624de8c9c7dcd8a9e648279fb0a0d552faa1312b7e4f3a5fa72663"
+fi
+actual_host_sha256="$(sha256sum "$host_asset" | cut -d ' ' -f 1)"
+[[ "$actual_host_sha256" == "$expected_host_sha256" ]] || {
+	printf 'Obsidian host differs from the pinned 1.13.7 build: %s\n' "$host_asset" >&2
+	exit 1
+}
 python3 -c 'import websocket' >/dev/null 2>&1 || {
 	printf 'Python package websocket-client is required.\n' >&2
 	exit 1

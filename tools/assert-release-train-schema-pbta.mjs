@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { assertReleaseTrain } from "./release-train-schema-pbta-assert.mjs";
 
 const releaseUrl = JSON.parse(readFileSync("package.json", "utf8")).dependencies["schema-pbta"];
 const sha256 = "bca28c7ff3033640efb570fb6c21a05ec79d82c6fb193560d504bd71d3c457ea";
@@ -47,16 +48,14 @@ function writeManifest(value) {
   writeFileSync(manifestPath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function runReleaseTrain() {
-  return spawnSync("pnpm", ["run", "release-train:assert", manifestPath], {
-    encoding: "utf8",
-  });
-}
+const fixtureHostProof = () => ({
+  obsidianVersion: "1.13.7",
+  sha256: createHash("sha256").update(readFileSync("dist/main.js")).digest("hex"),
+});
 
 try {
   writeManifest(manifest);
-  const success = runReleaseTrain();
-  assert.equal(success.status, 0, success.stderr || success.stdout);
+  await assertReleaseTrain(manifestPath, fixtureHostProof);
 
   const evidence = JSON.parse(readFileSync(evidencePath, "utf8"));
   assert.deepEqual(evidence.candidate, candidate);
@@ -68,6 +67,13 @@ try {
   assert.equal(evidence.consumer.ref, ref);
   assert.equal(evidence.consumer.resolved.version, "8.4.2");
   assert.equal(evidence.journey.status, "passed");
+  for (const check of ["production-build", "commonjs-plugin-build", "obsidian-load", "obsidian-1.13.7-plugin-load", `artifact-sha256:${fixtureHostProof().sha256}`, "obsidian-version:1.13.7"]) {
+    assert.ok(evidence.journey.checks.includes(check), `candidate evidence is missing ${check}`);
+  }
+
+  writeFileSync(evidencePath, '{"stale":true}\n');
+  await assert.rejects(() => assertReleaseTrain(manifestPath, () => { throw new Error("host-load-sentinel"); }), /host-load-sentinel/);
+  assert.equal(existsSync(evidencePath), false, "host load failure must remove stale passed evidence");
 
   for (const invalidManifest of [
 	{ ...manifest, evidencePath },
@@ -83,8 +89,7 @@ try {
   ]) {
     writeManifest(invalidManifest);
     writeFileSync(evidencePath, '{"stale":true}\n');
-    const rejected = runReleaseTrain();
-    assert.notEqual(rejected.status, 0, "release-train must reject an invalid protocol-1 manifest");
+    await assert.rejects(() => assertReleaseTrain(manifestPath, fixtureHostProof), "release-train must reject an invalid protocol-1 manifest");
     assert.equal(existsSync(evidencePath), false, "failed proof must not retain stale evidence");
   }
 } finally {

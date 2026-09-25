@@ -23,6 +23,14 @@ HANDBOOK_E2E_OBSIDIAN=/absolute/path/to/Obsidian.AppImage pnpm e2e:plugin-load
 controlled plugin; release and candidate proof must omit both variables and
 therefore always load `dist/`.
 
+The PbtA `release-train:assert` command calls this smoke itself. Its runner
+must provide `HANDBOOK_E2E_OBSIDIAN` pointing to the pinned 1.13.7 AppRun,
+`websocket-client`, and an active display (for example, wrap the release-train
+command in `xvfb-run -a`). The smoke checks the Obsidian AppImage or extracted
+application-bundle digest before launch and fails if the host differs. A
+candidate proof without these prerequisites fails before writing passed
+evidence. The schema-owned release-train manifest remains unchanged.
+
 ## requestUrl source installation
 
 `request-url-journey.sh` preserves the regression journey from issue #23. It launches a real Obsidian instance, installs the Mist Engine starter kit, verifies the historical `v1.0.0` tag, then changes `schema-in-the-mist` to `v1.2.0`. It compares each installed manifest, pack, and first declared image with its exact GitHub revision; for `v1.2.0`, it also compares City of Mist’s declared `styles/city-of-mist.css` byte for byte.
