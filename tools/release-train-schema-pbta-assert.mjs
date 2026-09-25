@@ -33,6 +33,18 @@ export function runRealHostProof() {
 	return { obsidianVersion: "1.13.7", sha256: createHash("sha256").update(readFileSync("dist/main.js")).digest("hex") };
 }
 
+export function buildCandidateEvidence(manifest, consumer, proof, host) {
+	if (host.obsidianVersion !== "1.13.7" || !/^[a-f0-9]{64}$/.test(host.sha256)) throw new Error("host proof must identify pinned Obsidian 1.13.7 and the production bundle SHA-256");
+	return {
+		protocol: 1,
+		status: "passed",
+		candidate: manifest.candidate,
+		consumer: { role: consumer.role, repository: consumer.repository, ref: consumer.ref, resolved: { version: manifest.candidate.version, releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity } },
+		lock: { file: "pnpm-lock.yaml", releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity },
+		journey: { id: "schema-pbta-candidate-adoption", status: "passed", checks: [...proof.proofs, "production-build", "commonjs-plugin-build", "obsidian-load", "obsidian-1.13.7-plugin-load", `artifact-sha256:${host.sha256}`, `obsidian-version:${host.obsidianVersion}`] },
+	};
+}
+
 export async function assertReleaseTrain(manifestPath, hostProof = runRealHostProof) {
 	const defaultEvidencePath = `${manifestPath}.evidence.json`;
 	if (existsSync(defaultEvidencePath)) rmSync(defaultEvidencePath);
@@ -41,15 +53,7 @@ export async function assertReleaseTrain(manifestPath, hostProof = runRealHostPr
 	if (await sha256(manifest.candidate.releaseUrl) !== manifest.candidate.sha256) throw new Error("candidate SHA-256 disagrees with release asset");
 	const proof = proveSchemaPbtaCandidate({ releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity, finalTag: manifest.candidate.finalTag });
 	const host = hostProof();
-	if (host.obsidianVersion !== "1.13.7" || !/^[a-f0-9]{64}$/.test(host.sha256)) throw new Error("host proof must identify pinned Obsidian 1.13.7 and the production bundle SHA-256");
-	const evidence = {
-		protocol: 1,
-		status: "passed",
-		candidate: manifest.candidate,
-		consumer: { role: consumer.role, repository: consumer.repository, ref: consumer.ref, resolved: { version: manifest.candidate.version, releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity } },
-		lock: { file: "pnpm-lock.yaml", releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity },
-		journey: { id: "schema-pbta-candidate-adoption", status: "passed", checks: [...proof.proofs, "production-build", "commonjs-plugin-build", "obsidian-load", "obsidian-1.13.7-plugin-load", `artifact-sha256:${host.sha256}`, `obsidian-version:${host.obsidianVersion}`] },
-	};
+	const evidence = buildCandidateEvidence(manifest, consumer, proof, host);
 	writeEvidence(defaultEvidencePath, evidence);
 	return { proof, evidencePath: defaultEvidencePath, evidence };
 }

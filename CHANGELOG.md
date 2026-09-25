@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.2] - 2026-09-25
+
+### Fixed
+
+- Load the production plugin in Obsidian 1.13.7 before candidate evidence or release publication can pass.
+- Detect browser-only provider URL construction in the CommonJS bundle and report the original plugin-load exception.
+- Pin final schema provider archives with verified integrity and remove the temporary PbtA asset rewrite.
+
 ## [2.29.1] - 2026-09-25
 
 ### Fixed
