@@ -106,6 +106,10 @@ const monsterheartsRendered = pbtaPlaybookBlock.render(unselected, doc as unknow
 assert.ok(monsterheartsRendered.classes.includes("handbook-monsterhearts-playbook"), "Monsterhearts pack selects its editorial layout");
 const renderedRegions = monsterheartsRendered.children.map((child) => child.dataset.region);
 assert.deepEqual(renderedRegions, presentation.canonicalOrder.filter((id) => renderedRegions.includes(id)), "published region order survives rendering");
+const portrait = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-portrait")[0];
+assert.ok(portrait, "a missing image still reserves the Monsterhearts portrait frame");
+const firstLayoutRow = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-layout-row")[0];
+assert.deepEqual(firstLayoutRow?.children[1]?.children.map((child) => child.dataset.region), ["playbook-portrait"], "portrait alone occupies the first row's middle cell");
 assert.ok(renderedRegions.includes("stat-profiles") && renderedRegions.includes("relationships") && renderedRegions.includes("conditions-and-harm"), "stat, relationship and harm regions are distinct");
 assert.ok(text(monsterheartsRendered).includes("Au quart de tour"), "published stat profiles remain visible");
 assert.equal(JSON.stringify(unselected.data), unchanged, "presentation does not change the TOML data");
