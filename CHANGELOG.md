@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.1] - 2026-09-25
+
+### Fixed
+
+- Restore the schema-declared Monsterhearts row layout, including the reserved central portrait cell and vault-resolved `playbookImage` assets.
+- Render Monsterhearts creation data semantically without leaking schema field names or repeating option lists already present in the editorial copy.
+
 ## [2.29.0] - 2026-09-24
 
 ### Added
