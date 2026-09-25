@@ -19,6 +19,12 @@ export interface GameParameters {
 
 export interface AdrenalinePjData {
 	nom: string;
+	etatDePartie?: {
+		stress?: { adrenaline?: number; panique?: number };
+		malus?: { physique?: number; mental?: number };
+		fatigue?: { rounds?: number; heures?: number };
+		etats?: { nom: string; versant: "physique" | "mental" | "general"; localisation?: string; duree?: string; notes?: string }[];
+	};
 	identite?: Identity;
 	caracteristiques: Characteristics;
 	sante: Health;

@@ -57,7 +57,7 @@ try {
 		alias: { obsidian: stub },
 		logLevel: "warning",
 	});
-	const run = spawnSync(process.execPath, [bundle], {
+	const run = spawnSync(process.execPath, [bundle, ...process.argv.slice(2)], {
 		stdio: "inherit",
 		env: { ...process.env, SCHEMA_ADRENALINE_ROOT: sourceRoot },
 	});

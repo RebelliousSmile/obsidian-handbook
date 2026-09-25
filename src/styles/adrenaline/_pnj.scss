@@ -25,6 +25,25 @@
 	.brumes-adrenaline-pnj h4 { text-transform: uppercase; }
 	.brumes-adrenaline-pnj h3 { margin: 0; }
 	.brumes-adrenaline-pnj header h3 { color: inherit; }
+	.brumes-adrenaline-pnj--entete > .brumes-adrenaline--sheet-block,
+	.brumes-adrenaline-monstre--entete > .brumes-adrenaline--sheet-block {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 0.3rem 0.7rem;
+	}
+	.brumes-adrenaline-pnj .brumes-adrenaline--sheet-section:not(:first-child) {
+		background: var(--adrenaline-card-surface);
+	}
+	.brumes-adrenaline-pnj--sante-protections,
+	.brumes-adrenaline-pnj--formations-competences {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.brumes-adrenaline-pnj--sante-protections > h4,
+	.brumes-adrenaline-pnj--formations-competences > h4 {
+		grid-column: 1 / -1;
+	}
 	.brumes-adrenaline-pnj--panel { min-width: 0; padding: 0.42rem 0.5rem; border-top: 1px solid var(--adrenaline-rule); background: var(--adrenaline-panel); }
 	.brumes-adrenaline-pnj--description {
 		margin: 0 0 0.3rem;

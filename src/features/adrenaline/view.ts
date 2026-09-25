@@ -3,6 +3,7 @@ import {
 	Characteristics,
 	Health,
 } from "./document";
+import { labelledValue } from "./presentation";
 
 export function adrenalineSection(
 	doc: Document,
@@ -119,10 +120,9 @@ export function renderHealth(doc: Document, health: Health): HTMLElement {
 		for (const thresholdName of ["superficiel", "leger", "grave", "profond"] as const) {
 			const threshold = side[thresholdName];
 			if (!threshold) continue;
-			const row = doc.createElement("div");
-			row.textContent = `${thresholdName}: ${threshold.base}${
+			const row = labelledValue(doc, thresholdName, `${threshold.base}${
 				threshold.couvert === undefined ? "" : ` / ${threshold.couvert}`
-			}`;
+			}`);
 			sideElement.appendChild(row);
 		}
 		grid.appendChild(sideElement);

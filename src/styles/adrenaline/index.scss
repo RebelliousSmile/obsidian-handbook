@@ -8,6 +8,71 @@
 .brumes--adrenaline {
 	@include page.page;
 	@include content.content;
+	.brumes-adrenaline--sheet-section:not(:first-child) {
+		border-top: 1px solid var(--adrenaline-rule);
+	}
+
+	.brumes-adrenaline--sheet-section > h4 {
+		margin: 0;
+		padding: 0.18rem 0.5rem;
+		text-align: center;
+		text-transform: uppercase;
+		color: var(--adrenaline-section-band-ink);
+		font-family: "Adrenaline Display", var(--font-header-theme);
+		font-size: 0.9em;
+		background: var(--adrenaline-section-band);
+	}
+
+	.brumes-adrenaline--sheet-block {
+		min-width: 0;
+	}
+
+	.brumes-adrenaline--sheet-block h5,
+	.brumes-adrenaline--sheet-block h6 {
+		margin: 0;
+		font-family: "Adrenaline Display", var(--font-header-theme);
+		font-size: 0.85em;
+		text-transform: uppercase;
+	}
+
+	.brumes-adrenaline--labelled-value {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.4rem;
+		min-width: 0;
+	}
+
+	.brumes-adrenaline--ink-value,
+	.brumes-adrenaline--entry-value,
+	.brumes-adrenaline--characteristics dd {
+		margin-inline-start: auto;
+		text-align: end;
+		color: var(--adrenaline-handwritten-ink);
+		font-family: "Adrenaline Handwriting", cursive;
+		font-size: 1.15em;
+		font-weight: 400;
+		line-height: 1;
+	}
+
+	.brumes-adrenaline--sheet-section:not(.brumes-adrenaline--section-entete) {
+		padding-block-end: 0.35rem;
+	}
+
+	.brumes-adrenaline--sheet-section:not(.brumes-adrenaline--section-entete) > .brumes-adrenaline--sheet-block {
+		margin: 0.3rem 0.5rem 0;
+	}
+
+	.brumes-adrenaline--characteristics {
+		display: grid;
+		grid-template-columns: repeat(4, auto minmax(0, 1fr));
+		gap: 0.1rem 0.45rem;
+		margin: 0;
+	}
+
+	.brumes-adrenaline--characteristics dd {
+		margin-inline-start: 0;
+	}
 	.brumes-adrenaline--section > h4 {
 		margin: -0.42rem -0.5rem 0.38rem;
 		padding: 0.18rem 0.5rem;

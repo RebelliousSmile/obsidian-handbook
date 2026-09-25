@@ -1,111 +1,252 @@
 @mixin sheet {
 	.brumes-adrenaline-pj {
-		display: grid;
-		grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1.2fr);
-		grid-template-areas:
-			"header header"
-			"formations competences"
-			"characteristics characteristics"
-			"equipment equipment"
-			"health health";
-		gap: 0.65rem 0.8rem;
 		max-width: 100%;
+		border: 2px solid var(--adrenaline-rule);
+		background: var(--adrenaline-card-surface);
+		color: var(--text-normal);
+		font-size: 0.84em;
+		line-height: 1.22;
 		overflow-wrap: anywhere;
-		padding: 0.75rem;
+	}
+
+	.brumes-adrenaline-pj--entete {
+		display: grid;
+		grid-template-columns: minmax(8rem, 1.15fr) minmax(10rem, 1fr) 4rem;
+		gap: 0.4rem;
+		padding: 0.4rem;
+		align-items: stretch;
+		background: var(--adrenaline-card-surface);
+	}
+
+	.brumes-adrenaline-pj--entete > div {
 		border: 1px solid var(--adrenaline-rule);
-		font-size: 0.92em;
-		line-height: 1.3;
-		background: var(--background-primary);
+		padding: 0.22rem 0.35rem;
 	}
 
-	.brumes-adrenaline-pj--header,
-	.brumes-adrenaline-pj--characteristics,
-	.brumes-adrenaline-pj--equipment,
-	.brumes-adrenaline-pj--health {
-		grid-column: 1 / -1;
-	}
-
-	.brumes-adrenaline-pj--header { grid-area: header; }
-	.brumes-adrenaline-pj--formations { grid-area: formations; }
-	.brumes-adrenaline-pj--competences { grid-area: competences; }
-	.brumes-adrenaline-pj--characteristics { grid-area: characteristics; }
-	.brumes-adrenaline-pj--equipment { grid-area: equipment; }
-	.brumes-adrenaline-pj--health { grid-area: health; }
-
-	.brumes-adrenaline-pj header {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.22rem 0.8rem;
-		align-items: baseline;
-		padding: 0.42rem 0.55rem;
+	.brumes-adrenaline-pj--entete h5 {
+		margin: -0.22rem -0.35rem 0.2rem;
+		padding: 0.18rem 0.25rem;
+		text-align: center;
 		color: var(--adrenaline-band-ink);
 		background: var(--adrenaline-band);
 	}
 
-	.brumes-adrenaline-pj h3,
-	.brumes-adrenaline-pj h4 {
+	.brumes-adrenaline-pj--name-card > .brumes-adrenaline--ink-value {
+		display: block;
+		padding-block: 0.3rem;
+		font-size: 2em;
+		text-align: center;
+	}
+
+	.brumes-adrenaline--block-px {
+		text-align: center;
+	}
+
+	.brumes-adrenaline--block-px > .brumes-adrenaline--ink-value {
+		display: block;
+		font-size: 1.6em;
+	}
+
+	.brumes-adrenaline-pj--competence > .brumes-adrenaline--block-formations-competences {
+		margin: 0;
+	}
+
+	.brumes-adrenaline-pj--formation-columns {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0;
+	}
+
+	.brumes-adrenaline-pj--formation-column {
+		padding: 0.25rem 0.4rem;
+		border-inline-end: 1px solid var(--adrenaline-rule);
+	}
+
+	.brumes-adrenaline-pj--formation-column:last-child {
+		border-inline-end: 0;
+	}
+
+	.brumes-adrenaline-pj--formation-column h5,
+	.brumes-adrenaline-pj--formation-column h6 {
+		text-align: center;
+		background: var(--adrenaline-band);
+		color: var(--adrenaline-band-ink);
+	}
+
+	.brumes-adrenaline-pj--formation-column h6 {
+		margin-block-start: 0.25rem;
+	}
+
+	.brumes-adrenaline-pj--formation-column .brumes-adrenaline--labelled-value {
+		min-height: 1.25rem;
+		border-block-end: 1px solid var(--adrenaline-rule);
+	}
+
+	.brumes-adrenaline-pj--profil {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.brumes-adrenaline-pj--profil > h4 {
+		grid-column: 1 / -1;
+	}
+
+	.brumes-adrenaline-pj--profil > .brumes-adrenaline--sheet-block {
+		margin-inline: 0;
+		padding-inline: 0.4rem;
+		border-inline-end: 1px solid var(--adrenaline-rule);
+	}
+
+	.brumes-adrenaline-pj--identity {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0 0.35rem;
+	}
+
+	.brumes-adrenaline-pj--identity h5 {
+		grid-column: 1 / -1;
+		text-align: center;
+	}
+
+	.brumes-adrenaline-pj--identity .brumes-adrenaline--labelled-value {
+		border-block-end: 1px dotted var(--adrenaline-rule);
+	}
+
+	.brumes-adrenaline-pj--characteristic-group > h5 {
+		text-align: center;
+		background: var(--adrenaline-band);
+		color: var(--adrenaline-band-ink);
+	}
+
+	.brumes-adrenaline-pj--characteristic-head,
+	.brumes-adrenaline-pj--characteristic-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 3rem 2.5rem;
+		gap: 0.25rem;
+		border-block-end: 1px solid var(--adrenaline-rule);
+	}
+
+	.brumes-adrenaline-pj--characteristic-head {
+		font-size: 0.75em;
 		text-transform: uppercase;
 	}
 
-	.brumes-adrenaline-pj h3 {
-		margin: 0;
+	.brumes-adrenaline-pj--characteristic-row > span:nth-child(n + 2) {
+		text-align: end;
 	}
 
-	.brumes-adrenaline-pj header h3 {
-		color: inherit;
-	}
-
-	.brumes-adrenaline-pj--panel {
-		min-width: 0;
-		padding: 0.42rem 0.5rem;
-		border-top: 1px solid var(--adrenaline-rule);
-		background: var(--adrenaline-panel);
-	}
-
-	.brumes-adrenaline--characteristics {
+	.brumes-adrenaline-pj--equipement {
 		display: grid;
-		grid-template-columns: repeat(4, auto minmax(0, 1fr));
-		gap: 0.12rem 0.45rem;
-		margin: 0;
+		grid-template-columns: 1.1fr 1fr 1fr;
+		gap: 0 0.3rem;
 	}
 
-	.brumes-adrenaline--characteristics dd {
-		margin: 0;
-		font-weight: 700;
+	.brumes-adrenaline-pj--equipement > h4 {
+		grid-column: 1 / -1;
 	}
 
-	.brumes-adrenaline-pj ul {
-		margin-block: 0.25rem 0;
-		padding-inline-start: 1.2rem;
+	.brumes-adrenaline--block-possessions { grid-column: 1; grid-row: 2 / 4; }
+	.brumes-adrenaline--block-armes-physiques { grid-column: 2; grid-row: 2; }
+	.brumes-adrenaline--block-armes-mentales { grid-column: 3; grid-row: 2; }
+	.brumes-adrenaline--block-protections-physiques { grid-column: 2; grid-row: 3; }
+	.brumes-adrenaline--block-protections-mentales { grid-column: 3; grid-row: 3; }
+
+	.brumes-adrenaline-pj--equipement .brumes-adrenaline--sheet-block {
+		padding-inline: 0.25rem;
+		border-inline-end: 1px solid var(--adrenaline-rule);
 	}
 
-	.brumes-adrenaline-pj--protection-rows > div {
-		margin-block-start: 0.18rem;
+	.brumes-adrenaline-pj--equipement .brumes-adrenaline--labelled-value {
+		min-height: 1.2rem;
+		border-block-end: 1px dotted var(--adrenaline-rule);
 	}
 
-	@media (max-width: 520px) {
-		.brumes-adrenaline-pj {
-			grid-template-columns: minmax(0, 1fr);
-			grid-template-areas:
-				"header"
-				"formations"
-				"competences"
-				"characteristics"
-				"equipment"
-				"health";
+	.brumes-adrenaline-pj--weapon-line {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 3rem 2.4rem;
+		align-items: baseline;
+		gap: 0 0.2rem;
+	}
+
+	.brumes-adrenaline-pj--weapon-line > :first-child {
+		grid-column: 1 / -1;
+	}
+
+	.brumes-adrenaline-pj--sante {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.brumes-adrenaline-pj--sante > h4 {
+		grid-column: 1 / -1;
+	}
+
+	.brumes-adrenaline-pj--sante > .brumes-adrenaline--sheet-block {
+		padding-inline: 0.3rem;
+	}
+
+	.brumes-adrenaline-pj--stress-adrenaline,
+	.brumes-adrenaline-pj--stress-panique,
+	.brumes-adrenaline-pj--status-frame {
+		border: 1px solid var(--adrenaline-rule);
+		margin-block: 0.2rem;
+		padding: 0.2rem;
+	}
+
+	.brumes-adrenaline-pj--stress-adrenaline,
+	.brumes-adrenaline-pj--status-frame:nth-child(odd) {
+		background: var(--adrenaline-status-yellow-bg);
+		color: var(--adrenaline-status-yellow-ink);
+	}
+
+	.brumes-adrenaline-pj--stress-panique,
+	.brumes-adrenaline-pj--status-frame:nth-child(even) {
+		background: var(--adrenaline-status-red-bg);
+		color: var(--adrenaline-status-red-ink);
+	}
+
+	.brumes-adrenaline-pj--threshold-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.2rem;
+	}
+
+	.brumes-adrenaline-pj--fatigue-line {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.brumes-adrenaline-pj--fatigue-line > span:first-child {
+		min-width: 3.5rem;
+	}
+
+	.brumes-adrenaline-pj--fatigue-circle {
+		width: 0.68rem;
+		height: 0.68rem;
+		border: 1px solid var(--adrenaline-rule);
+		border-radius: 50%;
+	}
+
+	.brumes-adrenaline-pj--fatigue-circle.is-marked {
+		background: var(--adrenaline-handwritten-ink);
+	}
+
+	@media (max-width: 700px) {
+		.brumes-adrenaline-pj--entete,
+		.brumes-adrenaline-pj--formation-columns,
+		.brumes-adrenaline-pj--profil,
+		.brumes-adrenaline-pj--equipement,
+		.brumes-adrenaline-pj--sante {
+			display: block;
 		}
 
-		.brumes-adrenaline-pj > * {
-			grid-column: 1;
-			min-width: 0;
-		}
-
-		.brumes-adrenaline--characteristics {
-			grid-template-columns: repeat(2, auto minmax(0, 1fr));
-		}
-
-		.brumes-adrenaline--health {
-			grid-template-columns: minmax(0, 1fr);
+		.brumes-adrenaline-pj--entete > div,
+		.brumes-adrenaline-pj--formation-column,
+		.brumes-adrenaline-pj--profil > .brumes-adrenaline--sheet-block,
+		.brumes-adrenaline-pj--equipement > .brumes-adrenaline--sheet-block {
+			margin-block-end: 0.4rem;
+			border: 1px solid var(--adrenaline-rule);
 		}
 	}
 }

@@ -16,6 +16,24 @@
 	.brumes-adrenaline-monstre h4 { text-transform: uppercase; }
 	.brumes-adrenaline-monstre h3 { margin: 0; }
 	.brumes-adrenaline-monstre header h3 { color: inherit; }
+	.brumes-adrenaline-monstre .brumes-adrenaline--sheet-section:not(:first-child) {
+		background: var(--adrenaline-card-surface);
+	}
+	.brumes-adrenaline-monstre--detection-deplacement,
+	.brumes-adrenaline-monstre--actions-comportement,
+	.brumes-adrenaline-monstre--sante-protections {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.brumes-adrenaline-monstre--detection-deplacement > h4,
+	.brumes-adrenaline-monstre--actions-comportement > h4,
+	.brumes-adrenaline-monstre--sante-protections > h4 {
+		grid-column: 1 / -1;
+	}
+	.brumes-adrenaline-monstre--capacites-etats > .brumes-adrenaline--sheet-block + .brumes-adrenaline--sheet-block {
+		border-top: 1px solid var(--adrenaline-rule);
+		padding-block-start: 0.3rem;
+	}
 	.brumes-adrenaline-monstre--panel { min-width: 0; padding: 0.42rem 0.5rem; border-top: 1px solid var(--adrenaline-rule); background: var(--adrenaline-panel); }
 	.brumes-adrenaline-monstre ul { margin-block: 0.22rem 0; padding-inline-start: 1.1rem; }
 	.brumes-adrenaline-monstre--mobility-list,
