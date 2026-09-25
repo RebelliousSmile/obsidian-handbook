@@ -4,6 +4,7 @@ import builtins from "builtin-modules";
 import { sassPlugin } from "esbuild-sass-plugin";
 import fs from "fs";
 import path from "path";
+import { assertPluginBundle } from "./tools/assert-plugin-bundle.mjs";
 
 const banner = `/* Handbook, game-specific themes and tools for Obsidian tabletop roleplaying vaults. */`;
 const outdir = "dist";
@@ -115,10 +116,14 @@ async function run() {
 		esbuild.build(styleBuildOptions),
 		esbuild.build(pluginBuildOptions),
 	]);
+	assertPluginBundle(fs.readFileSync(path.resolve(outdir, "main.js"), "utf8"));
 
 	copyManifest();
 	copyAssets();
 	console.log("✨ Build completed.");
 }
 
-run().catch(() => process.exit(1));
+run().catch((error) => {
+	console.error(error);
+	process.exitCode = 1;
+});

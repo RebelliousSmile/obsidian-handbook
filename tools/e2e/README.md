@@ -1,5 +1,28 @@
 # Obsidian E2E journeys
 
+## Production plugin load
+
+`plugin-load-journey.sh` opens a fresh vault and profile in Obsidian 1.13.7,
+installs the exact `dist/main.js`, `dist/manifest.json`, and `dist/styles.css`,
+then subscribes to CDP exceptions before enabling Handbook. It passes only
+when `app.plugins.plugins['obsidian-handbook']` exists. The command leaves
+`plugin-load.json`, `obsidian.log`, and `main.js.sha256` in its printed output
+directory, including on failure. It removes the temporary vault, profile, and
+Obsidian process on exit.
+
+On Linux, build first, then run with an executable Obsidian 1.13.7 AppImage,
+`curl`, `sha256sum`, Python 3, and `websocket-client` installed:
+
+```bash
+HANDBOOK_E2E_OBSIDIAN=/absolute/path/to/Obsidian.AppImage pnpm e2e:plugin-load
+```
+
+`HANDBOOK_E2E_OUTPUT_DIR` selects a persistent diagnostic directory, and
+`HANDBOOK_E2E_CDP_PORT` changes the default port 9234. The fixture-only
+`HANDBOOK_E2E_FIXTURE=1` switch permits `HANDBOOK_E2E_PLUGIN_DIR` to point at a
+controlled plugin; release and candidate proof must omit both variables and
+therefore always load `dist/`.
+
 ## requestUrl source installation
 
 `request-url-journey.sh` preserves the regression journey from issue #23. It launches a real Obsidian instance, installs the Mist Engine starter kit, verifies the historical `v1.0.0` tag, then changes `schema-in-the-mist` to `v1.2.0`. It compares each installed manifest, pack, and first declared image with its exact GitHub revision; for `v1.2.0`, it also compares City of Mist’s declared `styles/city-of-mist.css` byte for byte.

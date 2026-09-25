@@ -8,6 +8,8 @@
 		"dev": "node esbuild.config.mjs --watch",
 		"dev:schema-pbta": "node tools/dev-schema-source.mjs --source ../schema-pbta",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"assert:plugin-bundle": "node tools/assert-plugin-bundle.mjs",
+		"e2e:plugin-load": "bash tools/e2e/plugin-load-journey.sh",
 		"check": "node tools/check.mjs",
 		"lint": "eslint .",
 		"assert:corpus": "node tools/assert-corpus.mjs",
