@@ -97,7 +97,7 @@ journey
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | Passed PbtA or Adrenaline evidence includes `production-build`, `obsidian-plugin-load`, Obsidian 1.13.7, and the tested asset hashes; any failure leaves no passed or stale evidence. |
+| 1 | At this incident-gate boundary, passed PbtA or Adrenaline evidence includes the locally named build/load checks, Obsidian 1.13.7, and tested asset hashes; any failure leaves no passed or stale evidence. Phase 4 later maps those proved results into the master vocabulary and closed public shape. |
 | 2 | `pnpm check` rejects any release-capable path that removes, skips, reorders, or tolerates the host gate, while test doubles cannot be selected through the public CLI. |
 | 3 | A delayed trust dialog is awaited and handled before activation is measured; an unresolved trust state fails with bounded, actionable UI/plugin diagnostics. |
 | 3 | Two consecutive live proofs of the current v2.29.1 artifact reach its actual activation exception, rather than a trust timing failure, before evidence or GitHub assets can be written. |

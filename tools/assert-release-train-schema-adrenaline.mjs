@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { runReleaseTrain } from "./release-train-assert.mjs";
 
@@ -34,24 +34,57 @@ const providerEvidence = {
 };
 const host = {
 	status: "passed",
-	checks: ["production-build", "obsidian-plugin-load"],
+	checks: ["commonjs-plugin-build", "obsidian-1.13.7-plugin-load"],
 	obsidianVersion: "1.13.7",
 	plugin: { id: "obsidian-handbook", manifestVersion: "9.9.9" },
 	assets: { "main.js": "1".repeat(64), "manifest.json": "2".repeat(64), "styles.css": "3".repeat(64) },
 };
+const evidenceKeys = ["candidate", "consumer", "journey", "lock", "protocol", "status"];
+const dependencies = {
+	providerAssertions: {
+		"schema-adrenaline": async () => ({ proof: { proofs: ["contract"] }, evidencePath, evidence: providerEvidence }),
+	},
+	proveHost: async () => host,
+};
+
+async function expectFailure(overrides, pattern) {
+	writeFileSync(evidencePath, '{"stale":true}\n');
+	await assert.rejects(() => runReleaseTrain(manifestPath, { ...dependencies, ...overrides }), pattern);
+	assert.equal(existsSync(evidencePath), false, "failed compatibility proof must remove stale evidence");
+}
 
 try {
 	writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-	await runReleaseTrain(manifestPath, {
-		providerAssertions: {
-			"schema-adrenaline": async () => ({ proof: { proofs: ["contract"] }, evidencePath, evidence: providerEvidence }),
-		},
-		proveHost: async () => host,
-	});
+	await runReleaseTrain(manifestPath, dependencies);
 	const evidence = JSON.parse(readFileSync(evidencePath, "utf8"));
-	assert.deepEqual(evidence.journey.checks, ["contract", "production-build", "obsidian-plugin-load"]);
-	assert.equal(evidence.hostArtifact.obsidianVersion, "1.13.7");
-	assert.deepEqual(evidence.hostArtifact.assets, host.assets);
+	assert.deepEqual(Object.keys(evidence).sort(), evidenceKeys);
+	assert.deepEqual(evidence.journey.checks, ["contract", "commonjs-plugin-build", "obsidian-1.13.7-plugin-load"]);
+	assert.equal("hostArtifact" in evidence, false);
+
+	await expectFailure({ proveHost: async () => ({ ...host, checks: ["production-build", "obsidian-plugin-load"] }) }, /noncanonical check identifiers/);
+	await expectFailure({ proveHost: async () => ({ ...host, checks: ["commonjs-plugin-build"] }) }, /noncanonical check identifiers/);
+	await expectFailure({
+		providerAssertions: {
+			"schema-adrenaline": async () => ({
+				proof: { proofs: ["contract"] },
+				evidencePath,
+				evidence: { ...providerEvidence, hostArtifact: host },
+			}),
+		},
+	}, /closed protocol-1 shape/);
+	await expectFailure({
+		providerAssertions: {
+			"schema-adrenaline": async () => ({
+				proof: { proofs: ["contract"] },
+				evidencePath,
+				evidence: {
+					...providerEvidence,
+					journey: { ...providerEvidence.journey, checks: ["contract", "obsidian-1.13.7-plugin-load"] },
+				},
+			}),
+		},
+	}, /checks must be unique/);
+	await expectFailure({ proveHost: async () => { throw new Error("host failed"); } }, /host failed/);
 } finally {
 	rmSync(manifestPath, { force: true });
 	rmSync(evidencePath, { force: true });

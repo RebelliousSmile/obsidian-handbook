@@ -33,6 +33,8 @@ assert.ok(provider >= 0 && host > provider && evidence > host, "release-train ru
 assert.match(runner, /proveHost = dependencies\.proveHost \?\? proveHandbookHostArtifact/, "release-train public default is not the real host proof");
 assert.doesNotMatch(runner, /process\.env\.[A-Z_]*COMMAND/, "release-train CLI exposes a command override");
 assert.match(hostProof, /HANDBOOK_E2E_OBSIDIAN/, "host proof does not require an explicit Obsidian executable");
-assert.match(hostProof, /\["production-build", "obsidian-plugin-load"\]/, "host proof does not publish both required checks");
+assert.match(hostProof, /\["commonjs-plugin-build", "obsidian-1\.13\.7-plugin-load"\]/, "host proof does not publish the canonical release-train checks");
+assert.match(runner, /EVIDENCE_KEYS = \["candidate", "consumer", "journey", "lock", "protocol", "status"\]/, "release-train runner does not lock the master evidence shape");
+assert.doesNotMatch(runner, /hostArtifact/, "release-train runner publishes a consumer-local evidence field");
 
 console.log("Host-artifact gates are mandatory in CI, release, and protocol-1 evidence.");

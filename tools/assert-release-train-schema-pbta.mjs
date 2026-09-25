@@ -35,7 +35,7 @@ const providerEvidence = {
 };
 const host = {
 	status: "passed",
-	checks: ["production-build", "obsidian-plugin-load"],
+	checks: ["commonjs-plugin-build", "obsidian-1.13.7-plugin-load"],
 	obsidianVersion: "1.13.7",
 	plugin: { id: "obsidian-handbook", manifestVersion: "9.9.9" },
 	assets: { "main.js": "1".repeat(64), "manifest.json": "2".repeat(64), "styles.css": "3".repeat(64) },
@@ -46,26 +46,47 @@ const dependencies = {
 	},
 	proveHost: async () => host,
 };
+const evidenceKeys = ["candidate", "consumer", "journey", "lock", "protocol", "status"];
+
+async function expectFailure(overrides, pattern) {
+	writeFileSync(evidencePath, '{"stale":true}\n');
+	await assert.rejects(() => runReleaseTrain(manifestPath, { ...dependencies, ...overrides }), pattern);
+	assert.equal(existsSync(evidencePath), false, "failed compatibility proof must remove stale evidence");
+}
 
 try {
 	writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 	const result = await runReleaseTrain(manifestPath, dependencies);
 	assert.equal(result.evidencePath.endsWith(evidencePath), true);
 	const evidence = JSON.parse(readFileSync(evidencePath, "utf8"));
-	assert.deepEqual(evidence.journey.checks, ["contract", "production-build", "obsidian-plugin-load"]);
-	assert.deepEqual(evidence.hostArtifact, {
-		status: "passed",
-		obsidianVersion: "1.13.7",
-		plugin: host.plugin,
-		assets: host.assets,
-	});
+	assert.deepEqual(Object.keys(evidence).sort(), evidenceKeys);
+	assert.deepEqual(evidence.journey.checks, ["contract", "commonjs-plugin-build", "obsidian-1.13.7-plugin-load"]);
+	assert.equal("hostArtifact" in evidence, false);
 
-	writeFileSync(evidencePath, '{"stale":true}\n');
-	await assert.rejects(
-		() => runReleaseTrain(manifestPath, { ...dependencies, proveHost: async () => { throw new Error("host failed"); } }),
-		/host failed/,
-	);
-	assert.equal(existsSync(evidencePath), false, "failed host proof must remove stale evidence");
+	await expectFailure({ proveHost: async () => ({ ...host, checks: ["production-build", "obsidian-plugin-load"] }) }, /noncanonical check identifiers/);
+	await expectFailure({ proveHost: async () => ({ ...host, checks: ["commonjs-plugin-build"] }) }, /noncanonical check identifiers/);
+	await expectFailure({
+		providerAssertions: {
+			"schema-pbta": async () => ({
+				proof: { proofs: ["contract"] },
+				evidencePath,
+				evidence: { ...providerEvidence, hostArtifact: host },
+			}),
+		},
+	}, /closed protocol-1 shape/);
+	await expectFailure({
+		providerAssertions: {
+			"schema-pbta": async () => ({
+				proof: { proofs: ["contract"] },
+				evidencePath,
+				evidence: {
+					...providerEvidence,
+					journey: { ...providerEvidence.journey, checks: ["contract", "commonjs-plugin-build"] },
+				},
+			}),
+		},
+	}, /checks must be unique/);
+	await expectFailure({ proveHost: async () => { throw new Error("host failed"); } }, /host failed/);
 
 	const originalHost = process.env.HANDBOOK_E2E_OBSIDIAN;
 	delete process.env.HANDBOOK_E2E_OBSIDIAN;

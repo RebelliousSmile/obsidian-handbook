@@ -2,29 +2,33 @@
 status: pending
 ---
 
-# Instruction: Prepare one coherent Handbook patch
+# Instruction: Prove both immutable consumers and promote schema-pbta
 
 ## Architecture projection
 
 > Tree of the final files. ✅ create · ✏️ modify · ❌ delete
 
 ```txt
-.
-├── CHANGELOG.md ✏️ documents the activation correction, host gate, and canonical provider convergence under the patch version
-├── manifest.json ✏️ declares the corrective patch version delivered to Obsidian
-├── package.json ✏️ declares the same patch version on the final provider graph
-└── versions.json ✏️ maps the patch to its minimum supported Obsidian version
+External release-train state
+├── lantern
+│   └── immutable schema-pbta v8.4.3 candidate-adoption commit ✅ supplied by Lantern #47
+└── schema-pbta
+    ├── release-train/schema-pbta-v8.4.3.json ✅ binds the exact candidate and both immutable consumer refs
+    ├── release-train.provenance.json ✅ records accepted Lantern and Handbook protocol-1 evidence
+    └── GitHub Release v8.4.3 ✅ promotes the proved candidate bytes unchanged
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Final-pinned graph passes every gate] --> B[Choose the next patch version]
-  B --> C[Update package, manifest, versions map, and changelog]
-  C --> D[Build and load the exact release assets]
-  D --> E[Validate intended tag identity]
-  E --> F[Commit one tag-ready release source]
+  A[Handbook phase-4 SHA exists] --> C[Provider freezes release-train manifest]
+  B[Lantern 47 candidate SHA exists] --> C
+  C --> D[Run both consumer-owned proofs]
+  D --> E{Master parser accepts both evidences}
+  E -->|no| F[Reject promotion]
+  E -->|yes| G[Promote exact candidate archive]
+  G --> H[Verify final SHA-256 equals candidate SHA-256]
 ```
 
 ## Test Scope
@@ -35,37 +39,39 @@ title: Test scope
 ---
 journey
   section Setup
-    system: start from the clean phase-4 final dependency commit => one fully converged release graph is ready for a patch bump: 5: system
+    system: obtain immutable Handbook and Lantern 47 adoption SHAs plus the staged v8.4.3 identity => provider manifest contains no mutable consumer input: 5: system
   section Happy path
-    cli: bump through the repository version path and run release checks plus real host load => all four version sources and the intended tag agree and the exact dist activates: 5: cli
-  section Edge case - identity drift
-    cli: supply a tag, changelog, package, manifest, or versions-map value that differs => validation fails before a tag or release exists: 1: cli
+    cli: run the provider-owned train against both consumer proofs => Handbook CommonJS and Obsidian checks plus Lantern Vite and four-asset checks are accepted for the same candidate bytes: 5: cli
+    system: promote the downloaded candidate archive => final v8.4.3 bytes and SRI equal the proved candidate: 5: system
+  section Edge case - incomplete consumer proof
+    cli: omit either consumer ref or one required canonical check => provider parser rejects evidence and no final promotion occurs: 1: cli
   section Teardown
-    system: inspect the phase commit and worktree => the tag-ready source is immutable and no generated or temporary artifact is tracked: 5: system
+    system: finish the train => provenance identifies provider candidate and both immutable consumer commits without disposable workspace state: 5: system
 ```
 
 ## Tasks to do
 
-### `1)` Create the patch identity
+### `1)` Freeze both candidate consumers
 
-> Align every source Obsidian, BRAT, GitHub, and maintainers use to identify the release.
+> The provider orchestrates immutable external commits; it does not implement consumer changes.
 
-1. Select the next patch only after phase 4 is committed and use the repository version workflow to update package, manifest, and versions map together.
-2. Add the newest changelog entry describing the unloadable-bundle fix, mandatory host-artifact proof, and final provider pins.
-3. Verify the declared minimum app version remains consistent with the tested 1.13.7 host.
+1. Require Lantern #47 to commit its browser-subpath adoption, v8.4.3 candidate pins, four-asset proof, and canonical protocol evidence.
+2. Supply the clean Handbook phase-4 commit and Lantern #47 commit to schema-pbta #41 with their canonical repositories and proof interfaces.
+3. Require the committed provider manifest to copy the published candidate URL, SHA-256, SRI, tags, version, and provider commit exactly.
 
-### `2)` Produce a tag-ready commit
+### `2)` Run the master train and promote unchanged bytes
 
-> Validate locally before any public tag can trigger or identify a release.
+> Promotion is an outcome of both accepted consumer proofs, never a rebuild.
 
-1. Run a frozen install, full core check, final/coordinated pin assertions, production build, and focused Obsidian load.
-2. Run release-version validation both without a tag and with the intended `v<patch>` value.
-3. Mark the phase done and commit the versioned sources; leave the tree clean for the public release phase.
+1. Run the schema-pbta-owned train with the pinned Obsidian 1.13.7 host and require both evidence files to pass the master parser.
+2. Verify Handbook evidence contains `commonjs-plugin-build` and `obsidian-1.13.7-plugin-load`, while Lantern evidence contains `vite-build` and `monsterhearts-four-assets`.
+3. Let schema-pbta #41 promote the downloaded candidate archive, then verify final URL, target commit, SHA-256, and SRI against the staged candidate.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | `package.json`, `manifest.json`, `versions.json`, and the newest changelog entry identify one patch and minimum app version. |
-| 2 | The tag-ready commit passes frozen installation, full checks, canonical/coordinated pin validation, production build, and Obsidian 1.13.7 activation. |
-| 2 | `RELEASE_TAG=v<patch>` agrees with the shipped manifest before the public tag is created. |
+| 1 | The committed schema-pbta v8.4.3 train manifest names the exact staged candidate, the clean Handbook phase-4 SHA, and the immutable Lantern #47 adoption SHA. |
+| 2 | The provider-owned parser accepts both evidence files with their role-specific canonical checks and exact candidate coordinates. |
+| 2 | schema-pbta v8.4.3 final is published only after both proofs pass, and its archive SHA-256 and SRI equal the candidate values. |
+| 2 | Failed or incomplete consumer evidence prevents promotion and leaves no false completed-train provenance. |

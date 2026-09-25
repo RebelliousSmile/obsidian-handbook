@@ -45,7 +45,7 @@ export function proveHandbookHostArtifact() {
 		for (const digest of Object.values(report.assets)) assert.match(digest, SHA256, "host report contains an invalid asset SHA-256");
 		return {
 			status: "passed",
-			checks: ["production-build", "obsidian-plugin-load"],
+			checks: ["commonjs-plugin-build", "obsidian-1.13.7-plugin-load"],
 			obsidianVersion: report.observedObsidianVersion,
 			plugin: report.plugin,
 			assets: report.assets,

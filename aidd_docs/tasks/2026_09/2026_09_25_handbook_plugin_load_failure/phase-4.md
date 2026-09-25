@@ -1,8 +1,8 @@
 ---
-status: pending
+status: done
 ---
 
-# Instruction: Prove the candidate and converge canonical final pins
+# Instruction: Conform Handbook evidence to the master release-train contract
 
 ## Architecture projection
 
@@ -10,23 +10,26 @@ status: pending
 
 ```txt
 .
-├── package.json ✏️ replaces all staged schema pins with their promoted canonical final GitHub release URLs
-├── pnpm-lock.yaml ✏️ retains the exact published SRI for each final provider archive
+├── README.md ✏️ documents the provider-owned protocol vocabulary and separates local host diagnostics from public evidence
 └── tools/
-    └── assert-consumer-schema-pins.mjs ✏️ covers PbtA, Adrenaline, and Mist final URL/SRI rules plus explicit coordinated-version matching
+    ├── assert-host-artifact-gates.mjs ✏️ locks the canonical Handbook check identifiers and closed evidence shape
+    ├── assert-release-train-schema-adrenaline.mjs ✏️ expects the shared canonical host checks without a consumer-local evidence extension
+    ├── assert-release-train-schema-pbta.mjs ✏️ proves exact compatibility with the schema-pbta evidence contract
+    ├── prove-handbook-host-artifact.mjs ✏️ returns the canonical build and Obsidian-load check identifiers
+    └── release-train-assert.mjs ✏️ writes only the six protocol-1 evidence keys accepted by the master parser
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Phase-3 Handbook SHA and Lantern candidate SHA exist] --> B[Run both exact candidate proofs]
-  B --> C{Handbook loads in Obsidian 1.13.7 and Lantern builds}
-  C -->|no| D[Reject provider promotion]
-  C -->|yes| E[Promote byte-identical final archives]
-  E --> F[Replace both consumers' staged URLs with canonical final URLs]
-  F --> G[Verify exact SRI and coordinated versions]
-  G --> H[Commit the final Handbook dependency graph]
+  A[Provider orchestrator checks out immutable Handbook SHA] --> B[Invoke Handbook release-train proof]
+  B --> C[Build and load Handbook in Obsidian 1.13.7]
+  C --> D{Host proof passes}
+  D -->|no| E[Remove stale public evidence and retain local diagnostics]
+  D -->|yes| F[Append canonical check identifiers]
+  F --> G[Write exact protocol-1 evidence shape]
+  G --> H[Deterministic compatibility assertion accepts the exact master shape]
 ```
 
 ## Test Scope
@@ -37,41 +40,40 @@ title: Test scope
 ---
 journey
   section Setup
-    system: combine the phase-3 Handbook SHA, Lantern candidate SHA, and provider manifest => protocol-1 inputs name immutable candidate bytes and consumers: 5: system
+    system: load the provider-owned protocol-1 vocabulary and closed evidence schema => Handbook has one normative compatibility target: 5: system
   section Happy path
-    cli: run live candidate evidence then install promoted final URLs with frozen resolution => evidence lists production build and Obsidian load and all three providers resolve from canonical final assets with exact SRI: 5: cli
-  section Edge case - unloadable candidate
-    cli: receive any build or activation failure from Handbook => no passed evidence remains and provider promotion is rejected: 1: cli
-  section Edge case - incomplete convergence
-    cli: retain an rc URL, alternate filename, mismatched SRI, or different coordinated provider version in either consumer => final convergence assertion blocks the Handbook patch: 1: cli
+    cli: complete deterministic provider and host proof doubles => evidence contains canonical checks and only protocol status candidate consumer lock and journey keys: 5: cli
+  section Edge case - local vocabulary
+    cli: substitute production-build or obsidian-plugin-load => the compatibility assertion rejects the evidence before orchestration: 1: cli
+  section Edge case - local extension
+    cli: add hostArtifact to public evidence => the compatibility assertion rejects the extra key while the focused host journey retains its non-protocol report format: 1: cli
   section Teardown
-    system: finish final frozen installs in both consumers => locks remain unchanged and candidate/final provenance plus final consumer SHAs are auditable: 5: system
+    system: finish a failed compatibility or host proof => no stale evidence or temporary host directory remains: 5: system
 ```
 
 ## Tasks to do
 
-### `1)` Prove the immutable candidate commit in both hosts
+### `1)` Adopt the provider-owned evidence vocabulary
 
-> Cross the assurance boundary that v2.29.1 missed before any final promotion.
+> Handbook owns execution of its proof, while schema-pbta owns the protocol consumed by the train.
 
-1. Run Handbook's public `release-train:assert` against the protocol manifest naming the phase-3 commit and provisioned Obsidian 1.13.7 host.
-2. Require passed evidence to include provider assertions, `production-build`, `obsidian-plugin-load`, artifact hashes, and exact candidate coordinates.
-3. Require Lantern's matching immutable candidate proof and reject promotion if either consumer evidence is absent or names different bytes/refs.
+1. Replace the local `production-build` and `obsidian-plugin-load` identifiers with `commonjs-plugin-build` and `obsidian-1.13.7-plugin-load` on every supported provider path.
+2. Preserve Obsidian version, plugin identity, asset hashes, trust state, and activation diagnostics in the disposable local host report rather than extending public protocol evidence.
+3. Document the ownership boundary and canonical identifiers beside the public command.
 
-### `2)` Converge the three providers after promotion
+### `2)` Make protocol compatibility deterministic
 
-> Ship stable identities, not staging channels.
+> Detect vocabulary or shape drift before an external train spends a desktop-host run.
 
-1. Require schema-pbta #41, schema-adrenaline #36, and schema-in-the-mist #25 to publish canonical final archives byte-identical to their proved candidates.
-2. Tighten the consumer-pin assertion to validate all three providers in Handbook and Lantern, reject prerelease/query/fragment/alternate-name URLs, verify each consumer lockfile's exact SRI, and verify Handbook's installed versions.
-3. Provide an explicit coordinated mode that requires both consumers to name the same promoted versions for this train without forbidding later independent final-version adoption.
-4. Replace all Handbook staged URLs with canonical final URLs, retain exact SRI, run frozen installation, full checks, coordinated pin assertion, and the now-green real Obsidian load.
+1. Change the atomic writer to emit exactly `protocol`, `status`, `candidate`, `consumer`, `lock`, and `journey`, with unique canonical host checks merged into `journey.checks`.
+2. Update PbtA and Adrenaline orchestration regressions to reject local aliases, duplicate checks, `hostArtifact`, missing host checks, and stale evidence after failure.
+3. Extend the structural gate assertion so `pnpm check` fails if the public runner stops using the canonical names or reintroduces consumer-local evidence fields.
+4. Keep deterministic shape and vocabulary coverage in Handbook, then reserve authoritative `parseReleaseTrainEvidence` acceptance for the real provider-owned train in phase 5 rather than copying its parser locally.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | --- | --- |
-| 1 | The phase-3 Handbook commit produces passed protocol evidence naming `production-build`, `obsidian-plugin-load`, Obsidian 1.13.7, exact candidate coordinates, and production asset hashes. |
-| 1 | No provider is promoted unless both immutable consumer refs prove the same candidate bytes. |
-| 2 | Handbook and Lantern converge on canonical final URLs and published SRI for PbtA, Adrenaline, and Mist; candidate and final SHA-256 values are identical. |
-| 2 | A frozen install, full check, coordinated pin assertion, and real Obsidian load pass on the final Handbook graph. |
+| 1 | Every successful Handbook candidate proof names `commonjs-plugin-build` and `obsidian-1.13.7-plugin-load`; the local host report still records Obsidian 1.13.7, plugin identity, hashes, trust state, and activation diagnostics. |
+| 2 | Public evidence has exactly the six keys declared by `schema-pbta/tools/release-train-config.ts`, contains unique canonical checks, and the regression fixture rejects any vocabulary or shape deviation. |
+| 2 | Local aliases, an extra `hostArtifact` key, a missing host check, or any proof failure leave no passed or stale public evidence. |
