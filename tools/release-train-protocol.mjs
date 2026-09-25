@@ -9,6 +9,10 @@ const COMMIT = /^[a-f0-9]{40}$/;
 const FINAL_TAG = /^v(\d+)\.(\d+)\.(\d+)$/;
 const STAGING_TAG = /^v(\d+)\.(\d+)\.(\d+)-rc\.\d+$/;
 const PROVIDERS = {
+	"schema-in-the-mist": {
+		repository: "RebelliousSmile/schema-in-the-mist",
+		archive: "schema-in-the-mist",
+	},
 	"schema-pbta": {
 		repository: "RebelliousSmile/schema-pbta",
 		archive: "schema-pbta",
@@ -106,6 +110,23 @@ function gitHead() {
 
 export function readProtocolManifest(manifestPath) {
 	const source = object(JSON.parse(readFileSync(manifestPath, "utf8")), "release train");
+	if (source.protocol === 2) {
+		exactKeys(source, ["protocol", "artifact", "consumers"], "release train");
+		const artifact = object(source.artifact, "artifact");
+		exactKeys(artifact, ["provider", "releaseUrl", "sha256", "integrity", "version"], "artifact");
+		assert.equal(artifact.provider, "schema-in-the-mist", "artifact.provider must name schema-in-the-mist");
+		text(artifact.releaseUrl, "artifact.releaseUrl");
+		text(artifact.version, "artifact.version");
+		assert.match(text(artifact.sha256, "artifact.sha256"), SHA256);
+		assert.match(text(artifact.integrity, "artifact.integrity"), /^sha512-[A-Za-z0-9+/]+={0,2}$/);
+		const url = new URL(artifact.releaseUrl);
+		assert.equal(url.protocol, "https:");
+		assert.equal(url.hostname, "github.com");
+		assert.equal(url.pathname, `/RebelliousSmile/schema-in-the-mist/releases/download/v${artifact.version}/schema-in-the-mist-${artifact.version}.tgz`);
+		assert.equal(url.search, "");
+		assert.equal(url.hash, "");
+		return { protocol: 2, artifact, consumers: readConsumers(source.consumers), evidencePath: `${manifestPath}.evidence.json` };
+	}
 	exactKeys(source, ["protocol", "candidate", "consumers"], "release train");
 	assert.equal(source.protocol, 1, "release train protocol must be 1");
 	return {

@@ -11,6 +11,9 @@ const prod =
 	process.argv.includes("production") ||
 	process.argv.includes("--production");
 const watch = process.argv.includes("--watch");
+const pbtaReleaseUrl = JSON.parse(fs.readFileSync("package.json", "utf8")).dependencies["schema-pbta"];
+const pbtaTag = /\/releases\/download\/([^/]+)\//.exec(pbtaReleaseUrl)?.[1];
+if (!pbtaTag) throw new Error("schema-pbta must use a tagged release archive");
 
 function ensureOutdir() {
 	fs.mkdirSync(path.resolve(outdir), { recursive: true });
@@ -71,6 +74,18 @@ const pluginBuildOptions = {
 	],
 	format: "cjs",
 	loader: { ".svg": "text" },
+	plugins: [{
+		name: "schema-pbta-browser-assets",
+		setup(build) {
+			build.onLoad({ filter: /monsterhearts-appearance-assets\.js$/ }, async ({ path: sourcePath }) => ({
+				contents: (await fs.promises.readFile(sourcePath, "utf8")).replaceAll(
+					"import.meta.url",
+					JSON.stringify(`https://raw.githubusercontent.com/RebelliousSmile/schema-pbta/${pbtaTag}/dist/presentation/monsterhearts-appearance-assets.js`),
+				),
+				loader: "js",
+			}));
+		},
+	}],
 	target: "es2018",
 	logLevel: "info",
 	minify: prod,
