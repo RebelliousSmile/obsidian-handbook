@@ -23,8 +23,8 @@ export async function assertSchemaInTheMistReleaseTrain(manifestPath) {
 	const response = await fetch(artifact.releaseUrl);
 	assert.ok(response.ok, `final release download failed: ${response.status}`);
 	assert.equal(createHash("sha256").update(Buffer.from(await response.arrayBuffer())).digest("hex"), artifact.sha256);
-	for (const script of ["tools/assert-mist-contract.mjs", "tools/assert-mist-font-packs.mjs", "tools/assert-source-installer.mjs"]) run(process.execPath, [script]);
 	run("pnpm", ["build"]);
+	for (const script of ["tools/assert-mist-contract.mjs", "tools/assert-mist-font-packs.mjs", "tools/assert-source-installer.mjs"]) run(process.execPath, [script]);
 	// This existing journey launches the production bundle in an isolated real Obsidian
 	// vault and waits for app.plugins.plugins['obsidian-handbook'] to load.
 	run("powershell", ["-ExecutionPolicy", "Bypass", "-File", "tools/e2e/layout-regions-journey.ps1"]);
