@@ -43,6 +43,9 @@ def self_test():
     assert observed_version({"appVersion": "1.13.7", "userAgent": "ignored"}) == "1.13.7"
     assert observed_version({"appVersion": None, "userAgent": "obsidian/1.13.7 Electron/43"}) == "1.13.7"
     assert observed_version({"appVersion": None, "userAgent": "Electron/43"}) is None
+    assert trust_is_ready({"communityPluginsEnabled": False, "dialogPresent": False}) is False
+    assert trust_is_ready({"communityPluginsEnabled": False, "dialogPresent": True}) is True
+    assert trust_is_ready({"communityPluginsEnabled": True, "dialogPresent": False}) is True
     print("plugin-load CDP self-test passed")
 
 
@@ -129,6 +132,71 @@ def wait_until(cdp, expression, timeout=30):
     return False
 
 
+def trust_is_ready(state):
+    return bool(
+        isinstance(state, dict)
+        and (state.get("communityPluginsEnabled") or state.get("dialogPresent"))
+    )
+
+
+def trust_state(cdp):
+    return cdp.evaluate(
+        """(() => {
+          const dialog = document.querySelector('.mod-trust-folder');
+          const buttons = [...(dialog?.querySelectorAll('button') || [])];
+          return {
+            communityPluginsEnabled: Boolean(app.plugins?.isEnabled?.()),
+            dialogPresent: Boolean(dialog),
+            buttonCount: buttons.length,
+            buttonLabels: buttons.map((button) => button.textContent?.trim() || '')
+          };
+        })()"""
+    )
+
+
+def establish_trust(cdp, timeout=30):
+    deadline = time.time() + timeout
+    state = None
+    while time.time() < deadline:
+        state = trust_state(cdp)
+        if trust_is_ready(state):
+            break
+        time.sleep(0.2)
+    if not trust_is_ready(state):
+        raise RuntimeError(
+            "Obsidian trust UI did not become actionable: "
+            + json.dumps({"trust": state, "plugins": plugin_state(cdp)}, ensure_ascii=False)
+        )
+    if state.get("communityPluginsEnabled") and not state.get("dialogPresent"):
+        return {"outcome": "already-enabled", **state}
+    clicked = cdp.evaluate(
+        """(() => {
+          const trust = document.querySelector('.mod-trust-folder');
+          const button = [...(trust?.querySelectorAll('button') || [])].pop();
+          if (!button) return false;
+          button.click();
+          return true;
+        })()"""
+    )
+    if not clicked:
+        raise RuntimeError(
+            "Obsidian trust dialog had no actionable button: "
+            + json.dumps({"trust": state, "plugins": plugin_state(cdp)}, ensure_ascii=False)
+        )
+    if not wait_until(
+        cdp,
+        "Boolean(app.plugins?.isEnabled?.()) && !document.querySelector('.mod-trust-folder')",
+        timeout=timeout,
+    ):
+        raise RuntimeError(
+            "Obsidian trust did not settle after the prompt was accepted: "
+            + json.dumps(
+                {"trust": trust_state(cdp), "plugins": plugin_state(cdp)}, ensure_ascii=False
+            )
+        )
+    return {"outcome": "accepted", **trust_state(cdp)}
+
+
 def runtime_identity(cdp):
     return cdp.evaluate(
         """(() => {
@@ -208,6 +276,7 @@ def run(arguments):
         "runtimeIdentity": None,
         "plugin": {"id": manifest.get("id"), "manifestVersion": manifest.get("version")},
         "assets": asset_hashes(plugin_root),
+        "trust": None,
         "initial": None,
         "diagnostic": None,
     }
@@ -224,17 +293,9 @@ def run(arguments):
             raise RuntimeError(
                 f"Obsidian runtime identity must be {arguments.expected_version}, observed {version!r}: {identity}"
             )
-        wait_until(cdp, "Boolean(globalThis.app?.plugins && globalThis.app?.vault)")
-        cdp.evaluate(
-            """(() => {
-              const trust = document.querySelector('.mod-trust-folder');
-              const button = [...(trust?.querySelectorAll('button') || [])].pop();
-              button?.click();
-              return true;
-            })()"""
-        )
-        if not wait_until(cdp, "app.plugins.isEnabled() && !document.querySelector('.mod-trust-folder')"):
-            raise RuntimeError("Obsidian did not enable community plugins after the trust prompt")
+        if not wait_until(cdp, "Boolean(globalThis.app?.plugins && globalThis.app?.vault)"):
+            raise RuntimeError("Obsidian renderer did not expose vault and plugin APIs")
+        report["trust"] = establish_trust(cdp)
         initially_loaded = wait_until(
             cdp, "Boolean(app.plugins.plugins['obsidian-handbook'])", timeout=20
         )

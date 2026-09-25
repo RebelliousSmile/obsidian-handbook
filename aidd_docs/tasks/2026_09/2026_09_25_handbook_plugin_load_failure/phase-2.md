@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Install fail-closed candidate and publication gates
@@ -18,6 +18,8 @@ status: pending
 ├── package.json ✏️ registers the structural gate assertion
 └── tools/
     ├── assert-host-artifact-gates.mjs ✅ locks mandatory ordering and rejects skipped or tolerated gates
+    ├── e2e/
+    │   └── plugin-load-cdp.py ✏️ synchronizes the delayed trust dialog before measuring activation
     ├── assert-release-train-schema-adrenaline.mjs ✏️ tests provider/host composition without live evidence substitution
     ├── assert-release-train-schema-pbta.mjs ✏️ tests provider/host composition without active-candidate hard-coding
     ├── prove-handbook-host-artifact.mjs ✅ builds, runs the focused host journey, and returns its exact artifact identity
@@ -52,6 +54,8 @@ journey
     cli: exercise orchestration with deterministic internal proof doubles => evidence is written only after provider, production-build, and host-load results all pass: 5: cli
   section Edge case - current broken artifact
     cli: invoke the public host proof on the v2.29.1 graph => it fails with the phase-1 exception and no passed evidence survives: 1: cli
+  section Edge case - delayed trust dialog
+    system: expose renderer APIs before rendering the vault-trust prompt => the driver waits for trust or an already-enabled state and never reports that timing race as plugin failure: 1: system
   section Edge case - bypass attempt
     cli: remove, skip, reorder, or tolerate a smoke step in CI, release, or train source => the structural assertion fails during pnpm check: 1: cli
   section Teardown
@@ -82,10 +86,12 @@ journey
 
 > Make the current broken bundle turn the new release paths red before any provider correction lands.
 
-1. Provision the pinned Obsidian 1.13.7 AppImage plus Xvfb and websocket support in an enabled focused Linux CI job, and reject the downloaded binary unless its SHA-256 equals a committed expected digest.
-2. Provision and checksum the same host in the release workflow; validate core checks and tag identity first, then run the focused proof immediately before every `gh release create` or upload path.
-3. Keep broader layout, print, request-URL, and Windows journeys outside this narrow mandatory gate.
-4. Document that provider orchestrators must provision the same host when invoking Handbook's public candidate proof.
+1. Before measuring plugin activation, wait a bounded interval until the trust dialog exists or community plugins are already enabled; click trust only after the dialog is observable, and report useful UI/plugin state if trust cannot complete.
+2. Provision the pinned Obsidian 1.13.7 AppImage plus Xvfb and websocket support in an enabled focused Linux CI job, and reject the downloaded binary unless its SHA-256 equals a committed expected digest.
+3. Provision and checksum the same host in the release workflow; validate core checks and tag identity first, then run the focused proof immediately before every `gh release create` or upload path.
+4. Keep broader layout, print, request-URL, and Windows journeys outside this narrow mandatory gate.
+5. Document that provider orchestrators must provision the same host when invoking Handbook's public candidate proof.
+6. Run the live release-train proof at least twice against the same artifact and require both runs to reach the same actual activation result rather than a trust-timing failure.
 
 ## Test acceptance criteria
 
@@ -93,5 +99,6 @@ journey
 | --- | --- |
 | 1 | Passed PbtA or Adrenaline evidence includes `production-build`, `obsidian-plugin-load`, Obsidian 1.13.7, and the tested asset hashes; any failure leaves no passed or stale evidence. |
 | 2 | `pnpm check` rejects any release-capable path that removes, skips, reorders, or tolerates the host gate, while test doubles cannot be selected through the public CLI. |
-| 3 | The current v2.29.1 artifact makes the live train/release proof fail with its actual activation exception before evidence or GitHub assets can be written. |
+| 3 | A delayed trust dialog is awaited and handled before activation is measured; an unresolved trust state fails with bounded, actionable UI/plugin diagnostics. |
+| 3 | Two consecutive live proofs of the current v2.29.1 artifact reach its actual activation exception, rather than a trust timing failure, before evidence or GitHub assets can be written. |
 | 3 | The focused CI job is enabled and accepts only the pinned URL and committed SHA-256 for Obsidian 1.13.7; unrelated desktop journeys remain separate diagnostics. |

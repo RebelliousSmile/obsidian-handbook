@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { existsSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { proveSchemaPbtaCandidate } from "./prove-schema-pbta-candidate.mjs";
 import { readProtocolManifest, resolveHandbookConsumer } from "./release-train-protocol.mjs";
 
@@ -9,15 +8,8 @@ async function sha256(url) {
 	return createHash("sha256").update(Buffer.from(await response.arrayBuffer())).digest("hex");
 }
 
-function writeEvidence(path, evidence) {
-	const temporary = `${path}.${process.pid}.tmp`;
-	writeFileSync(temporary, `${JSON.stringify(evidence, null, 2)}\n`);
-	renameSync(temporary, path);
-}
-
 export async function assertReleaseTrain(manifestPath) {
 	const defaultEvidencePath = `${manifestPath}.evidence.json`;
-	if (existsSync(defaultEvidencePath)) rmSync(defaultEvidencePath);
 	const manifest = readProtocolManifest(manifestPath);
 	const consumer = resolveHandbookConsumer(manifest);
 	if (await sha256(manifest.candidate.releaseUrl) !== manifest.candidate.sha256) throw new Error("candidate SHA-256 disagrees with release asset");
@@ -30,6 +22,5 @@ export async function assertReleaseTrain(manifestPath) {
 		lock: { file: "pnpm-lock.yaml", releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity },
 		journey: { id: "schema-pbta-candidate-adoption", status: "passed", checks: proof.proofs },
 	};
-	writeEvidence(defaultEvidencePath, evidence);
 	return { proof, evidencePath: defaultEvidencePath, evidence };
 }

@@ -16,6 +16,7 @@
 		"dump:dom": "node tools/dump-dom.mjs",
 		"assert:override": "node tools/assert-override.mjs",
 		"assert:game-storage": "node tools/assert-game-storage.mjs",
+		"assert:host-artifact-gates": "node tools/assert-host-artifact-gates.mjs",
 		"assert:github-sources": "node tools/assert-github-sources.mjs",
 		"assert:custom-packs": "node tools/assert-custom-packs.mjs",
 		"assert:mist-font-packs": "node tools/assert-mist-font-packs.mjs",

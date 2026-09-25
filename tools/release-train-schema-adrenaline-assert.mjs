@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { existsSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { proveSchemaAdrenalineCandidate } from "./prove-schema-adrenaline-candidate.mjs";
 import { readProtocolManifest, resolveHandbookConsumer } from "./release-train-protocol.mjs";
 
@@ -9,15 +8,8 @@ async function sha256(url) {
 	return createHash("sha256").update(Buffer.from(await response.arrayBuffer())).digest("hex");
 }
 
-function writeEvidence(path, evidence) {
-	const temporary = `${path}.${process.pid}.tmp`;
-	writeFileSync(temporary, `${JSON.stringify(evidence, null, 2)}\n`);
-	renameSync(temporary, path);
-}
-
 export async function assertSchemaAdrenalineReleaseTrain(manifestPath) {
 	const defaultEvidencePath = `${manifestPath}.evidence.json`;
-	if (existsSync(defaultEvidencePath)) rmSync(defaultEvidencePath);
 	const manifest = readProtocolManifest(manifestPath);
 	if (manifest.candidate.provider !== "schema-adrenaline") throw new Error("Adrenaline release-train assertion requires a schema-adrenaline candidate");
 	const consumer = resolveHandbookConsumer(manifest);
@@ -31,6 +23,5 @@ export async function assertSchemaAdrenalineReleaseTrain(manifestPath) {
 		lock: { file: "pnpm-lock.yaml", releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity },
 		journey: { id: "schema-adrenaline-candidate-adoption", status: "passed", checks: proof.proofs },
 	};
-	writeEvidence(defaultEvidencePath, evidence);
 	return { proof, evidencePath: defaultEvidencePath, evidence };
 }

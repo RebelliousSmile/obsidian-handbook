@@ -70,6 +70,27 @@ jobs:
                   RELEASE_TAG: ${{ github.ref_name }}
               run: node tools/assert-release-version.mjs
 
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install pinned Obsidian host
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y xvfb
+                  python3 -m pip install websocket-client
+                  curl -fsSL -o /tmp/Obsidian.AppImage https://github.com/obsidianmd/obsidian-releases/releases/download/v1.13.7/Obsidian-1.13.7.AppImage
+                  echo "e0d8e0a611624de8c9c7dcd8a9e648279fb0a0d552faa1312b7e4f3a5fa72663  /tmp/Obsidian.AppImage" | sha256sum -c -
+                  chmod +x /tmp/Obsidian.AppImage
+                  cd /tmp
+                  ./Obsidian.AppImage --appimage-extract >/dev/null
+
+            - name: Load production plugin in Obsidian 1.13.7
+              working-directory: handbook
+              env:
+                  HANDBOOK_E2E_OBSIDIAN: /tmp/squashfs-root/AppRun
+              run: xvfb-run -a pnpm e2e:plugin-load:linux
+
             - name: Create release
               working-directory: handbook
               env:

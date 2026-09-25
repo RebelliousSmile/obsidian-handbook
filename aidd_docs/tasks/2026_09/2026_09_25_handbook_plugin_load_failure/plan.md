@@ -10,7 +10,7 @@ status: in-progress
 | Field | Value |
 | --- | --- |
 | **Goal** | Establish an incident-reproducing host gate first, use it to certify the corrected provider candidate, then converge and publish the Handbook patch. |
-| **Source** | GitHub issue [#63](https://github.com/RebelliousSmile/obsidian-handbook/issues/63), replanned after the first implementation attempt exposed an impossible phase order and a silent esbuild diagnostic. |
+| **Source** | GitHub issue [#63](https://github.com/RebelliousSmile/obsidian-handbook/issues/63), replanned after implementation exposed an impossible phase order, a silent esbuild diagnostic, then a race between renderer readiness and the delayed vault-trust dialog. |
 
 ## Phases
 
@@ -39,6 +39,7 @@ status: in-progress
 | --- | --- |
 | Make the first host-harness phase pass by detecting the known v2.29.1 failure, not by requiring a success that depends on a later provider release. | Each phase becomes executable in order, and the regression starts with evidence that the new gate catches the actual incident. |
 | Use the real Obsidian load as Handbook's authoritative rejection of browser-only CommonJS side effects. | The faulty production build emits no `empty-import-meta` diagnostic, so promoting that nonexistent warning would create a false gate; provider-side static/CommonJS coverage remains owned by schema-pbta #41. |
+| Stabilize the vault-trust state before measuring plugin activation. | Renderer readiness does not guarantee that Obsidian has rendered the trust dialog; treating those as one state makes a timing race masquerade as a plugin-load failure. |
 | Commit the corrected candidate pin before running protocol-1 evidence. | The protocol requires the Handbook consumer ref to equal an immutable Git HEAD; uncommitted candidate pins cannot be certified. |
 | Write passed evidence only after provider and host proofs succeed, and make public CLI paths incapable of substituting a test runner. | Unit tests can cover orchestration deterministically without letting mocked results become candidate evidence. |
 | Prove staged candidates, promote byte-identical archives, then replace both consumers' pins with canonical final URLs retaining exact SRI. | This preserves the cross-repository provider-first contract and separates byte proof from post-promotion convergence. |
