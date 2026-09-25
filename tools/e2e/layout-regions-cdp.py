@@ -418,6 +418,10 @@ wait_for("""
     })()
     """)
 wait_for("Boolean(app.plugins.plugins['obsidian-handbook'])")
+if os.environ.get("HANDBOOK_E2E_LOAD_ONLY") == "1":
+    print(json.dumps({"plugin": "obsidian-handbook", "loaded": True}))
+    ws.close()
+    sys.exit(0)
 # A fresh vault has no game installed, so Handbook offers a starter kit. Let it
 # appear, then dismiss it: an open modal swallows the preview toggle below.
 time.sleep(2)

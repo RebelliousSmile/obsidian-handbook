@@ -4,8 +4,8 @@ import { readFileSync, writeFileSync, renameSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { readProtocolManifest, resolveHandbookConsumer } from "./release-train-protocol.mjs";
 
-function run(command, args) {
-	const result = spawnSync(command, args, { encoding: "utf8", stdio: "pipe", timeout: 300000 });
+function run(command, args, env = process.env) {
+	const result = spawnSync(command, args, { encoding: "utf8", stdio: "pipe", timeout: 300000, env });
 	assert.equal(result.status, 0, `${command} ${args.join(" ")} failed: ${result.error?.message || result.stderr || result.stdout}`);
 }
 
@@ -25,9 +25,9 @@ export async function assertSchemaInTheMistReleaseTrain(manifestPath) {
 	assert.equal(createHash("sha256").update(Buffer.from(await response.arrayBuffer())).digest("hex"), artifact.sha256);
 	run("pnpm", ["build"]);
 	for (const script of ["tools/assert-mist-contract.mjs", "tools/assert-mist-font-packs.mjs", "tools/assert-source-installer.mjs"]) run(process.execPath, [script]);
-	// This existing journey launches the production bundle in an isolated real Obsidian
-	// vault and waits for app.plugins.plugins['obsidian-handbook'] to load.
-	run("powershell", ["-ExecutionPolicy", "Bypass", "-File", "tools/e2e/layout-regions-journey.ps1"]);
+	// Launch the production bundle in an isolated real Obsidian vault and wait
+	// for app.plugins.plugins['obsidian-handbook'] to exist inside the host.
+	run("powershell", ["-ExecutionPolicy", "Bypass", "-File", "tools/e2e/layout-regions-journey.ps1"], { ...process.env, HANDBOOK_E2E_LOAD_ONLY: "1" });
 	const evidence = {
 		protocol: 2, status: "passed",
 		artifact: { releaseUrl: artifact.releaseUrl, sha256: artifact.sha256, integrity: artifact.integrity, version: artifact.version },
