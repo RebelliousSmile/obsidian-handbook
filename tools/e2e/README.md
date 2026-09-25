@@ -1,5 +1,39 @@
 # Obsidian E2E journeys
 
+## Production plugin load
+
+`plugin-load-journey.sh` is the minimal release-critical journey. It copies
+`main.js`, `manifest.json`, and `styles.css` from the selected plugin directory
+into a new isolated vault, launches an isolated Obsidian profile, accepts the
+first-use trust prompt, and checks the initial activation result in
+`app.plugins.plugins`. The default plugin directory is `dist/`.
+
+The journey requires Obsidian 1.13.7. It reads the version exposed by the
+renderer and fails closed if that identity is absent or different. Release
+workflows additionally checksum the downloaded AppImage before launching it.
+
+Build and run the ordinary success proof with:
+
+```bash
+pnpm build
+HANDBOOK_E2E_OBSIDIAN=/absolute/path/to/Obsidian-1.13.7.AppImage \
+pnpm e2e:plugin-load:linux
+```
+
+`HANDBOOK_E2E_OUTPUT_DIR` selects a persistent report directory;
+`HANDBOOK_E2E_CDP_PORT` changes the default port 9233; and
+`HANDBOOK_E2E_PLUGIN_DIR` selects another three-file plugin directory for
+diagnostic fixtures. The journey always removes its disposable vault and
+profile, while preserving `REPORT.json` and `obsidian.log` in the output
+directory. `pnpm e2e:plugin-load:self-test` checks the irreversible failure and
+report-normalization logic without starting Obsidian.
+
+For the v2.29.1 incident, the same command is an expected-red regression: it
+must exit nonzero and `REPORT.json` must contain `Failed to construct 'URL':
+Invalid URL`. A diagnostic `loadPlugin` call is made only after initial
+activation has missed its deadline; its result can enrich the report but can
+never turn that run green.
+
 ## requestUrl source installation
 
 `request-url-journey.sh` preserves the regression journey from issue #23. It launches a real Obsidian instance, installs the Mist Engine starter kit, verifies the historical `v1.0.0` tag, then changes `schema-in-the-mist` to `v1.2.0`. It compares each installed manifest, pack, and first declared image with its exact GitHub revision; for `v1.2.0`, it also compares City of Mist’s declared `styles/city-of-mist.css` byte for byte.

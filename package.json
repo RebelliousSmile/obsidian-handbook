@@ -26,6 +26,8 @@
 		"e2e:layout-regions": "powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1",
 		"e2e:roller": "powershell -ExecutionPolicy Bypass -File tools/e2e/roller-journey.ps1",
 		"e2e:layout-regions:linux": "bash tools/e2e/layout-regions-journey.sh",
+		"e2e:plugin-load:linux": "bash tools/e2e/plugin-load-journey.sh",
+		"e2e:plugin-load:self-test": "python3 tools/e2e/plugin-load-cdp.py --self-test",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",
 		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",
