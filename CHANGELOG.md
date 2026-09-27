@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.5] - 2026-09-27
+
+### Changed
+
+- Put installed Handbook, schema, and game pack versions above game choices, using version numbers without source revisions.
+- Group game and appearance, Lantern integration, and schema source controls into separate sections.
+
 ## [2.29.4] - 2026-09-27
 
 ### Fixed

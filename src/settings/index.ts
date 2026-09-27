@@ -17,7 +17,6 @@ import { calloutCommandName } from "../features/callouts/commands";
 import { CalloutsModal } from "./calloutsModal";
 import { ThemeContentsModal } from "./themeContentsModal";
 import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
-import { installedSchemaVersion } from "../games/sources";
 import { bundledSchemaRelease } from "./schemaRelease";
 import { PbtaCoverageModal, currentPbtaCoverage, pbtaCoverageSummary } from "./pbtaCoverageModal";
 import { PackIntegrationModal } from "./packIntegrationModal";
@@ -49,7 +48,12 @@ export class BrumesSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		const versionsSection = this.createSection(containerEl);
+		versionsSection.setHeading("Installed versions");
+		this.renderActiveSchemaStatus(versionsSection);
+
 		const generalSection = this.createSection(containerEl);
+		generalSection.setHeading("Game and appearance");
 		generalSection.addSetting((setting) => {
 			setting
 				.setName("Game mode")
@@ -85,9 +89,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					);
 				});
 		});
-		this.renderActiveSchemaStatus(generalSection);
 		renderGeneralSettingsDomain(this, generalSection);
-		renderSchemaSourceSettingsDomain(this, generalSection);
 		renderGameSettingsDomain({
 			plugin: this.plugin,
 			createSection: (container) => this.createSection(container),
@@ -96,6 +98,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 			renderOtherscapeSettings: (section) => this.renderOtherscapeSettings(section),
 			hasGamePack: (id) => Boolean(findGamePack(id)),
 		}, containerEl);
+
+		const lanternSection = this.createSection(containerEl);
+		lanternSection.setHeading("Lantern in the Mist");
+		this.renderLanternSettings(lanternSection);
+
+		const sourcesSection = this.createSection(containerEl);
+		sourcesSection.setHeading("Schema sources");
+		renderSchemaSourceSettingsDomain(this, sourcesSection);
 
 		const calloutsSection = this.createSection(containerEl);
 		calloutsSection.setHeading("Callouts");
@@ -112,31 +122,23 @@ export class BrumesSettingTab extends PluginSettingTab {
 	}
 
 	private renderActiveSchemaStatus(section: SettingGroup): void {
-		const installation = resolveGameRegistration(this.plugin.settings.mode).installation;
+		const registration = resolveGameRegistration(this.plugin.settings.mode);
+		const installation = registration.installation;
 		const installedSource = installation?.source;
 		const bundled = installedSource ? bundledSchemaRelease(installedSource.repository) : null;
 		section.addSetting((setting) => {
 			setting
-				.setName("Handbook release")
-				.setDesc(`Plugin ${this.plugin.manifest.version}${bundled ? ` · Bundled schema: ${bundled}` : ""}. Update Handbook through BRAT to change the bundled schema.`);
+				.setName("Handbook")
+				.setDesc(this.plugin.manifest.version);
 		});
 
 		section.addSetting((setting) => {
-			setting.setName("Active game pack");
+			setting.setName(registration.pack.label);
 			if (!installation) {
-				setting.setDesc("No game pack is installed for the selected mode.");
+				setting.setDesc("No pack installed.");
 				return;
 			}
-			if (!installedSource) {
-				setting.setDesc(`Personal pack ${installation.version}. Its files are managed locally.`);
-				return;
-			}
-
-			const version = installedSchemaVersion(installedSource);
-			const reference = installedSource.reference.kind === "latest"
-				? "latest release"
-				: `${installedSource.reference.kind} ${installedSource.reference.value}`;
-			setting.setDesc(`Pack ${installation.version} · Installed source ${version ?? "unknown release"} (${reference}). Manage updates under Schema sources.`);
+			setting.setDesc(`Pack ${installation.version}${bundled ? ` · Bundled schema ${bundled}` : ""}`);
 		});
 	}
 
@@ -144,7 +146,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		const sources = this.plugin.settings.schemaSources;
 		section.addSetting((setting) => {
 			setting
-				.setName("Schema sources")
+				.setName("Repositories")
 				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
 				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }));
 		});
@@ -165,7 +167,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 							this.redisplay();
 							new Notice(before?.revision === after?.revision
 								? `${source.repository} is already up to date.`
-								: `${source.repository}: ${installedSchemaVersion(before) ?? "not installed"} → ${installedSchemaVersion(after) ?? "unknown release"}.`, 10000);
+								: `${source.repository} updated.`, 10000);
 						} catch (error) {
 							log.error("Failed to update schema source", error);
 							new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
@@ -183,8 +185,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					});
 				void this.plugin.readInstalledSchemaSource(source).then((installed) => {
 					if (!this.containerEl.contains(setting.settingEl)) return;
-					const version = installedSchemaVersion(installed);
-					setting.setDesc(`${reference} · ${version ? `Installed ${version}` : "Not installed"}`);
+					setting.setDesc(`${reference} · ${installed ? "Installed" : "Not installed"}`);
 				});
 			});
 		}
@@ -356,7 +357,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 						}),
 				);
 		});
+	}
 
+	private renderLanternSettings(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
 				.setName("Lantern in the Mist integration") // eslint-disable-line obsidianmd/ui/sentence-case

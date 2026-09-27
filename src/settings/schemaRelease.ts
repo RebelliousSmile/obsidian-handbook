@@ -15,5 +15,5 @@ export function bundledSchemaRelease(repository: string): string | null {
 	if (!url.startsWith(prefix)) return null;
 	const match = /^(v[^/]+)\/([^/]+)$/.exec(url.slice(prefix.length));
 	if (!match) return null;
-	return `${packageName} ${match[1]}${match[2] === "candidate.tgz" ? " (candidate.tgz)" : ""}`;
+	return `${match[1]}${match[2] === "candidate.tgz" ? " (candidate)" : ""}`;
 }

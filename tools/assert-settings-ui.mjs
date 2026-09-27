@@ -20,8 +20,12 @@ if (!source.includes("renderGeneralSettingsDomain(this, generalSection)") || !ge
 	failures.push("The general settings composition does not render the conditional game variant selector.");
 }
 
-if (!source.includes("renderSchemaSourceSettingsDomain(this, generalSection)") || !schemaSourceSettingsModule.includes("renderer.renderSchemaSources(section)")) {
+if (!source.includes("renderSchemaSourceSettingsDomain(this, sourcesSection)") || !schemaSourceSettingsModule.includes("renderer.renderSchemaSources(section)")) {
 	failures.push("Schema-source controls are not composed from their own settings domain.");
+}
+
+if (source.indexOf("this.renderActiveSchemaStatus(versionsSection)") < 0 || source.indexOf("this.renderActiveSchemaStatus(versionsSection)") > source.indexOf('setName("Game mode")')) {
+	failures.push("Installed versions must appear before game choices.");
 }
 
 if (!source.includes("renderGameSettingsDomain({") || !gameSettingsModule.includes("renderer.hasGamePack")) {
