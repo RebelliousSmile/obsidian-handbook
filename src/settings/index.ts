@@ -18,6 +18,7 @@ import { CalloutsModal } from "./calloutsModal";
 import { ThemeContentsModal } from "./themeContentsModal";
 import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
 import { installedSchemaVersion } from "../games/sources";
+import { bundledSchemaRelease } from "./schemaRelease";
 import { PbtaCoverageModal, currentPbtaCoverage, pbtaCoverageSummary } from "./pbtaCoverageModal";
 import { PackIntegrationModal } from "./packIntegrationModal";
 import {
@@ -84,6 +85,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 					);
 				});
 		});
+		this.renderActiveSchemaStatus(generalSection);
 		renderGeneralSettingsDomain(this, generalSection);
 		renderSchemaSourceSettingsDomain(this, generalSection);
 		renderGameSettingsDomain({
@@ -107,6 +109,68 @@ export class BrumesSettingTab extends PluginSettingTab {
 	private redisplay(): void {
 		// eslint-disable-next-line @typescript-eslint/no-deprecated -- Refreshes the pre-1.13 settings UI.
 		this.display();
+	}
+
+	private renderActiveSchemaStatus(section: SettingGroup): void {
+		const installation = resolveGameRegistration(this.plugin.settings.mode).installation;
+		const installedSource = installation?.source;
+		const bundled = installedSource ? bundledSchemaRelease(installedSource.repository) : null;
+		section.addSetting((setting) => {
+			setting
+				.setName("Handbook release")
+				.setDesc(`Plugin ${this.plugin.manifest.version}${bundled ? ` · Bundled schema: ${bundled}` : ""}. Update Handbook through BRAT to change the bundled schema.`);
+		});
+
+		section.addSetting((setting) => {
+			setting.setName("Active game pack");
+			if (!installation) {
+				setting.setDesc("No game pack is installed for the selected mode.");
+				return;
+			}
+			if (!installedSource) {
+				setting.setDesc(`Personal pack ${installation.version}. Its files are managed locally.`);
+				return;
+			}
+
+			const version = installedSchemaVersion(installedSource);
+			const configuredSource = this.plugin.settings.schemaSources.find((source) => source.id === installedSource.id);
+			const reference = installedSource.reference.kind === "latest"
+				? "latest release"
+				: `${installedSource.reference.kind} ${installedSource.reference.value}`;
+			const updateHint = !configuredSource
+				? "Register this source to check for updates."
+				: configuredSource.reference.kind === "tag"
+					? "Change the pinned tag to use another release."
+					: "Check for pack updates on demand.";
+			setting.setDesc(`${installedSource.repository} ${version ?? "unknown release"} · Pack ${installation.version} · Following ${reference}. ${updateHint}`);
+			if (!configuredSource) return;
+			if (configuredSource.reference.kind === "tag") {
+				setting.addButton((button) => button.setButtonText("Change source").onClick(() => {
+					new SchemaSourceModal(this.app, this.plugin, configuredSource, () => this.redisplay()).open();
+				}));
+				return;
+			}
+			setting.addButton((button) => button.setButtonText("Check and reload").onClick(() => {
+				button.setDisabled(true);
+				const progress = new Notice(`Checking ${configuredSource.repository}…`, 0);
+				void (async () => {
+					try {
+						await this.plugin.saveSchemaSource(configuredSource, configuredSource.repository);
+						const updated = await this.plugin.readInstalledSchemaSource(configuredSource);
+						this.redisplay();
+						new Notice(updated?.revision === installedSource.revision
+							? `${configuredSource.repository} is already up to date.`
+							: `${configuredSource.repository}: ${version ?? "unknown release"} → ${installedSchemaVersion(updated) ?? "unknown release"}.`, 10000);
+					} catch (error) {
+						log.error("Failed to reload active game source", error);
+						new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
+					} finally {
+						progress.hide();
+						button.setDisabled(false);
+					}
+				})();
+			}));
+		});
 	}
 
 	renderSchemaSources(section: SettingGroup) {
