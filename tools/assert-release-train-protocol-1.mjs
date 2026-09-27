@@ -43,6 +43,25 @@ try {
 	assert.equal(parsed.evidencePath, `${manifestPath}.evidence.json`);
 	writeFileSync(manifestArgument, JSON.stringify({ ...manifest, candidate: adrenalineCandidate }));
 	assert.equal(readProtocolManifest(resolveManifestPath(manifestArgument)).candidate.provider, "schema-adrenaline");
+	const finalArtifact = {
+		provider: "schema-adrenaline",
+		releaseUrl: "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v2.6.0/schema-adrenaline-2.6.0.tgz",
+		sha256: adrenalineCandidate.sha256,
+		integrity: adrenalineCandidate.integrity,
+		version: "2.6.0",
+	};
+	const finalManifest = { protocol: 2, artifact: finalArtifact, consumers: manifest.consumers };
+	writeFileSync(manifestArgument, JSON.stringify(finalManifest));
+	assert.deepEqual(readProtocolManifest(resolveManifestPath(manifestArgument)).artifact, finalArtifact);
+	for (const invalid of [
+		{ ...finalManifest, artifact: { ...finalArtifact, provider: "schema-pbta" } },
+		{ ...finalManifest, artifact: { ...finalArtifact, releaseUrl: finalArtifact.releaseUrl.replace("/v2.6.0/", "/v2.6.0-rc.1/") } },
+		{ ...finalManifest, artifact: { ...finalArtifact, version: "2.6.0-rc.1" } },
+		{ ...finalManifest, evidencePath },
+	]) {
+		writeFileSync(manifestArgument, JSON.stringify(invalid));
+		assert.throws(() => readProtocolManifest(resolveManifestPath(manifestArgument)));
+	}
 	for (const invalid of [
 		{ ...manifest, protocol: 2 },
 		{ ...manifest, candidate: { ...adrenalineCandidate, provider: "schema-unknown" } },
