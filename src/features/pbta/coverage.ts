@@ -104,16 +104,16 @@ export function pbtaCoverageReport(installed: readonly PbtaCoverageInput[]): Pbt
  */
 export function describePbtaCoverage(report: PbtaCoverageReport): string[] {
 	const lines: string[] = [];
-	if (report.unresolved.length > 0) {
+	const unresolvedInVault = report.unresolved.filter((target) =>
+		report.packs.some((id) => target.startsWith(`${id}-`)),
+	);
+	if (unresolvedInVault.length > 0) {
 		lines.push(
-			`Formats this build carries but does not resolve yet: ${report.unresolved.join(", ")}. Their documents read as generic playbooks.`,
+			`Formats this build carries but does not resolve yet: ${unresolvedInVault.join(", ")}. Their documents read as generic playbooks.`,
 		);
 	}
 	if (report.unknownGeneric.length > 0) {
 		lines.push(`Generic targets this build no longer carries: ${report.unknownGeneric.join(", ")}.`);
-	}
-	if (report.missingPacks.length > 0) {
-		lines.push(`Formats without their installed pack: ${report.missingPacks.join(", ")}.`);
 	}
 	return lines;
 }

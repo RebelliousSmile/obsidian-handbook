@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.4] - 2026-09-27
+
+### Fixed
+
+- Show PbtA playbook coverage only when a PbtA pack is installed, and stop treating optional uninstalled packs as format gaps.
+- Keep pack versions near the active game, put one update action on each schema source, and move pack diagnostics to Advanced.
+
 ## [2.29.3] - 2026-09-27
 
 ### Added

@@ -133,43 +133,10 @@ export class BrumesSettingTab extends PluginSettingTab {
 			}
 
 			const version = installedSchemaVersion(installedSource);
-			const configuredSource = this.plugin.settings.schemaSources.find((source) => source.id === installedSource.id);
 			const reference = installedSource.reference.kind === "latest"
 				? "latest release"
 				: `${installedSource.reference.kind} ${installedSource.reference.value}`;
-			const updateHint = !configuredSource
-				? "Register this source to check for updates."
-				: configuredSource.reference.kind === "tag"
-					? "Change the pinned tag to use another release."
-					: "Check for pack updates on demand.";
-			setting.setDesc(`${installedSource.repository} ${version ?? "unknown release"} · Pack ${installation.version} · Following ${reference}. ${updateHint}`);
-			if (!configuredSource) return;
-			if (configuredSource.reference.kind === "tag") {
-				setting.addButton((button) => button.setButtonText("Change source").onClick(() => {
-					new SchemaSourceModal(this.app, this.plugin, configuredSource, () => this.redisplay()).open();
-				}));
-				return;
-			}
-			setting.addButton((button) => button.setButtonText("Check and reload").onClick(() => {
-				button.setDisabled(true);
-				const progress = new Notice(`Checking ${configuredSource.repository}…`, 0);
-				void (async () => {
-					try {
-						await this.plugin.saveSchemaSource(configuredSource, configuredSource.repository);
-						const updated = await this.plugin.readInstalledSchemaSource(configuredSource);
-						this.redisplay();
-						new Notice(updated?.revision === installedSource.revision
-							? `${configuredSource.repository} is already up to date.`
-							: `${configuredSource.repository}: ${version ?? "unknown release"} → ${installedSchemaVersion(updated) ?? "unknown release"}.`, 10000);
-					} catch (error) {
-						log.error("Failed to reload active game source", error);
-						new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
-					} finally {
-						progress.hide();
-						button.setDisabled(false);
-					}
-				})();
-			}));
+			setting.setDesc(`Pack ${installation.version} · Installed source ${version ?? "unknown release"} (${reference}). Manage updates under Schema sources.`);
 		});
 	}
 
@@ -179,63 +146,37 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting
 				.setName("Schema sources")
 				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
-				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }))
-				.addButton((button) => button.setButtonText("Reload installed schemas").onClick(() => {
-					if (sources.length === 0) {
-						new Notice("No schema sources are registered.");
-						return;
-					}
-					button.setDisabled(true);
-					const progress = new Notice(`Checking and reinstalling ${sources.length} schema ${sources.length === 1 ? "source" : "sources"}…`, 0);
-					void (async () => {
-						try {
-							const results = await this.plugin.reloadInstalledSchemaSources();
-							this.redisplay();
-							const changed = results.filter((result) => result.changed);
-							if (changed.length === 0) {
-								new Notice("Installed schemas are already up to date.");
-							} else {
-								for (const result of changed) {
-									new Notice(`${result.repository}: ${result.before ?? "not installed"} → ${result.after}.`, 10000);
-								}
-							}
-						} catch (error) {
-							log.error("Failed to reload schema sources", error);
-							new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
-							this.redisplay();
-						} finally {
-							progress.hide();
-							button.setDisabled(false);
-						}
-					})();
-				}));
-		});
-		// The schema build ships one codec per playbook format; which of them this
-		// vault can actually read depends on the packs installed above.
-		section.addSetting((setting) => {
-			const report = currentPbtaCoverage();
-			setting
-				.setName("PbtA playbook coverage") // eslint-disable-line obsidianmd/ui/sentence-case
-				.setDesc(pbtaCoverageSummary(report))
-				.addButton((button) => button.setButtonText("Check coverage").onClick(() => {
-					new PbtaCoverageModal(this.app, currentPbtaCoverage()).open();
-				}));
-		});
-		section.addSetting((setting) => {
-			setting
-				.setName("Pack integration check")
-				.setDesc("Check whether every registered game pack has its manifest, declared capabilities, and resources available.")
-				.addButton((button) => button.setButtonText("Check packs").onClick(() => {
-					new PackIntegrationModal(this.app, this.plugin).open();
-				}));
+				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }));
 		});
 		for (const source of sources) {
 			section.addSetting((setting) => {
 				const reference = source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`;
 				setting
 					.setName(source.repository)
-					.setDesc(`${reference} · Checking installed version…`)
-					.addButton((button) => button.setButtonText("Check").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
+					.setDesc(`${reference} · Checking installed version…`);
+				if (source.reference.kind !== "tag") setting.addButton((button) => button.setButtonText("Check for update").onClick(() => {
+					button.setDisabled(true);
+					const progress = new Notice(`Checking ${source.repository}…`, 0);
+					void (async () => {
+						try {
+							const before = await this.plugin.readInstalledSchemaSource(source);
+							await this.plugin.saveSchemaSource(source, source.repository);
+							const after = await this.plugin.readInstalledSchemaSource(source);
+							this.redisplay();
+							new Notice(before?.revision === after?.revision
+								? `${source.repository} is already up to date.`
+								: `${source.repository}: ${installedSchemaVersion(before) ?? "not installed"} → ${installedSchemaVersion(after) ?? "unknown release"}.`, 10000);
+						} catch (error) {
+							log.error("Failed to update schema source", error);
+							new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
+						} finally {
+							progress.hide();
+							button.setDisabled(false);
+						}
+					})();
+				}));
+				setting
+					.addButton((button) => button.setButtonText("Edit").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
 					.addButton((button) => {
 						button.buttonEl.classList.add("mod-warning");
 						button.setButtonText("Remove").onClick(() => { new SchemaSourceRemovalModal(this.app, this.plugin, source, () => this.redisplay()).open(); });
@@ -735,6 +676,23 @@ export class BrumesSettingTab extends PluginSettingTab {
 	}
 
 	private renderAdvancedSection(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting
+				.setName("Validate installed packs")
+				.setDesc("Check pack manifests, declared capabilities, and local resources. This does not download updates.")
+				.addButton((button) => button.setButtonText("Validate").onClick(() => {
+					new PackIntegrationModal(this.app, this.plugin).open();
+				}));
+		});
+		const pbtaReport = currentPbtaCoverage();
+		if (pbtaReport.packs.length > 0) section.addSetting((setting) => {
+			setting
+				.setName("PbtA playbook coverage") // eslint-disable-line obsidianmd/ui/sentence-case
+				.setDesc(pbtaCoverageSummary(pbtaReport))
+				.addButton((button) => button.setButtonText("View coverage").onClick(() => {
+					new PbtaCoverageModal(this.app, currentPbtaCoverage()).open();
+				}));
+		});
 		section.addSetting((setting) => {
 			setting
 				.setName("Log level")

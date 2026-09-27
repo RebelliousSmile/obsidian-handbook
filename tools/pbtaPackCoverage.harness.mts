@@ -128,16 +128,27 @@ assert.deepEqual(
 	"the report disagrees with the measured unresolved formats",
 );
 /* Tolerating an upstream addition is only safe if the user is told: the finding carries the name. */
-const added = { ...installed, unresolved: ["dungeon-world-playbook"] };
+const addedTarget = `${projected[0].slice(0, projected[0].lastIndexOf("-playbook"))}-alternate-playbook`;
+const added = { ...installed, unresolved: [addedTarget] };
 assert.ok(
-	describePbtaCoverage(added).some((line) => line.indexOf("dungeon-world-playbook") >= 0),
+	describePbtaCoverage(added).some((line) => line.indexOf(addedTarget) >= 0),
 	"a format this build does not resolve yet is never reported to the vault owner",
+);
+assert.deepEqual(
+	describePbtaCoverage({ ...installed, unresolved: ["uninstalled-pack-playbook"] }),
+	[],
+	"a format for an uninstalled game is reported as a gap in this vault",
 );
 /* Symmetrically, an alias must stay silent: it is the correct reading, not a gap. */
 assert.deepEqual(
 	describePbtaCoverage({ ...installed, unresolved: [], aliases: ["salvage-run-playbook"] }),
 	[],
 	"an alias is reported as a finding",
+);
+assert.deepEqual(
+	describePbtaCoverage({ ...installed, unresolved: [], unknownGeneric: [], missingPacks: [projected[0]] }),
+	[],
+	"an optional pack that is not installed is reported as a format gap",
 );
 /* A pack that declares no PbtA capability is not this contract's business. */
 assert.deepEqual(pbtaCoverageReport([{ id: "masks", requires: ["style:city-of-mist"] }]).packs, []);
@@ -156,12 +167,16 @@ assert.ok(
 	`${projected[0]} stays unreachable although its pack is registered`,
 );
 /* The one line the settings row shows has to carry the findings, or the button is the only way to see them. */
-assert.match(pbtaCoverageSummary(fromSettings), /PbtA coverage: \d+ game-specific formats? readable/);
+assert.match(pbtaCoverageSummary(fromSettings), /PbtA coverage: \d+ installed game-specific formats? readable/);
 assert.equal(
-	/nothing missing/.test(pbtaCoverageSummary(fromSettings)),
+	/no format gaps/.test(pbtaCoverageSummary(fromSettings)),
 	describePbtaCoverage(fromSettings).length === 0,
 	"the summary line disagrees with the findings it summarises",
 );
+initGameRegistry([
+	{ pack: { id: "adrenaline", label: "Adrenaline", style: EMPTY_STYLE }, installation: { version: "2.6.0", root: "adrenaline", minimumHandbookVersion: "0.0.1", requires: ["block:adrenaline-pj", "style:adrenaline"] } },
+]);
+assert.deepEqual(currentPbtaCoverage().packs, [], "an Adrenaline-only vault should not show PbtA coverage");
 
 /* ---- What the pinned tarball publishes about itself, from v5.5.0 on ----
 

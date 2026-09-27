@@ -61,12 +61,16 @@ if (legendSettings.includes('setName("Roller tables")')) {
 	failures.push("Generic Roller tables remain incorrectly scoped to Legend in the Mist settings.");
 }
 
-if (!source.includes('setButtonText("Reload installed schemas")') || !source.includes("this.plugin.reloadInstalledSchemaSources()")) {
-	failures.push("The schema reload action is not named precisely or does not fetch installed schemas again.");
+if (!source.includes('setButtonText("Check for update")') || !source.includes("this.plugin.saveSchemaSource(source, source.repository)")) {
+	failures.push("Each schema source needs one direct update action.");
 }
 
-if (!plugin.includes("async reloadInstalledSchemaSources()") || !plugin.includes("resolveGithubSource(source)") || !plugin.includes("installResolvedSchemaSource(this, source, resolved)")) {
-	failures.push("Reloading installed schemas does not resolve and reinstall their configured Git references.");
+if (source.includes('setButtonText("Reload installed schemas")') || source.includes('setButtonText("Check and reload")')) {
+	failures.push("Schema update actions are duplicated outside the source row.");
+}
+
+if (!plugin.includes("async saveSchemaSource(source: SchemaSource") || !plugin.includes("resolveGithubSource(source)") || !plugin.includes("installResolvedSchemaSource(this, source, resolved)")) {
+	failures.push("Updating one schema source does not resolve and install its configured Git reference.");
 }
 
 if (!source.includes('variants.length < 2')) {

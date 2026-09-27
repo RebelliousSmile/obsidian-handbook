@@ -55,7 +55,7 @@ export class PbtaCoverageModal extends Modal {
 
 		this.contentEl.createEl("p", {
 			text: findings.length === 0
-				? "Every playbook format this build carries is readable and its pack is installed."
+				? "No PbtA format gaps detected. Formats for other game packs are available when those packs are installed."
 				: "Some playbook formats are not fully readable in this vault.",
 		});
 		for (const finding of findings) {
@@ -70,7 +70,7 @@ export class PbtaCoverageModal extends Modal {
 				new Setting(this.contentEl)
 					.setName(target)
 					.setDesc(report.missingPacks.indexOf(target) >= 0
-						? `Readable. Expects the "${expectedPackId(target)}" pack, missing.`
+						? `Supported by this build. Install the "${expectedPackId(target)}" pack to use it.`
 						: `Readable. Expects the "${expectedPackId(target)}" pack, installed.`);
 			}
 		}
@@ -85,13 +85,16 @@ export class PbtaCoverageModal extends Modal {
 			}
 		}
 
-		/* An upstream addition, not a defect of the vault: it is named so the owner can ask for it. */
-		if (report.unresolved.length > 0) {
+		/* Only formats reachable through an installed pack affect this vault. */
+		const unresolvedInVault = report.unresolved.filter((target) =>
+			report.packs.some((id) => target.startsWith(`${id}-`)),
+		);
+		if (unresolvedInVault.length > 0) {
 			this.contentEl.createEl("h3", { text: "Formats not read yet" });
 			this.contentEl.createEl("p", {
 				text: "The installed schema source carries these playbook formats and this build does not read them yet. Their documents still render as generic playbooks, without whatever each format adds.",
 			});
-			for (const target of report.unresolved) {
+			for (const target of unresolvedInVault) {
 				new Setting(this.contentEl).setName(target).setDesc("Newer than this build.");
 			}
 		}
@@ -113,8 +116,9 @@ export class PbtaCoverageModal extends Modal {
 /** The single line a Notice shows, so the user knows whether to open the modal. */
 export function pbtaCoverageSummary(report: PbtaCoverageReport): string {
 	const findings = describePbtaCoverage(report);
-	const readable = `${report.projected.length} game-specific ${report.projected.length === 1 ? "format" : "formats"} readable`;
+	const installedFormats = report.projected.length - report.missingPacks.length;
+	const readable = `${installedFormats} installed game-specific ${installedFormats === 1 ? "format" : "formats"} readable`;
 	return findings.length === 0
-		? `PbtA coverage: ${readable}, nothing missing.`
+		? `PbtA coverage: ${readable}, no format gaps.`
 		: `PbtA coverage: ${readable}, ${findings.length} ${findings.length === 1 ? "finding" : "findings"}.`;
 }

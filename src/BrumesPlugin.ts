@@ -35,7 +35,7 @@ import {
 } from "./games/storage";
 import { resolveGithubSource } from "./games/githubSources";
 import { installResolvedSchemaSource } from "./games/sourceInstaller";
-import { InstalledSchemaSource, installedSchemaVersion, SchemaSource } from "./games/sources";
+import { InstalledSchemaSource, SchemaSource } from "./games/sources";
 import { installStarterKitSources, type StarterKit } from "./games/starterKits";
 import {
 	EMPTY_OVERRIDE,
@@ -217,28 +217,6 @@ export default class BrumesPlugin extends Plugin {
 			this.assets = emptyAssetState("");
 			this.applySettings({ refreshMarkdown: true });
 		}
-	}
-
-	/** Fetch every registered schema source again, then rebuild the live games. */
-	async reloadInstalledSchemaSources() {
-		const results: Array<{ repository: string; before: string | null; after: string; changed: boolean }> = [];
-		for (const source of this.settings.schemaSources) {
-			const previous = await this.readInstalledSchemaSource(source);
-			try {
-				const resolved = await resolveGithubSource(source);
-				await installResolvedSchemaSource(this, source, resolved);
-				results.push({
-					repository: source.repository,
-					before: installedSchemaVersion(previous),
-					after: resolved.releaseTag ?? `revision ${resolved.revision.slice(0, 7)}`,
-					changed: previous?.revision !== resolved.revision,
-				});
-			} catch (error) {
-				throw new Error(`${source.repository}: ${error instanceof Error ? error.message : String(error)}`);
-			}
-		}
-		await this.refreshGameRegistry();
-		return results;
 	}
 
 	async readInstalledSchemaSource(source: SchemaSource): Promise<InstalledSchemaSource | null> {
