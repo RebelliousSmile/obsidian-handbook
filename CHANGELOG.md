@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.29.3] - 2026-09-27
+
+### Added
+
+- Show the installed Handbook version, bundled schema release, active source release, and game pack version in settings. Check and reload a tracked game source on demand.
+- Link the bilingual schema release guides from the README.
+
+### Fixed
+
+- Adopt the final Adrenaline 2.6.0 archive after its candidate was proved by Handbook and Lantern.
+- Accept Mist candidate release train proof and reject candidate schema pins when publishing Handbook.
+
 ## [2.29.2] - 2026-09-25
 
 ### Fixed
