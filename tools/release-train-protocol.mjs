@@ -114,15 +114,15 @@ export function readProtocolManifest(manifestPath) {
 		exactKeys(source, ["protocol", "artifact", "consumers"], "release train");
 		const artifact = object(source.artifact, "artifact");
 		exactKeys(artifact, ["provider", "releaseUrl", "sha256", "integrity", "version"], "artifact");
-		assert.equal(artifact.provider, "schema-in-the-mist", "artifact.provider must name schema-in-the-mist");
+		assert.ok(artifact.provider === "schema-in-the-mist" || artifact.provider === "schema-adrenaline", "artifact.provider must name a supported final provider");
 		text(artifact.releaseUrl, "artifact.releaseUrl");
-		text(artifact.version, "artifact.version");
+		assert.match(text(artifact.version, "artifact.version"), /^\d+\.\d+\.\d+$/, "artifact.version must be stable SemVer");
 		assert.match(text(artifact.sha256, "artifact.sha256"), SHA256);
 		assert.match(text(artifact.integrity, "artifact.integrity"), /^sha512-[A-Za-z0-9+/]+={0,2}$/);
 		const url = new URL(artifact.releaseUrl);
 		assert.equal(url.protocol, "https:");
 		assert.equal(url.hostname, "github.com");
-		assert.equal(url.pathname, `/RebelliousSmile/schema-in-the-mist/releases/download/v${artifact.version}/schema-in-the-mist-${artifact.version}.tgz`);
+		assert.equal(url.pathname, `/${PROVIDERS[artifact.provider].repository}/releases/download/v${artifact.version}/${PROVIDERS[artifact.provider].archive}-${artifact.version}.tgz`);
 		assert.equal(url.search, "");
 		assert.equal(url.hash, "");
 		return { protocol: 2, artifact, consumers: readConsumers(source.consumers), evidencePath: `${manifestPath}.evidence.json` };
