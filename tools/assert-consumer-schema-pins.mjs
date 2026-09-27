@@ -5,7 +5,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const lanternPackage = process.argv[2] ?? resolve(root, "../lantern/package.json");
+const arguments_ = process.argv.slice(2).filter((argument) => argument !== "--");
+const requireFinal = arguments_.includes("--final");
+const positional = arguments_.filter((argument) => argument !== "--final");
+assert.ok(positional.length <= 1 && arguments_.length === positional.length + Number(requireFinal), "usage: assert-consumer-schema-pins [lantern-package.json] [--final]");
+const lanternPackage = positional[0] ?? resolve(root, "../lantern/package.json");
 const handbook = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
 const lantern = JSON.parse(readFileSync(lanternPackage, "utf8"));
 const lock = readFileSync(resolve(root, "pnpm-lock.yaml"), "utf8");
@@ -24,12 +28,12 @@ function providerVersion(pkg, name, requireFinal) {
 	const match = parsed.pathname.match(new RegExp(`^/RebelliousSmile/${name}/releases/download/v(\\d+\\.\\d+\\.\\d+)${suffix}/([^/]+)\\.tgz$`));
 	assert.ok(match, `${pkg.name}: ${name} must point to a ${requireFinal ? "final " : ""}versioned public release asset`);
 	const [, version, archive] = match;
-	assert.ok(archive === `${name}-${version}` || name === "schema-adrenaline" && archive === "candidate", `${pkg.name}: ${name} archive name is not the published final asset`);
+	assert.equal(archive, `${name}-${version}`, `${pkg.name}: ${name} archive name is not the versioned asset`);
 	return { url, version };
 }
 
 async function assertHandbookPin(name) {
-	const { url, version } = providerVersion(handbook, name, true);
+	const { url, version } = providerVersion(handbook, name, requireFinal);
 	assert.ok(lock.includes(`specifier: ${url}`), `${name}: lock importer specifier differs from package.json`);
 	assert.ok(lock.includes(`version: ${url}`), `${name}: lock importer version differs from package.json`);
 	assert.ok(lock.includes(`  ${name}@${url}:`), `${name}: lock package or snapshot key differs from package.json`);
@@ -38,9 +42,9 @@ async function assertHandbookPin(name) {
 	const integrity = /integrity: (sha512-[A-Za-z0-9+/]+={0,2})/.exec(resolution)?.[1];
 	assert.ok(integrity, `${name}: lock resolution is missing SHA-512 SRI`);
 	const response = await fetch(url);
-	assert.ok(response.ok, `${name}: final release archive download failed: ${response.status}`);
+	assert.ok(response.ok, `${name}: release archive download failed: ${response.status}`);
 	const publishedIntegrity = `sha512-${createHash("sha512").update(Buffer.from(await response.arrayBuffer())).digest("base64")}`;
-	assert.equal(integrity, publishedIntegrity, `${name}: lock SRI differs from final release archive bytes`);
+	assert.equal(integrity, publishedIntegrity, `${name}: lock SRI differs from release archive bytes`);
 	return version;
 }
 

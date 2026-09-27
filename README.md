@@ -328,9 +328,11 @@ Handbook does not pin a game-specific schema commit. Schema sources records the
 generic release, tag or branch selected for each repository and installs its
 catalogue atomically.
 
-Handbook's `pnpm check` and release workflow deliberately remain independent
-from optional game repositories. `pnpm assert:adrenaline-contract` validates the
-immutable `schema-adrenaline` v1.0.0 package, including its strict codecs and
+Handbook's `pnpm check` validates pinned schema archives, including a staged
+candidate when a schema release train is in progress. The Handbook release
+workflow additionally requires final schema archives.
+`pnpm assert:adrenaline-contract` validates the installed
+`schema-adrenaline` package, including its strict codecs and
 canonical JSON/TOML corpus; Handbook keeps a tolerant projection and renderer.
 To validate a concrete Adrenaline pack checkout, set `SCHEMA_ADRENALINE_ROOT`
 and run the optional `assert:adrenaline-theme` and
@@ -746,9 +748,17 @@ Handbook can add a ribbon button that opens an embedded `Lantern in the Mist` vi
 
 For the six shared Mist formats, right-click a rendered block and choose `Paste TOML from clipboard` to bring an export back from Lantern. A schema-owned codec writes concise Handbook source only when it can prove that no content changes; TOML with comments, metadata, unknown fields, or transformed values is kept verbatim.
 
-## Protocol-1 release-train proof
+## Updating a schema dependency
 
-The central release train checks out the selected Handbook ref, then invokes this consumer-owned proof for a declared `schema-pbta` or `schema-adrenaline` candidate. It does not select candidates or promote releases.
+Start in the schema repository when a contract or presentation change is proposed; an issue or LLM request is not required. Its normal PR and main CI validate the change. After the provider change is merged, dispatch its candidate publication workflow from main with the next release candidate version. The candidate must publish a versioned archive at an immutable GitHub release URL, with its SHA-256 and SHA-512 SRI. Follow the provider README ([PbtA](https://github.com/RebelliousSmile/schema-pbta#readme), [Adrenaline](https://github.com/RebelliousSmile/schema-adrenaline#readme), [Mist](https://github.com/RebelliousSmile/schema-in-the-mist#readme)) for its exact workflow inputs and manifest format.
+
+Pin that candidate URL in Handbook's `package.json` and `pnpm-lock.yaml`, with the published SRI. Run `pnpm install --frozen-lockfile`, `pnpm check`, and the relevant schema or source assertions, then commit the consumer proof. Lantern adopts and proves the same candidate in its own repository. Give both full consumer commit SHAs to the provider release train manifest and run its train assertion as documented there. The provider checks out those exact commits, runs each consumer's proof, and can then promote the same bytes to the final release. Pin the final canonical archive and SRI in both consumers before their release. No consumer should substitute a `candidate.tgz` asset for a final archive.
+
+Handbook's CI is manually dispatched; `pnpm check` is the local development gate. It accepts a versioned release candidate whose lockfile SRI matches the published bytes. `node tools/assert-consumer-schema-pins.mjs --final` is the extra Handbook publication gate and fails while any Handbook schema pin still names an RC tag. This lets the next schema proposal proceed through its candidate proofs without blocking routine development.
+
+## Release-train proof in Handbook
+
+The provider release train checks out the selected Handbook ref, then invokes this consumer-owned proof for a declared `schema-pbta` or `schema-adrenaline` candidate (or the protocol-2 Mist artifact). It does not select candidates or promote releases.
 
 ```sh
 pnpm run release-train:assert -- path/to/release-train-manifest.json

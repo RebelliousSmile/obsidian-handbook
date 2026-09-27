@@ -61,6 +61,10 @@ jobs:
               working-directory: handbook
               run: pnpm check
 
+            - name: Require final schema archives for release
+              working-directory: handbook
+              run: node tools/assert-consumer-schema-pins.mjs --final
+
             # `pnpm check` proves the four version-bearing files agree with each other. Only here is
             # the tag known, and only here does a disagreement actually ship: v2.16.0 through v2.19.1
             # were all published from a manifest declaring 2.15.3.
