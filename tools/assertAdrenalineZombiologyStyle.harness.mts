@@ -27,10 +27,10 @@ assert.doesNotMatch(
 const pj = scssByFile.get("_pj.scss") ?? "";
 const pnj = scssByFile.get("_pnj.scss") ?? "";
 const monstre = scssByFile.get("_monstre.scss") ?? "";
-assert.match(pj, /grid-template-areas:[\s\S]*?"formations competences"/, "PJ must retain its two-column consultation layout");
-assert.match(pj, /@media \(max-width: 520px\)[\s\S]*?"formations"[\s\S]*?"competences"/, "PJ must stack consultation zones on mobile");
+assert.match(pj, /brumes-adrenaline-pj__columns-3[^}]*grid-template-columns:\s*repeat\(3/, "PJ must use the published three-column layout");
+assert.match(pj, /@container \(max-width: 520px\)[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/, "PJ must stack the sheet in a narrow note");
 assert.match(pj, /overflow-wrap:\s*anywhere/, "PJ must wrap long values instead of overflowing");
-assert.match(pj, /\.brumes-adrenaline-pj--panel\s*\{[\s\S]*?min-width:\s*0/, "PJ panels must not impose a competing minimum width");
+assert.match(pj, /\.brumes-adrenaline-pj__block\s*\{[^}]*min-width:\s*0/, "PJ blocks must not impose a competing minimum width");
 assert.match(pnj, /brumes-adrenaline-pnj--description/, "PNJ must keep a dedicated narrative treatment");
 assert.match(pnj, /overflow-wrap:\s*anywhere/, "PNJ must wrap long values instead of overflowing");
 assert.match(pnj, /\.brumes-adrenaline-pnj--panel\s*\{[\s\S]*?min-width:\s*0/, "PNJ panels must not impose a competing minimum width");

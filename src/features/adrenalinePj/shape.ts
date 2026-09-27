@@ -1,14 +1,12 @@
+import { PJ_PRESENTATION } from "schema-adrenaline/presentation";
 import { BlockShape } from "../blocks/shape";
 
 export const adrenalinePjShape: BlockShape = {
-	block: "adrenaline-pj",
+	block: PJ_PRESENTATION.sheet.id,
 	root: "brumes-adrenaline-pj",
-	zones: [
-		{ name: "header", holds: "name, identity and game parameters" },
-		{ name: "formations", holds: "formation groups and values", heading: "Formations", optional: true },
-		{ name: "competences", holds: "competences nested in formations", heading: "Compétences", optional: true },
-		{ name: "characteristics", holds: "eight physical and mental characteristics", heading: "Caractéristiques" },
-		{ name: "equipment", holds: "possessions and weapons", heading: "Équipement", optional: true },
-		{ name: "health", holds: "health thresholds and protections", heading: "Santé et protections" },
-	],
+	zones: PJ_PRESENTATION.sections.map((section) => ({
+		name: section.id,
+		holds: section.blocks.map((block) => block.label).join(", "),
+		...("showTitle" in section && section.showTitle === false ? {} : { heading: section.label }),
+	})),
 };

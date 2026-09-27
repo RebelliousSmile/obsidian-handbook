@@ -53,7 +53,7 @@ export function documentToPj(value: unknown): AdrenalinePjData | null {
 	if (!document) return null;
 	warnUnknownKeys(
 		document,
-		["nom", "identite", "caracteristiques", "sante", "protections", "formations", "equipement", "parametresDuJeu", "meta"],
+		["nom", "identite", "caracteristiques", "sante", "protections", "formations", "equipement", "parametresDuJeu", "etatDePartie", "meta"],
 		"pj",
 	);
 	const nom = asString(document.nom);

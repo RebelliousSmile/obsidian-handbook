@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
+import { PJ_PRESENTATION } from "schema-adrenaline/presentation";
+import { readFileSync } from "node:fs";
 import { assertAdrenalineContractVersion, loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
@@ -49,4 +51,22 @@ for (const entry of cases) {
 	assert.equal(text(block.render(reread, doc as unknown as Document) as unknown as El), before, `${entry.path}: rendering is stable`);
 }
 assert.deepEqual(new Set(cases.map((entry) => entry.target)), new Set(["pj", "pnj", "monstre"]));
+const pjSource = readFileSync("node_modules/schema-adrenaline/examples/adrenaline/pj/survivante-complete.toml", "utf8");
+const pjBlock = BRUMES_BLOCKS.find((entry) => entry.id === "adrenaline-pj");
+assert.ok(pjBlock);
+const pjData = pjBlock.parse(pjSource);
+assert.ok(pjData);
+const pjRender = pjBlock.render(pjData, doc as unknown as Document) as unknown as El;
+const allElements = (element: El): El[] => [element, ...element.children.flatMap(allElements)];
+const classes = new Set(allElements(pjRender).flatMap((element) => element.classes));
+for (const section of PJ_PRESENTATION.sections) {
+	assert.ok(classes.has(`brumes-adrenaline-pj--${section.id}`), `PJ section ${section.id} is rendered`);
+	for (const block of section.blocks) assert.ok(classes.has(`brumes-adrenaline-pj__${block.id}`), `PJ block ${block.id} is rendered`);
+}
+assert.match(text(pjRender), /Stress|stress/, "PJ displays its published stress area");
+assert.match(text(pjRender), /Naïma Berthier/, "PJ preserves the character name's published spelling and case");
+assert.match(text(pjRender), /Contusion/, "PJ displays the document's current states");
+const physicalCharacteristics = allElements(pjRender).find((element) => element.classes.includes("brumes-adrenaline-pj__caracteristiques-physiques"));
+assert.ok(physicalCharacteristics);
+assert.match(text(physicalCharacteristics), /0 %30 %/, "PJ displays both minimum and current values");
 console.log(`Adrenaline contract: ${cases.length} canonical cases passed.`);
