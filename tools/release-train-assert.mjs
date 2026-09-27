@@ -1,5 +1,5 @@
 /* global console, process */
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { assertReleaseTrain } from "./release-train-schema-pbta-assert.mjs";
 import { assertSchemaAdrenalineReleaseTrain } from "./release-train-schema-adrenaline-assert.mjs";
 import { assertSchemaInTheMistReleaseTrain } from "./release-train-schema-in-the-mist-assert.mjs";
@@ -11,8 +11,10 @@ if (arguments_.length !== 1) throw new Error("release-train assertion requires e
 const manifestPath = resolveManifestPath(arguments_[0]);
 const evidencePath = `${manifestPath}.evidence.json`;
 if (existsSync(evidencePath)) rmSync(evidencePath);
-const manifest = readProtocolManifest(manifestPath);
-const provider = manifest.protocol === 2 ? manifest.artifact.provider : manifest.candidate.provider;
+const source = JSON.parse(readFileSync(manifestPath, "utf8"));
+const mistCandidate = source.candidate?.packageName === "schema-in-the-mist" && source.protocol === undefined;
+const manifest = mistCandidate ? null : readProtocolManifest(manifestPath);
+const provider = mistCandidate ? "schema-in-the-mist" : manifest.protocol === 2 ? manifest.artifact.provider : manifest.candidate.provider;
 const assertions = {
 	"schema-pbta": assertReleaseTrain,
 	"schema-adrenaline": assertSchemaAdrenalineReleaseTrain,
