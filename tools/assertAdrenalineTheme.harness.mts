@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { PJ_PRESENTATION } from "schema-adrenaline/presentation";
 import { adrenalinePjBlock } from "../src/features/adrenalinePj/block";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../src/features/adrenalineMonstre/block";
@@ -33,7 +34,7 @@ class El {
 
 const doc = { createElement: (tagName: string) => new El(tagName) } as unknown as Document;
 const expectedZones = new Map([
-	[adrenalinePjBlock.id, ["header", "formations", "competences", "characteristics", "equipment", "health"]],
+	[adrenalinePjBlock.id, PJ_PRESENTATION.sections.map((section) => section.id)],
 	[adrenalinePnjBlock.id, ["header", "narrative", "characteristics", "health", "competences", "equipment"]],
 	[adrenalineMonsterBlock.id, ["header", "mobility", "behaviour", "characteristics", "health", "capabilities"]],
 ]);
@@ -122,8 +123,8 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 	.map((file) => readFileSync(join("src", "styles", "adrenaline", file), "utf8"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
-assert.match(scss, /grid-template-areas:[\s\S]*?"formations competences"/);
-assert.match(scss, /grid-template-areas:[\s\S]*?"formations"[\s\S]*?"competences"/);
+assert.match(scss, /brumes-adrenaline-pj__columns-3[^}]*grid-template-columns:\s*repeat\(3/);
+assert.match(scss, /@container \(max-width: 520px\)[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
 assert.match(scss, /\.brumes-adrenaline-pnj\s*\{[\s\S]*?max-width:\s*36rem/);
 assert.match(scss, /\.brumes-adrenaline-monstre\s*\{[\s\S]*?max-width:\s*36rem/);
 assert.match(scss, /brumes-adrenaline-monstre--capability-group/);
