@@ -1,0 +1,63 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://github.com/RebelliousSmile/obsidian-handbook/supervisor/train.schema.json",
+	"title": "Supervisor train record",
+	"description": "One correction coordinated across the repositories of supervisor/topology.json. The record is the source of truth; the coordination issue is a projection of it.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["$schema", "id", "title", "status", "coordinationIssue", "items", "approval", "publication"],
+	"properties": {
+		"$schema": { "const": "../train.schema.json" },
+		"id": { "$ref": "#/definitions/id" },
+		"title": { "type": "string", "minLength": 1 },
+		"status": { "enum": ["open", "closed"] },
+		"coordinationIssue": { "$ref": "#/definitions/issueRef" },
+		"items": {
+			"type": "array",
+			"items": { "$ref": "#/definitions/item" }
+		},
+		"approval": {
+			"description": "Filled by supervise approve (phase 3).",
+			"type": ["object", "null"]
+		},
+		"publication": {
+			"description": "Filled by supervise publish (phase 4), one entry per provider.",
+			"type": "object"
+		}
+	},
+	"definitions": {
+		"id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+		"sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+		"issueRef": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["repo", "number", "url"],
+			"properties": {
+				"repo": { "$ref": "#/definitions/id" },
+				"number": { "type": "integer", "minimum": 1 },
+				"url": { "type": "string", "pattern": "^https://github\\.com/" }
+			}
+		},
+		"item": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["repo", "issue", "url", "title", "baseSha", "dependsOn", "expectedEvidence"],
+			"properties": {
+				"repo": { "$ref": "#/definitions/id" },
+				"issue": { "type": "integer", "minimum": 1 },
+				"url": { "type": "string", "pattern": "^https://github\\.com/" },
+				"title": { "type": "string" },
+				"baseSha": { "$ref": "#/definitions/sha" },
+				"dependsOn": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": { "$ref": "#/definitions/id" }
+				},
+				"expectedEvidence": {
+					"type": "array",
+					"items": { "type": "string", "minLength": 1 }
+				}
+			}
+		}
+	}
+}

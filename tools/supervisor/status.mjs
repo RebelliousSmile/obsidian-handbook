@@ -155,7 +155,9 @@ export function renderStatus(status) {
 		lines.push("");
 	}
 	if (status.train) {
-		lines.push(`Active train: ${status.train.id} (${status.train.status})`, "");
+		lines.push(`Active train: ${status.train.id} (${status.train.status})`);
+		for (const item of status.train.items) lines.push(`  ${item.repo}#${item.issue}${item.dependsOn.length ? ` after ${item.dependsOn.join(", ")}` : ""}`);
+		lines.push("");
 	}
 	if (status.gaps.length === 0) {
 		lines.push("No gaps: the five repositories are aligned.");
