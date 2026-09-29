@@ -1,0 +1,3 @@
+# The publication guard is a PATH prefix of POSIX scripts: a CRLF checkout
+# breaks their shebang and the guard fails open.
+tools/supervisor/guard/* text eol=lf

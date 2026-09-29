@@ -146,7 +146,7 @@ export function renderPresentation(train, presentation) {
 		}
 		if (entry.role === "provider") {
 			lines.push("", entry.repo === "schema-pbta"
-				? "Local preview: in obsidian-handbook, `pnpm dev:schema-pbta` builds Handbook against this checkout (#65)."
+				? "Local preview: in obsidian-handbook, `pnpm dev:schema-pbta -- <vault>` syncs this checkout's packs into a vault and reloads Handbook (#65)."
 				: "Local preview: none exists yet for this provider.");
 		}
 	}
