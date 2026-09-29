@@ -26,7 +26,9 @@ export function parsePinUrl(url) {
 }
 
 /** Every `<name>@<url>` resolution of a pnpm lockfile, with its SRI. */
-export function pnpmLockPins(text, name) {
+export function pnpmLockPins(raw, name) {
+	// A working tree checked out with autocrlf, then partly rewritten by pnpm, mixes CRLF and LF.
+	const text = raw.replace(/\r\n/g, "\n");
 	const pins = [];
 	const lines = text.split("\n");
 	const key = new RegExp(`^  ${escape(name)}@(https://\\S+\\.tgz):$`);
