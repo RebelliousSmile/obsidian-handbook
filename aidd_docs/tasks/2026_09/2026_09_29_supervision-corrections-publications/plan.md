@@ -1,6 +1,6 @@
 ---
 objective: "Un outil déterministe lancé depuis le parent coordonne une correction entre Handbook, Lantern et les trois dépôts de schémas, bloque toute publication sans accord explicite lié aux commits présentés, garantit que la finale publie les octets du candidat, puis pilote le train existant jusqu'à une convergence vérifiée."
-status: in-progress
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
