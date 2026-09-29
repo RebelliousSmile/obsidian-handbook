@@ -1,0 +1,55 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "zombiology-pj-design",
+	"title": "Zombiology PJ sheet matches its design mockup",
+	"status": "open",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 68,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/68"
+	},
+	"items": [
+		{
+			"repo": "schema-adrenaline",
+			"issue": 39,
+			"url": "https://github.com/RebelliousSmile/schema-adrenaline/issues/39",
+			"title": "Publish the PJ design tokens: field border, track mark, fatigue, condition",
+			"baseSha": "80d3b8c271ee2fd6647f3c8bab7046d1547c51d6",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 69,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/69",
+			"title": "Render the Zombiology PJ from its published presentation, one column by default",
+			"baseSha": "4827bf11aebcd10d5815f17a4c3d3af2c4d57c92",
+			"dependsOn": [
+				"schema-adrenaline"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		},
+		{
+			"repo": "lantern",
+			"issue": 48,
+			"url": "https://github.com/RebelliousSmile/lantern/issues/48",
+			"title": "Render the Zombiology PJ preview from PJ_PRESENTATION",
+			"baseSha": "66edca2f23c200e96ee56853216ef45a7021fb9a",
+			"dependsOn": [
+				"schema-adrenaline"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"approval": null,
+	"publication": {}
+}
