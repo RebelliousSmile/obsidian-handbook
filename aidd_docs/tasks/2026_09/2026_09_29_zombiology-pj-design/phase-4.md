@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Lantern — rendre la fiche PJ depuis la présentation v2.6.0
