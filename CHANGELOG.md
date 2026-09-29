@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.30.0] - 2026-09-29
+
+### Added
+
+- Add `pnpm supervise`, a correction-train supervisor for Handbook, Lantern and the three schema providers: observe the five repositories and their schema pins (`status`), record a train with its linked issues and next step, present the evidence and record a bound approval, drive provider publication under that approval, then converge consumers and close the train.
+- Add French and English operator guides (`doc/supervisor.fr.md`, `doc/supervisor.en.md`) and a README section.
+
+### Fixed
+
+- Read pnpm lockfiles that mix CRLF and LF line endings, which reported false pin-lock mismatches.
+- Keep the supervisor publication guard scripts in LF so their shebang works in a CRLF checkout.
+
 ## [2.29.6] - 2026-09-28
 
 ### Changed
