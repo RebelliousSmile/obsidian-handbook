@@ -1,0 +1,22 @@
+{
+	"version": 1,
+	"repos": [
+		{
+			"id": "obsidian-handbook",
+			"path": "obsidian-handbook",
+			"repository": "RebelliousSmile/obsidian-handbook",
+			"role": "coordinator",
+			"trainFiles": ["package.json"]
+		},
+		{
+			"id": "schema-pbta",
+			"path": "schema-pbta",
+			"repository": "RebelliousSmile/schema-pbta",
+			"role": "provider",
+			"package": "schema-pbta",
+			"adapter": "pbta",
+			"consumers": ["obsidian-handbook", "ghost"],
+			"trainFiles": ["release-train/"]
+		}
+	]
+}
