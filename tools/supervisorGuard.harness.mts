@@ -167,6 +167,11 @@ out.shell = cp.spawnSync("gh pr merge 1", { shell: true, encoding: "utf8" }).sta
 try { cp.execSync("gh release create v1", { stdio: "pipe" }); out.execSync = 0; } catch (error) { out.execSync = error.status; }
 try { cp.execFileSync("gh", ["run", "rerun", "1"], { stdio: "pipe" }); out.execFileSync = 0; } catch (error) { out.execFileSync = error.status ?? error.code; }
 out.git = cp.spawnSync("git", ["--version"], { encoding: "utf8" }).status;
+// An absolute path quoted inside an explicit shell line: cmd /s strips the outer quotes.
+const fake = require("path").join(require("path").dirname(process.env.FAKE_GH_LOG), "bin", "gh");
+out.quoted = process.platform === "win32"
+	? cp.spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", '""' + fake + '.cmd" workflow run x"'], { windowsVerbatimArguments: true, encoding: "utf8" }).status
+	: cp.spawnSync("sh", ["-c", '"' + fake + '" workflow run x'], { encoding: "utf8" }).status;
 let done = false;
 const finish = (code) => {
 	if (done) return;
@@ -201,7 +206,7 @@ function hook(): void {
 		assert.equal(guarded.status, 0, `hook probe failed\n${guarded.stderr}\n${guarded.error ?? ""}`);
 		assert.deepEqual(
 			JSON.parse(guarded.stdout),
-			{ spawnSync: 97, shell: 97, execSync: 97, execFileSync: 97, git: 0, spawn: 97, exec: 97 },
+			{ spawnSync: 97, shell: 97, execSync: 97, execFileSync: 97, git: 0, quoted: 97, spawn: 97, exec: 97 },
 			`every publishing launcher is refused and git --version passes\n${guarded.stderr}`,
 		);
 		assert.deepEqual(reached(w), [], "a call refused by the hook reached the fake gh");

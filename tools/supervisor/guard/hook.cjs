@@ -85,7 +85,13 @@ function install() {
 		// An explicit shell: cmd.exe /d /s /c "<line>", sh -c "<line>".
 		if (tool === "cmd") {
 			const at = args.findIndex((argument) => /^\/[ck]$/i.test(String(argument)));
-			if (at >= 0) return refusalOfLine(args.slice(at + 1).join(" "));
+			if (at < 0) return null;
+			// cmd strips the first and the last quote of a line that starts with
+			// one (always under /s): `""C:\bin\gh.cmd" release create"`. Both
+			// readings are checked, so a quoted absolute path cannot hide gh.
+			const line = args.slice(at + 1).join(" ");
+			const stripped = /^\s*"/.test(line) ? line.replace(/^\s*"/, "").replace(/"(?=[^"]*$)/, "") : line;
+			return refusalOfLine(line) ?? refusalOfLine(stripped);
 		}
 		if (["sh", "bash", "dash", "zsh"].includes(tool)) {
 			const at = args.findIndex((argument) => /^-[a-z]*c[a-z]*$/.test(String(argument)));
@@ -102,7 +108,10 @@ function install() {
 	const withoutShell = (options) => {
 		if (!options || typeof options !== "object") return options;
 		const copy = { ...options };
+		// The replacement is a plain node call: neither a shell nor the verbatim
+		// quoting a cmd line needed may reach its arguments.
 		delete copy.shell;
+		delete copy.windowsVerbatimArguments;
 		return copy;
 	};
 

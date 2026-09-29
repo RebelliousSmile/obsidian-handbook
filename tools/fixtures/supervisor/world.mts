@@ -11,12 +11,15 @@ import { spawnSync } from "child_process";
 import { createHash } from "crypto";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
-import { dirname, join, resolve } from "path";
+import { basename, delimiter, dirname, join, resolve } from "path";
+import { findExecutable, pathKey } from "../../supervisor/spawn.mjs";
 
 export const HANDBOOK = process.cwd();
 export const SUPERVISE = resolve(HANDBOOK, "tools/supervise.mjs");
 export const FAKE_GH = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-gh.mjs");
+export const FAKE_GIT = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-git.mjs");
 export const FAKE_NPM = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-npm.mjs");
+export const FAKE_TTY = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-tty.cjs");
 export const TOPOLOGY = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/topology.json"), "utf8"));
 export const PROVIDERS = TOPOLOGY.repos.filter((repo: any) => repo.role === "provider");
 
@@ -47,6 +50,7 @@ export class World {
 	statePath: string;
 	bin: string;
 	gitLog: string;
+	realGit = "";
 	archives = new Map<string, Archive>();
 
 	constructor() {
@@ -64,13 +68,20 @@ export class World {
 		process.env.GIT_CONFIG_GLOBAL = config;
 		process.env.GIT_CONFIG_NOSYSTEM = "1";
 		// A git that logs every call before delegating: proves which commands ran.
-		const realGit = sh(this.tmp, "sh", ["-c", "command -v git"]).stdout.trim();
-		writeFileSync(join(this.bin, "git"), `#!/bin/sh\necho "$*" >> "${this.gitLog}"\nexec "${realGit}" "$@"\n`);
-		chmodSync(join(this.bin, "git"), 0o755);
+		const realGit = findExecutable("git", { exclude: [this.bin] });
+		if (!realGit) throw new Error("the supervisor harness needs git on the PATH");
+		this.realGit = realGit;
+		this.shim("git", FAKE_GIT);
 		// The local release-train scripts of a provider run through this npm.
-		writeFileSync(join(this.bin, "npm"), `#!/bin/sh\nexec "${process.execPath}" "${FAKE_NPM}" "$@"\n`);
-		chmodSync(join(this.bin, "npm"), 0o755);
+		this.shim("npm", FAKE_NPM);
 		this.writeState({ calls: [], releases: {}, issues: {}, prs: {}, events: {}, secrets: {}, runs: {}, workflowEffects: {} });
+	}
+
+	/** `bin/<name>` runs `node <script>`: a sh shim for POSIX shells, a `.cmd` one for Windows. */
+	shim(name: string, script: string): void {
+		writeFileSync(join(this.bin, name), `#!/bin/sh\nexec "${process.execPath}" "${script}" "$@"\n`);
+		chmodSync(join(this.bin, name), 0o755);
+		writeFileSync(join(this.bin, `${name}.cmd`), `@"${process.execPath}" "${script}" %*\r\n@exit /b %ERRORLEVEL%\r\n`);
 	}
 
 	dir(id: string): string {
@@ -104,7 +115,7 @@ export class World {
 			isPrerelease: tag.includes("-rc."),
 			isDraft: false,
 			publishedAt,
-			assets: [{ name: archive.file.split("/").pop(), url: archive.url, file: archive.file }],
+			assets: [{ name: basename(archive.file), url: archive.url, file: archive.file }],
 		};
 	}
 
@@ -122,12 +133,21 @@ export class World {
 		this.writeState(state);
 	}
 
+	/** The PATH is set on the key the platform uses (`Path` on Windows), never on a second one. */
 	env(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+		const key = pathKey(process.env);
+		const env: NodeJS.ProcessEnv = {};
+		for (const [name, value] of Object.entries(process.env)) {
+			if (name.toUpperCase() !== "PATH" || name === key) env[name] = value;
+		}
 		return {
-			...process.env,
+			...env,
 			SUPERVISOR_GH: FAKE_GH,
+			SUPERVISOR_GIT: FAKE_GIT,
 			FAKE_GH_STATE: this.statePath,
-			PATH: `${this.bin}:${process.env.PATH}`,
+			FAKE_GIT_LOG: this.gitLog,
+			FAKE_GIT_REAL: this.realGit,
+			[key]: [this.bin, process.env[key]].filter(Boolean).join(delimiter),
 			...extra,
 		};
 	}

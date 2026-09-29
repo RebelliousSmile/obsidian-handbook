@@ -8,9 +8,13 @@
  */
 import assert from "assert/strict";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
-import { resolve } from "path";
+import { delimiter, join, resolve } from "path";
 import Ajv from "ajv";
-import { createWorld, git, HANDBOOK, sh, SUPERVISE, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
+import { createWorld, FAKE_TTY, git, HANDBOOK, sh, SUPERVISE, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
+import { pathKey, spawnCommand, withRequire } from "./supervisor/spawn.mjs";
+
+// present.mjs locates its guard through import.meta, which this CJS bundle empties.
+const GUARD_DIR = resolve(HANDBOOK, "tools/supervisor/guard");
 
 const statusSchema = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/status.schema.json"), "utf8"));
 const validateStatus = new Ajv({ allErrors: true }).compile(statusSchema);
@@ -292,7 +296,12 @@ scenario("link --create asks first: nothing is created without a terminal or --y
 
 // Phase 3: presentation and approval.
 
-const PASS = ["sh", "-c", "echo validation passed"];
+/** A validation that runs `code` in the current node: no shell, the same on every OS. */
+function nodeCommand(code: string): string[] {
+	return [process.execPath, "-e", code];
+}
+
+const PASS = nodeCommand("console.log('validation passed')");
 
 /** The shipped topology with harmless validations and consumer convergence commands, written in the world. */
 function testTopology(world: World, validations: Record<string, string[][]> = {}, convergence: Record<string, string[][] | null> = {}, name = "topology.json"): string {
@@ -325,15 +334,14 @@ function doneTrain(world: World): void {
 	}
 }
 
-function quote(argument: string): string {
-	return `'${argument.replace(/'/g, "'\\''")}'`;
-}
-
-/** `supervise` on a pseudo-terminal (util-linux `script`), `input` typed on it. */
+/**
+ * `supervise` as if on a terminal: `fake-tty.cjs` marks stdin as a TTY, `input`
+ * is typed on it. A terminal shows both streams as one, so does `stdout` here.
+ */
 function superviseTty(world: World, args: string[], input: string, topology: string) {
 	const [command, ...rest] = args;
-	const line = [process.execPath, SUPERVISE, command, "--root", world.root, "--topology", topology, ...rest].map(quote).join(" ");
-	return sh(HANDBOOK, "script", ["-qec", line, "/dev/null"], world.env(), input);
+	const result = sh(HANDBOOK, process.execPath, ["--require", FAKE_TTY, SUPERVISE, command, "--root", world.root, "--topology", topology, ...rest], world.env(), input);
+	return { ...result, stdout: `${result.stdout}${result.stderr}` };
 }
 
 function presentAndApprove(world: World, topology: string): void {
@@ -351,7 +359,7 @@ scenario("present reports each concerned repository with its SHA, commits and va
 	}
 	assert.match(report, /\*\*Presentable\.\*\*/);
 	assert.match(report, /Colours \(fixes #31\)/);
-	assert.match(report, /passed: `sh -c echo validation passed`/);
+	assert.ok(report.includes(`passed: \`${PASS.join(" ")}\``), report);
 	assert.match(report, /schema-in-the-mist: release candidate of schema-in-the-mist/);
 	assert.match(report, /schema-in-the-mist: final release of schema-in-the-mist, same bytes as the candidate/);
 	assert.match(report, /lantern: release/);
@@ -450,12 +458,13 @@ scenario("an adoption commit of the observed candidate keeps the approval; any o
 });
 
 scenario("a failing validation makes the train not presentable and approve refuses it", (world) => {
-	const topology = testTopology(world, { "schema-in-the-mist": [["sh", "-c", "echo contract broken >&2; exit 3"]] });
+	const broken = nodeCommand("console.error('contract broken'); process.exit(3)");
+	const topology = testTopology(world, { "schema-in-the-mist": [broken] });
 	doneTrain(world);
 	const result = world.supervise(["present"], { topology });
 	assert.equal(result.status, 1, result.stderr);
 	assert.match(result.stdout, /\*\*Not presentable\*\*/);
-	assert.match(result.stdout, /schema-in-the-mist: sh -c echo contract broken >&2; exit 3 exited 3/);
+	assert.ok(result.stdout.includes(`schema-in-the-mist: ${broken.join(" ")} exited 3`), result.stdout);
 	assert.match(result.stdout, /contract broken/);
 	const approve = superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology);
 	assert.equal(approve.status, 1, approve.stdout);
@@ -463,10 +472,46 @@ scenario("a failing validation makes the train not presentable and approve refus
 	assert.equal(readRecord(world).approval, null);
 });
 
-scenario("a validation cannot release, push or tag: the guard refuses, ordinary calls go through", (world) => {
+/** A shell validation: `cmd /d /s /c` on Windows, `sh -c` elsewhere. Lines joined by the shell's own separator. */
+function shellCommand(lines: string[]): string[] {
+	return process.platform === "win32" ? ["cmd", "/d", "/s", "/c", lines.join(" & ")] : ["sh", "-c", lines.join("; ")];
+}
+
+/**
+ * A Node validation that starts gh and git by absolute path, so no PATH shim
+ * stands in its way: only the preloaded hook can refuse it. `leak` runs the
+ * first publishing call alone, for the mutation that removes the hook.
+ */
+function nodeValidation(world: World): string {
+	const file = resolve(world.tmp, "publishing-tool.cjs");
+	writeFileSync(file, `const { spawnSync } = require("node:child_process");
+const { join } = require("node:path");
+const BIN = ${JSON.stringify(world.bin)};
+function run(name, args) {
+	const file = join(BIN, name);
+	const result = process.platform === "win32"
+		? spawnSync(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", \`""\${file}.cmd" \${args.join(" ")}"\`], { windowsVerbatimArguments: true, stdio: "inherit" })
+		: spawnSync(file, args, { stdio: "inherit" });
+	return result.status;
+}
+if (run("gh", ["workflow", "run", "release.yml"]) === 0) process.exit(21);
+if (process.argv[2] === "leak") process.exit(0);
+if (run("gh", ["release", "create", "v9.9.8"]) === 0) process.exit(22);
+if (run("git", ["push", "origin", "HEAD:main"]) === 0) process.exit(23);
+if (run("git", ["tag", "v9.9.8"]) === 0) process.exit(24);
+if (run("gh", ["issue", "list"]) !== 0) process.exit(25);
+if (run("git", ["status", "--short"]) !== 0) process.exit(26);
+console.log("guarded");
+`);
+	return file;
+}
+
+scenario("a validation cannot release, push or tag: the guard refuses on both paths, ordinary calls go through", (world) => {
 	const ghLog = resolve(world.tmp, "real-gh.log");
-	writeFileSync(resolve(world.bin, "gh"), `#!/bin/sh\necho "$*" >> "${ghLog}"\n`, { mode: 0o755 });
-	const attempt = [
+	const realGh = resolve(world.tmp, "real-gh.mjs");
+	writeFileSync(realGh, `import { appendFileSync } from "node:fs";\nappendFileSync(${JSON.stringify(ghLog)}, process.argv.slice(2).join(" ") + "\\n");\n`);
+	world.shim("gh", realGh);
+	const shell = shellCommand([
 		"gh release create v9.9.9 dist.tgz && exit 11",
 		"gh api -X POST repos/o/r/dispatches && exit 12",
 		"gh workflow run release.yml && exit 13",
@@ -476,19 +521,32 @@ scenario("a validation cannot release, push or tag: the guard refuses, ordinary 
 		"git status --short || exit 17",
 		"git tag -l || exit 18",
 		"echo guarded",
-	].join("; ");
-	const topology = testTopology(world, { "schema-in-the-mist": [["sh", "-c", attempt]] });
+	]);
+	const tool = nodeValidation(world);
+	const topology = testTopology(world, { "schema-in-the-mist": [shell, [process.execPath, tool]] });
 	doneTrain(world);
 	const mist = world.dir("schema-in-the-mist");
 	const remote = git(mist, "ls-remote", "origin", "refs/heads/main", "refs/tags/*");
 	const report = ok(world.supervise(["present"], { topology }), "present");
-	assert.match(report, /passed: `sh -c gh release create/);
+	assert.ok(report.includes(`passed: \`${shell.join(" ")}\``), report);
+	assert.ok(report.includes(`passed: \`${process.execPath} ${tool}\``), report);
 	const calls = readFileSync(ghLog, "utf8");
-	assert.equal(calls, "issue list\n", `the real gh saw: ${calls}`);
+	assert.equal(calls, "issue list\nissue list\n", `the real gh saw: ${calls}`);
 	assert.equal(git(mist, "ls-remote", "origin", "refs/heads/main", "refs/tags/*"), remote, "a validation moved the remote");
 	const gitCalls = readFileSync(world.gitLog, "utf8");
 	assert.doesNotMatch(gitCalls, /^push/m, "a push reached git");
 	assert.doesNotMatch(gitCalls, /^tag v9/m, "a tag reached git");
+
+	// Mutation: each path, removed alone, lets its publishing call through.
+	const env = world.env();
+	const key = pathKey(env);
+	const unshimmed = { ...env, NODE_OPTIONS: withRequire(env.NODE_OPTIONS, join(GUARD_DIR, "hook.cjs")) };
+	const [command, ...args] = shellCommand(["gh release create v9.9.9 dist.tgz"]);
+	spawnCommand(command, args, { cwd: mist, env: unshimmed, encoding: "utf8" });
+	assert.match(readFileSync(ghLog, "utf8"), /^release create v9\.9\.9/m, "without its shims the shell path did not leak: the scenario proves nothing");
+	const unhooked = { ...env, [key]: [GUARD_DIR, env[key]].join(delimiter) };
+	spawnCommand(process.execPath, [tool, "leak"], { cwd: mist, env: unhooked, encoding: "utf8" });
+	assert.match(readFileSync(ghLog, "utf8"), /^workflow run release\.yml/m, "without its hook the Node path did not leak: the scenario proves nothing");
 });
 
 // Phase 4: publication, one provider at a time, under the approval.
@@ -789,7 +847,7 @@ scenario("with two providers, publish --run moves only the first one of the trai
 
 // Phase 5: convergence of the consumers on every final, their releases, and the closing.
 
-const FAIL = ["sh", "-c", "echo pins do not converge >&2; exit 3"];
+const FAIL = nodeCommand("console.error('pins do not converge'); process.exit(3)");
 
 function converge(world: World, topology: string) {
 	return world.supervise(["converge"], { topology });
@@ -873,7 +931,7 @@ scenario("a failing consumer check or a consumer without convergence command fai
 	adopt(world, "schema-pbta", final, candidate);
 	const result = converge(world, topology);
 	assert.equal(result.status, 1, result.stdout);
-	assert.match(result.stdout, /failed \(exit 3\): lantern: sh -c/);
+	assert.ok(result.stdout.includes(`failed (exit 3): lantern: ${FAIL.join(" ")}`), result.stdout);
 	assert.match(result.stdout, /pins do not converge/);
 	assert.match(result.stdout, /note: obsidian-handbook: no convergence command is configured in the topology/);
 	assert.equal(readRecord(world).convergence.status, "failed");

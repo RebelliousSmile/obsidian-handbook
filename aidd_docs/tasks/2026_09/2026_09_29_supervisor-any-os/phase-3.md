@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: un harnais qui tourne sans `sh` ni `script`
@@ -83,3 +83,12 @@ journey
 | 1 | `pnpm assert:supervisor` passe sous PowerShell et sous Git Bash sur ce poste, et sous WSL ou Linux. `gitLog` enregistre les commandes du superviseur sur les deux plateformes. |
 | 2 | Aucun scénario n'appelle `sh` ni `script`. `approve` aboutit sur le faux terminal, et il est refusé sans lui. |
 | 3 | Les appels publiants n'atteignent jamais le vrai `gh` ou `git` quand les deux voies sont en place. Sans l'une ou l'autre, le harnais montre la fuite, sur les deux plateformes. |
+
+## Écarts constatés à l'exécution
+
+- **Faille réelle trouvée par le scénario, corrigée dans `guard/hook.cjs`.** Un outil Node qui lançait `spawnSync(ComSpec, ["/d","/s","/c", '""C:\…\gh.cmd" workflow run x"'], { windowsVerbatimArguments: true })` passait le hook. Celui-ci lisait tout le chemin et ses arguments comme un seul mot, alors que `cmd /s` retire d'abord le premier et le dernier guillemet. Le hook contrôle maintenant les deux lectures et refuse dès que l'une des deux publie. Second défaut, révélé par le même cas : l'appel de remplacement héritait de `windowsVerbatimArguments`, le `node -e` qui imprime le refus perdait ses guillemets, et l'appel sortait en 1 au lieu de 97. L'option est désormais retirée avec `shell`. `supervisorGuard.harness.mts` porte ce cas (`quoted: 97`), sous Windows par `cmd /s /c` et sous POSIX par `sh -c`.
+- **Tâche 3.1, en deux validations au lieu d'un script unique.** La voie shell est une validation `[shell, ligne]` lancée par le superviseur lui-même, qui n'est pas hooké : seuls les shims la protègent. La voie hook est un outil Node en fichier (`publishing-tool.cjs`), qui lance `gh` et `git` par **chemin absolu** : aucun shim ne se trouve sur son chemin, seul le hook peut le refuser. Chaque mutation retire exactement la protection que sa voie exige. Un seul script n'aurait pas séparé les deux voies.
+- **« Aucun scénario n'appelle `sh` » est tenu au sens de la dépendance, pas au sens littéral.** La validation shell du garde lance `sh -c` sous POSIX et `cmd /d /s /c` sous Windows (`shellCommand`) : c'est la voie testée, pas une dépendance du monde de test. `script` n'est plus appelé nulle part.
+- `superviseTty` fusionne stdout et stderr comme le ferait un terminal. `script -qec` le faisait implicitement, et trois assertions en dépendaient.
+- Le harnais est bundlé en CJS : `present.mjs` y perd `import.meta`, donc `GUARD_DIR` y est recalculé depuis `HANDBOOK` et les deux mutations construisent leur environnement localement (`withRequire`, `pathKey`), plutôt que par `guardedEnv`.
+- Vérifié : `pnpm assert:supervisor` vert sous PowerShell et sous WSL (bundle Windows, exécution Ubuntu), et `eslint src` ainsi que `pnpm lint` à zéro erreur.
