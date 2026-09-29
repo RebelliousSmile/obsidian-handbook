@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: lancer les commandes locales de façon portable
@@ -75,3 +75,10 @@ journey
 | 1 | Sous Windows, `npm run check` et `pnpm check`, lancés par le superviseur, s'exécutent et rendent leur vrai statut. Une commande absente est rapportée par son nom, avec le statut 127. |
 | 2 | Lantern `npm run check` passe dans `supervise present` sous Windows natif. Un `NODE_OPTIONS` préexistant survit. L'enfant ne voit qu'une seule clé `PATH`, avec le garde en tête. |
 | 3 | Avec `SUPERVISOR_GIT` pointé sur un faux `git` en `.mjs`, chaque commande git du superviseur y passe. Sans la variable, le vrai `git` est appelé comme avant. |
+
+## Écarts constatés à l'exécution
+
+- `spawnCommand` était déjà livré en phase 1, sa tâche se réduit ici au branchement.
+- `present.mjs` exporte `guardedEnv(env)`. Cette fonction garde la seule clé PATH existante, retire toute autre variante de casse et tout doublon du garde, ajoute le hook à `NODE_OPTIONS` par `withRequire` et pose `SUPERVISOR_PRESENT`. La commande elle-même est résolue hors du dossier du garde (`exclude`).
+- Vérifié en Windows natif (Node 23.4). `npm --version` et `pnpm --version` sortent en 0. `gh release create`, lancé depuis un enfant Node sans shell, avec shell, ou par `cmd /c`, sort en 97. `gh --version` passe. Une commande absente sort en 127 et est nommée. **Lantern `npm run check` sort en 0 sous garde, en 62 s.** Avec `SUPERVISOR_GIT`, le faux git reçoit les appels ; sans la variable, le vrai git répond.
+- Sous WSL, pour tenir la CI Linux, les 36 scénarios existants et le harnais du garde passent toujours.

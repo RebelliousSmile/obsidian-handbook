@@ -9,7 +9,6 @@
  * train records only say which dispatch was already tried, so a failed run is
  * retried while a published candidate is never published again.
  */
-import { spawnSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { gh, ghJson } from "./gh.mjs";
@@ -21,6 +20,7 @@ import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
+import { spawnCommand } from "./spawn.mjs";
 
 const ADAPTERS = { pbta, adrenaline, mist };
 
@@ -185,7 +185,7 @@ function dispatch(file, topology, repo, step) {
 function runLocal(file, topology, repo, dir, evidenceDir, step) {
 	mkdirSync(evidenceDir, { recursive: true });
 	console.log(`$ ${step.command.map(quote).join(" ")}   (in ${dir})`);
-	const result = spawnSync(step.command[0], step.command.slice(1), { cwd: dir, stdio: "inherit" });
+	const result = spawnCommand(step.command[0], step.command.slice(1), { cwd: dir, stdio: "inherit" });
 	const conclusion = !result.error && result.status === 0 ? "success" : "failure";
 	updateRecord(file, topology, repo.id, (next) => {
 		next.runs = [...(next.runs ?? []), { step: step.step, command: step.command, conclusion, at: new Date().toISOString() }];

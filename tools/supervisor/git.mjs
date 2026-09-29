@@ -4,13 +4,18 @@
  * The supervisor never checks out, pulls, commits or pushes on its own. The
  * only command here that writes is `git fetch`, and it writes remote-tracking
  * refs, never the working tree or HEAD.
+ *
+ * `SUPERVISOR_GIT` replaces the binary, as `SUPERVISOR_GH` does for gh: a
+ * value ending in `.mjs` is run with the current node.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 export function git(cwd, args, options = {}) {
-	const result = spawnSync("git", args, {
+	const binary = process.env.SUPERVISOR_GIT || "git";
+	const viaNode = binary.endsWith(".mjs");
+	const result = spawnSync(viaNode ? process.execPath : binary, viaNode ? [binary, ...args] : args, {
 		cwd,
 		encoding: "utf8",
 		input: options.input,

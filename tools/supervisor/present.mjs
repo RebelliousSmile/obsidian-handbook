@@ -8,14 +8,14 @@
  * mistake. The report is Markdown; its content is also written to the train
  * record, where `approve` finds it.
  */
-import { spawnSync } from "node:child_process";
-import { delimiter } from "node:path";
+import { delimiter, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { announcedPublications, computeDigest, concernedRepos, trainFilesOf } from "./digest.mjs";
 import { evaluateTrain } from "./next.mjs";
 import { TRAINS_PATH } from "./train.mjs";
 import { repoDir, SupervisorError } from "./topology.mjs";
+import { pathKey, spawnCommand, withRequire } from "./spawn.mjs";
 
 export const GUARD_DIR = fileURLToPath(new URL("./guard", import.meta.url));
 
@@ -60,13 +60,34 @@ export function checkCheckouts(root, repos, label) {
 	return heads;
 }
 
+/**
+ * The environment of a guarded validation. The guard leads the PATH, under
+ * the key the environment already uses (`Path` on Windows), so a shell call
+ * meets its shims; its hook is preloaded in every Node child, so a Node tool
+ * spawning gh or git without a shell is refused too.
+ */
+export function guardedEnv(env = process.env) {
+	const key = pathKey(env);
+	const next = {};
+	for (const [name, value] of Object.entries(env)) {
+		if (name.toUpperCase() !== "PATH" || name === key) next[name] = value;
+	}
+	const rest = (env[key] ?? "").split(delimiter).filter((dir) => dir && resolve(dir) !== resolve(GUARD_DIR));
+	next[key] = [GUARD_DIR, ...rest].join(delimiter);
+	next.NODE_OPTIONS = withRequire(env.NODE_OPTIONS, join(GUARD_DIR, "hook.cjs"));
+	next.SUPERVISOR_PRESENT = "1";
+	return next;
+}
+
 /** Run `command` in `dir` behind the publication guard; its output is kept to its last lines. */
 export function runGuarded(dir, command, label) {
 	process.stderr.write(`${label}: ${command.join(" ")} in ${dir}\n`);
-	const result = spawnSync(command[0], command.slice(1), {
+	// The command itself is resolved past the guard's own shims.
+	const result = spawnCommand(command[0], command.slice(1), {
 		cwd: dir,
 		encoding: "utf8",
-		env: { ...process.env, PATH: `${GUARD_DIR}${delimiter}${process.env.PATH ?? ""}`, SUPERVISOR_PRESENT: "1" },
+		env: guardedEnv(),
+		exclude: [GUARD_DIR],
 		maxBuffer: 256 * 1024 * 1024,
 	});
 	const output = `${result.stdout ?? ""}${result.stderr ?? ""}${result.error ? `\n${result.error.message}` : ""}`;
