@@ -1,0 +1,139 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://github.com/RebelliousSmile/obsidian-handbook/supervisor/status.schema.json",
+	"title": "Output of supervise status --json",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["version", "root", "repos", "providers", "pins", "gaps", "train"],
+	"properties": {
+		"version": { "const": 1 },
+		"root": { "type": "string" },
+		"repos": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "path", "repository", "role", "present", "fetched", "branch", "head", "originMain", "clean", "ahead", "behind"],
+				"properties": {
+					"id": { "type": "string" },
+					"path": { "type": "string" },
+					"repository": { "type": "string" },
+					"role": { "enum": ["coordinator", "provider", "consumer"] },
+					"present": { "type": "boolean" },
+					"fetched": { "type": ["boolean", "null"] },
+					"branch": { "type": ["string", "null"] },
+					"head": { "$ref": "#/definitions/shaOrNull" },
+					"originMain": { "$ref": "#/definitions/shaOrNull" },
+					"clean": { "type": ["boolean", "null"] },
+					"ahead": { "type": ["integer", "null"], "minimum": 0 },
+					"behind": { "type": ["integer", "null"], "minimum": 0 }
+				}
+			}
+		},
+		"providers": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["id", "package", "repository", "latestRc", "latestFinal", "error"],
+				"properties": {
+					"id": { "type": "string" },
+					"package": { "type": "string" },
+					"repository": { "type": "string" },
+					"latestRc": { "$ref": "#/definitions/release" },
+					"latestFinal": { "$ref": "#/definitions/release" },
+					"error": { "type": ["string", "null"] }
+				}
+			}
+		},
+		"pins": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["consumer", "provider", "package", "url", "tag", "version", "rc", "lockfiles"],
+				"properties": {
+					"consumer": { "type": "string" },
+					"provider": { "type": "string" },
+					"package": { "type": "string" },
+					"url": { "type": "string" },
+					"tag": { "type": ["string", "null"] },
+					"version": { "type": ["string", "null"] },
+					"rc": { "type": ["boolean", "null"] },
+					"lockfiles": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"additionalProperties": false,
+							"required": ["file", "specifier", "url", "integrity"],
+							"properties": {
+								"file": { "enum": ["pnpm-lock.yaml", "package-lock.json"] },
+								"specifier": { "type": ["string", "null"] },
+								"url": { "type": ["string", "null"] },
+								"integrity": { "type": ["string", "null"], "pattern": "^sha512-" }
+							}
+						}
+					}
+				}
+			}
+		},
+		"gaps": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["kind", "repo", "message"],
+				"properties": {
+					"kind": {
+						"enum": [
+							"missing-repo",
+							"fetch-failed",
+							"no-origin-main",
+							"behind",
+							"releases-unavailable",
+							"pin-missing",
+							"pin-invalid",
+							"pin-lock-mismatch",
+							"pin-rc",
+							"pin-outdated",
+							"pin-divergent"
+						]
+					},
+					"repo": { "type": "string" },
+					"message": { "type": "string", "minLength": 1 }
+				}
+			}
+		},
+		"train": {
+			"oneOf": [
+				{ "type": "null" },
+				{
+					"type": "object",
+					"required": ["id", "status", "items"],
+					"properties": {
+						"id": { "type": "string" },
+						"status": { "enum": ["open", "closed"] },
+						"items": { "type": "array" }
+					}
+				}
+			]
+		}
+	},
+	"definitions": {
+		"shaOrNull": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+		"release": {
+			"oneOf": [
+				{ "type": "null" },
+				{
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["tag", "publishedAt"],
+					"properties": {
+						"tag": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+(?:-rc\\.\\d+)?$" },
+						"publishedAt": { "type": ["string", "null"] }
+					}
+				}
+			]
+		}
+	}
+}

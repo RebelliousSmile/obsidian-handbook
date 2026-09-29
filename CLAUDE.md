@@ -277,6 +277,21 @@ Cinq tags n'avaient aucune release, pour cinq pannes distinctes : `v2.10.0` (`EN
 - ⚠ `PBTA_ALIAS_TARGETS` est en revanche une **déclaration locale portant sur une sémantique amont**, ce que « keep game semantics outside consumers » et « drive Handbook menus from published metadata » refusent. Le fait est connu en amont (`KNOWN_ALIAS_TARGETS` dans `schema-pbta`) mais toujours **non publié**, y compris depuis que v5.5.0 publie ses `pack-contract.json` : aucune occurrence de « alias » dans le tarball installé, et `packs/salvage-run/pack-contract.json` déclare `salvage-run-playbook` comme une cible ordinaire. La liste en dur est donc un pis-aller assumé, à remplacer par la lecture d'une métadonnée dès que l'amont l'expose ;
 - « verify corpus and cross-tool round trips » n'est tenu qu'à moitié ici : les round trips de corpus le sont, le round trip croisé avec Lantern ne l'est pas.
 
+## Superviseur `pnpm supervise` : ce qui mord sur ce poste (constaté le 2026-09-29)
+
+Le guide opérateur est `doc/supervisor.fr.md` / `.en.md` ; ne pas le redire ici. Cinq pièges propres à ce poste Windows :
+
+- **`pnpm assert:supervisor` ne passe pas sous Windows natif**, ni en PowerShell (`spawnSync sh ENOENT`) ni en Git Bash (`spawnSync script ENOENT` : 19 scénarios, ceux qui simulent un TTY avec util-linux `script -qec`). `pnpm check` est donc rouge à cette étape sur Windows, pas ailleurs. Recette vérifiée (36/36) : bundler sous Windows, exécuter sous WSL **depuis PowerShell** (Git Bash réécrit `/mnt/c`) :
+  ```bash
+  node -e "require('esbuild').buildSync({entryPoints:['tools/supervisor.harness.mts'],outfile:'tools/.supervisor-harness-wsl/harness.cjs',bundle:true,platform:'node',format:'cjs',target:'node18',external:['obsidian','fs','ajv'],logLevel:'warning'})"
+  wsl -d Ubuntu --cd /mnt/c/Users/fxgui/Documents/Code/Perso/obsidian/obsidian-handbook -- node tools/.supervisor-harness-wsl/harness.cjs
+  ```
+  Supprimer `tools/.supervisor-harness-wsl/` ensuite, et ne rien éditer dans le checkout pendant le run : le harnais échoue sur « the harness left files in the Handbook checkout ».
+- **Le garde de publication (`tools/supervisor/guard/{gh,git}`) doit rester en LF.** Avec `autocrlf=true`, un checkout CRLF casse le shebang et le garde **laisse tout passer**, même sous WSL. `.gitattributes` force `eol=lf` : ne pas le retirer. Sous Windows natif, le garde ne s'interpose de toute façon pas (préfixe de `PATH` fait de scripts `sh`) : `present` et `converge` réels se lancent sous WSL.
+- **Le dossier doit s'appeler `obsidian-handbook`** (renommé depuis `obsidian/handbook` le 2026-09-29) : `supervisor/topology.json` le cherche à côté de `lantern` et des `schema-*`, et `--root` ne change que le parent. Lancer le superviseur depuis ce dépôt suffit à trouver les quatre autres.
+- **Un lockfile de l'arbre de travail peut mélanger CRLF et LF** (`git ls-files --eol` : `i/lf w/mixed`) : checkout `autocrlf=true`, puis `pnpm install` qui réécrit une partie en LF. Git n'y voit aucun diff, mais `readPin` lit le disque : avant la normalisation de `pnpmLockPins`, cela donnait de faux `pin-lock-mismatch` (« resolves … to nothing without SRI ») sur les seules entrées restées en CRLF.
+- **Dépôt déplacé → jonctions pnpm mortes** (`ERR_MODULE_NOT_FOUND` sur esbuild, jonctions de `node_modules` vers l'ancien chemin). `rtk pnpm install` avale l'invite de purge : lancer `rtk proxy pnpm install --config.confirmModulesPurge=false`.
+
 ## Conventions de travail
 
 - Ne pas commiter ni pousser sans demande explicite.

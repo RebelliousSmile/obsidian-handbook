@@ -63,7 +63,9 @@
 		"assert:provider-capabilities": "node tools/assert-provider-capabilities.mjs",
 		"assert:game-pack-contract": "node tools/assert-game-pack-contract.mjs",
 		"assert:contextual-toml-export": "node tools/assert-contextual-toml-export.mjs",
-		"assert:contextual-pack-blocks": "node tools/assert-contextual-pack-blocks.mjs"
+		"assert:contextual-pack-blocks": "node tools/assert-contextual-pack-blocks.mjs",
+		"supervise": "node tools/supervise.mjs",
+		"assert:supervisor": "node tools/assert-supervisor.mjs"
 	},
 	"keywords": [
 		"city of mist",

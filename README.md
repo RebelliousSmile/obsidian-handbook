@@ -27,6 +27,10 @@ Le [guide d'installation](https://github.com/RebelliousSmile/obsidian-handbook/w
 
 Le [wiki complet](https://github.com/RebelliousSmile/obsidian-handbook/wiki) contient les tutoriels dans les deux langues. Les contrats de jeu et leur présentation appartiennent aux dépôts de schémas ; Handbook gère l'installation, les réglages et le rendu Obsidian.
 
+## Superviseur
+
+`pnpm supervise` coordonne une correction qui traverse Handbook, Lantern et les trois dépôts de schémas : il suit les issues liées, présente les preuves, enregistre l'accord, publie les fournisseurs pas à pas, vérifie la convergence des consommateurs et ferme les issues sur preuves. Il ne publie rien sans accord. Voir le [guide du superviseur](doc/supervisor.fr.md).
+
 ## English
 
 Handbook is an [Obsidian](https://obsidian.md/) plugin for tabletop games. It installs declarative packs from public schema repositories and applies their styles, callouts, and Markdown blocks to notes. First launch offers City of Mist, Legend in the Mist, and :Otherscape; more sources can be added in settings.
@@ -40,6 +44,10 @@ Handbook began as a fork of [Brumes](https://github.com/4rtamis/obsidian-brumes)
 3. Choose a game on first launch. To add another, open **Settings → Handbook → Schema sources → Add source**.
 
 The [getting started guide](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Getting-Started-EN) covers sources, settings, illustrations, and local customization. The [documentation table](#documentation) links every guide in both languages, including the schema release train for PbtA, Adrenaline, and Mist.
+
+### Supervisor
+
+`pnpm supervise` coordinates a correction that spans Handbook, Lantern, and the three schema repositories: it tracks the linked issues, presents the evidence, records the approval, publishes the providers step by step, checks that the consumers converged, and closes the issues on evidence. It publishes nothing without an approval. See the [supervisor guide](doc/supervisor.en.md).
 
 ## Migration des anciens packs / Legacy pack migration
 

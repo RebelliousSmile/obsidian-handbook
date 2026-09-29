@@ -1,0 +1,543 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://github.com/RebelliousSmile/obsidian-handbook/supervisor/train.schema.json",
+	"title": "Supervisor train record",
+	"description": "One correction coordinated across the repositories of supervisor/topology.json. The record is the source of truth; the coordination issue is a projection of it.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"$schema",
+		"id",
+		"title",
+		"status",
+		"coordinationIssue",
+		"items",
+		"approval",
+		"publication"
+	],
+	"properties": {
+		"$schema": {
+			"const": "../train.schema.json"
+		},
+		"id": {
+			"$ref": "#/definitions/id"
+		},
+		"title": {
+			"type": "string",
+			"minLength": 1
+		},
+		"status": {
+			"enum": [
+				"open",
+				"closed"
+			]
+		},
+		"coordinationIssue": {
+			"$ref": "#/definitions/issueRef"
+		},
+		"items": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/item"
+			}
+		},
+		"approval": {
+			"description": "Written by supervise approve, only after the train id was typed on a terminal.",
+			"oneOf": [
+				{
+					"type": "null"
+				},
+				{
+					"$ref": "#/definitions/approval"
+				}
+			]
+		},
+		"publication": {
+			"description": "Written by supervise publish (phase 4), one entry per provider.",
+			"type": "object",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"candidate": {
+						"$ref": "#/definitions/archive"
+					},
+					"final": {
+						"$ref": "#/definitions/archive"
+					},
+					"runs": {
+						"description": "Every step supervise publish --run started, oldest first: a dispatched workflow or a local command.",
+						"type": "array",
+						"items": {
+							"$ref": "#/definitions/run"
+						}
+					}
+				}
+			}
+		},
+		"presentation": {
+			"description": "Written by supervise present: what approve binds to.",
+			"$ref": "#/definitions/presentation"
+		},
+		"convergence": {
+			"description": "Written by supervise converge: the checks that proved every consumer adopted every final, at these SHAs.",
+			"$ref": "#/definitions/convergence"
+		},
+		"consumerReleases": {
+			"description": "Written by supervise close: the consumer releases observed on GitHub, Lantern then Handbook.",
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/consumerRelease"
+			}
+		},
+		"closedAt": {
+			"description": "Written by supervise close --run, once the coordination issue is closed.",
+			"type": "string"
+		}
+	},
+	"definitions": {
+		"id": {
+			"type": "string",
+			"pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+		},
+		"sha": {
+			"type": "string",
+			"pattern": "^[0-9a-f]{40}$"
+		},
+		"issueRef": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"repo",
+				"number",
+				"url"
+			],
+			"properties": {
+				"repo": {
+					"$ref": "#/definitions/id"
+				},
+				"number": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
+				}
+			}
+		},
+		"item": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"repo",
+				"issue",
+				"url",
+				"title",
+				"baseSha",
+				"dependsOn",
+				"expectedEvidence"
+			],
+			"properties": {
+				"repo": {
+					"$ref": "#/definitions/id"
+				},
+				"issue": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
+				},
+				"title": {
+					"type": "string"
+				},
+				"baseSha": {
+					"$ref": "#/definitions/sha"
+				},
+				"dependsOn": {
+					"type": "array",
+					"uniqueItems": true,
+					"items": {
+						"$ref": "#/definitions/id"
+					}
+				},
+				"expectedEvidence": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"minLength": 1
+					}
+				}
+			}
+		},
+		"trainFiles": {
+			"type": "object",
+			"additionalProperties": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			}
+		},
+		"publications": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"minLength": 1
+			}
+		},
+		"digest": {
+			"type": "string",
+			"pattern": "^sha256:[0-9a-f]{64}$"
+		},
+		"run": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"step",
+				"conclusion",
+				"at"
+			],
+			"properties": {
+				"step": {
+					"type": "string",
+					"minLength": 1
+				},
+				"workflow": {
+					"type": "string"
+				},
+				"inputs": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"command": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"id": {
+					"type": "integer"
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
+				},
+				"conclusion": {
+					"type": [
+						"string",
+						"null"
+					]
+				},
+				"at": {
+					"type": "string"
+				}
+			}
+		},
+		"archive": {
+			"type": "object",
+			"required": [
+				"tag",
+				"url",
+				"sha256",
+				"integrity"
+			],
+			"properties": {
+				"tag": {
+					"type": "string"
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
+				},
+				"sha256": {
+					"type": "string",
+					"pattern": "^[0-9a-f]{64}$"
+				},
+				"integrity": {
+					"type": "string",
+					"pattern": "^sha512-"
+				}
+			}
+		},
+		"presentation": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"presentedAt",
+				"presentable",
+				"reasons",
+				"digest",
+				"repos",
+				"trainFiles",
+				"publications"
+			],
+			"properties": {
+				"presentedAt": {
+					"type": "string",
+					"minLength": 1
+				},
+				"presentable": {
+					"type": "boolean"
+				},
+				"reasons": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"digest": {
+					"$ref": "#/definitions/digest"
+				},
+				"repos": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"repo",
+							"role",
+							"sha",
+							"baseSha",
+							"commits",
+							"diffstat",
+							"validations"
+						],
+						"properties": {
+							"repo": {
+								"$ref": "#/definitions/id"
+							},
+							"role": {
+								"enum": [
+									"coordinator",
+									"provider",
+									"consumer"
+								]
+							},
+							"sha": {
+								"$ref": "#/definitions/sha"
+							},
+							"baseSha": {
+								"oneOf": [
+									{
+										"type": "null"
+									},
+									{
+										"$ref": "#/definitions/sha"
+									}
+								]
+							},
+							"commits": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"additionalProperties": false,
+									"required": [
+										"sha",
+										"subject"
+									],
+									"properties": {
+										"sha": {
+											"$ref": "#/definitions/sha"
+										},
+										"subject": {
+											"type": "string"
+										}
+									}
+								}
+							},
+							"diffstat": {
+								"type": "string"
+							},
+							"validations": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"additionalProperties": false,
+									"required": [
+										"command",
+										"status",
+										"tail"
+									],
+									"properties": {
+										"command": {
+											"type": "array",
+											"items": {
+												"type": "string"
+											}
+										},
+										"status": {
+											"type": "integer"
+										},
+										"tail": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"trainFiles": {
+					"$ref": "#/definitions/trainFiles"
+				},
+				"publications": {
+					"$ref": "#/definitions/publications"
+				}
+			}
+		},
+		"approval": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"approvedAt",
+				"digest",
+				"repos",
+				"trainFiles",
+				"publications"
+			],
+			"properties": {
+				"approvedAt": {
+					"type": "string",
+					"minLength": 1
+				},
+				"digest": {
+					"$ref": "#/definitions/digest"
+				},
+				"repos": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"repo",
+							"sha"
+						],
+						"properties": {
+							"repo": {
+								"$ref": "#/definitions/id"
+							},
+							"sha": {
+								"$ref": "#/definitions/sha"
+							}
+						}
+					}
+				},
+				"trainFiles": {
+					"$ref": "#/definitions/trainFiles"
+				},
+				"publications": {
+					"$ref": "#/definitions/publications"
+				}
+			}
+		},
+		"convergence": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"status",
+				"at",
+				"repos",
+				"checks",
+				"notes"
+			],
+			"properties": {
+				"status": {
+					"enum": [
+						"passed",
+						"failed"
+					]
+				},
+				"at": {
+					"type": "string"
+				},
+				"repos": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"repo",
+							"sha"
+						],
+						"properties": {
+							"repo": {
+								"$ref": "#/definitions/id"
+							},
+							"sha": {
+								"$ref": "#/definitions/sha"
+							}
+						}
+					}
+				},
+				"checks": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"repo",
+							"command",
+							"status"
+						],
+						"properties": {
+							"repo": {
+								"$ref": "#/definitions/id"
+							},
+							"command": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"status": {
+								"type": "integer"
+							}
+						}
+					}
+				},
+				"notes": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"consumerRelease": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"repo",
+				"version",
+				"tag",
+				"sha",
+				"url"
+			],
+			"properties": {
+				"repo": {
+					"$ref": "#/definitions/id"
+				},
+				"version": {
+					"type": "string",
+					"minLength": 1
+				},
+				"tag": {
+					"type": "string",
+					"minLength": 1
+				},
+				"sha": {
+					"$ref": "#/definitions/sha"
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
+				}
+			}
+		}
+	}
+}

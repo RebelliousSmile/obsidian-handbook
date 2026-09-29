@@ -1,0 +1,143 @@
+{
+	"$schema": "./topology.schema.json",
+	"version": 1,
+	"repos": [
+		{
+			"id": "obsidian-handbook",
+			"path": "obsidian-handbook",
+			"repository": "RebelliousSmile/obsidian-handbook",
+			"role": "coordinator",
+			"trainFiles": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			],
+			"validations": [
+				[
+					"pnpm",
+					"check"
+				]
+			],
+			"convergence": [
+				[
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				]
+			]
+		},
+		{
+			"id": "lantern",
+			"path": "lantern",
+			"repository": "RebelliousSmile/lantern",
+			"role": "consumer",
+			"trainFiles": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"package-lock.json",
+				"release-train.matrix.json",
+				"CHANGELOG.md",
+				"release-train/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			],
+			"convergence": [
+				[
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-train-matrix"
+				]
+			]
+		},
+		{
+			"id": "schema-pbta",
+			"path": "schema-pbta",
+			"repository": "RebelliousSmile/schema-pbta",
+			"role": "provider",
+			"package": "schema-pbta",
+			"adapter": "pbta",
+			"consumers": [
+				"obsidian-handbook",
+				"lantern"
+			],
+			"trainFiles": [
+				"release-train/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			]
+		},
+		{
+			"id": "schema-adrenaline",
+			"path": "schema-adrenaline",
+			"repository": "RebelliousSmile/schema-adrenaline",
+			"role": "provider",
+			"package": "schema-adrenaline",
+			"adapter": "adrenaline",
+			"consumers": [
+				"obsidian-handbook",
+				"lantern"
+			],
+			"trainFiles": [
+				"release-train/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			]
+		},
+		{
+			"id": "schema-in-the-mist",
+			"path": "schema-in-the-mist",
+			"repository": "RebelliousSmile/schema-in-the-mist",
+			"role": "provider",
+			"package": "schema-in-the-mist",
+			"adapter": "mist",
+			"consumers": [
+				"obsidian-handbook",
+				"lantern"
+			],
+			"trainFiles": [
+				"release-trains/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			]
+		}
+	]
+}
