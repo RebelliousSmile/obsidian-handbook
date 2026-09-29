@@ -1,6 +1,6 @@
 ---
 objective: "`supervise present`, `converge` et `publish` tournent sous Windows natif comme sous POSIX, derrière un garde de publication qui refuse les mêmes appels sur les deux plateformes, et `pnpm assert:supervisor` le prouve sur les deux."
-status: pending
+status: in-progress
 ---
 
 # Plan: le superviseur tourne sur tout OS

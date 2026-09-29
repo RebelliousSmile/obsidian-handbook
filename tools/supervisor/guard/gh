@@ -1,31 +1,8 @@
 #!/bin/sh
 # Supervisor guard, first on the PATH of `supervise present` validations.
 # Refuses what publishes (release writes, workflow dispatch, pull request
-# merge, API writes); hands every other gh call to the real binary.
+# merge, API writes); the rules live in rules.cjs, shared with the
+# child_process hook. Fails closed: no node, no call.
 guard_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-refuse() {
-	echo "supervisor guard: \"gh $*\" publishes and is refused before approval (supervise present)" >&2
-	exit 97
-}
-case "$1 $2" in
-	"release create"*|"release upload"*|"release edit"*|"release delete"*) refuse "$@" ;;
-	"workflow run"*|"run rerun"*|"pr merge"*) refuse "$@" ;;
-esac
-# `gh api` writes as soon as it sends a method other than GET or a field.
-if [ "$1" = api ]; then
-	previous=""
-	for argument in "$@"; do
-		case "$previous" in
-			-X|--method) [ "$argument" = GET ] || refuse "$@" ;;
-		esac
-		case "$argument" in
-			-f|-F|--field|--raw-field|--input|-f*|-F*|--field=*|--raw-field=*|--input=*) refuse "$@" ;;
-			--method=GET|-XGET) ;;
-			--method=*|-X?*) refuse "$@" ;;
-		esac
-		previous=$argument
-	done
-fi
-real_path=$(printf '%s\n' "$PATH" | tr ':' '\n' | grep -vxF "$guard_dir" | paste -sd: -)
-real=$(PATH=$real_path command -v gh) || { echo "supervisor guard: no gh outside $guard_dir" >&2; exit 127; }
-exec "$real" "$@"
+command -v node >/dev/null 2>&1 || { echo "supervisor guard: node not found, gh refused" >&2; exit 127; }
+exec node "$guard_dir/run.mjs" gh "$@"

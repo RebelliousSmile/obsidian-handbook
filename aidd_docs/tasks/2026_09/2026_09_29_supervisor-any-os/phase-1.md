@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: les règles du garde en Node, et deux voies d'interception
@@ -99,3 +99,13 @@ journey
 | 2 | Sous Windows comme sous POSIX, `gh release create`, lancé par un shell avec le garde en tête du `PATH`, sort en 97 sans atteindre le vrai `gh`. `gh issue list`, lui, l'atteint. Sans `node` ou sans `gh` réel, l'appel échoue au lieu de passer. |
 | 3 | Un processus Node lancé avec le hook, qui appelle `spawnSync("gh", ["workflow", "run", "x"])`, reçoit un statut 97, et le vrai `gh` ne reçoit aucun appel. `spawnSync("git", ["status"])` passe. |
 | 4 | Le harnais des règles passe. Retirer une règle le fait échouer, en nommant l'appel concerné. |
+
+## Écarts constatés à l'exécution
+
+- **`rules.cjs`, pas de `rules.mjs`.** Le point ouvert ESM/CJS est tranché pour CJS, sans réexport ESM, car aucun consommateur ne l'exige. `run.mjs` le charge par `createRequire`, le harnais par import. `require(esm)` n'est donc jamais requis, quel que soit le Node 20 de la CI.
+- **`tools/supervisor/spawn.mjs` arrive dès cette phase**, alors que le plan le prévoyait en phase 2 : `run.mjs` en a besoin pour résoudre et lancer le binaire réel. On y trouve `pathKey`, `findExecutable` (PATHEXT et exclusion du garde), `withRequire` et `spawnCommand`. L'échappement de `cmd.exe` suit cross-spawn (`^` devant les méta-caractères, doublé pour les shims `node_modules\.bin`) plutôt que le simple « `"` doublé » prévu.
+- **`NODE_OPTIONS` se lit avec des échappements.** Un chemin Windows entre guillemets y perd ses `\`. `withRequire` échappe donc `\` et `"`, et le harnais le vérifie à côté d'une option préexistante (`--max-old-space-size`).
+- **Le hook couvre aussi les shells explicites** (`cmd /c|/k`, `sh|bash|dash|zsh -c`) et les lignes composées (`&`, `|`, `;`, parenthèses). Sur un refus, l'appel est réécrit en `node -e` qui sort en 97 : `spawnSync` rend un statut 97, `execSync` et `execFileSync` lèvent une erreur de statut 97, `spawn`, `exec` et `execFile` rendent un enfant qui sort en 97.
+- **Les sondes du harnais passent par des fichiers.** Sur ce poste, la protection antivirale refuse en `EPERM` un `node -e` dont la ligne contient à la fois `exec(` et `spawn(`.
+- **La preuve de passage est intégrée au harnais, pour chaque voie.** Chaque voie est rejouée sans garde, pour montrer que le faux `gh` était bien atteignable. La mutation manuelle (règle `push` vidée) fait échouer « guard rules » avec `guardRefusal must refuse: git push`, et « PATH shims ». Elle n'a pas été commitée.
+- Vérifié sous Windows natif (Node 23.4) et sous WSL Ubuntu (Node 24.15). `pnpm build` et les deux portées de lint sont vertes.

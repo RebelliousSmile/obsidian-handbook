@@ -1,43 +1,7 @@
 #!/bin/sh
 # Supervisor guard, first on the PATH of `supervise present` validations.
-# Refuses push and tag creation; hands every other git call to the real
-# binary. Global options (-C, -c, --git-dir=...) are skipped to find the
-# subcommand.
+# Refuses push and tag creation; the rules live in rules.cjs, shared with the
+# child_process hook. Fails closed: no node, no call.
 guard_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-refuse() {
-	echo "supervisor guard: \"git $*\" publishes and is refused before approval (supervise present)" >&2
-	exit 97
-}
-subcommand=""
-skip=0
-for argument in "$@"; do
-	if [ "$skip" = 1 ]; then skip=0; continue; fi
-	case "$argument" in
-		-C|-c|--git-dir|--work-tree|--namespace|--exec-path) skip=1 ;;
-		-*) ;;
-		*) subcommand=$argument; break ;;
-	esac
-done
-case "$subcommand" in
-	push) refuse "$@" ;;
-	tag)
-		# Listing tags is reading: no argument, or -l/--list among them. Any
-		# other form (a name, -d, -a, -f...) creates or deletes one.
-		listing=1
-		seen=0
-		for argument in "$@"; do
-			if [ "$seen" = 1 ]; then
-				case "$argument" in
-					-l|--list) listing=1; break ;;
-					-n*|--contains*|--no-contains*|--points-at*|--merged*|--no-merged*|--sort*|--format*|--column*|--no-column|-i|--ignore-case) ;;
-					*) listing=0 ;;
-				esac
-			fi
-			[ "$argument" = tag ] && seen=1
-		done
-		[ "$listing" = 1 ] || refuse "$@"
-		;;
-esac
-real_path=$(printf '%s\n' "$PATH" | tr ':' '\n' | grep -vxF "$guard_dir" | paste -sd: -)
-real=$(PATH=$real_path command -v git) || { echo "supervisor guard: no git outside $guard_dir" >&2; exit 127; }
-exec "$real" "$@"
+command -v node >/dev/null 2>&1 || { echo "supervisor guard: node not found, git refused" >&2; exit 127; }
+exec node "$guard_dir/run.mjs" git "$@"

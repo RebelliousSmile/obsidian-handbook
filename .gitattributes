@@ -1,3 +1,5 @@
-# The publication guard is a PATH prefix of POSIX scripts: a CRLF checkout
-# breaks their shebang and the guard fails open.
+# The publication guard's sh shims lead the PATH of validations: a CRLF
+# checkout breaks their shebang and the shell path of the guard fails open.
 tools/supervisor/guard/* text eol=lf
+# Their Windows twins are batch files, read by cmd.exe: CRLF.
+tools/supervisor/guard/*.cmd text eol=crlf
