@@ -7,7 +7,7 @@
  * what it printed, what it wrote, and which git and gh calls it made.
  */
 import assert from "assert/strict";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import Ajv from "ajv";
 import { createWorld, git, HANDBOOK, sh, SUPERVISE, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
@@ -484,6 +484,287 @@ scenario("a validation cannot release, push or tag: the guard refuses, ordinary 
 	const gitCalls = readFileSync(world.gitLog, "utf8");
 	assert.doesNotMatch(gitCalls, /^push/m, "a push reached git");
 	assert.doesNotMatch(gitCalls, /^tag v9/m, "a tag reached git");
+});
+
+// Phase 4: publication, one provider at a time, under the approval.
+
+const NEXT = "1.1.0";
+
+function bytesOf(provider: string, variant = ""): string {
+	return `package ${provider} ${NEXT}${variant}\n`;
+}
+
+/**
+ * A train of `providers` then both consumers, every item closed by a commit
+ * (each provider's bumps it to 1.1.0), presented and approved unless told not.
+ */
+function approvedTrain(world: World, providers: string[], options: { approve?: boolean; secrets?: boolean; before?: () => void } = {}): string {
+	const topology = testTopology(world);
+	const items: Array<[string, number]> = [...providers.map((id, index): [string, number] => [id, 50 + index]), ["obsidian-handbook", 12], ["lantern", 40]];
+	world.updateState((state) => {
+		for (const [repo, number] of items) state.issues[REPOSITORY[repo]] = { [number]: { number, title: `Change ${repo}`, state: "OPEN" } };
+		if (options.secrets !== false) state.secrets[REPOSITORY["schema-pbta"]] = ["RELEASE_TOKEN"];
+	});
+	openTrain(world);
+	for (const [repo, number] of items) ok(world.supervise(["link", `${repo}#${number}`]), `link ${repo}`);
+	for (const [repo, number] of items) {
+		const files: Record<string, string> = { "src/change.ts": `export const change = ${number};\n` };
+		if (providers.includes(repo)) files["package.json"] = `${JSON.stringify({ name: repo, version: NEXT }, null, "\t")}\n`;
+		const commit = world.land(repo, files, `Change (fixes #${number})`);
+		world.updateState((state) => {
+			state.issues[REPOSITORY[repo]][number].state = "CLOSED";
+			state.events[`repos/${REPOSITORY[repo]}/issues/${number}/events`] = [{ event: "closed", commit_id: commit }];
+		});
+	}
+	options.before?.();
+	if (options.approve !== false) presentAndApprove(world, topology);
+	return topology;
+}
+
+function publish(world: World, run: boolean) {
+	return world.supervise(run ? ["publish", "--run"] : ["publish"]);
+}
+
+function dispatches(world: World, workflow?: string): string[][] {
+	return world.readState().calls
+		.filter((call: any) => call.args[0] === "workflow" && call.args[1] === "run" && (!workflow || call.args[2] === workflow))
+		.map((call: any) => call.args);
+}
+
+/** Both consumers land the candidate in place of the v1.0.0 pin: package.json and every lockfile. */
+function adopt(world: World, provider: string, candidate: { tag: string; url: string; integrity: string }): void {
+	const final = world.archive(provider, "v1.0.0");
+	const consumers: Array<[string, string[]]> = [["obsidian-handbook", ["package.json", "pnpm-lock.yaml"]], ["lantern", ["package.json", "pnpm-lock.yaml", "package-lock.json"]]];
+	for (const [id, files] of consumers) {
+		const changed: Record<string, string> = {};
+		for (const file of files) {
+			changed[file] = readFileSync(resolve(world.dir(id), file), "utf8").split(final.url).join(candidate.url).split(final.integrity).join(candidate.integrity);
+		}
+		world.landFiles(id, changed, `Adopt ${provider} ${candidate.tag}`);
+	}
+}
+
+/** The provider lands the manifest a human step asked for, with exactly the JSON it printed. */
+function landInstructedManifest(world: World, provider: string, output: string): string {
+	const path = /commit (\S+) on main of the provider/.exec(output);
+	assert.ok(path, `no manifest instruction in:\n${output}`);
+	const lines = output.split("\n");
+	const start = lines.findIndex((line) => line.includes("with this candidate:"));
+	const end = lines.findIndex((line, index) => index > start && line.includes("Keep the other fields"));
+	const manifest = JSON.parse(lines.slice(start + 1, end).join("\n"));
+	world.landFiles(provider, { [path[1]]: `${JSON.stringify(manifest, null, "\t")}\n` }, `Release train manifest ${path[1]}`);
+	return path[1];
+}
+
+/** schema-in-the-mist from its approval to its local promotion, whose final carries `finalBytes`. */
+function driveMist(world: World, finalBytes: string) {
+	const mist = REPOSITORY["schema-in-the-mist"];
+	world.updateState((state) => {
+		state.workflowEffects[`${mist} release-candidate.yml`] = [{ createRelease: world.release("schema-in-the-mist", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-in-the-mist")) }];
+		state.localEffects = { "schema-in-the-mist release-train:promote": [{ repository: mist, createRelease: world.release("schema-in-the-mist", `v${NEXT}`, "2026-09-29T11:00:00Z", finalBytes) }] };
+	});
+	let output = ok(publish(world, true), "publish --run: candidate");
+	assert.match(output, /adopt the candidate v1\.1\.0-rc\.1 of schema-in-the-mist and land it on origin\/main of obsidian-handbook and lantern/);
+	const candidate = world.archive("schema-in-the-mist", `v${NEXT}-rc.1`);
+	assert.deepEqual(readRecord(world).publication["schema-in-the-mist"].candidate, { tag: candidate.tag, url: candidate.url, sha256: candidate.sha256, integrity: candidate.integrity });
+	adopt(world, "schema-in-the-mist", candidate);
+	output = ok(publish(world, true), "publish --run: manifest");
+	assert.equal(landInstructedManifest(world, "schema-in-the-mist", output), `release-trains/v${NEXT}.json`);
+	return { candidate, result: publish(world, true) };
+}
+
+scenario("publish shows the next step and its exact command, runs nothing, and says the same twice", (world) => {
+	approvedTrain(world, ["schema-pbta", "schema-in-the-mist"], { secrets: false });
+	const sha = readRecord(world).approval.repos.find((entry: any) => entry.repo === "schema-pbta").sha;
+	const first = ok(publish(world, false), "publish");
+	assert.ok(first.includes(`$ gh workflow run release.yml -R RebelliousSmile/schema-pbta --ref main -f mode=digest -f provider_commit=${sha}`), first);
+	assert.match(first, /Nothing was run/);
+	assert.equal(ok(publish(world, false), "publish again"), first, "a same observation gave another step");
+	assert.deepEqual(dispatches(world), []);
+	assert.equal(world.readState().calls.filter((call: any) => call.args[0] === "secret").length, 0, "publish without --run read secrets");
+	assert.equal(readRecord(world).publication["schema-pbta"]?.runs, undefined);
+});
+
+scenario("a same observation always gives the same step, for each adapter", () => {
+	const repo = (id: string) => TOPOLOGY.repos.find((entry: any) => entry.id === id);
+	const candidate = { tag: "v1.1.0-rc.1", url: "https://github.com/o/r/releases/download/v1.1.0-rc.1/p-1.1.0.tgz", sha256: "a".repeat(64), integrity: "sha512-x" };
+	const run = (conclusion: string | null) => ({ step: "s", url: "https://github.com/o/r/actions/runs/1", conclusion, at: "t" });
+	const common = { sha: "b".repeat(40), version: NEXT, finalTag: `v${NEXT}`, final: null, candidate, published: true, adopted: true, trainProblem: null, trainPath: "release-train/x.json" };
+	const adoption = [{ repo: "obsidian-handbook", sha: "c".repeat(40), adopted: true }, { repo: "lantern", sha: "d".repeat(40), adopted: false }];
+	const observations: Array<[any, any]> = [
+		["pbta", { ...common, repo: repo("schema-pbta"), provider: "schema-pbta", candidate: null, runs: { digest: run(null) }, inputs: { digest: {} } }],
+		["pbta", { ...common, repo: repo("schema-pbta"), provider: "schema-pbta", candidateProblem: null, adoption, runs: {}, inputs: {} }],
+		["pbta", { ...common, repo: repo("schema-pbta"), provider: "schema-pbta", candidateProblem: null, adoption: adoption.map((entry) => ({ ...entry, adopted: true })), runs: { train: run("success"), promote: run("failure") }, inputs: { promote: { mode: "promote" } } }],
+		["adrenaline", { ...common, repo: repo("schema-adrenaline"), provider: "schema-adrenaline", candidateTag: "v1.1.0-rc.1", published: false, runs: { candidate: null }, inputs: { candidate: { tag: "v1.1.0-rc.1" } } }],
+		["adrenaline", { ...common, repo: repo("schema-adrenaline"), provider: "schema-adrenaline", adoption: [], tagPushed: false, runs: { train: run("success") }, inputs: {} }],
+		["mist", { ...common, repo: repo("schema-in-the-mist"), provider: "schema-in-the-mist", adoption: [], checkout: { dir: "/m", head: "e", originMain: "e", clean: true }, proven: false, provenance: "/p.json", runs: {}, inputs: {} }],
+		["mist", { ...common, repo: repo("schema-in-the-mist"), provider: "schema-in-the-mist", adoption: [], checkout: { dir: "/m", head: "e", originMain: "f", clean: true }, runs: {}, inputs: {} }],
+	];
+	// The adapters are ES modules that locate the repository by import.meta: they are loaded by node itself, not bundled.
+	const probe = [
+		"const observations = JSON.parse(process.argv[1]);",
+		"const results = [];",
+		"for (const [name, observation] of observations) {",
+		"\tconst adapter = await import(`./tools/supervisor/adapters/${name}.mjs`);",
+		"\tconst copy = structuredClone(observation);",
+		"\tresults.push({ first: adapter.nextStep(observation), second: adapter.nextStep(copy), untouched: JSON.stringify(observation) === JSON.stringify(copy) });",
+		"}",
+		"console.log(JSON.stringify(results));",
+	].join("\n");
+	const result = sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, JSON.stringify(observations)]);
+	for (const [index, entry] of (JSON.parse(ok(result, "nextStep probe")) as any[]).entries()) {
+		const provider = observations[index][1].provider;
+		assert.notEqual(entry.first.kind, "done", `${provider}: observation ${index} is not finished`);
+		assert.deepEqual(entry.second, entry.first, `${provider}: a copy of observation ${index} gave another step`);
+		assert.ok(entry.untouched, `${provider}: nextStep changed observation ${index}`);
+	}
+});
+
+scenario("publish --run takes schema-pbta through digest, stage, release-train and promote with the manifest inputs", (world) => {
+	approvedTrain(world, ["schema-pbta"]);
+	const pbta = REPOSITORY["schema-pbta"];
+	const sha = readRecord(world).approval.repos.find((entry: any) => entry.repo === "schema-pbta").sha;
+	const candidate = world.archive("schema-pbta", `v${NEXT}-rc.1`, bytesOf("schema-pbta"));
+	const receipt = resolve(world.tmp, "receipt", "candidate-digest.json");
+	mkdirSync(resolve(world.tmp, "receipt"));
+	writeFileSync(receipt, JSON.stringify({ protocol: 1, providerCommit: sha, version: NEXT, filename: `schema-pbta-${NEXT}.tgz`, sha256: candidate.sha256, integrity: candidate.integrity }));
+	world.updateState((state) => {
+		state.workflowEffects[`${pbta} release.yml`] = [
+			{ artifacts: [{ name: `schema-pbta-digest-${sha}`, file: receipt }] },
+			{ createRelease: world.release("schema-pbta", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-pbta")) },
+			{ createRelease: world.release("schema-pbta", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-pbta")) },
+		];
+	});
+	let output = ok(publish(world, true), "publish --run: digest");
+	assert.equal(readRecord(world).publication["schema-pbta"].candidate.sha256, candidate.sha256, "the receipt's candidate is recorded before its manifest");
+	const candidatePath = landInstructedManifest(world, "schema-pbta", output);
+	assert.equal(candidatePath, `release-train/candidates/schema-pbta-v${NEXT}-rc.1.json`);
+	output = ok(publish(world, true), "publish --run: stage");
+	assert.match(output, /adopt the candidate v1\.1\.0-rc\.1 of schema-pbta/);
+	adopt(world, "schema-pbta", candidate);
+	output = ok(publish(world, true), "publish --run: train manifest");
+	const trainPath = landInstructedManifest(world, "schema-pbta", output);
+	assert.equal(trainPath, `release-train/schema-pbta-v${NEXT}.json`);
+	output = ok(publish(world, true), "publish --run: release-train and promote");
+	assert.match(output, /Every provider of train couleur-otherscape is published/);
+
+	const head = ["-R", pbta, "--ref", "main"];
+	assert.deepEqual(dispatches(world), [
+		["workflow", "run", "release.yml", ...head, "-f", "mode=digest", "-f", `provider_commit=${sha}`],
+		["workflow", "run", "release.yml", ...head, "-f", "mode=stage", "-f", `provider_commit=${sha}`, "-f", `config=${candidatePath}`],
+		["workflow", "run", "release-train.yml", ...head, "-f", `provider_commit=${sha}`, "-f", `config=${trainPath}`],
+		["workflow", "run", "release.yml", ...head, "-f", "mode=promote", "-f", `provider_commit=${sha}`, "-f", `config=${trainPath}`],
+	]);
+	const record = readRecord(world).publication["schema-pbta"];
+	assert.equal(record.final.tag, `v${NEXT}`);
+	assert.equal(record.final.sha256, record.candidate.sha256);
+	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "release-train success", "promote success"]);
+	ok(world.supervise(["approve", "--verify"]), "the approval still holds after the publication");
+});
+
+scenario("publish --run promotes schema-in-the-mist locally in its checkout, with the candidate's bytes", (world) => {
+	approvedTrain(world, ["schema-in-the-mist"]);
+	const { candidate, result } = driveMist(world, bytesOf("schema-in-the-mist"));
+	assert.match(ok(result, "publish --run: assert and promote"), /Every provider of train couleur-otherscape is published/);
+	const mistDir = world.dir("schema-in-the-mist");
+	const evidence = resolve(world.dir("obsidian-handbook"), "supervisor/trains", `${TRAIN_ID}.evidence`, `schema-in-the-mist-v${NEXT}.provenance.json`);
+	assert.deepEqual(world.readState().localCalls.map((call: any) => [call.cwd, ...call.args]), [
+		[mistDir, "run", "release-train:assert", "--", `release-trains/v${NEXT}.json`, "--output", evidence],
+		[mistDir, "run", "release-train:promote", "--", `release-trains/v${NEXT}.json`, "--evidence", evidence],
+	]);
+	assert.ok(existsSync(evidence), "the provenance was not written");
+	const record = readRecord(world).publication["schema-in-the-mist"];
+	assert.equal(record.final.sha256, candidate.sha256);
+	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate success", "assert success", "promote success"]);
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["release-candidate.yml"]);
+});
+
+scenario("without a valid approval, publish --run dispatches nothing and runs nothing", (world) => {
+	approvedTrain(world, ["schema-in-the-mist"], { approve: false });
+	let result = publish(world, true);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stderr, /has no approval/);
+	presentAndApprove(world, testTopology(world));
+	const outside = world.land("schema-in-the-mist", { "src/late.ts": "export {};\n" }, "late change");
+	result = publish(world, true);
+	assert.equal(result.status, 1, result.stdout);
+	assert.ok(result.stderr.includes(`commit ${outside.slice(0, 10)} changes src/late.ts, outside the train files`), result.stderr);
+	assert.deepEqual(dispatches(world), []);
+	assert.equal(world.readState().localCalls, undefined);
+});
+
+scenario("after a failed release-train, publish resumes at the proof and never publishes the candidate again", (world) => {
+	approvedTrain(world, ["schema-adrenaline"]);
+	const adrenaline = REPOSITORY["schema-adrenaline"];
+	world.updateState((state) => {
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
+		state.workflowEffects[`${adrenaline} release-train.yml`] = [{ conclusion: "failure" }, {}];
+		state.workflowEffects[`${adrenaline} release.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-adrenaline")) }];
+	});
+	ok(publish(world, true), "publish --run: candidate");
+	adopt(world, "schema-adrenaline", world.archive("schema-adrenaline", `v${NEXT}-rc.1`));
+	const trainPath = landInstructedManifest(world, "schema-adrenaline", ok(publish(world, true), "publish --run: manifest"));
+	const failed = publish(world, true);
+	assert.equal(failed.status, 1, failed.stdout);
+	assert.match(failed.stderr, /release-train\.yml run https:\/\/github\.com\/RebelliousSmile\/schema-adrenaline\/actions\/runs\/\d+ concluded failure/);
+
+	const shown = ok(publish(world, false), "publish after the failure");
+	assert.ok(shown.includes(`$ gh workflow run release-train.yml -R ${adrenaline} --ref main -f manifest=${trainPath}`), shown);
+	const tagStep = ok(publish(world, true), "publish --run: release-train again");
+	assert.match(tagStep, /git tag v1\.1\.0 origin\/main && git push origin v1\.1\.0/);
+	git(world.dir("schema-adrenaline"), "tag", `v${NEXT}`, "origin/main");
+	git(world.dir("schema-adrenaline"), "push", "--quiet", "origin", `v${NEXT}`);
+	assert.match(ok(publish(world, true), "publish --run: release"), /Every provider of train couleur-otherscape is published/);
+
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml", "release-train.yml", "release.yml"]);
+	assert.deepEqual(dispatches(world, "release.yml")[0].slice(-2), ["-f", `tag=v${NEXT}`]);
+	const record = readRecord(world).publication["schema-adrenaline"];
+	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate success", "release-train failure", "release-train success", "promote success"]);
+	assert.equal(record.final.sha256, record.candidate.sha256);
+});
+
+scenario("a missing RELEASE_TOKEN on schema-pbta stops publish --run before any dispatch, by name", (world) => {
+	approvedTrain(world, ["schema-pbta"], { secrets: false });
+	const result = publish(world, true);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stderr, /RebelliousSmile\/schema-pbta lacks the secret RELEASE_TOKEN that release\.yml reads; nothing was run/);
+	assert.deepEqual(dispatches(world), []);
+});
+
+scenario("inputs a workflow does not declare stop publish before anything is dispatched", (world) => {
+	approvedTrain(world, ["schema-adrenaline"], {
+		before: () => {
+			world.land("schema-adrenaline", { ".github/workflows/publish-candidate.yml": "on:\n  workflow_dispatch:\n    inputs:\n      version:\n        required: true\n" }, "Rename the input");
+		},
+	});
+	const result = publish(world, true);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stderr, /publish-candidate\.yml: input tag is not declared; required input version is missing/);
+	assert.deepEqual(dispatches(world), []);
+});
+
+scenario("a final whose bytes differ from the candidate stops publish, naming both digests", (world) => {
+	approvedTrain(world, ["schema-in-the-mist"]);
+	const { candidate, result } = driveMist(world, bytesOf("schema-in-the-mist", " rebuilt"));
+	const final = world.archive("schema-in-the-mist", `v${NEXT}`);
+	assert.equal(result.status, 1, result.stdout);
+	assert.ok(result.stderr.includes(final.sha256) && result.stderr.includes(candidate.sha256), result.stderr);
+	assert.notEqual(final.sha256, candidate.sha256);
+	assert.equal(readRecord(world).publication["schema-in-the-mist"].final, undefined, "a final with other bytes was recorded");
+	const again = publish(world, false);
+	assert.equal(again.status, 1, "a second look must stop the same way");
+});
+
+scenario("with two providers, publish --run moves only the first one of the train", (world) => {
+	approvedTrain(world, ["schema-in-the-mist", "schema-adrenaline"]);
+	world.updateState((state) => {
+		state.workflowEffects[`${REPOSITORY["schema-in-the-mist"]} release-candidate.yml`] = [{ createRelease: world.release("schema-in-the-mist", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-in-the-mist")) }];
+	});
+	const output = ok(publish(world, true), "publish --run");
+	assert.match(output, /adopt the candidate v1\.1\.0-rc\.1 of schema-in-the-mist/);
+	assert.doesNotMatch(output, /schema-adrenaline/);
+	assert.deepEqual(dispatches(world).map((args) => `${args[4]} ${args[2]}`), [`${REPOSITORY["schema-in-the-mist"]} release-candidate.yml`]);
+	assert.equal(readRecord(world).publication["schema-adrenaline"], undefined);
 });
 
 function main(): void {

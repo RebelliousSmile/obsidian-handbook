@@ -13,6 +13,7 @@ import { collectStatus, assertStatusShape, renderStatus } from "./supervisor/sta
 import { activeTrain } from "./supervisor/train.mjs";
 import { TRAIN_COMMANDS } from "./supervisor/trainCommands.mjs";
 import { APPROVAL_COMMANDS } from "./supervisor/approvalCommands.mjs";
+import { PUBLISH_COMMANDS } from "./supervisor/publishCommands.mjs";
 import { DEFAULT_TOPOLOGY, HANDBOOK_ROOT, loadTopology, SupervisorError } from "./supervisor/topology.mjs";
 
 const COMMON = {
@@ -36,6 +37,7 @@ const COMMANDS = {
 	},
 	...TRAIN_COMMANDS,
 	...APPROVAL_COMMANDS,
+	...PUBLISH_COMMANDS,
 };
 
 const USAGE = `usage: pnpm supervise <command> [options]

@@ -63,6 +63,13 @@
 					},
 					"final": {
 						"$ref": "#/definitions/archive"
+					},
+					"runs": {
+						"description": "Every step supervise publish --run started, oldest first: a dispatched workflow or a local command.",
+						"type": "array",
+						"items": {
+							"$ref": "#/definitions/run"
+						}
 					}
 				}
 			}
@@ -169,6 +176,52 @@
 		"digest": {
 			"type": "string",
 			"pattern": "^sha256:[0-9a-f]{64}$"
+		},
+		"run": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"step",
+				"conclusion",
+				"at"
+			],
+			"properties": {
+				"step": {
+					"type": "string",
+					"minLength": 1
+				},
+				"workflow": {
+					"type": "string"
+				},
+				"inputs": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"command": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"id": {
+					"type": "integer"
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
+				},
+				"conclusion": {
+					"type": [
+						"string",
+						"null"
+					]
+				},
+				"at": {
+					"type": "string"
+				}
+			}
 		},
 		"archive": {
 			"type": "object",

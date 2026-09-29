@@ -1,0 +1,235 @@
+/**
+ * `supervise publish`: observe a provider, compute its one next step, then
+ * show it, or with `--run` execute it and observe again.
+ *
+ * Nothing moves without an approval that holds: it is checked before every
+ * step, not once at the start, because a repository can move while a run is
+ * watched. One provider at a time, in the dependency order of the train. A
+ * step is recomputed from what GitHub and the repositories show; the runs the
+ * train records only say which dispatch was already tried, so a failed run is
+ * retried while a published candidate is never published again.
+ */
+import { spawnSync } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+import { gh, ghJson } from "./gh.mjs";
+import { showFile } from "./git.mjs";
+import { assertApproval } from "./approval.mjs";
+import { dispatchInputs, listReleases, observeArchive, workflowSecrets } from "./adapters/common.mjs";
+import * as pbta from "./adapters/pbta.mjs";
+import * as adrenaline from "./adapters/adrenaline.mjs";
+import * as mist from "./adapters/mist.mjs";
+import { readTrain, trainsDir, writeTrain } from "./train.mjs";
+import { repoById, repoDir, SupervisorError } from "./topology.mjs";
+
+const ADAPTERS = { pbta, adrenaline, mist };
+
+const POLL_MS = 2000;
+const POLL_ATTEMPTS = 30;
+
+function sleep(ms) {
+	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/** Providers of the train in dependency order; items order breaks ties. */
+export function providerOrder(topology, train) {
+	const placed = [];
+	const remaining = [...train.items];
+	while (remaining.length > 0) {
+		const index = remaining.findIndex((item) => item.dependsOn.every((dependency) => placed.includes(dependency)));
+		placed.push(remaining.splice(index < 0 ? 0 : index, 1)[0].repo);
+	}
+	return placed.map((id) => repoById(topology, id)).filter((repo) => repo.role === "provider");
+}
+
+function updateRecord(file, topology, provider, change) {
+	const train = readTrain(file, topology);
+	const record = { ...(train.publication[provider] ?? {}) };
+	change(record);
+	writeTrain(file, { ...train, publication: { ...train.publication, [provider]: record } }, topology);
+	return record;
+}
+
+/** Ask GitHub for the conclusion of the runs the train recorded without one. */
+function refreshRuns(file, topology, repo, record) {
+	const open = (record.runs ?? []).filter((run) => run.id && run.conclusion === null);
+	if (open.length === 0) return record;
+	const conclusions = new Map(open.map((run) => {
+		const view = ghJson(["run", "view", String(run.id), "-R", repo.repository, "--json", "status,conclusion"]);
+		return [run.id, view.status === "completed" ? view.conclusion || "unknown" : null];
+	}));
+	return updateRecord(file, topology, repo.id, (next) => {
+		next.runs = next.runs.map((run) => (conclusions.has(run.id) ? { ...run, conclusion: conclusions.get(run.id) } : run));
+	});
+}
+
+function approvedSha(train, repo) {
+	const entry = train.approval.repos.find((candidate) => candidate.repo === repo.id);
+	if (!entry) throw new SupervisorError(`publish: ${repo.id} is not bound by the approval of train "${train.id}"`, 1);
+	return entry.sha;
+}
+
+/** Observe one provider, record what it showed, and return its next step. */
+function stepOf(context, train, file, repo) {
+	const adapter = ADAPTERS[repo.adapter];
+	if (!adapter) throw new SupervisorError(`publish: ${repo.id} has no known adapter (${repo.adapter ?? "none"})`);
+	const dir = repoDir(context.root, repo);
+	const sha = approvedSha(train, repo);
+	let manifest;
+	try {
+		manifest = JSON.parse(showFile(dir, sha, "package.json") ?? "");
+	} catch {
+		throw new SupervisorError(`publish: ${repo.id} has no readable package.json at the approved commit ${sha.slice(0, 10)}`, 1);
+	}
+	const record = refreshRuns(file, context.topology, repo, train.publication[repo.id] ?? {});
+	const version = manifest.version;
+	const finalTag = `v${version}`;
+	const tags = listReleases(repo);
+	const final = tags.includes(finalTag) ? observeArchive(repo, finalTag, version) : null;
+	const ctx = {
+		root: context.root,
+		topology: context.topology,
+		repo,
+		dir,
+		sha,
+		version,
+		record,
+		evidenceDir: resolve(trainsDir(context.root, context.topology), `${train.id}.evidence`),
+	};
+	const observation = adapter.observe(ctx, { repo, provider: repo.id, sha, version, tags, finalTag, final });
+	const { candidate } = observation;
+	if (final) {
+		if (!candidate) {
+			throw new SupervisorError(`publish: ${repo.id} ${finalTag} is already published and the train never observed its candidate; bump the version of ${repo.id} or close the train`, 1);
+		}
+		if (final.sha256 !== candidate.sha256) {
+			throw new SupervisorError(`publish: ${repo.id} final ${finalTag} has sha256 ${final.sha256}, its candidate ${candidate.tag} has sha256 ${candidate.sha256}: not the same bytes`, 1);
+		}
+	}
+	const changed = (candidate && record.candidate?.sha256 !== candidate.sha256) || (final && record.final?.sha256 !== final.sha256);
+	if (changed) {
+		updateRecord(file, context.topology, repo.id, (next) => {
+			if (candidate) next.candidate = candidate;
+			if (final) next.final = final;
+		});
+	}
+	return { repo, dir, evidenceDir: ctx.evidenceDir, step: adapter.nextStep(observation) };
+}
+
+function quote(argument) {
+	return /^[A-Za-z0-9_./:=@%+-]+$/.test(argument) ? argument : `'${argument.replace(/'/g, "'\\''")}'`;
+}
+
+/** The inputs of a dispatch are exactly those its workflow declares on origin/main. */
+function checkInputs(dir, step) {
+	const text = showFile(dir, "origin/main", `.github/workflows/${step.workflow}`);
+	if (text === null) throw new SupervisorError(`publish: ${step.repo} has no .github/workflows/${step.workflow} on origin/main`, 1);
+	const declared = dispatchInputs(text);
+	if (!declared) throw new SupervisorError(`publish: ${step.repo} ${step.workflow} has no workflow_dispatch trigger`, 1);
+	const problems = [];
+	for (const name of Object.keys(step.inputs)) {
+		if (!declared[name]) problems.push(`input ${name} is not declared`);
+		else if (!step.inputs[name]) problems.push(`input ${name} is empty`);
+	}
+	for (const name of Object.keys(declared)) {
+		if (declared[name].required && !(name in step.inputs)) problems.push(`required input ${name} is missing`);
+	}
+	if (problems.length > 0) throw new SupervisorError(`publish: ${step.repo} ${step.workflow}: ${problems.join("; ")}`, 1);
+	return text;
+}
+
+/** What `--run` needs before anything is dispatched or run: a gh session, and every secret the workflow reads. */
+function preflight(repo, step, workflowText) {
+	const auth = gh(["auth", "status"]);
+	if (auth.status !== 0) throw new SupervisorError(`publish: gh is not authenticated (gh auth status: ${(auth.stderr || auth.stdout).trim()}); nothing was run`, 1);
+	if (step.type !== "workflow") return;
+	const needed = workflowSecrets(workflowText);
+	if (needed.length === 0) return;
+	const listed = gh(["secret", "list", "-R", repo.repository, "--json", "name"]);
+	if (listed.status !== 0) throw new SupervisorError(`publish: cannot list the secrets of ${repo.repository} (${listed.stderr.trim()}); ${step.workflow} needs ${needed.join(", ")}; nothing was run`, 1);
+	const present = new Set(JSON.parse(listed.stdout).map((secret) => secret.name));
+	const missing = needed.filter((name) => !present.has(name));
+	if (missing.length > 0) {
+		throw new SupervisorError(`publish: ${repo.repository} lacks the secret ${missing.join(", ")} that ${step.workflow} reads; nothing was run`, 1);
+	}
+}
+
+function runIds(repo, workflow) {
+	return ghJson(["run", "list", "-R", repo.repository, "--workflow", workflow, "--limit", "20", "--json", "databaseId,url"]);
+}
+
+function dispatch(file, topology, repo, step) {
+	const before = new Set(runIds(repo, step.workflow).map((run) => run.databaseId));
+	const started = gh(step.command.slice(1));
+	if (started.status !== 0) throw new SupervisorError(`publish: ${step.command.join(" ")} failed: ${started.stderr.trim()}`, 1);
+	let run = null;
+	for (let attempt = 0; attempt < POLL_ATTEMPTS && !run; attempt++) {
+		if (attempt > 0) sleep(POLL_MS);
+		run = runIds(repo, step.workflow).find((candidate) => !before.has(candidate.databaseId)) ?? null;
+	}
+	if (!run) throw new SupervisorError(`publish: ${step.workflow} was dispatched on ${repo.repository} but no new run appeared; look at its Actions page before running publish again`, 1);
+	const entry = { step: step.step, workflow: step.workflow, inputs: step.inputs, id: run.databaseId, url: run.url, conclusion: null, at: new Date().toISOString() };
+	updateRecord(file, topology, repo.id, (next) => {
+		next.runs = [...(next.runs ?? []), entry];
+	});
+	console.log(`Watching ${run.url}`);
+	gh(["run", "watch", String(run.databaseId), "-R", repo.repository, "--exit-status"], { inherit: true });
+	const view = ghJson(["run", "view", String(run.databaseId), "-R", repo.repository, "--json", "status,conclusion"]);
+	const conclusion = view.status === "completed" ? view.conclusion || "unknown" : null;
+	updateRecord(file, topology, repo.id, (next) => {
+		next.runs = next.runs.map((recorded) => (recorded.id === run.databaseId ? { ...recorded, conclusion } : recorded));
+	});
+	if (conclusion !== "success") throw new SupervisorError(`publish: ${step.workflow} run ${run.url} concluded ${conclusion ?? "without a conclusion"}; run supervise publish again once it is understood`, 1);
+}
+
+function runLocal(file, topology, repo, dir, evidenceDir, step) {
+	mkdirSync(evidenceDir, { recursive: true });
+	console.log(`$ ${step.command.map(quote).join(" ")}   (in ${dir})`);
+	const result = spawnSync(step.command[0], step.command.slice(1), { cwd: dir, stdio: "inherit" });
+	const conclusion = !result.error && result.status === 0 ? "success" : "failure";
+	updateRecord(file, topology, repo.id, (next) => {
+		next.runs = [...(next.runs ?? []), { step: step.step, command: step.command, conclusion, at: new Date().toISOString() }];
+	});
+	if (conclusion !== "success") throw new SupervisorError(`publish: ${step.command.join(" ")} failed in ${dir}`, 1);
+}
+
+function render(repo, dir, step) {
+	if (step.kind === "human") return `Next step for ${step.repo} (a person):\n  ${step.instruction.split("\n").join("\n  ")}\nThen run supervise publish again.`;
+	if (step.kind === "wait") return `Waiting on ${repo.id}: ${step.instruction}`;
+	const where = step.type === "local" ? ` (in ${dir})` : "";
+	return `Next step for ${repo.id}: ${step.description}\n  $ ${step.command.map(quote).join(" ")}${where}`;
+}
+
+export function publishTrain(context, file, { run = false } = {}) {
+	for (;;) {
+		const train = readTrain(file, context.topology);
+		if (train.status !== "open") throw new SupervisorError(`publish: train "${train.id}" is closed`);
+		assertApproval(context.root, context.topology, train);
+		let next = null;
+		for (const repo of providerOrder(context.topology, train)) {
+			const current = readTrain(file, context.topology);
+			const found = stepOf(context, current, file, repo);
+			if (found.step.kind !== "done") {
+				next = found;
+				break;
+			}
+			console.log(`${repo.id}: final ${current.publication[repo.id]?.final?.tag ?? ""} published, same bytes as its candidate.`);
+		}
+		if (!next) {
+			console.log(`Every provider of train ${train.id} is published.`);
+			return 0;
+		}
+		const { repo, dir, evidenceDir, step } = next;
+		const workflowText = step.type === "workflow" ? checkInputs(dir, step) : null;
+		console.log(render(repo, dir, step));
+		if (step.kind !== "automated") return 0;
+		if (!run) {
+			console.log("Nothing was run. Run it with: pnpm supervise publish --run");
+			return 0;
+		}
+		preflight(repo, step, workflowText);
+		assertApproval(context.root, context.topology, readTrain(file, context.topology));
+		if (step.type === "workflow") dispatch(file, context.topology, repo, step);
+		else runLocal(file, context.topology, repo, dir, evidenceDir, step);
+	}
+}

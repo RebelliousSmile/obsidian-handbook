@@ -16,6 +16,7 @@ import { dirname, join, resolve } from "path";
 export const HANDBOOK = process.cwd();
 export const SUPERVISE = resolve(HANDBOOK, "tools/supervise.mjs");
 export const FAKE_GH = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-gh.mjs");
+export const FAKE_NPM = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-npm.mjs");
 export const TOPOLOGY = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/topology.json"), "utf8"));
 export const PROVIDERS = TOPOLOGY.repos.filter((repo: any) => repo.role === "provider");
 
@@ -66,6 +67,9 @@ export class World {
 		const realGit = sh(this.tmp, "sh", ["-c", "command -v git"]).stdout.trim();
 		writeFileSync(join(this.bin, "git"), `#!/bin/sh\necho "$*" >> "${this.gitLog}"\nexec "${realGit}" "$@"\n`);
 		chmodSync(join(this.bin, "git"), 0o755);
+		// The local release-train scripts of a provider run through this npm.
+		writeFileSync(join(this.bin, "npm"), `#!/bin/sh\nexec "${process.execPath}" "${FAKE_NPM}" "$@"\n`);
+		chmodSync(join(this.bin, "npm"), 0o755);
 		this.writeState({ calls: [], releases: {}, issues: {}, prs: {}, events: {}, secrets: {}, runs: {}, workflowEffects: {} });
 	}
 
@@ -158,6 +162,15 @@ export class World {
 		return git(this.dir(id), "rev-parse", "HEAD");
 	}
 
+	/** Commit only `files` on `main` and push: what a person lands, whatever else lies in the checkout. */
+	landFiles(id: string, files: Record<string, string>, message: string): string {
+		this.write(id, files);
+		git(this.dir(id), "add", "--", ...Object.keys(files));
+		git(this.dir(id), "commit", "--quiet", "-m", message);
+		git(this.dir(id), "push", "--quiet", "origin", "HEAD:main");
+		return git(this.dir(id), "rev-parse", "HEAD");
+	}
+
 	/** Commit on `main` and push: what a merged pull request leaves on origin/main. */
 	land(id: string, files: Record<string, string>, message: string): string {
 		const sha = this.commit(id, files, message);
@@ -211,6 +224,42 @@ export function consumerFiles(pins: Record<string, Archive>, withNpmLock: boolea
 	return files;
 }
 
+function workflow(name: string, triggers: string[], inputs: Record<string, boolean>, secret?: string): string {
+	return [
+		`name: ${name}`,
+		"on:",
+		...triggers,
+		"  workflow_dispatch:",
+		"    inputs:",
+		...Object.keys(inputs).flatMap((input) => [`      ${input}:`, `        description: ${input}`, `        required: ${inputs[input]}`, "        type: string"]),
+		"jobs:",
+		"  run:",
+		"    runs-on: ubuntu-latest",
+		"    steps:",
+		"      - run: echo ok",
+		...(secret ? ["        env:", "          GH_TOKEN: ${{ secrets." + secret + " }}"] : []),
+		"",
+	].join("\n");
+}
+
+/** The dispatch triggers of each provider's workflows, as their repositories declare them. */
+export const WORKFLOWS: Record<string, Record<string, string>> = {
+	pbta: {
+		".github/workflows/release.yml": workflow("Release", [], { mode: true, provider_commit: true, config: false }, "RELEASE_TOKEN"),
+		".github/workflows/release-train.yml": workflow("Release train", [], { provider_commit: true, config: true }),
+		".github/workflows/publish-candidate.yml": workflow("Publish candidate", [], { tag: true, commit: true }),
+	},
+	adrenaline: {
+		".github/workflows/publish-candidate.yml": workflow("Publish candidate", [], { tag: true }),
+		".github/workflows/release-train.yml": workflow("Release train", [], { manifest: true }),
+		".github/workflows/release.yml": workflow("Release", ["  push:", "    tags:", "      - 'v*.*.*'"], { tag: true }),
+		".github/workflows/final-convergence.yml": workflow("Final convergence", [], { record: true }),
+	},
+	mist: {
+		".github/workflows/release-candidate.yml": workflow("Release candidate", [], { tag: true }),
+	},
+};
+
 /** The five repositories, every consumer on the latest final of every provider. */
 export function createWorld(): World {
 	const world = new World();
@@ -244,6 +293,7 @@ export function createWorld(): World {
 			"package.json": `${JSON.stringify({ name: provider.package, version: "1.0.0" }, null, "\t")}\n`,
 			[`${trainDir}.gitkeep`]: "",
 			"src/index.ts": "export {};\n",
+			...WORKFLOWS[provider.adapter],
 		});
 	}
 	return world;
