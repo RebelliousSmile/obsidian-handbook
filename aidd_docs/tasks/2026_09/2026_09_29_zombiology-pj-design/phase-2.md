@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Compléter les jetons de schema-adrenaline, fusionnés sans publication

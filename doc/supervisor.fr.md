@@ -128,6 +128,14 @@ Exige une convergence `passed`, un accord qui tient, des `origin/main` qui **des
 | **Humain** | les corrections ; l'accord tapé au terminal ; les manifestes de train à commiter ; l'adoption de la candidate puis de la finale par Handbook et Lantern ; le tag final d'`schema-adrenaline` ; le fichier de convergence de `schema-in-the-mist` ; les releases des consommateurs ; un checkout à ramener sur `origin/main` |
 | **Jamais avant accord** | toute release, tout dispatch de workflow, tout `git push` et tout `git tag`, toute écriture via `gh api`. `present` et `converge` passent sous le garde, et `publish --run` revérifie l'accord avant chaque pas |
 
+## Ce que l'accord juge : le design et le fonctionnel
+
+L'accord tapé à `approve` porte sur **le rendu et le comportement** : la fiche ou la fonctionnalité présentée est-elle celle qui était voulue ? Il ne porte pas sur la mécanique de contrôle.
+
+Tout ce qui est technique avance sans demander : cohérence des packs et des versions, épingles et SRI, protocoles de release-train, validations de `pnpm check` / `npm run check`, CI des fournisseurs. Une validation rouge se corrige, dans le code ou dans la validation elle-même quand c'est elle qui est fausse, puis se commite et se pousse sur `main` avant `present`, sans passer par l'accord. Elle ne se contourne jamais : pas de validation désactivée, pas de garde écarté. Le compte rendu vient après coup, dans le rapport de `present`.
+
+Deux choses restent à l'humain : l'accord lui-même, et toute suppression (branches, traces, fichiers).
+
 ## Les trois fournisseurs
 
 | | `schema-pbta` | `schema-adrenaline` | `schema-in-the-mist` |

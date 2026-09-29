@@ -128,6 +128,14 @@ Requires a `passed` convergence, an approval that holds, `origin/main` heads tha
 | **Human** | the corrections; the approval typed on the terminal; train manifests to commit; Handbook and Lantern adopting the candidate, then the final; the final tag of `schema-adrenaline`; the convergence file of `schema-in-the-mist`; the consumer releases; bringing a checkout back to `origin/main` |
 | **Never before approval** | any release, workflow dispatch, `git push` or `git tag`, any write through `gh api`. `present` and `converge` run behind the guard, and `publish --run` checks the approval again before every step |
 
+## What the approval judges: design and behaviour
+
+The approval typed at `approve` covers **rendering and behaviour**: is the presented sheet or feature the one that was wanted? It does not cover the control machinery.
+
+Everything technical moves on without asking: pack and version consistency, pins and SRI, release-train protocols, `pnpm check` / `npm run check` validations, provider CI. A red validation gets fixed, in the code or in the validation itself when the validation is what is wrong, then committed and pushed to `main` before `present`, without going through the approval. It is never bypassed: no validation disabled, no guard set aside. It is reported afterwards, in the `present` report.
+
+Two things stay human: the approval itself, and any deletion (branches, traces, files).
+
 ## The three providers
 
 | | `schema-pbta` | `schema-adrenaline` | `schema-in-the-mist` |
