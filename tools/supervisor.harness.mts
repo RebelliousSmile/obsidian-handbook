@@ -10,7 +10,7 @@ import assert from "assert/strict";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import Ajv from "ajv";
-import { createWorld, git, HANDBOOK, sh, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
+import { createWorld, git, HANDBOOK, sh, SUPERVISE, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
 
 const statusSchema = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/status.schema.json"), "utf8"));
 const validateStatus = new Ajv({ allErrors: true }).compile(statusSchema);
@@ -288,6 +288,202 @@ scenario("link --create asks first: nothing is created without a terminal or --y
 	assert.equal(item.issue, 1);
 	assert.equal(item.title, "Offer the new colours");
 	assert.ok(existsSync(trainPath(world)));
+});
+
+// Phase 3: presentation and approval.
+
+const PASS = ["sh", "-c", "echo validation passed"];
+
+/** The shipped topology with harmless validations, written in the world. */
+function testTopology(world: World, validations: Record<string, string[][]> = {}): string {
+	const file = resolve(world.tmp, "topology.json");
+	const topology = JSON.parse(JSON.stringify(TOPOLOGY));
+	for (const repo of topology.repos) repo.validations = validations[repo.id] ?? [PASS];
+	writeFileSync(file, JSON.stringify(topology));
+	return file;
+}
+
+/** A train whose three items (Mist, Handbook, Lantern) are closed by a commit on origin/main. */
+function doneTrain(world: World): void {
+	seedIssues(world);
+	openTrain(world);
+	ok(world.supervise(["link", "schema-in-the-mist#31"]), "link mist");
+	ok(world.supervise(["link", "obsidian-handbook#12"]), "link handbook");
+	ok(world.supervise(["link", "lantern#40"]), "link lantern");
+	const closing: Array<[string, number, string]> = [["schema-in-the-mist", 31, "src/colours.ts"], ["obsidian-handbook", 12, "src/colours.ts"], ["lantern", 40, "src/colours.ts"]];
+	for (const [repo, issue, path] of closing) {
+		const commit = world.land(repo, { [path]: `export const ${repo.replace(/-/g, "")} = [];\n` }, `Colours (fixes #${issue})`);
+		world.updateState((state) => {
+			state.issues[REPOSITORY[repo]][issue].state = "CLOSED";
+			state.events[`repos/${REPOSITORY[repo]}/issues/${issue}/events`] = [{ event: "closed", commit_id: commit }];
+		});
+	}
+}
+
+function quote(argument: string): string {
+	return `'${argument.replace(/'/g, "'\\''")}'`;
+}
+
+/** `supervise` on a pseudo-terminal (util-linux `script`), `input` typed on it. */
+function superviseTty(world: World, args: string[], input: string, topology: string) {
+	const [command, ...rest] = args;
+	const line = [process.execPath, SUPERVISE, command, "--root", world.root, "--topology", topology, ...rest].map(quote).join(" ");
+	return sh(HANDBOOK, "script", ["-qec", line, "/dev/null"], world.env(), input);
+}
+
+function presentAndApprove(world: World, topology: string): void {
+	ok(world.supervise(["present"], { topology }), "present");
+	ok(superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology), "approve");
+}
+
+scenario("present reports each concerned repository with its SHA, commits and validations", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	const report = ok(world.supervise(["present"], { topology }), "present");
+	for (const repo of ["schema-in-the-mist", "obsidian-handbook", "lantern"]) {
+		const sha = git(world.dir(repo), "rev-parse", "origin/main");
+		assert.ok(report.includes(`## ${repo} (`) && report.includes(sha.slice(0, 10)), `${repo} at ${sha} missing\n${report}`);
+	}
+	assert.match(report, /\*\*Presentable\.\*\*/);
+	assert.match(report, /Colours \(fixes #31\)/);
+	assert.match(report, /passed: `sh -c echo validation passed`/);
+	assert.match(report, /schema-in-the-mist: release candidate of schema-in-the-mist/);
+	assert.match(report, /schema-in-the-mist: final release of schema-in-the-mist, same bytes as the candidate/);
+	assert.match(report, /lantern: release/);
+	assert.match(report, /Local preview: none exists yet/);
+	const record = readRecord(world);
+	assert.equal(record.presentation.presentable, true);
+	assert.equal(record.approval, null, "present approved");
+	assert.ok(!report.includes("schema-pbta ("), "an unconcerned provider was presented");
+});
+
+scenario("present refuses an unfinished train and a checkout that is not origin/main", (world) => {
+	const topology = testTopology(world);
+	seedIssues(world);
+	openTrain(world);
+	ok(world.supervise(["link", "schema-in-the-mist#31"]), "link mist");
+	let result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stderr, /not every item is done: schema-in-the-mist#31 \(ready\)/);
+
+	world.updateState((state) => { state.issues[REPOSITORY["schema-in-the-mist"]][31].state = "CLOSED"; });
+	const commit = world.land("schema-in-the-mist", { "src/colours.ts": "export {};\n" }, "Colours");
+	world.updateState((state) => { state.events[`repos/${REPOSITORY["schema-in-the-mist"]}/issues/31/events`] = [{ event: "closed", commit_id: commit }]; });
+	world.write("lantern", { "src/index.ts": "dirty\n" });
+	sh(world.dir("obsidian-handbook"), "git", ["switch", "--quiet", "-c", "feat/elsewhere"]);
+	world.commit("obsidian-handbook", { "src/other.ts": "export {};\n" }, "not landed");
+	result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stderr, /lantern: uncommitted changes/);
+	assert.match(result.stderr, /obsidian-handbook: HEAD [0-9a-f]{10} is not origin\/main .*switch main && git -C .* pull --ff-only/);
+});
+
+scenario("approve records nothing without a terminal, and records the typed id bound to the SHAs", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	ok(world.supervise(["present"], { topology }), "present");
+	const refused = world.supervise(["approve"], { topology, input: `${TRAIN_ID}\n` });
+	assert.equal(refused.status, 1, refused.stderr);
+	assert.match(refused.stderr, /interactive terminal/);
+	assert.equal(readRecord(world).approval, null, "an approval was written without a terminal");
+
+	const wrong = superviseTty(world, ["approve"], "yes\n", topology);
+	assert.equal(wrong.status, 1, wrong.stdout);
+	assert.equal(readRecord(world).approval, null, "a wrong id approved the train");
+
+	const approved = ok(superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology), "approve");
+	const record = readRecord(world);
+	assert.ok(approved.includes(record.presentation.digest), approved);
+	assert.equal(record.approval.digest, record.presentation.digest);
+	assert.deepEqual(record.approval.repos.map((entry: any) => entry.repo).sort(), ["lantern", "obsidian-handbook", "schema-in-the-mist"]);
+	assert.equal(record.approval.repos.find((entry: any) => entry.repo === "lantern").sha, git(world.dir("lantern"), "rev-parse", "origin/main"));
+	assert.ok(record.approval.publications.includes("schema-in-the-mist: release candidate of schema-in-the-mist"));
+	assert.ok(record.approval.approvedAt);
+	ok(world.supervise(["approve", "--verify"], { topology }), "approve --verify");
+});
+
+scenario("approve refuses a presentation the repositories moved away from", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	ok(world.supervise(["present"], { topology }), "present");
+	world.land("lantern", { "src/late.ts": "export {};\n" }, "late change");
+	const result = superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stdout, /lantern: origin\/main is [0-9a-f]{10}, the presentation showed/);
+	assert.equal(readRecord(world).approval, null);
+});
+
+scenario("an adoption commit of the observed candidate keeps the approval; any other change voids it", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	presentAndApprove(world, topology);
+	const candidate = world.archive("schema-in-the-mist", "v1.0.1-rc.1");
+	const final = world.archive("schema-in-the-mist", "v1.0.0");
+	const record = readRecord(world);
+	record.publication = { "schema-in-the-mist": { candidate: { tag: candidate.tag, url: candidate.url, sha256: candidate.sha256, integrity: candidate.integrity } } };
+	writeFileSync(trainPath(world), `${JSON.stringify(record, null, "\t")}\n`);
+
+	const lantern = world.dir("lantern");
+	const adopt: Record<string, string> = {};
+	for (const file of ["package.json", "pnpm-lock.yaml", "package-lock.json"]) {
+		adopt[file] = readFileSync(resolve(lantern, file), "utf8").split(final.url).join(candidate.url).split(final.integrity).join(candidate.integrity);
+	}
+	world.land("lantern", adopt, "Adopt schema-in-the-mist v1.0.1-rc.1");
+	ok(world.supervise(["approve", "--verify"], { topology }), "verify after adoption");
+
+	const unknown = world.archive("schema-in-the-mist", "v9.9.9");
+	world.land("lantern", { "pnpm-lock.yaml": `${adopt["pnpm-lock.yaml"]}# ${unknown.url}\n` }, "Pin an archive nobody observed");
+	let result = world.supervise(["approve", "--verify"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.ok(result.stderr.includes(`introduces ${unknown.url} in pnpm-lock.yaml`), result.stderr);
+
+	const outside = world.land("obsidian-handbook", { "src/main.ts": "export const late = 1;\n" }, "late fix");
+	result = world.supervise(["approve", "--verify"], { topology });
+	assert.equal(result.status, 1);
+	assert.ok(result.stderr.includes(`obsidian-handbook: commit ${outside.slice(0, 10)} changes src/main.ts, outside the train files`), result.stderr);
+	assert.match(result.stderr, /supervise present/);
+});
+
+scenario("a failing validation makes the train not presentable and approve refuses it", (world) => {
+	const topology = testTopology(world, { "schema-in-the-mist": [["sh", "-c", "echo contract broken >&2; exit 3"]] });
+	doneTrain(world);
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stdout, /\*\*Not presentable\*\*/);
+	assert.match(result.stdout, /schema-in-the-mist: sh -c echo contract broken >&2; exit 3 exited 3/);
+	assert.match(result.stdout, /contract broken/);
+	const approve = superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology);
+	assert.equal(approve.status, 1, approve.stdout);
+	assert.match(approve.stdout, /not presentable/);
+	assert.equal(readRecord(world).approval, null);
+});
+
+scenario("a validation cannot release, push or tag: the guard refuses, ordinary calls go through", (world) => {
+	const ghLog = resolve(world.tmp, "real-gh.log");
+	writeFileSync(resolve(world.bin, "gh"), `#!/bin/sh\necho "$*" >> "${ghLog}"\n`, { mode: 0o755 });
+	const attempt = [
+		"gh release create v9.9.9 dist.tgz && exit 11",
+		"gh api -X POST repos/o/r/dispatches && exit 12",
+		"gh workflow run release.yml && exit 13",
+		"git push origin HEAD:main && exit 14",
+		"git tag v9.9.9 && exit 15",
+		"gh issue list || exit 16",
+		"git status --short || exit 17",
+		"git tag -l || exit 18",
+		"echo guarded",
+	].join("; ");
+	const topology = testTopology(world, { "schema-in-the-mist": [["sh", "-c", attempt]] });
+	doneTrain(world);
+	const mist = world.dir("schema-in-the-mist");
+	const remote = git(mist, "ls-remote", "origin", "refs/heads/main", "refs/tags/*");
+	const report = ok(world.supervise(["present"], { topology }), "present");
+	assert.match(report, /passed: `sh -c gh release create/);
+	const calls = readFileSync(ghLog, "utf8");
+	assert.equal(calls, "issue list\n", `the real gh saw: ${calls}`);
+	assert.equal(git(mist, "ls-remote", "origin", "refs/heads/main", "refs/tags/*"), remote, "a validation moved the remote");
+	const gitCalls = readFileSync(world.gitLog, "utf8");
+	assert.doesNotMatch(gitCalls, /^push/m, "a push reached git");
+	assert.doesNotMatch(gitCalls, /^tag v9/m, "a tag reached git");
 });
 
 function main(): void {

@@ -15,6 +15,12 @@
 				"CHANGELOG.md",
 				"release-train/",
 				"supervisor/trains/"
+			],
+			"validations": [
+				[
+					"pnpm",
+					"check"
+				]
 			]
 		},
 		{
@@ -29,6 +35,13 @@
 				"release-train.matrix.json",
 				"CHANGELOG.md",
 				"release-train/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
 			]
 		},
 		{
@@ -38,8 +51,20 @@
 			"role": "provider",
 			"package": "schema-pbta",
 			"adapter": "pbta",
-			"consumers": ["obsidian-handbook", "lantern"],
-			"trainFiles": ["release-train/"]
+			"consumers": [
+				"obsidian-handbook",
+				"lantern"
+			],
+			"trainFiles": [
+				"release-train/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			]
 		},
 		{
 			"id": "schema-adrenaline",
@@ -48,8 +73,20 @@
 			"role": "provider",
 			"package": "schema-adrenaline",
 			"adapter": "adrenaline",
-			"consumers": ["obsidian-handbook", "lantern"],
-			"trainFiles": ["release-train/"]
+			"consumers": [
+				"obsidian-handbook",
+				"lantern"
+			],
+			"trainFiles": [
+				"release-train/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			]
 		},
 		{
 			"id": "schema-in-the-mist",
@@ -58,8 +95,20 @@
 			"role": "provider",
 			"package": "schema-in-the-mist",
 			"adapter": "mist",
-			"consumers": ["obsidian-handbook", "lantern"],
-			"trainFiles": ["release-trains/"]
+			"consumers": [
+				"obsidian-handbook",
+				"lantern"
+			],
+			"trainFiles": [
+				"release-trains/"
+			],
+			"validations": [
+				[
+					"npm",
+					"run",
+					"check"
+				]
+			]
 		}
 	]
 }
