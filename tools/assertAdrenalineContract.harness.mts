@@ -69,4 +69,30 @@ assert.match(text(pjRender), /Contusion/, "PJ displays the document's current st
 const physicalCharacteristics = allElements(pjRender).find((element) => element.classes.includes("brumes-adrenaline-pj__caracteristiques-physiques"));
 assert.ok(physicalCharacteristics);
 assert.match(text(physicalCharacteristics), /0 %30 %/, "PJ displays both minimum and current values");
+/* The renderer follows the published form and appearance, not the block id. */
+for (const block of PJ_PRESENTATION.sections.flatMap((section) => section.blocks)) {
+	assert.ok(classes.has(`brumes-adrenaline-pj__form-${block.form}`), `PJ block ${block.id} is dispatched on its form ${block.form}`);
+	assert.ok(classes.has(`brumes-adrenaline-pj__layout-${block.layout}`), `PJ block ${block.id} carries its published layout`);
+}
+const appearance = PJ_PRESENTATION.appearance;
+for (const name of [`variant-${appearance.variant}`, `surface-${appearance.surface}`, `titles-${appearance.sectionTitles.align}`, `values-${appearance.values.font}`]) {
+	assert.ok(pjRender.classes.includes(`brumes-adrenaline-pj--${name}`), `PJ root carries the published appearance ${name}`);
+}
+assert.match(text(pjRender), new RegExp(PJ_PRESENTATION.sheet.label), "PJ cartouche prints the published sheet label");
+assert.match(text(pjRender), /\+1d100/, "PJ stress dice print the published favourable die");
+const competences = allElements(pjRender).find((element) => element.classes.includes("brumes-adrenaline-pj__formations-competences"));
+assert.ok(competences);
+assert.equal(allElements(competences).filter((element) => element.classes.includes("brumes-adrenaline-pj__formation")).length, pjData.formations?.length, "one competence column per formation");
+/* An unpublished form degrades to plain lines instead of throwing or vanishing. */
+const probe = PJ_PRESENTATION.sections[0].blocks[0] as { form?: string };
+if (!Object.isFrozen(probe)) {
+	const published = probe.form;
+	probe.form = "unpublished-form";
+	try {
+		const degraded = pjBlock.render(pjData, doc as unknown as Document) as unknown as El;
+		assert.match(text(degraded), /Naïma Berthier/, "an unknown form still shows its values");
+	} finally {
+		probe.form = published;
+	}
+}
 console.log(`Adrenaline contract: ${cases.length} canonical cases passed.`);

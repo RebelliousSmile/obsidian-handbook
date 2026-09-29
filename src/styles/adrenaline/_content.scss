@@ -48,8 +48,15 @@
 		border-color: var(--adrenaline-table-border, var(--background-modifier-border));
 	}
 
+	// Live Preview draws tables in a CM6 widget whose own header rule outranks
+	// `thead th`: the ink applied and the band did not, leaving pale text on a
+	// pale header. Name the widget so both land together. In reading view,
+	// Obsidian's `.markdown-rendered thead tr > th:nth-child(2n+2)` repaints
+	// every other header cell with the column-alt tint: `:nth-child(n)` lifts
+	// ours above it without naming a column.
 	.markdown-source-view thead th,
-	.markdown-reading-view thead th {
+	.markdown-reading-view thead tr > th:nth-child(n),
+	.markdown-source-view.mod-cm6 .cm-table-widget th {
 		color: var(--adrenaline-table-header-ink, var(--table-header-color));
 		background: var(--adrenaline-table-header-bg, none);
 	}

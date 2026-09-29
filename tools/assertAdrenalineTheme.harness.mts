@@ -124,18 +124,18 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
 assert.match(scss, /brumes-adrenaline-pj__columns-3[^}]*grid-template-columns:\s*repeat\(3/);
-assert.match(scss, /@container \(max-width: 520px\)[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
+assert.match(scss, /@container \(max-width: 420px\)[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
 assert.match(scss, /\.brumes-adrenaline-pnj\s*\{[\s\S]*?max-width:\s*36rem/);
 assert.match(scss, /\.brumes-adrenaline-monstre\s*\{[\s\S]*?max-width:\s*36rem/);
 assert.match(scss, /brumes-adrenaline-monstre--capability-group/);
-assert.match(scss, /@media \(min-width: 900px\)/);
-assert.match(scss, /markdown-reading-view:not\(\.adrenaline-one-column\)/);
-assert.match(scss, /markdown-preview-sizer > \.mod-header \{\s*column-span: all;/);
-assert.match(scss, /:is\(\.inline-title, \.el-h1, h1, h2\)/);
+// One column by default: multi-column text only comes from a marked layout region.
+assert.doesNotMatch(scss, /column-count/, "Adrenaline must not split notes into columns by default");
+assert.doesNotMatch(scss, /adrenaline-one-column/, "the one-column escape hatch has nothing left to escape");
 assert.match(scss, /--adrenaline-page-texture/);
 assert.match(scss, /opacity:\s*var\(--adrenaline-page-texture-opacity, 0\)/);
 assert.match(scss, /pointer-events:\s*none/);
 assert.match(scss, /:focus-visible/);
+assert.match(scss, /\.markdown-source-view :focus-visible:not\(\.cm-content\)/, "the editable area must not be outlined as a whole");
 assert.match(scss, /outline:\s*2px solid var\(--interactive-accent\)/);
 assert.match(scss, /@media print[\s\S]*?markdown-reading-view::before[\s\S]*?content:\s*none/);
 assert.match(scss, /--adrenaline-callout-warning/);

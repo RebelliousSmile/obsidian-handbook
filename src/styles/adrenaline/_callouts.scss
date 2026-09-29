@@ -97,6 +97,9 @@
 		.callout-title {
 			margin: 0 0 0.4rem;
 			padding: 0.2rem 0.5rem;
+			// Obsidian paints `.callout-title-inner` from this variable, not from
+			// `color`: without it the text keeps the dark title ink on the dark band.
+			--callout-title-color: var(--adrenaline-callout-cartouche-ink);
 			color: var(--adrenaline-callout-cartouche-ink);
 			background: var(--adrenaline-callout-cartouche-bg);
 		}

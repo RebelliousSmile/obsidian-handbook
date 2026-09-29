@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Handbook — rendre la fiche PJ depuis la présentation v2.6.0, une colonne par défaut

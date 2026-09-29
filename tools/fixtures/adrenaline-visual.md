@@ -24,6 +24,10 @@ canal: AURORE-7
 statut: surveillance
 ```
 
+<!-- handbook-layout: columns=2 -->
+
+### Signaux
+
 > [!info] Information
 > Le plan de ronde est affiché près de l’entrée.
 
@@ -32,6 +36,8 @@ statut: surveillance
 
 > [!question] Question
 > Qui a déplacé la caisse de balises ?
+
+### Alertes
 
 > [!warning] Avertissement
 > La passerelle nord ne supporte qu’une personne à la fois.
@@ -44,6 +50,8 @@ statut: surveillance
 
 > [!quote] Transmission
 > « Équipe Aurore, confirmez votre position. »
+
+<!-- /handbook-layout -->
 
 ## Personnage
 

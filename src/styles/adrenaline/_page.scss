@@ -32,9 +32,10 @@
 		background-image: none;
 	}
 
-	.markdown-source-view :focus-visible,
+	// The editable area itself is a focus target: outlining it drew a frame around the whole note.
+	.markdown-source-view :focus-visible:not(.cm-content),
 	.markdown-reading-view :focus-visible,
-	&.brumes--workspace-theme :focus-visible {
+	&.brumes--workspace-theme :focus-visible:not(.cm-content) {
 		outline: 2px solid var(--interactive-accent);
 		outline-offset: 2px;
 	}
@@ -145,45 +146,7 @@
 		break-inside: avoid;
 	}
 
-	@media (min-width: 900px) {
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer {
-			column-count: 2;
-			column-gap: 3rem;
-			column-rule: 1px solid var(--adrenaline-rule);
-		}
-
-		// Obsidian groups the inline title and properties in `.mod-header`.
-		// Keep that complete document header above the editorial columns.
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > .mod-header {
-			column-span: all;
-		}
-
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > :is(.inline-title, .el-h1, h1, h2) {
-			column-span: all;
-		}
-
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer > :is(
-			.block-language-adrenaline-pj,
-			.block-language-adrenaline-pnj,
-			.block-language-adrenaline-monstre
-		) {
-			column-span: all;
-		}
-
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-section:has(
-			.block-language-adrenaline-pj,
-			.block-language-adrenaline-pnj,
-			.block-language-adrenaline-monstre
-		) {
-			column-span: all;
-		}
-	}
-
 	@media print {
-		.markdown-reading-view:not(.adrenaline-one-column) .markdown-preview-sizer {
-			column-count: 1;
-		}
-
 		.markdown-source-view,
 		.markdown-reading-view,
 		.print .markdown-preview-view {
