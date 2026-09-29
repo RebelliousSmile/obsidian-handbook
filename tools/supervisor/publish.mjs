@@ -116,7 +116,7 @@ function stepOf(context, train, file, repo) {
 	return { repo, dir, evidenceDir: ctx.evidenceDir, step: adapter.nextStep(observation) };
 }
 
-function quote(argument) {
+export function quote(argument) {
 	return /^[A-Za-z0-9_./:=@%+-]+$/.test(argument) ? argument : `'${argument.replace(/'/g, "'\\''")}'`;
 }
 

@@ -27,6 +27,15 @@ function checkPreconditions(root, topology, train, repos) {
 	if (pending.length > 0) {
 		throw new SupervisorError(`present: not every item is done: ${pending.map((item) => `${item.label} (${item.state})`).join(", ")}; see supervise next`, 1);
 	}
+	return checkCheckouts(root, repos, "present");
+}
+
+/**
+ * Every checkout clean and at origin/main, after a fetch: the SHAs a command
+ * reports are then the ones GitHub has. The coordinator's train records are
+ * not a change of the checkout, the supervisor writes them.
+ */
+export function checkCheckouts(root, repos, label) {
 	const problems = [];
 	const heads = {};
 	for (const repo of repos) {
@@ -47,12 +56,13 @@ function checkPreconditions(root, topology, train, repos) {
 		}
 		heads[repo.id] = originMain;
 	}
-	if (problems.length > 0) throw new SupervisorError(`present: the repositories are not ready\n  ${problems.join("\n  ")}`, 1);
+	if (problems.length > 0) throw new SupervisorError(`${label}: the repositories are not ready\n  ${problems.join("\n  ")}`, 1);
 	return heads;
 }
 
-function runValidation(dir, command) {
-	process.stderr.write(`present: ${command.join(" ")} in ${dir}\n`);
+/** Run `command` in `dir` behind the publication guard; its output is kept to its last lines. */
+export function runGuarded(dir, command, label) {
+	process.stderr.write(`${label}: ${command.join(" ")} in ${dir}\n`);
 	const result = spawnSync(command[0], command.slice(1), {
 		cwd: dir,
 		encoding: "utf8",
@@ -82,7 +92,7 @@ export function presentTrain(root, topology, train) {
 				.map((line) => ({ sha: line.slice(0, 40), subject: line.slice(41) }))
 			: [];
 		const diffstat = baseKnown ? gitOut(dir, ["diff", "--stat", base, sha]) : "";
-		const validations = (repo.validations ?? []).map((command) => runValidation(dir, command));
+		const validations = (repo.validations ?? []).map((command) => runGuarded(dir, command, "present"));
 		return { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat, validations };
 	});
 	const reasons = [];

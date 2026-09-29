@@ -77,6 +77,21 @@
 		"presentation": {
 			"description": "Written by supervise present: what approve binds to.",
 			"$ref": "#/definitions/presentation"
+		},
+		"convergence": {
+			"description": "Written by supervise converge: the checks that proved every consumer adopted every final, at these SHAs.",
+			"$ref": "#/definitions/convergence"
+		},
+		"consumerReleases": {
+			"description": "Written by supervise close: the consumer releases observed on GitHub, Lantern then Handbook.",
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/consumerRelease"
+			}
+		},
+		"closedAt": {
+			"description": "Written by supervise close --run, once the coordination issue is closed.",
+			"type": "string"
 		}
 	},
 	"definitions": {
@@ -417,6 +432,110 @@
 				},
 				"publications": {
 					"$ref": "#/definitions/publications"
+				}
+			}
+		},
+		"convergence": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"status",
+				"at",
+				"repos",
+				"checks",
+				"notes"
+			],
+			"properties": {
+				"status": {
+					"enum": [
+						"passed",
+						"failed"
+					]
+				},
+				"at": {
+					"type": "string"
+				},
+				"repos": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"repo",
+							"sha"
+						],
+						"properties": {
+							"repo": {
+								"$ref": "#/definitions/id"
+							},
+							"sha": {
+								"$ref": "#/definitions/sha"
+							}
+						}
+					}
+				},
+				"checks": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"repo",
+							"command",
+							"status"
+						],
+						"properties": {
+							"repo": {
+								"$ref": "#/definitions/id"
+							},
+							"command": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							},
+							"status": {
+								"type": "integer"
+							}
+						}
+					}
+				},
+				"notes": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"consumerRelease": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"repo",
+				"version",
+				"tag",
+				"sha",
+				"url"
+			],
+			"properties": {
+				"repo": {
+					"$ref": "#/definitions/id"
+				},
+				"version": {
+					"type": "string",
+					"minLength": 1
+				},
+				"tag": {
+					"type": "string",
+					"minLength": 1
+				},
+				"sha": {
+					"$ref": "#/definitions/sha"
+				},
+				"url": {
+					"type": "string",
+					"pattern": "^https://github\\.com/"
 				}
 			}
 		}

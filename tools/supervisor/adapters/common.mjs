@@ -94,7 +94,7 @@ export function originFiles(dir, path) {
 	return result.status === 0 ? result.stdout.split("\n").filter(Boolean) : [];
 }
 
-function consumerPin(dir, name, ref) {
+export function consumerPin(dir, name, ref) {
 	const manifestText = showFile(dir, ref, "package.json");
 	let manifest = {};
 	try {
@@ -115,7 +115,7 @@ function consumerPin(dir, name, ref) {
 }
 
 /** Whether `ref` of a consumer pins `archive`, in package.json and every lockfile, with its SRI. */
-function pins(dir, name, ref, archive) {
+export function pins(dir, name, ref, archive) {
 	const pin = consumerPin(dir, name, ref);
 	return pin.url === archive.url
 		&& pin.lockfiles.every((lockfile) => lockfile.url === archive.url && lockfile.integrity === archive.integrity);
@@ -230,6 +230,29 @@ export function manifestProblem(root, topology, repo, manifest, expected) {
 		const dir = repoDir(root, consumer);
 		if (git(dir, ["cat-file", "-e", `${entry.ref}^{commit}`]).status !== 0) return `names ${id} at ${entry.ref}, which is not a commit of ${id}`;
 		if (!pins(dir, repo.package, entry.ref, expected.candidate)) return `names ${id} at ${entry.ref.slice(0, 10)}, which does not pin the candidate ${expected.candidate.tag}`;
+	}
+	return null;
+}
+
+/** The role a consumer holds in the providers' release-train records. */
+export const CONSUMER_ROLES = { "obsidian-handbook": "handbook", lantern: "lantern" };
+
+/** The steps of a convergence: the commands that prove it, once no person has anything left to do. */
+export const checks = (commands, notes = []) => ({ kind: "checks", commands, notes });
+
+/**
+ * What is wrong with the consumer refs a final record names, or null: each
+ * consumer of the provider named once, at a commit of its own that pins the
+ * final archive.
+ */
+export function finalConsumersProblem(root, topology, repo, entries, final) {
+	for (const id of repo.consumers ?? []) {
+		const consumer = repoById(topology, id);
+		const named = (entries ?? []).filter((entry) => entry.repository === consumer.repository);
+		if (named.length !== 1 || !named[0].ref) return `names ${consumer.repository} ${named.length === 0 ? "nowhere" : `${named.length} times`}`;
+		const dir = repoDir(root, consumer);
+		if (git(dir, ["cat-file", "-e", `${named[0].ref}^{commit}`]).status !== 0) return `names ${id} at ${named[0].ref}, which is not a commit of ${id}`;
+		if (!pins(dir, repo.package, named[0].ref, final)) return `names ${id} at ${named[0].ref.slice(0, 10)}, which does not pin the final ${final.tag}`;
 	}
 	return null;
 }

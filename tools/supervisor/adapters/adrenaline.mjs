@@ -10,7 +10,7 @@
  */
 import { ghJson } from "../gh.mjs";
 import {
-	adoptionStep, candidateFields, done, human, inspect, lastRun, manifestInstruction, nextCandidateTag,
+	adoptionStep, candidateFields, checks, CONSUMER_ROLES, done, finalConsumersProblem, human, originJson, inspect, lastRun, manifestInstruction, nextCandidateTag,
 	observeCandidate, observeTrainManifest, pending, settleCandidate, succeeded, tagExists, wait, workflowStep,
 } from "./common.mjs";
 
@@ -69,4 +69,47 @@ export function nextStep(o) {
 	if (pending(o.runs.promote)) return wait(o.runs.promote);
 	if (succeeded(o.runs.promote)) return inspect(repo.id, o.runs.promote, `release ${o.finalTag} is not published`);
 	return workflowStep(repo, "promote", "release.yml", o.inputs.promote, `publish ${o.finalTag} with the bytes of ${o.candidate.tag}`);
+}
+
+/**
+ * After the final: a person commits the final record the provider's
+ * `release-train:verify-final` reads, which then checks each named consumer
+ * against GitHub. `final-convergence.yml` runs the same check on dispatch; the
+ * local command gives the same answer without a workflow run.
+ */
+export function observeConvergence(ctx) {
+	const { root, topology, repo, dir, finalTag, final, version, consumers } = ctx;
+	const recordPath = `release-train/${repo.package}-${finalTag}-final.json`;
+	const record = originJson(dir, recordPath);
+	const artifact = { provider: repo.package, releaseUrl: final.url, sha256: final.sha256, integrity: final.integrity, version };
+	let recordProblem = null;
+	if (!record) recordProblem = "is not on origin/main";
+	else if (record.unreadable) recordProblem = "is not valid JSON";
+	else if (record.protocol !== 2) recordProblem = `has protocol ${record.protocol ?? "(none)"}, not 2`;
+	else {
+		const wrong = Object.keys(artifact).find((field) => record.artifact?.[field] !== artifact[field]);
+		recordProblem = wrong
+			? `names artifact.${wrong} ${record.artifact?.[wrong] ?? "(none)"}, the train expects ${artifact[wrong]}`
+			: finalConsumersProblem(root, topology, repo, record.consumers, final);
+	}
+	return {
+		repo,
+		recordPath,
+		recordProblem,
+		expectedRecord: {
+			protocol: 2,
+			artifact,
+			consumers: consumers.map((consumer) => ({ role: CONSUMER_ROLES[consumer.repo] ?? consumer.repo, repository: consumer.repository, ref: consumer.sha })),
+		},
+	};
+}
+
+export function convergence(o) {
+	if (o.recordProblem) {
+		return human(o.repo.id, [
+			`commit ${o.recordPath} on main of the provider (it ${o.recordProblem}), with this content:`,
+			...JSON.stringify(o.expectedRecord, null, "\t").split("\n").map((line) => `  ${line}`),
+		].join("\n"));
+	}
+	return checks([["npm", "run", "release-train:verify-final"]]);
 }

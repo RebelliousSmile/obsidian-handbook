@@ -6,11 +6,12 @@
  * (`FAKE_GH_STATE`), with its arguments and working directory. The next
  * queued effect of `localEffects["<repository directory> <script>"]` decides
  * its exit status, and may publish a release in the same fake GitHub, which
- * is what a local promotion does. `--output <file>` is written, as the
+ * is what a local promotion does, or write a file of the checkout, as a
+ * convergence writes its evidence. `--output <file>` is written, as the
  * assertion writes its provenance.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 const statePath = process.env.FAKE_GH_STATE;
 if (!statePath) {
@@ -34,6 +35,10 @@ if (status === 0) {
 	if (output >= 0) {
 		mkdirSync(dirname(args[output + 1]), { recursive: true });
 		writeFileSync(args[output + 1], `${JSON.stringify({ script, args: args.slice(2) }, null, "\t")}\n`);
+	}
+	if (effect.write) {
+		mkdirSync(dirname(join(process.cwd(), effect.write.path)), { recursive: true });
+		writeFileSync(join(process.cwd(), effect.write.path), effect.write.content);
 	}
 	if (effect.createRelease) {
 		state.releases = state.releases ?? {};

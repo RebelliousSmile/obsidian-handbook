@@ -14,7 +14,7 @@
  * every release URL and SRI it introduces is already known to the train.
  */
 import {
-	adoptionStep, candidateFields, done, human, inspect, lastRun, manifestInstruction, manifestProblem,
+	adoptionStep, candidateFields, checks, done, human, inspect, lastRun, manifestInstruction, manifestProblem,
 	nextCandidateTag, observeCandidate, observeTrainManifest, originFiles, originJson, pending, releaseUrl,
 	runArtifactJson, settleCandidate, succeeded, wait, workflowStep,
 } from "./common.mjs";
@@ -109,4 +109,13 @@ export function nextStep(o) {
 	if (pending(o.runs.promote)) return wait(o.runs.promote);
 	if (succeeded(o.runs.promote)) return inspect(repo.id, o.runs.promote, `release ${o.finalTag} is not published`);
 	return workflowStep(repo, "promote", "release.yml", o.inputs.promote, `publish ${o.finalTag} with the bytes of ${o.candidate.tag}`);
+}
+
+/** schema-pbta has no convergence tool: both consumers pinning the final, and their own checks, are the whole proof. */
+export function observeConvergence(ctx) {
+	return { repo: ctx.repo, finalTag: ctx.finalTag };
+}
+
+export function convergence(o) {
+	return checks([], [`${o.repo.id}: no convergence tool of its own; its convergence rests on the final ${o.finalTag} pinned by both consumers and on their convergence commands`]);
 }

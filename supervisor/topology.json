@@ -21,6 +21,16 @@
 					"pnpm",
 					"check"
 				]
+			],
+			"convergence": [
+				[
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				]
 			]
 		},
 		{
@@ -41,6 +51,25 @@
 					"npm",
 					"run",
 					"check"
+				]
+			],
+			"convergence": [
+				[
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-train-matrix"
 				]
 			]
 		},
