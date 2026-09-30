@@ -187,12 +187,8 @@ export function renderPresentation(train, presentation) {
 			lines.push(`- ${validation.status === 0 ? "passed" : `**failed (exit ${validation.status})**`}: \`${validation.command.join(" ")}\``);
 			if (validation.status !== 0 && validation.tail) lines.push("", "```", validation.tail, "```");
 		}
-		if (entry.role === "provider") {
-			lines.push("", entry.repo === "schema-pbta"
-				? "Local preview: in obsidian-handbook, `pnpm dev:schema-pbta -- <vault>` syncs this checkout's packs into a vault and reloads Handbook (#65)."
-				: "Local preview: none exists yet for this provider.");
-		}
 	}
+	lines.push("", "## Try it before approving", "", "`pnpm supervise preview --vault <vault>` builds these checkouts, installs the Handbook packs of each provider in the vault, deploys Handbook next to its `data.json`, and serves each consumer's dev server on the same checkouts.");
 	lines.push("", "## Publications covered by an approval", "", ...presentation.publications.map((publication) => `- ${publication}`));
 	return lines.join("\n");
 }

@@ -40,6 +40,22 @@ function copyAssets() {
 	console.log("🖼  Copied assets");
 }
 
+// `supervise preview` builds against the train's unpublished providers: each
+// alias maps a package specifier to its checkout, as its `exports` map does.
+const previewAliases = JSON.parse(process.env.HANDBOOK_PREVIEW_ALIASES ?? "[]").map(
+	({ find, replacement }) => ({ find: new RegExp(find), replacement }),
+);
+const previewPlugin = {
+	name: "supervisor-preview",
+	setup(build) {
+		build.onResolve({ filter: /.*/ }, (args) => {
+			const alias = previewAliases.find(({ find }) => find.test(args.path));
+			return alias ? { path: path.resolve(args.path.replace(alias.find, alias.replacement)) } : undefined;
+		});
+	},
+};
+const previewPlugins = previewAliases.length > 0 ? [previewPlugin] : [];
+
 const styleBuildOptions = {
 	banner: { js: banner, css: banner },
 	entryPoints: ["src/styles/styles.scss"],
@@ -77,6 +93,7 @@ const pluginBuildOptions = {
 	minify: prod,
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
+	plugins: previewPlugins,
 	outdir,
 };
 

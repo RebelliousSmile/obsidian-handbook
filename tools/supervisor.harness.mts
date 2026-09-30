@@ -363,7 +363,7 @@ scenario("present reports each concerned repository with its SHA, commits and va
 	assert.match(report, /schema-in-the-mist: release candidate of schema-in-the-mist/);
 	assert.match(report, /schema-in-the-mist: final release of schema-in-the-mist, same bytes as the candidate/);
 	assert.match(report, /lantern: release/);
-	assert.match(report, /Local preview: none exists yet/);
+	assert.ok(report.includes("## Try it before approving\n\n`pnpm supervise preview --vault <vault>`"), report);
 	const record = readRecord(world);
 	assert.equal(record.presentation.presentable, true);
 	assert.equal(record.approval, null, "present approved");
@@ -1059,6 +1059,61 @@ scenario("the convergence step of each provider is pure and names what a person 
 	assert.deepEqual(steps[6].commands, [["npm", "run", "release-train:validate", "--", "--require-complete", "v1.1.0"]]);
 	assert.deepEqual(steps[7].commands, []);
 	assert.match(steps[7].notes[0], /^schema-pbta: no convergence tool of its own/);
+});
+
+scenario("preview plans from what the train's providers publish, and installs their packs without touching data.json", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	const mist = world.dir("schema-in-the-mist");
+	world.write("schema-in-the-mist", {
+		"package.json": `${JSON.stringify({ name: "schema-in-the-mist", version: "1.0.0", scripts: { build: "tsc" }, exports: { ".": "./dist/index.js", "./presentation": { import: "./dist/presentation.js" }, "./handbook/*": "./handbook/*" } }, null, "\t")}\n`,
+		"handbook.json": JSON.stringify({ repository: REPOSITORY["schema-in-the-mist"], packs: [{ id: "mist", version: "1.1.0", path: "handbook/mist/pack.json" }] }),
+		"handbook/mist/pack.json": JSON.stringify({ version: "1.1.0", pack: { id: "mist" } }),
+		"handbook/mist/assets/grain.webp": "grain",
+	});
+	world.write("obsidian-handbook", { "manifest.json": "{\"id\": \"obsidian-handbook\", \"version\": \"1.0.0\"}\n" });
+	world.write("lantern", { "vite.config.ts": "export default {};\n" });
+	const vault = resolve(world.tmp, "vault");
+	const pluginDir = resolve(vault, ".obsidian/plugins/obsidian-handbook");
+	mkdirSync(pluginDir, { recursive: true });
+	const sourceId = REPOSITORY["schema-in-the-mist"].toLowerCase().replace("/", "--");
+	const settings = `${JSON.stringify({ schemaSources: [{ id: sourceId, reference: { kind: "tag", value: "v1.0.0" } }] })}\n`;
+	writeFileSync(resolve(pluginDir, "data.json"), settings);
+	writeFileSync(resolve(pluginDir, "manifest.json"), "{}\n");
+
+	const probe = [
+		"const [root, topologyFile, trainFile, vault] = process.argv.slice(1);",
+		"const { readFileSync } = await import('node:fs');",
+		"const { planPreview, installSources } = await import('./tools/supervisor/preview.mjs');",
+		"const read = (file) => JSON.parse(readFileSync(file, 'utf8'));",
+		"const plan = planPreview(root, read(topologyFile), read(trainFile), { vaults: [vault] });",
+		"const lines = installSources(plan, new Date(0));",
+		"const resolveAlias = (aliases, spec) => { const alias = aliases.find(({ find }) => new RegExp(find).test(spec)); return alias ? spec.replace(new RegExp(alias.find), alias.replacement) : null; };",
+		"const specs = ['schema-in-the-mist', 'schema-in-the-mist/presentation', 'schema-in-the-mist/handbook/mist/assets/grain.webp?url&no-inline', 'schema-in-the-mist-other'];",
+		"console.log(JSON.stringify({ plan, lines, resolved: specs.map((spec) => resolveAlias(plan.handbook.aliases, spec)) }));",
+	].join("\n");
+	const { plan, lines, resolved } = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, trainPath(world), vault]), "preview probe"));
+	const slash = (path: string) => path.split("\\").join("/");
+	assert.deepEqual(plan.packages.map((entry: any) => entry.repo), ["schema-in-the-mist"], "only the train's providers are packages");
+	assert.deepEqual(plan.builds.map((entry: any) => entry.repo), ["schema-in-the-mist"]);
+	assert.deepEqual(plan.consumers.map((entry: any) => [entry.repo, entry.packages]), [["lantern", ["schema-in-the-mist"]]]);
+	assert.equal(slash(resolved[0]), `${slash(mist)}/dist/index.js`);
+	assert.equal(slash(resolved[1]), `${slash(mist)}/dist/presentation.js`);
+	assert.equal(slash(resolved[2]), `${slash(mist)}/handbook/mist/assets/grain.webp?url&no-inline`, "the query is lost");
+	assert.equal(resolved[3], null, "a longer package name was captured");
+
+	const sourceDir = resolve(vault, ".obsidian/handbook/sources", sourceId);
+	const source = JSON.parse(readFileSync(resolve(sourceDir, "source.json"), "utf8"));
+	assert.deepEqual(source.reference, { kind: "tag", value: "v1.0.0" }, "the registered reference was replaced");
+	assert.equal(source.revision, git(mist, "rev-parse", "HEAD"));
+	assert.equal(readFileSync(resolve(sourceDir, "packs/mist/assets/grain.webp"), "utf8"), "grain");
+	assert.ok(existsSync(resolve(sourceDir, "packs/mist/pack.json")) && existsSync(resolve(sourceDir, "handbook.json")));
+	assert.equal(readFileSync(resolve(pluginDir, "data.json"), "utf8"), settings, "data.json was written");
+	assert.match(lines[0], /source .* \(mist 1\.1\.0\)$/);
+
+	const refused = world.supervise(["preview", "--no-serve"], { topology });
+	assert.equal(refused.status, 2, refused.stderr);
+	assert.match(refused.stderr, /nothing to show without --vault/);
 });
 
 function main(): void {

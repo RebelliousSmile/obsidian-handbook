@@ -71,7 +71,15 @@ The guard has a single rule table (`tools/supervisor/guard/rules.cjs`) and two i
 
 The guard fails closed: a refused call exits 97, a missing real binary exits 127, and neither reaches the binary.
 
-**Local preview (#65)**: when `schema-pbta` is part of the train, the report points to `pnpm dev:schema-pbta -- <vault>`. This command copies the installable packs of the local `schema-pbta` checkout (`handbook.json`, `pack.json` and assets) into the vault's Handbook data, asks Handbook to reload, then does it again on every change. `--once` syncs a single time. Handbook must already be installed in the vault. For the two other providers, no local preview exists yet, and the report says so.
+**Try it before approving**: `pnpm supervise preview --vault <vault>` runs the train's code in Obsidian and in each consumer. The command first requires what `present` requires: every concerned repository must be on `origin/main` and clean. It also warns about a SHA that moved since the presentation. Then:
+
+- it builds the train's providers that have a `build` script;
+- it builds Handbook against their checkouts: each declared package is redirected to its folder, following its `exports` map;
+- it installs in the vault the packs each provider publishes through its `handbook.json`. The layout is the installer's (`.obsidian/handbook/sources/<id>/`), and `source.json` carries the checkout's HEAD;
+- it deploys `dist/` next to `data.json`, which it reads and never writes, then opens the vault;
+- it starts each consumer's vite server on those same checkouts, with its own config and aliases merged on top. Its `package.json` and lockfiles are not touched.
+
+Nothing in it belongs to one game or one schema: what gets mounted is what each provider of the train publishes and what each consumer declares. `--no-serve` stops at the vault, `--no-open` opens nothing, `--port` sets the dev server port, and `Ctrl+C` stops the servers. To follow `schema-pbta` continuously, `pnpm dev:schema-pbta -- <vault>` (#65) copies its packs again on every change.
 
 ### 5. `approve`: the approval
 

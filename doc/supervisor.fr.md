@@ -71,7 +71,15 @@ Le garde a une seule table de règles (`tools/supervisor/guard/rules.cjs`) et de
 
 Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuvable en 127, et aucun des deux n'atteint le binaire.
 
-**Aperçu local (#65)** : quand `schema-pbta` fait partie du train, le rapport rappelle `pnpm dev:schema-pbta -- <coffre>`. Cette commande copie les packs installables du checkout local de `schema-pbta` (`handbook.json`, `pack.json` et assets) dans les données Handbook du coffre, demande à Handbook de se recharger, puis recommence à chaque modification. `--once` synchronise une seule fois. Handbook doit déjà être installé dans le coffre. Pour les deux autres fournisseurs, aucun aperçu local n'existe encore et le rapport le dit.
+**Essayer avant d'approuver** : `pnpm supervise preview --vault <coffre>` fait tourner le code du train dans Obsidian et dans chaque consommateur. La commande exige d'abord ce que `present` exige : chaque dépôt concerné doit être sur `origin/main` et propre. Elle signale aussi un SHA qui a bougé depuis la présentation. Ensuite :
+
+- elle construit les fournisseurs du train qui ont un script `build` ;
+- elle construit Handbook contre leurs checkouts : chaque paquet déclaré est redirigé vers son dossier, en suivant sa carte `exports` ;
+- elle installe dans le coffre les packs que chaque fournisseur publie par son `handbook.json`. L'arborescence est celle de l'installeur (`.obsidian/handbook/sources/<id>/`), et `source.json` porte le HEAD du checkout ;
+- elle déploie `dist/` à côté du `data.json`, qu'elle lit sans jamais l'écrire, puis ouvre le coffre ;
+- elle lance le serveur vite de chaque consommateur sur ces mêmes checkouts, avec sa propre configuration et des alias ajoutés par-dessus. Son `package.json` et ses lockfiles ne sont pas touchés.
+
+Rien n'y est propre à un jeu ou à un schéma : ce qui est monté, c'est ce que chaque fournisseur du train publie et ce que chaque consommateur déclare. `--no-serve` s'en tient au coffre, `--no-open` n'ouvre rien, `--port` fixe le port du serveur de dev, et `Ctrl+C` arrête les serveurs. Pour suivre `schema-pbta` en continu, `pnpm dev:schema-pbta -- <coffre>` (#65) recopie ses packs à chaque modification.
 
 ### 5. `approve` : l'accord
 
