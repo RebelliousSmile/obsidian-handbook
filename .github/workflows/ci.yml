@@ -64,6 +64,30 @@ jobs:
               working-directory: handbook
               run: pnpm assert:adrenaline-source
 
+    # The supervisor runs validations and local publish steps on the maintainer's Windows host:
+    # its harness, the cmd.exe interception path of the publication guard included, is proven
+    # there, not only on Linux.
+    supervisor-windows:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  path: handbook
+            - uses: pnpm/action-setup@v4
+              with:
+                  package_json_file: handbook/package.json
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "20.x"
+                  cache: pnpm
+                  cache-dependency-path: handbook/pnpm-lock.yaml
+            - name: Install dependencies
+              working-directory: handbook
+              run: pnpm install --frozen-lockfile
+            - name: Check supervisor
+              working-directory: handbook
+              run: pnpm assert:supervisor
+
     plugin-load:
         runs-on: ubuntu-latest
         steps:

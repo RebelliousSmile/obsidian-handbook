@@ -10,7 +10,7 @@ The supervisor observes, records and tells who does what next. It never writes c
 
 - The five repositories cloned side by side, under the names of the topology (`supervisor/topology.json`, `path` field): `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` names their parent directory (default: the parent of Handbook).
 - `git`, and `gh` authenticated on `RebelliousSmile`.
-- A POSIX shell (Linux, macOS or WSL). The publication guard is a `PATH` prefix of `sh` scripts; on native Windows it does not step in.
+- Node 20 or later, on Linux, macOS or native Windows. Neither a POSIX shell nor WSL is required.
 - `approve`, and `link --create` without `--yes`, need a real terminal.
 
 ## The train record
@@ -63,6 +63,13 @@ pnpm supervise present
 ```
 
 Requires clean checkouts at `origin/main`, a train whose items are all `done`, and no repository engaged elsewhere. For each concerned repository, it reports the SHA, the commits since the base and the diff summary, then runs its validations (`validations` in the topology) **behind the publication guard**: a validation that tries `gh release create`, a workflow dispatch, `git push` or `git tag` fails. The presentation ends with the list of publications an approval will cover.
+
+The guard has a single rule table (`tools/supervisor/guard/rules.cjs`) and two interception paths, because neither is enough alone:
+
+- **`PATH` shims** `gh` / `git` (in `sh`) and `gh.cmd` / `git.cmd` (for `cmd.exe`), put at the head of the validation's `PATH`: they stop any call made through a shell;
+- a **`NODE_OPTIONS=--require` hook** (`hook.cjs`), inherited by every Node process: it stops a Node tool that starts `gh` or `git` without a shell, which on Windows finds `gh.exe` directly and skips the shims.
+
+The guard fails closed: a refused call exits 97, a missing real binary exits 127, and neither reaches the binary.
 
 **Local preview (#65)**: when `schema-pbta` is part of the train, the report points to `pnpm dev:schema-pbta -- <vault>`. This command copies the installable packs of the local `schema-pbta` checkout (`handbook.json`, `pack.json` and assets) into the vault's Handbook data, asks Handbook to reload, then does it again on every change. `--once` syncs a single time. Handbook must already be installed in the vault. For the two other providers, no local preview exists yet, and the report says so.
 
@@ -151,4 +158,4 @@ Two things stay human: the approval itself, and any deletion (branches, traces, 
 - **"the repositories are not ready"**: a checkout is not clean or not at `origin/main`. The command to run is printed.
 - **"supervisor guard: … is refused"**: a validation tries to publish. Fix the validation, not the guard.
 - **Approval voided**: a commit outside `trainFiles`, or a release URL the train does not know, landed on a repository. Run `present` then `approve` again.
-- **Windows checkout**: `.gitattributes` forces LF line endings on `tools/supervisor/guard/`. A guard script in CRLF breaks its shebang, and the guard then lets everything through.
+- **Windows checkout**: `.gitattributes` forces LF on the `sh` shims of `tools/supervisor/guard/` and CRLF on their `.cmd` twins. An `sh` shim in CRLF breaks its shebang, a `.cmd` in LF is misread by `cmd.exe`: keep both rules.

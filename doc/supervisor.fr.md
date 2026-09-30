@@ -10,7 +10,7 @@ Le superviseur observe, consigne et dit qui fait quoi ensuite. Il n'écrit jamai
 
 - Les cinq dépôts clonés côte à côte, sous les noms de la topologie (`supervisor/topology.json`, champ `path`) : `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` désigne leur dossier parent (par défaut, le parent de Handbook).
 - `git` et `gh` authentifié sur `RebelliousSmile`.
-- Un shell POSIX (Linux, macOS ou WSL). Le garde de publication est un préfixe de `PATH` fait de scripts `sh` ; sous Windows natif, il ne s'interpose pas.
+- Node 20 ou plus récent, sous Linux, macOS ou Windows natif. Aucun shell POSIX ni WSL n'est exigé.
 - `approve` et `link --create` sans `--yes` demandent un vrai terminal.
 
 ## Le dossier de train
@@ -63,6 +63,13 @@ pnpm supervise present
 ```
 
 Exige des checkouts propres sur `origin/main`, un train dont tous les éléments sont `done`, et aucun dépôt engagé ailleurs. Pour chaque dépôt concerné, il rapporte le SHA, les commits depuis la base, le diff résumé, puis lance ses validations (`validations` de la topologie) **derrière le garde de publication** : une validation qui tenterait `gh release create`, un dispatch de workflow, un `git push` ou un `git tag` échoue. La présentation se termine par la liste des publications qu'un accord couvrira.
+
+Le garde a une seule table de règles (`tools/supervisor/guard/rules.cjs`) et deux voies d'interception, parce qu'aucune ne suffit seule :
+
+- des **shims `PATH`** `gh` / `git` (en `sh`) et `gh.cmd` / `git.cmd` (pour `cmd.exe`), placés en tête du `PATH` de la validation : ils arrêtent tout appel passé par un shell ;
+- un **hook `NODE_OPTIONS=--require`** (`hook.cjs`), hérité par chaque processus Node : il arrête un outil Node qui lance `gh` ou `git` sans shell, ce qui sous Windows trouve directement `gh.exe` et saute les shims.
+
+Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuvable en 127, et aucun des deux n'atteint le binaire.
 
 **Aperçu local (#65)** : quand `schema-pbta` fait partie du train, le rapport rappelle `pnpm dev:schema-pbta -- <coffre>`. Cette commande copie les packs installables du checkout local de `schema-pbta` (`handbook.json`, `pack.json` et assets) dans les données Handbook du coffre, demande à Handbook de se recharger, puis recommence à chaque modification. `--once` synchronise une seule fois. Handbook doit déjà être installé dans le coffre. Pour les deux autres fournisseurs, aucun aperçu local n'existe encore et le rapport le dit.
 
@@ -151,4 +158,4 @@ Deux choses restent à l'humain : l'accord lui-même, et toute suppression (bran
 - **« the repositories are not ready »** : un checkout n'est pas propre ou pas sur `origin/main`. La commande à lancer est affichée.
 - **« supervisor guard: … is refused »** : une validation tente de publier. C'est la validation qu'il faut corriger, pas le garde.
 - **Accord annulé** : un commit hors `trainFiles`, ou une URL de release inconnue du train, est arrivé sur un dépôt. Relancer `present` puis `approve`.
-- **Checkout Windows** : `.gitattributes` force des fins de ligne LF sur `tools/supervisor/guard/`. Un script du garde en CRLF casse son shebang, et le garde laisse alors tout passer.
+- **Checkout Windows** : `.gitattributes` force LF sur les shims `sh` de `tools/supervisor/guard/` et CRLF sur leurs jumeaux `.cmd`. Un shim `sh` en CRLF casse son shebang, un `.cmd` en LF est mal lu par `cmd.exe` : ne pas retirer ces deux règles.

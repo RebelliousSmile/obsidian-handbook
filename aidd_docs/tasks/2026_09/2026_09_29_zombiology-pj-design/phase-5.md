@@ -24,7 +24,7 @@ lantern/
 
 ```mermaid
 flowchart TD
-  A[supervise present sous WSL] --> B[Captures Handbook et Lantern à côté de pj.jpg]
+  A[supervise present] --> B[Captures Handbook et Lantern à côté de pj.jpg]
   B --> C{Feu vert utilisateur ?}
   C -->|non| D[Retour à la phase concernée]
   C -->|oui: supervise approve| E[publish --run: publish-candidate.yml]
@@ -33,7 +33,7 @@ flowchart TD
   E3 --> F[Tag final schema-adrenaline et release.yml]
   F --> G[Handbook et Lantern épinglent le final]
   G --> G2[schema-adrenaline-v2.7.0-final.json avec leurs refs, puis verify-final]
-  G2 --> H[supervise converge sous WSL]
+  G2 --> H[supervise converge]
   H --> I[Releases Lantern puis Handbook]
   I --> J[supervise close]
 ```
@@ -48,13 +48,13 @@ journey
   section Setup
     Trois checkouts propres sur origin/main, issues du train fermées => supervise next rapporte done: 5: cli
   section Happy path
-    supervise present sous WSL => rapport par dépôt, validations vertes derrière le garde, publications listées: 5: cli
+    supervise present => rapport par dépôt, validations vertes derrière le garde, publications listées: 5: cli
     Montrer les captures côte à côte avec pj.jpg => l'utilisateur tape l'id du train à approve: 5: cli
     supervise publish --run => candidat v2.7.0-rc.N publié depuis main avec SHA-256 et SRI: 5: cli
     Handbook et Lantern épinglent le candidat, installation figée et check verts => approve --verify tient toujours: 5: cli
     Coffre zombiology et aperçu Lantern sur le candidat => rendu identique aux captures présentées: 5: browser
     supervise publish --run jusqu'au final => schema-adrenaline v2.7.0 publiée avec les octets du candidat: 5: cli
-    Épingler le final, commiter le manifeste final avec les refs des consommateurs, verify-final puis supervise converge sous WSL => convergence verte: 5: cli
+    Épingler le final, commiter le manifeste final avec les refs des consommateurs, verify-final puis supervise converge => convergence verte: 5: cli
     Release Lantern puis release Handbook par gh workflow run release.yml --ref vX.Y.Z => manifeste Obsidian à la nouvelle version: 5: cli
     supervise close --run => issue de coordination fermée en dernier: 5: cli
   section Edge case - refus ou modification après accord
@@ -68,7 +68,7 @@ journey
 > Montrer le résultat concret avant toute publication.
 
 1. Vérifier que le garde `tools/supervisor/guard/{gh,git}` est en LF.
-2. `pnpm supervise present`, lancé sous WSL depuis PowerShell, avec la parade éventuelle notée en phase 1.
+2. `pnpm supervise present`, lancé en natif sous PowerShell (plan #70).
 3. Présenter à l'utilisateur les captures des phases 3 et 4 à côté de `pj.jpg`, les changements par dépôt, les validations et les publications prévues.
 4. Attendre l'accord. Le silence et des tests verts ne valent pas accord.
 
@@ -89,7 +89,7 @@ journey
 
 1. Handbook et Lantern épinglent l'URL et le SRI du final (`package.json` et chaque lockfile ; Lantern : `resolved` du `package-lock.json` inclus), installation figée, validations vertes, commit limité aux `trainFiles`.
 2. Écrire `release-train/schema-adrenaline-v2.7.0-final.json` avec les refs de ces commits, le commiter, puis `npm.cmd run release-train:verify-final` : il relit l'épingle chez chaque consommateur.
-3. `pnpm supervise converge` sous WSL.
+3. `pnpm supervise converge`.
 4. Release Lantern selon son dépôt, puis release Handbook : `pnpm version <x.y.z>`, `pnpm assert:release-version`, push, puis `gh workflow run release.yml --ref v<x.y.z>`.
 5. `pnpm supervise close --run`.
 
