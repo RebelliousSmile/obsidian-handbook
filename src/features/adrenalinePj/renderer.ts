@@ -14,10 +14,10 @@ const reportedForms = new Set<string>();
 const PARAMETER_LABELS: Record<string, string> = { joueur: "Joueur", typeDeCreation: "Création", typeDeScenario: "Scénario", declinaisonDeCampagne: "Campagne" };
 const PARAMETER_VALUES: Record<string, string> = { equitable: "Équitable", aleatoire: "Aléatoire", "one-shot": "One-shot", campagne: "Campagne", "bac-a-sable": "Bac à sable", storyline: "Storyline" };
 const FIELD_LABELS: Record<string, string> = { equipementFavori: "Équipement favori", possessions: "Possessions" };
-const IDENTITY_COLUMNS: readonly (readonly (readonly [string, string])[])[] = [
-	[["nationalite", "Nationalité"], ["cheveux", "Cheveux"], ["yeux", "Yeux"], ["peau", "Peau"], ["signesParticuliers", "Signes particuliers"]],
-	[["genre", "Genre"], ["age", "Âge"], ["taille", "Taille"], ["poids", "Poids"]],
-];
+const IDENTITY_LABELS: Record<string, string> = {
+	nationalite: "Nationalité", genre: "Genre", cheveux: "Cheveux", age: "Âge", yeux: "Yeux",
+	taille: "Taille", peau: "Peau", poids: "Poids", signesParticuliers: "Signes particuliers",
+};
 const RANGE_HEADS = { minimum: "Création", current: "Actuel" } as const;
 const THRESHOLDS: readonly (readonly [string, string])[] = [["superficiel", "Superficiel"], ["leger", "Léger"], ["grave", "Grave"], ["profond", "Profond"]];
 const STRESS: readonly (readonly [string, string, "favorable" | "defavorable", string])[] = [["adrenaline", "Adrénaline", "favorable", "Favorable"], ["panique", "Panique", "defavorable", "Défavorable"]];
@@ -140,14 +140,24 @@ function renderFormationColumns(doc: Document, box: HTMLElement, block: Adrenali
 	}
 }
 
+/**
+ * The printed rows of an identity grid, published since schema-adrenaline 2.7.0: a lone field
+ * spans the whole width. Read by cast so an older installed contract falls back to one per row.
+ */
+function fieldRows(block: AdrenalinePresentationBlock): readonly (readonly string[])[] {
+	const rows = (block as { fieldRows?: unknown }).fieldRows;
+	if (Array.isArray(rows)) return rows.filter((row): row is string[] => Array.isArray(row) && row.every((key) => typeof key === "string"));
+	return Object.keys(IDENTITY_LABELS).map((key) => [key]);
+}
+
 function renderIdentityFields(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const identity = asRecord(at(source, block.paths[0])) ?? {};
-	for (const fields of IDENTITY_COLUMNS) {
-		const column = add(box, doc, "div", "identity-column");
-		for (const [key, label] of fields) {
+	for (const row of fieldRows(block)) {
+		for (const key of row) {
 			const raw = identity[key];
 			const shown = Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string").join(" · ") : key === "age" ? text(raw, " ans") : text(raw);
-			writeLine(doc, column, label, shown);
+			const line = writeLine(doc, box, IDENTITY_LABELS[key] ?? key, shown);
+			if (row.length === 1) line.classList.add(`${ROOT}__field-across`);
 		}
 	}
 }
@@ -323,7 +333,7 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: Ad
 		if (block.placement.columnSpan) box.classList.add(`${ROOT}__col-span-${block.placement.columnSpan}`);
 	}
 	if (!TITLED_ELSEWHERE.has(block.form ?? "")) subhead(doc, box, block.label);
-	const body = block.form === "formation-columns" || block.form === "identity-fields" ? add(box, doc, "div", "block-grid") : box;
+	const body = block.form === "formation-columns" ? add(box, doc, "div", "block-grid") : block.form === "identity-fields" ? add(box, doc, "div", "field-rows") : box;
 	switch (block.form) {
 		case "name-card": renderNameCard(doc, box, block, source); break;
 		case "game-parameters": renderGameParameters(doc, box, block, source); break;
@@ -352,6 +362,9 @@ function renderBrand(doc: Document): HTMLElement {
 
 function renderSection(doc: Document, section: AdrenalinePresentationSection, data: AdrenalinePjData, source: AdrenalineDocument): HTMLElement {
 	const container = node(doc, "section", "section");
+	/* Neighbouring sections of one published row share it, in thirds of the sheet (schema-adrenaline 2.7.0). */
+	const span = (section as { row?: { span?: unknown } }).row?.span;
+	container.classList.add(`${ROOT}__span-${span === 1 || span === 2 ? span : 3}`);
 	if (section.showTitle !== false) add(container, doc, "h4", "section-title", section.label);
 	const body = add(container, doc, "div", "section-body");
 	body.classList.add(`${ROOT}__columns-${section.columns ?? 1}`, `${ROOT}__layout-${section.layout}`);
