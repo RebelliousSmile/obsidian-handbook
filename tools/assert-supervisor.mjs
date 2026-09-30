@@ -10,6 +10,7 @@ import { buildSync } from "esbuild";
 import { mkdtempSync, rmSync } from "fs";
 import { join, resolve } from "path";
 import { spawnSync } from "child_process";
+import { unguardedEnv } from "./supervisor/present.mjs";
 
 const work = mkdtempSync(resolve("tools", ".supervisor-harness-"));
 const harnesses = ["tools/supervisorGuard.harness.mts", "tools/supervisor.harness.mts"];
@@ -28,7 +29,8 @@ try {
 			external: ["obsidian", "fs", "ajv"],
 			logLevel: "warning",
 		});
-		const run = spawnSync(process.execPath, [bundle], { stdio: "inherit" });
+		// `pnpm check` runs behind the guard of a real `present`: the harnesses start without it.
+		const run = spawnSync(process.execPath, [bundle], { stdio: "inherit", env: unguardedEnv() });
 		if ((run.status ?? 1) !== 0) status = 1;
 	}
 } finally {

@@ -79,6 +79,28 @@ export function guardedEnv(env = process.env) {
 	return next;
 }
 
+/**
+ * The inverse of `guardedEnv`: the guard's PATH entry, its hook and the
+ * present marker removed, everything else kept. Only for the supervisor
+ * harnesses, run by `pnpm check` behind the guard of a real `present`: their
+ * worlds push to bare remotes in a temporary directory and talk to a fake gh,
+ * and they prove the guard from a baseline where it is absent.
+ */
+export function unguardedEnv(env = process.env) {
+	const key = pathKey(env);
+	const next = {};
+	for (const [name, value] of Object.entries(env)) {
+		if (name.toUpperCase() !== "PATH" || name === key) next[name] = value;
+	}
+	next[key] = (env[key] ?? "").split(delimiter).filter((dir) => dir && resolve(dir) !== resolve(GUARD_DIR)).join(delimiter);
+	const hook = withRequire(undefined, join(GUARD_DIR, "hook.cjs"));
+	const options = (env.NODE_OPTIONS ?? "").split(hook).join("").trim().replace(/\s+/g, " ");
+	if (options) next.NODE_OPTIONS = options;
+	else delete next.NODE_OPTIONS;
+	delete next.SUPERVISOR_PRESENT;
+	return next;
+}
+
 /** Run `command` in `dir` behind the publication guard; its output is kept to its last lines. */
 export function runGuarded(dir, command, label) {
 	process.stderr.write(`${label}: ${command.join(" ")} in ${dir}\n`);
