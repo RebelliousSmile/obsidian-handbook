@@ -56,9 +56,10 @@ function humanize(value: string): string {
 	return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
+/** A scalar characteristic is its creation value: both columns print it. */
 function rangePart(value: unknown, part: "minimum" | "current"): number | undefined {
 	const record = asRecord(value);
-	return readCurrentValue(record?.[part] ?? (part === "current" ? value : undefined));
+	return readCurrentValue(record ? record[part] : value);
 }
 
 function capitalize(value: string): string {
