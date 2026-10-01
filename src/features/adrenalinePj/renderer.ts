@@ -1,5 +1,5 @@
 import { PJ_PRESENTATION, type AdrenalinePresentationBlock, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
-import { adrenalineSourceDocument, asRecord, displayedCompetenceTotal, readCurrentValue, type AdrenalineDocument, type Competence, type EquipmentWeapon, type Formation } from "../adrenaline/document";
+import { adrenalineSourceDocument, asRecord, readCurrentValue, type AdrenalineDocument, type Competence, type EquipmentWeapon, type Formation } from "../adrenaline/document";
 import { renderZones } from "../blocks/shape";
 import { logScope } from "../../utils/logger";
 import { AdrenalinePjData } from "./parser";
@@ -118,22 +118,55 @@ function renderGameParameters(doc: Document, box: HTMLElement, block: Adrenaline
 	}
 }
 
-function competenceName(competence: Competence): string {
-	return competence.specialite ? `${competence.nom} · ${competence.specialite}` : competence.nom;
+/**
+ * The printed fields of a competence. schema-adrenaline 2.7.0 adds `caracteristique`; read by
+ * cast so an older installed contract keeps printing the name and speciality alone.
+ */
+function competenceFields(block: AdrenalinePresentationBlock): readonly string[] {
+	const fields = (block as { formationFields?: { competence?: unknown } }).formationFields?.competence;
+	return Array.isArray(fields) ? fields.filter((field): field is string => typeof field === "string") : ["nom", "specialite", "pourcentage"];
+}
+
+function competenceName(competence: Competence, fields: readonly string[]): string {
+	const name = competence.specialite && fields.indexOf("specialite") >= 0 ? `${competence.nom} · ${competence.specialite}` : competence.nom;
+	return competence.caracteristique && fields.indexOf("caracteristique") >= 0 ? `${name} (${competence.caracteristique.toUpperCase()})` : name;
+}
+
+/**
+ * The printed columns, published since schema-adrenaline 2.7.0 as `formationTypes`: every type
+ * keeps its column even when the document leaves it empty. An older contract prints the
+ * document's formations only.
+ */
+function formationColumns(block: AdrenalinePresentationBlock, formations: readonly Formation[]): (Formation | { type: string })[] {
+	const types = (block as { formationTypes?: unknown }).formationTypes;
+	if (!Array.isArray(types)) return [...formations];
+	const columns: (Formation | { type: string })[] = [];
+	for (const type of types) if (typeof type === "string") {
+		const own = formations.filter((formation) => formation.type === type);
+		if (own.length > 0) columns.push(...own);
+		else columns.push({ type });
+	}
+	for (const formation of formations) if (types.indexOf(formation.type) < 0) columns.push(formation);
+	return columns;
 }
 
 function renderFormationColumns(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, data: AdrenalinePjData): void {
 	const suffix = block.valueSuffix ?? "";
-	const shown: Formation[] = data.formations ?? [];
-	for (const formation of shown) {
+	const fields = competenceFields(block);
+	for (const formation of formationColumns(block, data.formations ?? [])) {
 		const column = add(box, doc, "div", "formation");
 		subhead(doc, column, "Formation", [suffix]);
 		const header = add(column, doc, "div", "metric-list");
+		if (!("nom" in formation)) {
+			metric(doc, header, humanize(formation.type), [""]);
+			continue;
+		}
 		metric(doc, header, `${humanize(formation.type)} (${formation.nom})`, [text(formation.pourcentage)]);
 		subhead(doc, column, "Compétences", [suffix]);
 		const list = add(column, doc, "div", "metric-list");
 		for (const competence of formation.competences ?? []) {
-			metric(doc, list, competenceName(competence), [text(displayedCompetenceTotal(competence, data.caracteristiques) ?? competence.pourcentage)]);
+			/* The published fields print the skill alone; the noted characteristic is added at the roll. */
+			metric(doc, list, competenceName(competence, fields), [text(competence.pourcentage)]);
 			if (competence.avantages?.length) add(list, doc, "p", "note", `Avantage : ${competence.avantages.join(", ")}`);
 			if (competence.notes) add(list, doc, "p", "note", competence.notes);
 		}

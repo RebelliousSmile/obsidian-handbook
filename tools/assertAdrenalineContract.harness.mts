@@ -82,7 +82,27 @@ assert.match(text(pjRender), new RegExp(PJ_PRESENTATION.sheet.label), "PJ cartou
 assert.match(text(pjRender), /\+1d100/, "PJ stress dice print the published favourable die");
 const competences = allElements(pjRender).find((element) => element.classes.includes("brumes-adrenaline-pj__formations-competences"));
 assert.ok(competences);
-assert.equal(allElements(competences).filter((element) => element.classes.includes("brumes-adrenaline-pj__formation")).length, pjData.formations?.length, "one competence column per formation");
+const formationBlock = PJ_PRESENTATION.sections.flatMap((section) => section.blocks).find((block) => block.form === "formation-columns") as { formationTypes?: readonly string[]; formationFields?: { competence: readonly string[] } } | undefined;
+assert.ok(formationBlock);
+const printedColumns = allElements(competences).filter((element) => element.classes.includes("brumes-adrenaline-pj__formation")).length;
+if (formationBlock.formationTypes) {
+	/* Every published formation type keeps its column, even when the document leaves it empty. */
+	const emptied = pjBlock.render({ ...pjData, formations: [] }, doc as unknown as Document) as unknown as El;
+	assert.equal(allElements(emptied).filter((element) => element.classes.includes("brumes-adrenaline-pj__formation")).length, formationBlock.formationTypes.length, "one column per published formation type");
+	assert.ok(printedColumns >= formationBlock.formationTypes.length, "a document's formations fill the published columns");
+} else {
+	assert.equal(printedColumns, pjData.formations?.length, "one competence column per formation");
+}
+/* The characteristic follows the published competence fields: printed once the contract names it. */
+const firstFormation = pjData.formations?.[0];
+assert.ok(firstFormation?.competences?.length, "the PJ witness must carry a competence");
+const withCharacteristic = { ...pjData, formations: [{ ...firstFormation, competences: [{ ...firstFormation.competences[0], caracteristique: "dex" as const }] }] };
+const characteristicRender = text(pjBlock.render(withCharacteristic, doc as unknown as Document) as unknown as El);
+if ((formationBlock.formationFields?.competence ?? []).indexOf("caracteristique") >= 0) {
+	assert.match(characteristicRender, /\(DEX\)/, "a PJ competence prints its published characteristic");
+} else {
+	assert.doesNotMatch(characteristicRender, /\(DEX\)/, "an older contract leaves the characteristic to the roll");
+}
 /* An unpublished form degrades to plain lines instead of throwing or vanishing. */
 const probe = PJ_PRESENTATION.sections[0].blocks[0] as { form?: string };
 if (!Object.isFrozen(probe)) {
