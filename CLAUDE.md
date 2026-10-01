@@ -1,364 +1,122 @@
 # CLAUDE.md — obsidian-handbook
 
-Dépôt autonome depuis le **2026-09-07**. Objectif : développer le plugin comme on l'entend, les trois déclinaisons de jeu complètes. **Plus aucune PR vers l'amont.**
+Plugin Obsidian **Handbook** (`id: obsidian-handbook`) : thèmes et blocs pour City of Mist, Legend in the Mist, :Otherscape et Adrenaline System (plus les packs PbtA). Fork de **Brumes** (`4rtamis/obsidian-brumes`, MIT) détaché le 2026-09-07 : dépôt autonome, **plus aucune PR vers l'amont**.
 
-## Identité du projet
+## Mémoire détaillée
 
-- Plugin Obsidian **Handbook** (`id: obsidian-handbook`), thèmes + outils pour quatre lignes : City of Mist, Legend in the Mist, :Otherscape et Adrenaline System.
-- Fork de **Brumes** (`4rtamis/obsidian-brumes`), MIT, détaché le 2026-09-07. Le copyright d'origine reste dans `LICENSE`, l'origine est créditée dans le README.
-- Version : `package.json`, `manifest.json` et `versions.json` portent **`2.19.2`**, tenus à une seule valeur par `pnpm assert:release-version` (voir plus bas). `minAppVersion: 1.12.7`.
-- Stack : TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), lint ESLint (dont `eslint-plugin-obsidianmd`).
-- Gestionnaire de paquets : **pnpm** et lui seul. `pnpm-lock.yaml` est le **seul lockfile suivi par git** (avec `flake.lock`) ; `package-lock.json` a été sorti de l'arbre de travail le 2026-09-20, plus aucun outil ni workflow ne le lit. `package.json` épingle `packageManager: pnpm@10.5.2`.
+Ce fichier ne garde que les règles d'action. Le raisonnement, l'historique et les pièges détaillés vivent dans `aidd_docs/` — à lire quand on touche au sujet :
 
-### Nommage : ce qui a changé et ce qui n'a pas bougé
+| Sujet | Fichier |
+| --- | --- |
+| Packs de jeu, polarités, `overrides.json`, illustrations, format d'apparence | `aidd_docs/memory/internal/game-packs.md` |
+| Couverture PbtA (projetée / alias / `unresolved`), métadonnées `schema-pbta` | `aidd_docs/memory/internal/pbta-coverage.md` |
+| CI, épingles de producteur, version de release, historique des tags | `aidd_docs/memory/internal/ci-and-release.md` |
+| Superviseur sous Windows | `aidd_docs/memory/internal/supervisor-windows.md` + `doc/supervisor.fr.md` |
+| Harnais d'assertion (motif de bundling, pièges) | `aidd_docs/memory/internal/assertion-harnesses.md` |
+| Ajouter ou modifier un format de bloc | `aidd_docs/guidelines/schema-design.md` |
+| Décisions d'architecture (ADR) | `aidd_docs/memory/internal/decisions/` |
 
-Renommé : `manifest.json` (`id`, `name`, `author`, `authorUrl`), `package.json` (`name`, `author`), le README, et les seules chaînes **visibles par l'utilisateur** dans `src/` (sous-menu contextuel, Notices, préfixe de log).
+## Stack et structure
 
-**Pas renommé, et à ne pas renommer** :
-
-- le préfixe CSS `brumes-*` et la classe de body `brumes--<mode>` — des centaines d'occurrences, aucun gain, et les presets `themes/*.settings.json` déjà importés chez l'utilisateur s'y appuient ;
-- les identifiants TypeScript (`BrumesPlugin`, `BrumesSettings`, `BrumesBlock`…) ;
-- **les clés de `features.*`** — elles sont écrites dans le `data.json` de l'utilisateur (`storyThemeParser` désigne toujours `theme-card`).
-
-### Structure
+- TypeScript + SCSS, bundle esbuild (`esbuild.config.mjs`), ESLint (dont `eslint-plugin-obsidianmd`). `minAppVersion: 1.12.7`.
+- **pnpm seul** (`packageManager: pnpm@10.5.2`). `pnpm-lock.yaml` est le seul lockfile suivi ; aucun outil ne lit `package-lock.json`.
 
 | Chemin | Rôle |
 | --- | --- |
 | `src/main.ts`, `src/BrumesPlugin.ts` | entrée et classe du plugin |
-| `src/features/` | `blocks` (registre), familles historiques, profils et création :Otherscape (`osThemes`, `osChallenges`, `osCharacterCreation`), socle `adrenaline` et fiches `adrenalinePj`, `adrenalinePnj`, `adrenalineMonstre` |
-| `src/games/` | un jeu = un pack de données : `registry.ts`, `types.ts`, `tokens.ts`, `assets.ts`, `overrides.ts`, `fromSchema.ts` + un fichier par jeu |
-| `src/views/` | `LanternView.ts`, `lanternLogo.ts` |
-| `src/settings/` | `index.ts` (onglet de réglages), `canvasSnippets.ts` (snippets Advanced Canvas), `types.ts` — et rien d'autre |
-| `src/styles/` | SCSS par jeu (`city-of-mist/`, `legend-in-the-mist/`, `otherscape/`, `adrenaline/`) + styles transversaux |
-| `src/contextMenu/`, `src/utils/` | menus contextuels, `logger.ts` |
-| `assets/` | illustrations source à déposer dans le coffre, un dossier par jeu |
-| `corpus/` | les documents qui prouvent : `temoins/` (doivent passer), `refus/` (doivent être rejetés) |
-| `tools/` | les harnais durables et leurs lanceurs — **linté par `pnpm lint`**, voir plus bas |
-| `dist/` | artefacts de build : `main.js`, `styles.css`, `manifest.json` |
+| `src/features/` | `blocks` (registre `BRUMES_BLOCKS`), familles de blocs, `osThemes`/`osChallenges`/`osCharacterCreation`, `adrenaline*`, `pbta` |
+| `src/games/` | un jeu = un pack de données : `registry.ts`, `types.ts`, `tokens.ts`, `assets.ts`, `overrides.ts`, `fromSchema.ts`, `customPacks.ts` + un fichier par jeu |
+| `src/settings/` | `index.ts`, `canvasSnippets.ts`, `types.ts` — rien d'autre |
+| `src/styles/` | SCSS par jeu + transversal |
+| `src/views/`, `src/contextMenu/`, `src/utils/` | vue Lantern, menus, `logger.ts` |
+| `assets/` | illustrations à déposer dans le coffre, un dossier par jeu |
+| `corpus/` | `temoins/` (doivent passer), `refus/` (doivent être rejetés) — les deux moitiés sont nécessaires |
+| `tools/` | harnais `assert:*` et superviseur — linté par `pnpm lint` |
+| `schemas/appearance/` | contrat `GamePack`, propriété de Handbook |
 
-### Commandes
+## Commandes
 
 ```bash
 pnpm install
-pnpm build            # tsc -noEmit -skipLibCheck && esbuild production
-pnpm dev              # esbuild --watch
-pnpm lint             # eslint . — pas seulement src/
-pnpm assert:corpus    # chaque bloc lit un témoin, dégrade un refus, et a sa commande de copie
-pnpm assert:adrenaline-documents # lecteurs communs et aller-retour TOML
-pnpm assert:adrenaline-contract  # corpus et codecs canoniques schema-adrenaline v1
-pnpm assert:adrenaline-theme     # trois racines, deux polarités et responsive
-pnpm assert:override  # overrides.json : surcharger une zone, la retirer, retrouver le rendu d'origine
-pnpm assert:custom-packs # packs/*.json : pack valide, fichier fautif écarté seul, collision d'id, ordre du cycle de vie
-pnpm assert:pbta-pack-coverage # quels formats de playbook PbtA ce build lit vraiment, et lesquels retombent sur le playbook portable
-pnpm assert:ci-install # ce qu'un checkout propre peut installer : pnpm seul, lockfile gelé, aucun outil ne lit package-lock.json
-pnpm dump:dom         # le DOM rendu des corpus canoniques, à comparer d'une phase à l'autre
+rtk proxy pnpm build   # tsc -noEmit sur TOUT le dépôt + esbuild
+pnpm lint              # eslint . (inclut tools/)
+./node_modules/.bin/eslint src --ext .ts
+pnpm check             # la porte complète, dont tous les assert:*
+pnpm assert:<nom>      # un harnais seul (voir package.json)
+pnpm dump:dom          # DOM des corpus canoniques, à comparer d'une phase à l'autre
+pnpm supervise         # superviseur multi-dépôts (doc/supervisor.fr.md)
 ```
 
-## Topologie git
+Pas de vitest/jest et pas question d'en ajouter : les preuves sont des harnais `tools/<nom>.mjs` + `tools/<nom>.harness.mts`, bundlés par esbuild. Aucune dépendance neuve (`tsx` inclus).
 
-| Remote | URL | Rôle |
-| --- | --- | --- |
-| `origin` | `git@github.com:RebelliousSmile/obsidian-handbook.git` | le dépôt, seul à recevoir des push |
-| `upstream` | `https://github.com/4rtamis/obsidian-brumes.git` | lecture seule, pour piocher les correctifs de 4rtamis |
-| `fork-brumes` | `https://github.com/RebelliousSmile/obsidian-brumes` | l'ancien fork, lecture seule, à supprimer quand il n'a plus d'usage |
+## Règles de travail
 
-`upstream` et `fork-brumes` ont leur push-url à `no_push` : un `git push` dessus échoue exprès. `gh repo set-default` → **`RebelliousSmile/obsidian-handbook`**.
+- **Tout se fait sur `main`** (`.codex/rules/00-architecture/0-main-only-execution.md`) : pas de branche, pas de worktree.
+- Ne pas commiter ni pousser sans demande explicite. Messages de commit en anglais. Ne jamais commiter `dist/`.
+- Avant tout commit : `rtk proxy pnpm build` vert **et** les deux portées de lint à zéro erreur (`eslint src --ext .ts` et `pnpm lint` — aucune ne fait foi seule).
+- **Flux inter-dépôts** (`.codex/rules/00-architecture/0-cross-repo-contract-flow.md`) : contrat et sémantique de présentation vivent dans les paquets `schema-*` ; étendre le schéma **avant** le travail consommateur et le **publier avant** de l'adopter ; menus pilotés par les métadonnées publiées ; aucun repli sémantique local.
+- **Tolérance asymétrique** envers l'amont : un ajout amont non encore branché est un constat (build vert) ; une régression de ce que Handbook *déclare*, ou une incohérence interne d'un tarball épinglé, est un échec dur. Les compteurs sur les déclarations de Handbook restent des égalités, ceux sur les corpus amont des planchers.
+- Une exigence qui porte sur un checkout propre (CI) s'affirme par un `assert:*` : les workflows ne tournent jamais en local.
+- Vérifier une phase terminée, c'est croiser son fichier **et** le tableau Decisions du `plan.md`.
 
-Récupérer un correctif amont reste possible et sans engagement :
+## Nommage : ne pas renommer
 
-```bash
-git fetch upstream
-git log --oneline main..upstream/master
-git cherry-pick <sha>
-```
+Renommés : `manifest.json`, `package.json`, README, chaînes visibles de `src/`. **Restent tels quels** : préfixe CSS `brumes-*` et classe de body `brumes--<mode>`, identifiants TS (`BrumesPlugin`, `BrumesBlock`…), et **les clés de `features.*`** (écrites dans le `data.json` utilisateur ; `storyThemeParser` désigne toujours `theme-card`).
 
-⚠ **`origin` est sur `main`, `upstream` sur `master`.** Les deux noms cohabitent
-et ce fichier a longtemps écrit `master` des deux côtés : une branche partie de
-`master` part de rien.
+## Packs de jeu (résumé — détail dans `game-packs.md`)
 
-### Cycle de travail
+- Le plugin écrit ses variables dans **un seul `<style id="brumes-game-style">`** (`src/features/modes/styleElement.ts`). Style Settings et le thème Border ne sont plus des prérequis.
+- Jeu embarqué : `src/games/<jeu>.ts` exportant un `GamePack` + une entrée dans `DECLARED_GAMES`. Rien d'autre.
+- Jeu optionnel : `packs/<id>/pack.json` déclaratif (aucun JS/CSS externe), lu au démarrage avant `loadSettings()`. Nom du dossier = id du pack. Collision avec un jeu déclaré → le déclaré gagne.
+- Id de pack : minuscules, chiffres, traits d'union (`isValidGamePackId`) — c'est un suffixe CSS et une clé du `data.json`.
+- **Un pack déclare ses polarités** ; une couche non déclarée n'est pas écrite. Variantes en sélecteur composé `.brumes--<jeu>.theme-dark`, jamais `.theme-dark` seul.
+- Noms de jetons validés à la lecture (`/^--[a-zA-Z0-9-]+$/`, `readPackTokens`) : c'est une frontière d'injection CSS, ne pas l'assouplir.
+- Illustrations nommées **par rôle**, résolues dans `<plugin>/assets/<id>/` ; un rôle absent dégrade, ce n'est pas un bug.
+- Les polices **ne sont plus embarquées** : chaque pack `schema-in-the-mist/handbook/<id>` publie ses WOFF2 et son `styles/fonts.css`. `assert:mist-font-packs` impose `dist/styles.css` < 150 000 octets et sans `@font-face`.
+- Réglage fin : `<plugin>/overrides.json` (valeurs et `shapes` zone par zone). Aucune dépendance réseau à l'exécution. Format gelé : jamais renommer ni supprimer un champ sans chemin de lecture de l'ancienne forme.
+- Un thème de jeu doit fixer `--code-normal` / `--code-background`.
 
-```bash
-git switch -c feat/<sujet> main
-# modifier src/
-rtk proxy pnpm build
-# tester dans le vault (voir plus bas)
-git add src/ && git commit -m "..."
-git push -u origin feat/<sujet>
-```
+## Release
 
-- Une branche = un sujet. Merge dans `main` quand c'est testé ; pas de PR à faire valider par un tiers.
-- Messages de commit en anglais (le code et le README le sont).
-- **Ne pas commiter `dist/`** : il est dans `.gitignore`, c'est du build local.
-- `CLAUDE.md` et `aidd_docs/` ne sont plus masqués : `.git/info/exclude` a été vidé de ses règles de fork le 2026-09-07. Les commiter ou non est un choix ouvert, plus une interdiction.
+- Version unique sur `package.json`, `manifest.json`, `versions.json` et la dernière section de `CHANGELOG.md`, tenue par `pnpm assert:release-version`.
+- Bumper par **`pnpm version <x.y.z>`**, jamais à la main. Ne pas rétro-remplir `versions.json`.
+- Pousser un tag ne publie rien : `gh workflow run release.yml --ref v<x.y.z>` (sur le **tag**, pas sur `main`).
+- Workflows : `pnpm install --frozen-lockfile` uniquement (gardé par `assert:ci-install`). Les versions des `schema-*` se lisent dans `package.json`, jamais recopiées en littéral.
 
-### Tester sans BRAT
+## Git
 
-**Un coffre par jeu depuis le 2026-09-07** — le coffre unique `Documents/Perso` ne fait plus foi :
-
-| Jeu | Coffre |
+| Remote | Rôle |
 | --- | --- |
-| City of Mist | `C:/Users/fxgui/Documents/Perso/RPG/city-of-mist` |
-| Legend in the Mist | `C:/Users/fxgui/Documents/Perso/RPG/legend-in-the-mist` |
+| `origin` (`RebelliousSmile/obsidian-handbook`, branche **`main`**) | seul à recevoir des push ; `gh repo set-default` pointe ici |
+| `upstream` (`4rtamis/obsidian-brumes`, branche **`master`**) | lecture seule (`no_push`), pour `git cherry-pick` des correctifs |
+| `fork-brumes` | ancien fork, lecture seule, à supprimer |
 
-Les deux sont **imbriqués** dans l'ancien coffre `Documents/Perso`, qui existe toujours et voit les mêmes notes. Déployer dans les deux coffres de jeu, puis recharger le plugin (Ctrl+P → *Reload app without saving*, ou toggle off/on dans Community plugins) :
+## Tester dans Obsidian
+
+Coffres : `C:/Users/fxgui/Documents/Perso/RPG/city-of-mist` et `.../legend-in-the-mist`. **Ne jamais écraser `data.json`.**
 
 ```bash
-for v in "C:/Users/fxgui/Documents/Perso/RPG/city-of-mist"          "C:/Users/fxgui/Documents/Perso/RPG/legend-in-the-mist"; do
-  cp dist/main.js dist/styles.css dist/manifest.json      "$v/.obsidian/plugins/obsidian-handbook/"
+for v in "C:/Users/fxgui/Documents/Perso/RPG/city-of-mist" "C:/Users/fxgui/Documents/Perso/RPG/legend-in-the-mist"; do
+  p="$v/.obsidian/plugins/obsidian-handbook"
+  cp dist/main.js dist/styles.css dist/manifest.json "$p/"
+  mkdir -p "$p/assets" && cp -r assets/city-of-mist assets/legend-in-the-mist "$p/assets/"
 done
 ```
 
-Chaque coffre a son propre `data.json` (réglages utilisateur) dans ce dossier : **ne jamais l'écraser** lors de la copie.
+Puis recharger le plugin. Bancs de test à la racine des coffres : `Handbook - Test blocs *.md`, `Handbook - Test canvas *.canvas`.
 
-Depuis la phase 4, **déployer aussi les illustrations** — sinon les blocs se rendent en dégradé, ce qui n'est pas un bug :
+**Advanced Canvas** : Iceberg (CoM) et Montagne (LitM) n'apparaissent que si `<coffre>/.obsidian/snippets/iceberg.css` / `mountain.css` existent (contenu = `ADVANCED_CANVAS_*_SNIPPET` de `src/settings/canvasSnippets.ts`) **et** sont activés à la main dans *Appearance → CSS snippets*. Dans un `.canvas` écrit à la main, la clé est en camelCase (`"icebergCard"`).
 
-```bash
-mkdir -p "$v/.obsidian/plugins/obsidian-handbook/assets"
-cp -r assets/city-of-mist assets/legend-in-the-mist    "$v/.obsidian/plugins/obsidian-handbook/assets/"
-```
+## Pièges du code
 
-Bancs de test, à la racine de chaque coffre : `Handbook - Test blocs *.md` pour les blocs fencés, `Handbook - Test canvas *.canvas` pour les styles de nœud Advanced Canvas.
+- **Cible ES basse** : ni `Object.values` ni `Array.prototype.flat` — `reduce`, `indexOf`, `for…of`.
+- **`tsc` couvre `**/*.ts`** : c'est l'extension qui protège un harnais, pas son dossier. Harnais jetables `src/__assert_*.ts` : les supprimer avant de builder.
+- `log.warn` est muet par défaut (`logger.ts` démarre à `"error"`) : `log.setLevel("warn")` dans un harnais qui l'affirme.
+- Lint : une garde `x is string` réduit `x` à `never` dans la branche négative → capturer `String(value)` avant pour l'interpoler. `obsidianmd` impose la sentence case et traite `id` comme un sigle : reformuler plutôt que désactiver la règle.
+- Partager une géométrie SCSS par `@mixin`, jamais par copie de valeurs ni d'image.
+- Dépôt déplacé → jonctions pnpm mortes : `rtk proxy pnpm install --config.confirmModulesPurge=false`.
 
-### Advanced Canvas : le snippet est un prérequis, pas un détail
+## rtk
 
-Iceberg (CoM) et Montagne (LitM) ne s'affichent **que** si le snippet correspondant est présent **et activé** dans le coffre. Sans lui, Advanced Canvas ne connaît pas le style, ne pose aucun `data-iceberg-card` / `data-mountain-card`, et tout le SCSS est mort — un rendu « rien ne se passe » qui n'a rien à voir avec le CSS.
-
-- Fichiers : `<coffre>/.obsidian/snippets/iceberg.css` et `mountain.css`, noms imposés par le texte des réglages. Contenu = `ADVANCED_CANVAS_*_SNIPPET` de `src/settings/canvasSnippets.ts` (`borderPresets.ts` n'existe plus).
-- L'activation se fait à la main dans `Settings → Appearance → CSS snippets` : Obsidian garde `appearance.json` en mémoire et réécrirait toute édition faite pendant qu'il tourne.
-- Si le dossier `snippets/` vient d'être créé, Obsidian ne le surveille pas encore : rafraîchir la liste ou recharger l'application.
-- Advanced Canvas passe la clé du snippet par `toCamelCase` : `key: iceberg-card` est stocké `"icebergCard"` dans le `.canvas` et ressort en `data-iceberg-card` dans le DOM. Un canvas écrit à la main doit utiliser la forme **camelCase**.
-
-## Packs de jeu : le plugin possède son rendu (depuis le 2026-09-08)
-
-**Style Settings et le thème Border ne sont plus des prérequis.** `themes/*.settings.json` a été supprimé, l'onglet de réglages n'offre plus de bouton de copie de preset. Le plugin écrit lui-même ses variables CSS dans **un unique élément `<style>` qu'il possède** (`src/features/modes/styleElement.ts`, `id: brumes-game-style`) : un seul point d'écriture, donc un seul point de nettoyage, et changer de jeu ne laisse aucun résidu de l'ancien.
-
-### Un jeu est une donnée, son moteur reste dans Handbook
-
-Un pack déclare une identité, des jetons de note et d'interface, en couches `base` / `light` / `dark`, ses assets, ses `polarities` et, s'il le veut, des `shapes`. Les jeux livrés avec Handbook vivent dans `src/games/<jeu>.ts`. Un jeu optionnel moderne est un **plugin de jeu Handbook** déclaratif dans `packs/<id>/pack.json`, accompagné au besoin de son répertoire `assets/`. Aucun JavaScript, TypeScript ou CSS externe n'est exécuté. Une enveloppe interne `GameRegistration` peut ajouter des variantes visuelles sans modifier le `GamePack` sérialisable. :Otherscape emploie ce mécanisme pour Metro, Cairo et Tokyo, avec la priorité `pack → variante → overrides utilisateur`.
-
-**Un pack ou sa variante active déclare ses polarités, il n'en dérive aucune** (`GamePolarity`, `src/games/types.ts`). Une couche non déclarée n'est **pas écrite**, plutôt qu'écrite en copie de `base` — un pack dont le `base` est fortement clair casserait un coffre en thème sombre. Une polarité unique s'écrit sur le sélecteur de mode nu, après `base`, donc elle gagne à spécificité égale quel que soit le réglage du thème ; deux polarités s'écrivent en sélecteurs composés. City of Mist et chacune des variantes Metro/Cairo/Tokyo déclarent `["light", "dark"]`; Legend in the Mist déclare `["light"]` — le jeu n'imprime que du parchemin, et le schéma sombre qui existait avait été inventé.
-
-Ajouter un jeu embarqué sans variante :
-
-1. un fichier `src/games/<jeu>.ts` exportant un `GamePack` ;
-	2. une registration dans `DECLARED_GAMES` de `src/games/registry.ts` ;
-3. rien d'autre. La liste déroulante des réglages, la classe de body et le style suivent.
-
-Ajouter un jeu optionnel ne modifie pas `DECLARED_GAMES` : son manifeste versionné annonce sa version, la version minimale de Handbook, ses capacités `block:*` / `style:*` et son `pack`. `loadCustomGamePacks` le découvre uniquement au démarrage, `initGameRegistry` l'enregistre, la sélection du mode l'active, et retirer son répertoire puis redémarrer le désinstalle. Un mode sauvegardé devenu absent retombe sur le jeu par défaut. Les anciens fichiers personnels `packs/*.json` restent lisibles, mais `packs/<id>/pack.json` est la convention distribuable.
-
-`schema-adrenaline/handbook/adrenaline` est la source canonique du plugin de jeu Adrenaline pour Handbook ; le même dépôt sert aussi Lantern, sans second dépôt d'intégration. L'optionalité porte sur le mode, ses données et ses surfaces visibles, pas sur le binaire : les parseurs, renderers et styles structurels Adrenaline restent dormants dans le bundle Handbook. Les feature flags et scopes de callouts sûrs sont conservés pendant l'absence du répertoire afin qu'une réinstallation retrouve les préférences.
-
-Trois règles qui mordent :
-
-- **Les variantes s'écrivent en sélecteur composé** : `.brumes--<jeu>.theme-dark`, jamais `.theme-dark` seul. Les deux classes sont sur le même `body` — à spécificité égale seul l'ordre des feuilles trancherait, et rien ne garantit que la nôtre passe après celle du thème actif.
-- **L'identifiant d'un pack est un suffixe de classe CSS et une clé du `data.json` de l'utilisateur** : minuscules, chiffres, traits d'union simples (`isValidGamePackId`). Un pack qui échoue au contrôle est écarté seul, les autres chargent.
-- **Le registre accueille aussi des packs personnels et plugins de jeu, lus au démarrage.** Un fichier `packs/*.json` ou un manifeste `packs/<id>/pack.json` (`src/games/customPacks.ts`) rejoint `DECLARED_GAMES` avant le premier rendu : `BrumesPlugin.ts::onload()` appelle `loadCustomGamePacks` puis `initGameRegistry` avant `loadSettings()`. Le nom du répertoire moderne doit égaler l'id du pack ; sa racine d'assets reste relative à ce répertoire. Un id en collision avec un jeu déclaré perd, journalisé une fois ; deux candidats partageant un id, le chemin qui trie premier gagne. `domModeClass.ts` ne fige plus `gamePackClasses()`/`gameVariantClasses()` à l'import — les deux se relisent à chaque appel, comme l'onglet de réglages et `settings/types.ts` le faisaient déjà chacun de leur côté.
-
-### Le réglage fin passe par un fichier, pas par des curseurs
-
-`<dossier du plugin>/overrides.json` : un pack amputé de tout sauf des valeurs à changer, qui prend le dessus sur le pack du jeu pour celles-là seulement. Retirer le fichier redonne exactement le rendu du jeu. Une valeur fautive se perd elle-même, journalisée une fois, le reste s'applique.
-
-Il ne porte pas que des valeurs : la clé `shapes` surcharge **la forme d'un bloc, zone par zone** — renommer le libellé imprimé d'une zone (`heading`), en cacher une (`hidden`). Une zone qu'aucune forme ne connaît est signalée une fois par session et le reste charge ; un fichier ne nommant qu'un bloc laisse les cinq autres où ils étaient.
-
-```json
-{
-	"shapes": {
-		"litm-challenge": {
-			"threats": { "heading": "Menaces et conséquences" },
-			"secrets": { "hidden": true }
-		}
-	}
-}
-```
-
-L'aller-retour est **mesuré**, pas constaté à l'œil : `pnpm assert:override` rend un témoin sans fichier, avec, puis sans, et compare caractère par caractère. Un œil ne distingue pas « identique » de « presque identique ». La commande « Reload illustrations and personal overrides » relit le fichier sans recharger le greffon.
-
-### Les illustrations vivent dans le coffre
-
-Le pack les nomme **par rôle**, jamais par image : `assets.images["iceberg-group"] = "iceberg-group.svg"`, et le SCSS lit `var(--brumes-image-iceberg-group)`. Résolution dans `<dossier du plugin>/assets/<id du pack>/` sauf si le pack déclare un `root`. Un rôle absent **dégrade** — le gabarit se rend à plat, il ne réserve pas une boîte pour une image qui ne vient pas (`missingAssetClass`, `_fallbacks.scss`). L'onglet de réglages liste les fichiers manquants du jeu actif.
-
-Les **polices restent embarquées** (libres, redistribuables) ; seules les illustrations sortent. `dist/styles.css` est passé de 6,21 Mo à **3,64 Mo**, dont l'essentiel est désormais les fontes.
-
-### Le format d’apparence est local, mais rien ne le télécharge
-
-Les six schémas de contenu :Otherscape vivent dans le dépôt frère `schema-in-the-mist`. Le contrat d’apparence `GamePack`, lui, appartient à Handbook dans `schemas/appearance/game-pack.schema.json` et les manifests de packs installés sont validés localement avant d’entrer dans le registre.
-
-**Aucune dépendance à l'exécution** : ni fetch, ni import du dépôt distant. Le contrat est honoré par la forme de la donnée. Un pack charge réseau coupé.
-
-Le format est **gelé** : un champ ne se renomme et ne se supprime jamais sans un chemin de lecture de l'ancienne forme. Un champ inconnu laisse un avertissement **une fois par session**, pas un par rendu.
-
-**Le nom d'un jeton est validé à la lecture, pas seulement sa valeur** (constaté le 2026-09-09, refactor du contrat `GamePack`). `readPackTokens` (`fromSchema.ts`) n'exigeait que le préfixe `--` sur un nom, sans restreindre les autres caractères, alors que `renderTokens` (`styleElement.ts`) n'assainit que la *valeur* avant d'écrire dans l'élément `<style>` que le plugin possède — un nom contenant `{`, `}` ou `;` pouvait donc fermer sa propre déclaration CSS et injecter des règles dans la feuille de style de confiance. `readPackTokens` exige désormais `/^--[a-zA-Z0-9-]+$/` ; un nom refusé se journalise comme tout champ inconnu, une fois par session. Sans effet observable tant que seul du code ou l'`overrides.json` de l'utilisateur fournissent des noms, mais c'est la frontière exacte qu'un dépôt de schéma tiers traverserait un jour (voir `aidd_docs/tasks/2026_09/2026_09_09_game-schema-repos/discovery-brief.md`).
-
-### Couverture des cibles PbtA : projetée, alias, ou pas encore lue (constaté le 2026-09-20)
-
-`schema-pbta` publie un codec par cible de document (`PBTA_DOCUMENT_CODECS`) : cinq génériques — `game-definition`, `move`, `playbook`, `npc`, `front` — et une cible spécialisée par jeu, préfixée par l'id de son pack. Handbook n'en résout qu'une partie depuis un document seul, et la distinction porte un nom :
-
-- **projetée** : le schéma de la cible refuse le playbook portable, donc un parseur spécialisé peut la reconnaître sans indice extérieur. `SPECIALIZED_PARSERS` (`src/features/pbta/specializedPlaybooks.ts`) les liste, et `PBTA_PROJECTED_TARGETS` en dérive la liste — jamais recopiée à la main.
-- **pas encore lue** (`unresolved`) : la cible refuse le playbook portable — donc elle serait projetable — mais ce build ne la branche pas. C'est une **addition de l'amont**, pas un défaut du coffre : les documents continuent de s'afficher comme des `playbook` génériques, sans ce que le format ajoute.
-- **alias** : la cible *accepte* le playbook portable. La brancher réclamerait tous les playbooks génériques avant que le parseur générique ne soit atteint ; elle reste donc lue comme un `playbook`. C'est le cas de `salvage-run-playbook`, dont le schéma amont est `playbookSchema.meta({…})` — le playbook portable inchangé.
-
-**L'alias n'est pas un accident de schéma : Salvage Run est un jeu du pack Apocalypse World**, pas un jeu à schéma propre. Lantern le montre (`src/core/gamePacks.ts` : `APOCALYPSE_WORLD_PACK_ID = 'apocalypse-world'`) — les templates `playbook` et `game-definition` y sont groupés, et les documents Salvage Run sont **génériques**, avec `game = "salvage-run"`. Un jeu Apocalypse World est décrit par le playbook portable, ses caractéristiques venant de son `game-definition`. Le lire comme un `playbook` est donc le comportement juste ; c'est l'existence de la cible `salvage-run-playbook` en amont qui est de trop (voir `schema-pbta/CLAUDE.md`, où l'alias est mesuré et épinglé dans `KNOWN_ALIAS_TARGETS`). Conséquence pour Handbook : **ne pas chercher à la projeter**, et ne pas prendre son absence de `PBTA_SPECIALIZED_FIELDS` pour un trou à combler.
-
-Le partage projetée/alias n'est **pas écrit** dans le code : `tools/pbtaPackCoverage.harness.mts` le **mesure** en passant le témoin `playbook` accepté dans chaque codec spécialisé, puis confronte le résultat au câblage. Les listes en dur de `tools/assert-pbta-contract.mjs` et `tools/pbtaContractCorpus.mts` sont épinglées sur cette mesure, et `PBTA_ALIAS_TARGETS` (`src/features/pbta/coverage.ts`) l'est aussi — le plugin n'embarque pas de corpus, il ne peut donc que déclarer ses alias, et c'est le harnais qui prouve la déclaration.
-
-**La tolérance est asymétrique** (décidé le 2026-09-20, les trois dépôts avançant à leur rythme) : une cible que l'amont ajoute et que Handbook ne branche pas encore devient un **constat** (`unresolved`), affiché à l'utilisateur, build vert ; une régression de ce que Handbook *déclare* reste un échec dur — un alias qu'on branche, un `PBTA_GENERIC_TARGETS` qui nomme un codec disparu, un champ mécanique qui cesse d'être imprimé, `PBTA_ALIAS_TARGETS` qui ne colle plus à la mesure. Avant, une simple addition amont rendait `pnpm check` rouge sans qu'aucun document ne soit cassé. La même règle a été appliquée au contrat Mist : `assert:mist-contract` épinglait `cases.length === 31` (avec un message resté à « v1.0.0 » alors que le tarball est en v1.3.0), donc tout cas ajouté en amont cassait le build ; c'est maintenant un plancher (`>= 31`), un corpus qui rétrécit échoue toujours. Les compteurs qui portent sur les **déclarations de Handbook** — 14 cibles de `MIST_TARGET_TO_BLOCK`, 12 renderers, 12 exporters exercés — restent des égalités.
-
-⚠ **Un alias ne se déduit pas de la mesure seule** : un schéma spécialisé trop laxiste pour refuser le playbook portable est indiscernable d'un alias. C'est pourquoi `PBTA_ALIAS_TARGETS` est *déclaré* puis épinglé, et non dérivé : un désaccord est une question (addition volontaire ou schéma qui ne contraint plus rien ?), pas une ligne à ajouter. **`schema-pbta` est le plus fragile des trois schémas** — peu de ses schémas sont réellement validés — donc rien de ce contrat ne doit servir de modèle aux deux autres. Le référent est `schema-in-the-mist` (ou `schema-adrenaline`) : là, la couverture est **déclarée** cible par cible (`MIST_TARGET_TO_BLOCK ... satisfies Record<MistEngineDocumentTarget, string | null>`, `null` = pas de renderer attendu, et une attente `render | degraded | null` par cas du corpus), donc une addition amont est une erreur de types à une ligne, pas une mesure à interpréter.
-
-`src/features/pbta/coverage.ts` porte le même calcul côté exécution, sans import d'`obsidian` pour rester bundlable par le harnais, et croise les cibles avec les packs installés : la propriété d'une cible spécialisée se lit sur son nom (`<pack.id>-playbook`). Cette forme n'est plus une convention tacite : `assert:pbta-pack-coverage` l'oppose à chaque `pack-contract.json` publié (voir plus bas), donc une convention rompue en amont casse le build au lieu de rendre ce rapport faux en silence.
-
-**Un champ mécanique optionnel se prouve par cible, pas par témoin** (constaté le 2026-09-20) : `assert:pbta-specialized-projection` exigeait `strings` dans *chaque* témoin monsterhearts accepté, alors que `monsterhearts-playbook-empty-ascendants.toml` — accepté par le schéma — n'a pas de table `strings`. `pnpm check` était donc rouge depuis la montée du corpus. L'assertion vérifie maintenant deux choses distinctes : le champ ne s'affiche **que** si le document le déclare (par témoin), et **au moins un** témoin par cible l'affiche (par cible). Un renderer qui cesse d'imprimer une mécanique échoue toujours.
-
-**Depuis Obsidian** : *Advanced → Schema sources → PbtA playbook coverage → « Check coverage »*. La ligne affiche un résumé, le bouton ouvre le détail — formats lisibles, formats dont le pack manque, formats lus comme un playbook portable, **formats pas encore lus** (« Formats not read yet », l'amont est plus récent que ce build), packs PbtA installés. La source est `GAME_REGISTRATIONS`, pas le disque : ce que `initGameRegistry` a accepté est ce qui est rapporté.
-
-### Ce que le contrôle prouve contre les métadonnées publiées (depuis `schema-pbta` v5.5.0)
-
-**Le tarball publie désormais `cross-tool-provider.json` et `packs/*/pack-contract.json`** — la réserve inverse, vraie jusqu'à v5.4.x, ne l'est plus. `tools/pbtaProviderContract.mts` les lit sur le chemin d'installation et `assert:pbta-pack-coverage` s'en sert pour prouver quatre choses que Handbook ne faisait jusque-là que déclarer :
-
-- **les capacités** : chaque nom de `PORTABLE_GAME_PLUGIN_SUPPORT` (`src/games/capabilities.ts`) est présent dans `capabilities.handbook` du fournisseur. C'est ce qui a permis de supprimer la liste jumelle de `src/features/pbta/coverage.ts` : une seule déclaration, prouvée contre l'amont ;
-- **les exigences des packs** : chaque `requirements.handbook` d'un `pack-contract.json` est inclus dans ce que son propre fournisseur publie pour Handbook ;
-- **l'appartenance** : toute cible publiée est générique ou vaut exactement `<pack.id>-playbook`, la forme que la modale de couverture inverse pour nommer le pack attendu ;
-- **la cohérence interne du tarball** : chaque cible déclarée par un pack existe comme codec, et sa fixture existe dans le corpus du même tarball.
-
-**La règle de tolérance a deux justifications distinctes, et elles ne se confondent pas** :
-
-- **d'une version à l'autre**, un ajout amont est un **constat**, build vert : les trois dépôts avancent à leur rythme et « étendre le schéma avant le travail consommateur » fait de l'amont-en-avance l'ordre attendu. Une capacité offerte et non implémentée s'affiche (`offered upstream and not implemented here`), une cible publiée et non projetée aussi (`unresolved`) ;
-- **à l'intérieur d'un tarball épinglé**, codecs, `pack-contract.json` et corpus sont livrés ensemble : un désaccord entre eux est un **défaut de cette version**, donc un échec dur. De même, une régression de ce que Handbook *déclare* — une capacité déclarée qui disparaît de `capabilities.handbook`, une cible projetée qu'aucun pack ne déclare plus, une appartenance qui cesse de se lire sur le nom — échoue, nommément. Toutes ces mutations ont été vérifiées en modifiant `node_modules/schema-pbta` : enveloppe (`providerVersion`, `contractVersion`), capacité retirée, capacité inconnue ajoutée, cible renommée hors convention, cible projetée retirée, pack ajouté sans son codec.
-
-⚠ **Un ajout amont, c'est trois fichiers, pas un.** Ajouter un `pack-contract.json` seul échoue — à juste titre : sans codec ni témoin, c'est un tarball incohérent, pas une release en avance. La branche « publié et pas encore lu » ne s'exerce qu'en simulant la livraison complète (codec dans `dist/`, `pack-contract.json`, témoin accepté à chemin unique dans le manifeste de corpus) ; ainsi muté, le contrôle sort en 0 et rapporte la cible en observation. C'est la même distinction, vue depuis la mutation : cohérent et en avance → constat ; incohérent → échec.
-
-⚠ **Le lecteur vit dans `tools/`, pas dans le bundle**, et ce n'est pas un détail d'organisation : `packManifest` est un glob, et un bundle ne peut pas l'énumérer. L'adopter côté plugin reviendrait à figer six imports nommés — exactement la liste que ces métadonnées sont là pour remplacer. Handbook continue donc de **déclarer** ce qu'il porte, et le contrôle de build **prouve** la déclaration.
-
-⚠ **L'alias reste hors de portée de ces métadonnées.** Le tarball v5.5.0 ne contient aucune occurrence de « alias », `packs/` et `cross-tool-provider.json` compris, et `packs/salvage-run/pack-contract.json` déclare `salvage-run-playbook` comme une **cible ordinaire** — les métadonnées publiées affirment donc le contraire de ce que la mesure montre. Le raisonnement du dessus tient tel quel : Salvage Run est un jeu du pack Apocalypse World, son document est un playbook portable, et `PBTA_ALIAS_TARGETS` reste une déclaration locale épinglée sur la mesure, à remplacer le jour où l'amont publiera le fait. La comptabilité pack par pack complète vit toujours en amont (`tools/validate-pack-coverage.ts` dans `schema-pbta`).
-
-## CI : un seul installeur, un seul lockfile (corrigé le 2026-09-20)
-
-**Les CI échouaient à chaque push, et pas à cause des comparaisons de version.** `ci.yml` et `release.yml` lançaient `npm ci` alors que `package-lock.json` n'est **pas suivi par git** — `npm error code EUSAGE … can only install with an existing package-lock.json`. Le job mourait avant d'atteindre la moindre assertion : n'importe quel commit, même vide, donnait le même rouge. Aggravant : `tools/assert-mist-contract.mjs` et `tools/assert-adrenaline-contract.mjs` *lisaient* ce même fichier non suivi, donc `pnpm check` n'était vert en local que grâce à un artefact présent sur cette machine et introuvable dans un checkout propre.
-
-Ce qui a changé :
-
-- les deux workflows installent par `pnpm/action-setup@v4` + `pnpm install --frozen-lockfile`, avec `cache: pnpm` et `cache-dependency-path: handbook/pnpm-lock.yaml` ; `npm run check` devient `pnpm check` ;
-- `package.json` déclare `packageManager: "pnpm@10.5.2"` — c'est de ce champ que `pnpm/action-setup` tire la version, sans quoi l'action échoue ;
-- les deux lanceurs ne vérifient plus que `pnpm-lock.yaml` : l'URL publique, le SRI de la résolution épinglée, et l'absence de redirection signée `release-assets.githubusercontent.com` ;
-- `pnpm assert:ci-install` ferme la porte : un `npm ci|install|run` dans un workflow, un `pnpm install` sans `--frozen-lockfile`, un outil qui relit `package-lock.json`, un `packageManager` disparu — quatre régressions, quatre échecs, vérifiés par mutation.
-
-**Les workflows sont la seule partie du build qui ne tourne jamais en local** : c'est pourquoi ils ont pu rester cassés sans que rien ne le remarque. Toute exigence portant sur un checkout propre doit donc être affirmée par un `assert:*`, pas par l'habitude.
-
-### Les épingles de producteur se lisent, elles ne se recopient pas
-
-`assert:mist-contract` et `assert:adrenaline-contract` déduisaient leur version attendue d'un littéral : chaque release amont cassait le build sans que rien ne soit cassé. Désormais l'URL de release est **lue dans `package.json`**, sa forme est validée (`https://github.com/…/<schema>/releases/download/v…tgz`), la version en est extraite, et c'est *cette* valeur qui est confrontée au lockfile et au paquet installé. Un bump reste une édition d'une ligne, dans un seul fichier.
-
-Même principe pour le contrat Adrenaline : `assertAdrenalineContractVersion` figeait `"1.0.0"` ; elle exige maintenant un **major de contrat** (`/^1\.\d+\.\d+$/`). Un minor ou un patch amont est adopté sans toucher au code, `2.0.0` est refusé — c'est là que se situe la vraie rupture. Les versions d'**enveloppe** (`manifestVersion`, `tomlVersion`) restent des égalités : elles décrivent le format du fichier lu, pas la cadence du producteur.
-
-### La version se tient à une seule valeur, et le tag la prouve (corrigé le 2026-09-20)
-
-`manifest.json`, `package.json` et `versions.json` sont restés à **2.15.3** pendant que les tags allaient jusqu'à `v2.19.1`. Obsidian lit le **manifeste**, pas le tag : chacune de ces releases annonçait donc `2.15.3` à un coffre déjà installé, aucune mise à jour n'a jamais été proposée. Rien ne pouvait le remarquer — les trois fichiers étaient d'accord **entre eux**, et ne divergeaient que du tag et du changelog.
-
-`pnpm assert:release-version` tient maintenant la version à une valeur unique sur ses quatre lieux d'écriture : les trois fichiers plus la section la plus récente de `CHANGELOG.md`. Le workflow de release la relance **avec le tag** (`RELEASE_TAG: ${{ github.ref_name }}`, étape posée entre `Check plugin` et `Create release`). ⚠ **Pousser un tag ne publie rien** depuis le 2026-09-23 (`dafdab3`) : `release.yml` ne se déclenche que par `workflow_dispatch`. Publier, c'est `gh workflow run release.yml --ref v<x.y.z>` — lancé sur le tag, pour que `github.ref_name` soit ce tag ; lancé sur `main`, `RELEASE_TAG` vaut `main` et l'assertion échoue avant `Create release` : c'est le seul endroit où le tag est connu et le seul où l'écart embarque vraiment. Vérifié par mutation : un `RELEASE_TAG` décalé sort en 1 en nommant ce que le manifeste embarquerait.
-
-Deux corollaires :
-
-- **Passer par `pnpm version <x.y.z>`**, jamais par une édition à la main de `manifest.json` : le script de cycle de vie `version` appelle `version-bump.mjs`, qui réécrit `manifest.json` et `versions.json` puis les stage. Ce script préserve désormais le saut de ligne final des deux fichiers — sans quoi chaque bump traînait un `\ No newline at end of file` dans son propre diff de release.
-- **Les versions sautées ne sont pas rétro-remplies dans `versions.json`** : aucun build publié ne les a jamais déclarées, et inventer une entrée affirmerait une compatibilité que personne n'a mesurée.
-
-Cinq tags n'avaient aucune release, pour cinq pannes distinctes : `v2.10.0` (`ENOENT … corpus/refus`), `v2.12.0` (`Dynamic require of "path" is not supported`), `v2.16.0` (lint `obsidianmd/prefer-active-doc`), `v2.18.0` (`npm ci` sans lockfile suivi), `v2.19.0` (`No pnpm version is specified`). Chacune n'a été corrigée que sur `main`, et **rejouer un run rejoue le workflow tel qu'il était à ce commit** — `release.yml` n'avait alors aucun `workflow_dispatch` (ajouté le 2026-09-23, voir plus haut). Ces cinq tags ont donc reçu une release **sans artefact**, notes tirées du changelog et `--latest=false`, la raison écrite en tête des notes. Un build fait à ces tags aurait de toute façon déclaré `2.15.3`.
-
-## Règles Codex (`AGENTS.md`, `.codex/rules/`) — elles s'appliquent quel que soit l'agent
-
-`AGENTS.md` renvoie à `.codex/rules/00-architecture/`. Deux règles versionnées dans le dépôt, donc opposables ici comme dans une session Codex :
-
-- **`0-main-only-execution.md`** : tout le travail d'agent se fait sur `main`. Pas de branche, pas de worktree ; les plans restent dans le worktree actif. (Vérifié le 2026-09-20 : `main`, un seul worktree.)
-- **`0-cross-repo-contract-flow.md`** : contrat de document et sémantique de présentation se versionnent dans les paquets `schema-*`, données utilisateur séparées des métadonnées ; blocs, régions, ordre des sections, tokens, assets, variantes et styles sont **publiés** ; **étendre le schéma avant le travail consommateur** et le **publier avant de l'adopter** ; menus de Handbook et formulaires de Lantern pilotés par les **métadonnées publiées** ; **aucun repli sémantique local** ; la sémantique de jeu reste hors des consommateurs, les adaptateurs runtime restent chez eux ; corpus et round trips croisés vérifiés.
-
-**Ce que ces règles tranchent sur la couverture PbtA** (constaté le 2026-09-20) :
-
-- la tolérance asymétrique en est la traduction directe : « extend schema before consumer work » fait de l'amont-en-avance l'ordre **attendu**, pas une panne — d'où un constat et non un échec ;
-- ⚠ `PBTA_ALIAS_TARGETS` est en revanche une **déclaration locale portant sur une sémantique amont**, ce que « keep game semantics outside consumers » et « drive Handbook menus from published metadata » refusent. Le fait est connu en amont (`KNOWN_ALIAS_TARGETS` dans `schema-pbta`) mais toujours **non publié**, y compris depuis que v5.5.0 publie ses `pack-contract.json` : aucune occurrence de « alias » dans le tarball installé, et `packs/salvage-run/pack-contract.json` déclare `salvage-run-playbook` comme une cible ordinaire. La liste en dur est donc un pis-aller assumé, à remplacer par la lecture d'une métadonnée dès que l'amont l'expose ;
-- « verify corpus and cross-tool round trips » n'est tenu qu'à moitié ici : les round trips de corpus le sont, le round trip croisé avec Lantern ne l'est pas.
-
-## Superviseur `pnpm supervise` : ce qui mord sur ce poste (constaté le 2026-09-29, mis à jour le 2026-09-30)
-
-Le guide opérateur est `doc/supervisor.fr.md` / `.en.md` ; ne pas le redire ici. **Depuis le plan #70, le superviseur tourne sous Windows natif** : `pnpm assert:supervisor` passe sous PowerShell sans `sh`, sans `script` et sans WSL, et `present` / `converge` se lancent directement. Le job CI `supervisor-windows` le prouve ailleurs que sur ce poste. Les pièges qui restent :
-
-- **Fins de ligne du garde, deux sortes de shims.** `.gitattributes` force LF sur les shims `sh` (`tools/supervisor/guard/{gh,git}`) et CRLF sur `gh.cmd` / `git.cmd`. Avec `autocrlf=true`, un shim `sh` en CRLF casse son shebang et laisse tout passer ; un `.cmd` en LF est mal lu par `cmd.exe`. Ne retirer aucune des deux règles.
-- **Un `.cmd` ne se lance pas par `spawn` sans shell** (`EINVAL` depuis Node 20.12.2 / 18.20.2) : tout lancement passe par `spawnCommand` (`tools/supervisor/spawn.mjs`), qui ouvre les `.cmd` par `cmd.exe /d /s /c` avec des arguments cités à la manière de cmd.
-- **`cmd /s` retire le premier et le dernier guillemet de la ligne** : `""C:\…\gh.cmd" workflow run x"` se lit de deux façons. Le hook contrôle les deux lectures ; un contrôle qui n'en lit qu'une laisse passer une publication.
-- **`NODE_OPTIONS` se lit avec des échappements** : un chemin Windows entre guillemets y perd ses `\`. Passer par `withRequire`, qui échappe `\` et `"` et garde les options déjà posées.
-- **L'antivirus de ce poste refuse en `EPERM` un `node -e` dont la ligne contient à la fois `exec(` et `spawn(`** : les sondes de harnais s'écrivent dans des fichiers.
-- **`present` lance `pnpm check` derrière le garde, et `pnpm check` contient `assert:supervisor`** : les harnais, qui poussent vers des remotes nus temporaires et parlent à un faux `gh`, héritaient du hook et du `PATH` gardés et voyaient leurs propres `git push` refusés (97). Le lanceur `tools/assert-supervisor.mjs` les démarre par `unguardedEnv()` (`present.mjs`), qui retire le dossier du garde du `PATH`, le `--require` du hook de `NODE_OPTIONS` (les autres options restent) et `SUPERVISOR_PRESENT`.
-- **Les harnais sont bundlés en CJS, donc `import.meta` y est vide** : un module qui en tire un chemin (`present.mjs`, `GUARD_DIR`) doit le recalculer dans le harnais.
-- **Le dossier doit s'appeler `obsidian-handbook`** (renommé depuis `obsidian/handbook` le 2026-09-29) : `supervisor/topology.json` le cherche à côté de `lantern` et des `schema-*`, et `--root` ne change que le parent. Lancer le superviseur depuis ce dépôt suffit à trouver les quatre autres.
-- **Un lockfile de l'arbre de travail peut mélanger CRLF et LF** (`git ls-files --eol` : `i/lf w/mixed`) : checkout `autocrlf=true`, puis `pnpm install` qui réécrit une partie en LF. Git n'y voit aucun diff, mais `readPin` lit le disque : avant la normalisation de `pnpmLockPins`, cela donnait de faux `pin-lock-mismatch` (« resolves … to nothing without SRI ») sur les seules entrées restées en CRLF.
-- **Dépôt déplacé → jonctions pnpm mortes** (`ERR_MODULE_NOT_FOUND` sur esbuild, jonctions de `node_modules` vers l'ancien chemin). `rtk pnpm install` avale l'invite de purge : lancer `rtk proxy pnpm install --config.confirmModulesPurge=false`.
-
-## Conventions de travail
-
-- Ne pas commiter ni pousser sans demande explicite.
-- `rtk proxy pnpm build` doit passer et **les deux portées de lint** rester à zéro erreur avant tout merge : `./node_modules/.bin/eslint src --ext .ts` **et** `pnpm lint`.
-- Le versionnement, `versions.json` et les releases nous appartiennent désormais — ce n'est plus « la prérogative de l'amont ».
-- **Un `status: done` de phase ne suffit pas à prouver qu'elle est complète** (constaté le 2026-09-09 sur `generic-callouts`) : le tableau **Decisions** du `plan.md` peut porter une exigence qui n'apparaît nulle part dans les critères propres à la phase — ici la suppression de `calloutAliases`, actée dans les Decisions et dans la tâche 3.2 de `phase-1.md`, mais absente au moment où la phase a été marquée `done`. Vérifier une phase, c'est croiser son propre fichier **et** le tableau Decisions du plan, pas l'un sans l'autre.
-
-## Contraintes du code (constatées le 2026-09-06)
-
-### Lint
-
-**Le lint a deux portées, et elles ne couvrent pas la même chose** (vérifié le 2026-09-08) :
-
-- `./node_modules/.bin/eslint src --ext .ts` — le seul `src/` ;
-- `pnpm lint` vaut **`eslint .`** : `eslint.config.mjs` porte `files: ["**/*.ts"]` et n'ignore que `node_modules`, `dist` et `demo`. Un outil posé dans `tools/` est donc linté.
-
-**Les deux doivent être vertes.** Aucune ne fait foi seule : la première ne voit pas `tools/`, la seconde ne prouve pas que `src/` est propre si un `ignores` change. Les deux sortent à zéro erreur.
-
-Trois pièges :
-
-- `@typescript-eslint/parser` est une dépendance de développement explicite parce que `eslint.config.mjs` l'importe directement. Après un clone, installer le lockfile avant de conclure à une panne du lint.
-- `pnpm lint` via le runner échoue parfois : appeler `./node_modules/.bin/eslint src --ext .ts` directement.
-- `@typescript-eslint/restrict-template-expressions` : **une garde de type `x is string` réduit `x` à `never` dans la branche négative**, et `never` ne s'interpole pas. Capturer la valeur brute avant la garde (`const declared = String(value);`) pour pouvoir la nommer dans le message d'erreur.
-- `eslint-plugin-obsidianmd` impose la **sentence case** sur les chaînes d'UI, considère `id` comme un sigle (« The older story-theme ID keeps working. ») et **veut abaisser les noms propres** : écrire une description de réglage sans y mettre « City of Mist » plutôt que de désactiver la règle.
-
-### Cible ES basse
-
-`tsconfig.json` vise une lib ES antérieure à ES2017 : **`Object.values` et `Array.prototype.flat` ne compilent pas**. Utiliser `reduce`, `indexOf`, boucles `for…of`.
-
-### Pas de runner de tests, mais des assertions durables
-
-Le dépôt n'a toujours ni vitest ni jest, et n'en prendra pas : la convention a été formalisée en outils plutôt que réinventée par bloc.
-
-| Script | Ce qu'il affirme |
-| --- | --- |
-| `pnpm assert:corpus` | chaque bloc de `BRUMES_BLOCKS` lit un témoin entièrement, dégrade un refus sans exception ni bloc vide, et possède sa commande de copie |
-| `pnpm assert:override` | `overrides.json` surcharge une zone, la retirer restaure le rendu au caractère près, une zone inconnue avertit une fois |
-| `pnpm assert:pbta-pack-coverage` | chaque cible de codec PbtA est comptée (générique ou spécialisée), possède un témoin accepté dans le corpus publié, la liste des cibles que Handbook résout est **mesurée** contre le playbook portable, et les capacités et l'appartenance déclarées sont prouvées contre `cross-tool-provider.json` et les `pack-contract.json` du tarball épinglé |
-| `pnpm assert:ci-install` | les workflows installent avec `pnpm install --frozen-lockfile`, `packageManager` est déclaré, et aucun outil de `tools/` ne lit un lockfile non suivi |
-| `pnpm dump:dom` | rend le DOM des douze blocs — à comparer d'une phase à l'autre : une phase qui ne touche pas au balisage doit le laisser identique |
-
-Le motif : un lanceur `tools/<nom>.mjs` bundle son harnais `tools/<nom>.harness.mts` par `esbuild.buildSync({platform:'node', format:'cjs', external:['obsidian','fs']})`, puis `node` l'exécute. **Aucune dépendance neuve** — `tsx` n'est pas installé et n'a pas à l'être.
-
-Le corpus est partagé par les deux camps : `corpus/temoins/` (le schéma les accepte, le plugin les rend) et `corpus/refus/` (le schéma les rejette, le plugin les dégrade), un fichier par faute, nommé par la faute. **Les deux moitiés sont nécessaires** — sans le témoin, une série de refus ne prouve rien, un schéma qui rejette tout les passerait tous.
-
-Pour le ponctuel, le harnais jetable reste : `src/__assert_*.ts` (classe `El` bouchon + faux `Document` avec `createElement`), même motif de bundling.
-
-⚠ `pnpm build` lance `tsc -noEmit` sur **tout le dépôt**, pas sur `src/` : `tsconfig.json` porte `"include": ["**/*.ts"]`. C'est donc **l'extension d'un fichier qui le protège, pas son dossier** — un harnais en `.mts` échappe à `tsc`, un `.ts` posé n'importe où y passe. `rm -f src/__assert_*.ts __assert_*.cjs` **avant** de builder, sinon le build casse sur le harnais.
-
-Deux pièges qui coûtent un aller-retour chacun (constatés le 2026-09-08) :
-
-- **Le script de bundling du harnais doit vivre à la racine du dépôt**, pas dans un dossier temporaire : écrit ailleurs, `node` ne résout pas `esbuild` et sort `ERR_MODULE_NOT_FOUND: Cannot find package 'esbuild'`.
-- **`log.warn` est muet par défaut.** `src/utils/logger.ts` démarre à `currentLogLevel = "error"` et `shouldLog` compare `LEVEL_ORDER[currentLogLevel] <= LEVEL_ORDER[level]` : un harnais qui affirme un avertissement doit appeler `log.setLevel("warn")` d'abord, sinon il mesure un silence et le prend pour un échec.
-
-### SCSS : les partials pèsent des mégaoctets
-
-Depuis le 2026-09-08 les illustrations sont sorties du bundle : `_theme-cards.scss` a maigri et `dist/styles.css` est à **3,64 Mo**. Le poids restant est celui des **polices**, embarquées par décision — `fonts/caveat.scss` 670 Ko, `fonts/im-fell-great-primer.scss` 596 Ko, `fonts/im-fell-english.scss` 508 Ko. **Ne jamais `cat` ces fichiers ni `dist/styles.css`** : les lire par `grep -n … -A n` ou `sed -n`. Pour partager la géométrie d'une carte entre partials, extraire un `@mixin` (`theme-cards.frame`) et l'`@include` — jamais recopier les valeurs, jamais dupliquer l'image.
-
-**Le thème d'un jeu doit fixer `--code-normal`/`--code-background`** (constaté le 2026-09-09 sur City of Mist). Aucun `_workspace.scss` ne les posait avant cette date : le code inline (par exemple un identifiant de bloc entre backticks dans un titre, `` `com-theme-card` ``) retombait sur la couleur non thématisée d'Obsidian, quel que soit le jeu actif — un titre pouvait ainsi afficher deux teintes différentes sans qu'aucun bug ne soit en cause. À vérifier si Legend in the Mist, :Otherscape ou Adrenaline System gagnent une couche `workspace-theme` du même genre.
-
-### Registre de blocs
-
-Depuis 2026-09, tout bloc fencé passe par `BrumesBlock<T>` (`src/features/blocks/`) et une ligne dans `BRUMES_BLOCKS`. Aux six blocs historiques s'ajoutent les six formats :Otherscape canoniques : `os-theme`, `os-theme-kit`, `os-challenge`, `os-power-set`, `os-character-trope` et `os-loadout-item`.
-
-**Ce qu'un format doit au schéma est écrit une seule fois** : [`aidd_docs/guidelines/schema-design.md`](aidd_docs/guidelines/schema-design.md). Checklist d'ajout, règle de zéro exemption, frontière valeurs / forme / pixels, polarités, langue, échappatoire SCSS, et les deux règles de compatibilité (`aliases`, clés de `features.*` jamais renommées). Ne pas redire ici ce qu'elle dit — y renvoyer.
-
-### rtk
-
-- `rtk pnpm build` part sur `next build` → utiliser **`rtk proxy pnpm <script>`**.
-- `rtk git commit` n'accepte ni `-q` ni `-F`, et `rtk proxy git commit -F -` ne reçoit pas stdin → écrire le message dans un fichier et faire `rtk proxy git commit -F <fichier>`.
+- `rtk pnpm build` part sur `next build` → **`rtk proxy pnpm <script>`**.
+- `rtk git commit` n'accepte ni `-q` ni `-F` stdin → écrire le message dans un fichier et `rtk proxy git commit -F <fichier>`.

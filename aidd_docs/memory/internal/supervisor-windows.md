@@ -1,0 +1,17 @@
+# Superviseur `pnpm supervise` : pièges de ce poste Windows
+
+> Extrait de `CLAUDE.md` le 2026-09-30, contenu inchangé.
+
+Le guide opérateur est `doc/supervisor.fr.md` / `.en.md` ; ne pas le redire ici. **Depuis le plan #70, le superviseur tourne sous Windows natif** : `pnpm assert:supervisor` passe sous PowerShell sans `sh`, sans `script` et sans WSL, et `present` / `converge` se lancent directement. Le job CI `supervisor-windows` le prouve ailleurs que sur ce poste. Les pièges qui restent :
+
+- **Fins de ligne du garde, deux sortes de shims.** `.gitattributes` force LF sur les shims `sh` (`tools/supervisor/guard/{gh,git}`) et CRLF sur `gh.cmd` / `git.cmd`. Avec `autocrlf=true`, un shim `sh` en CRLF casse son shebang et laisse tout passer ; un `.cmd` en LF est mal lu par `cmd.exe`. Ne retirer aucune des deux règles.
+- **Un `.cmd` ne se lance pas par `spawn` sans shell** (`EINVAL` depuis Node 20.12.2 / 18.20.2) : tout lancement passe par `spawnCommand` (`tools/supervisor/spawn.mjs`), qui ouvre les `.cmd` par `cmd.exe /d /s /c` avec des arguments cités à la manière de cmd.
+- **`cmd /s` retire le premier et le dernier guillemet de la ligne** : `""C:\…\gh.cmd" workflow run x"` se lit de deux façons. Le hook contrôle les deux lectures ; un contrôle qui n'en lit qu'une laisse passer une publication.
+- **`NODE_OPTIONS` se lit avec des échappements** : un chemin Windows entre guillemets y perd ses `\`. Passer par `withRequire`, qui échappe `\` et `"` et garde les options déjà posées.
+- **L'antivirus de ce poste refuse en `EPERM` un `node -e` dont la ligne contient à la fois `exec(` et `spawn(`** : les sondes de harnais s'écrivent dans des fichiers.
+- **`present` lance `pnpm check` derrière le garde, et `pnpm check` contient `assert:supervisor`** : les harnais, qui poussent vers des remotes nus temporaires et parlent à un faux `gh`, héritaient du hook et du `PATH` gardés et voyaient leurs propres `git push` refusés (97). Le lanceur `tools/assert-supervisor.mjs` les démarre par `unguardedEnv()` (`present.mjs`), qui retire le dossier du garde du `PATH`, le `--require` du hook de `NODE_OPTIONS` (les autres options restent) et `SUPERVISOR_PRESENT`.
+- **Les harnais sont bundlés en CJS, donc `import.meta` y est vide** : un module qui en tire un chemin (`present.mjs`, `GUARD_DIR`) doit le recalculer dans le harnais.
+- **Le dossier doit s'appeler `obsidian-handbook`** (renommé depuis `obsidian/handbook` le 2026-09-29) : `supervisor/topology.json` le cherche à côté de `lantern` et des `schema-*`, et `--root` ne change que le parent. Lancer le superviseur depuis ce dépôt suffit à trouver les quatre autres.
+- **Un lockfile de l'arbre de travail peut mélanger CRLF et LF** (`git ls-files --eol` : `i/lf w/mixed`) : checkout `autocrlf=true`, puis `pnpm install` qui réécrit une partie en LF. Git n'y voit aucun diff, mais `readPin` lit le disque : avant la normalisation de `pnpmLockPins`, cela donnait de faux `pin-lock-mismatch` (« resolves … to nothing without SRI ») sur les seules entrées restées en CRLF.
+- **Dépôt déplacé → jonctions pnpm mortes** (`ERR_MODULE_NOT_FOUND` sur esbuild, jonctions de `node_modules` vers l'ancien chemin). `rtk pnpm install` avale l'invite de purge : lancer `rtk proxy pnpm install --config.confirmModulesPurge=false`.
+
