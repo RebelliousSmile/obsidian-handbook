@@ -282,12 +282,15 @@
 
 	// ── Profil.
 	// Identité : deux champs par ligne publiée, un champ seul sur toute la largeur.
+	// Libellé et valeur sur une seule ligne ; la colonne de droite (genre, âge, taille, poids) tient en peu de caractères.
 	.brumes-adrenaline-pj__field-rows {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 		gap: 5px 12px;
 		min-width: 0;
 	}
+	.brumes-adrenaline-pj__field-rows > .brumes-adrenaline-pj__write-line { flex-wrap: nowrap; }
+	.brumes-adrenaline-pj__field-rows .brumes-adrenaline-pj__write-field { flex: 1 1 0; }
 	.brumes-adrenaline-pj__field-across { grid-column: 1 / -1; }
 	.brumes-adrenaline-pj__characteristic { border: 0; gap: 3px; }
 	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-name {
@@ -318,13 +321,17 @@
 		text-align: end;
 	}
 
-	// ── Santé : stress + malus, seuils, états sur deux colonnes.
-	.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress sp sm" "fatigue etats etats" "malus etats etats"; }
+	// ── Santé : stress et seuils, puis la colonne Malus de la fiche (Choc, Divers, Total) et les états.
+	.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress sp sm" "choc etats etats" "divers etats etats" "total etats etats"; }
 	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__stress { grid-area: stress; }
 	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__seuils-physiques { grid-area: sp; }
 	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__seuils-mentaux { grid-area: sm; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__fatigue { grid-area: fatigue; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__malus { grid-area: malus; }
+	// fatigue et malus : ids publiés jusqu'à schema-adrenaline 2.6.0.
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__choc,
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__fatigue { grid-area: choc; }
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__divers,
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__malus { grid-area: divers; }
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__total-malus { grid-area: total; }
 	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__etats-encaisses { grid-area: etats; }
 
 	.brumes-adrenaline-pj__stress-grid {
@@ -398,10 +405,47 @@
 		@include display(8px);
 		color: var(--adrenaline-rule);
 	}
-	.brumes-adrenaline-pj__track--fatigue { border-color: var(--adrenaline-fatigue); }
-	.brumes-adrenaline-pj__track--fatigue .brumes-adrenaline-pj__track-label {
+	// Choc : la case jaune de la fiche (jetons --adrenaline-fatigue du pack).
+	.brumes-adrenaline-pj__track--choc { border-color: var(--adrenaline-fatigue); }
+	.brumes-adrenaline-pj__track--choc .brumes-adrenaline-pj__track-label {
 		background: var(--adrenaline-fatigue);
 		color: var(--adrenaline-fatigue-ink);
+	}
+	// Divers : cadre bordeaux à écrire librement.
+	.brumes-adrenaline-pj__track--frame { border-color: var(--adrenaline-condition-border); }
+	.brumes-adrenaline-pj__track--frame .brumes-adrenaline-pj__track-label { background: var(--adrenaline-condition); }
+	.brumes-adrenaline-pj__track-text { flex: 1; min-width: 0; text-align: start; }
+
+	// Total des malus : l'échelle imprimée, le total courant entouré.
+	.brumes-adrenaline-pj__scale {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 4px;
+		padding: 4px 8px;
+		border-radius: 6px;
+		background: var(--adrenaline-card-surface, var(--background-primary));
+	}
+	.brumes-adrenaline-pj__scale-label {
+		@include display(7px);
+		max-width: 44px;
+		line-height: 1.1;
+		text-align: center;
+		color: var(--adrenaline-rule);
+	}
+	.brumes-adrenaline-pj__scale-step {
+		@include display(15px);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		color: var(--adrenaline-rule);
+	}
+	.brumes-adrenaline-pj__scale-step--current {
+		border: 2px solid var(--adrenaline-handwritten-ink);
+		border-radius: 50%;
+		color: var(--adrenaline-handwritten-ink);
 	}
 
 	.brumes-adrenaline-pj__condition-stack {
@@ -440,7 +484,7 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			grid-template-areas: "brand brand" "nom params";
 		}
-		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress stress" "sp sm" "fatigue malus" "etats etats"; }
+		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress stress" "sp sm" "choc divers" "total total" "etats etats"; }
 	}
 
 	// Note étroite : une seule colonne.
@@ -454,6 +498,6 @@
 			grid-template-columns: minmax(0, 1fr);
 			grid-template-areas: "brand" "nom" "params";
 		}
-		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress" "sp" "sm" "fatigue" "malus" "etats"; }
+		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress" "sp" "sm" "choc" "divers" "total" "etats"; }
 	}
 }

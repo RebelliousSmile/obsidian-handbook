@@ -324,24 +324,46 @@ function renderStatusFrames(doc: Document, box: HTMLElement, block: AdrenalinePr
 		renderConditionCards(doc, box, found);
 		return;
 	}
-	const malus = asRecord(found) ?? {};
 	const tracks = add(box, doc, "div", "tracks");
+	const malus = asRecord(found);
+	if (!malus) {
+		// A free-text frame of the Malus block, such as Divers.
+		const body = track(doc, tracks, block.label, "frame");
+		body.appendChild(value(doc, text(found), "track-text"));
+		return;
+	}
+	// schema-adrenaline 2.6.0 still publishes the two counts physique and mental.
 	for (const [key, label] of MALUS) {
 		const body = track(doc, tracks, label);
 		add(body, doc, "span", "track-line");
-		body.appendChild(value(doc, text(malus[key], " %"), "track-value"));
+		body.appendChild(value(doc, text(malus[key]), "track-value"));
 	}
 }
 
-function renderFatigueCircles(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const fatigue = asRecord(at(source, block.paths[0])) ?? {};
-	const body = track(doc, add(box, doc, "div", "tracks"), block.label, "fatigue");
+/** The yellow Choc box: five round circles, then five hour circles (published as `fatigue-circles` up to 2.6.0). */
+function renderShockCircles(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const shock = asRecord(at(source, block.paths[0])) ?? {};
+	const body = track(doc, add(box, doc, "div", "tracks"), block.label, "choc");
 	if (block.decoration?.kind !== "circle-groups") return;
 	block.decoration.groups.forEach((group, index) => {
 		if (index > 0) add(body, doc, "span", "track-line");
 		add(body, doc, "span", "track-period", capitalize(group.label));
-		circles(doc, body, group.count, Math.min(group.count, Math.max(0, Number(scalar(fatigue[group.label])) || 0)));
+		circles(doc, body, group.count, Math.min(group.count, Math.max(0, Number(scalar(shock[group.label])) || 0)));
 	});
+}
+
+/** Total des malus: the printed scale, the current total circled. */
+function renderMalusScale(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const decoration = (block as { decoration?: { kind?: unknown; from?: unknown; to?: unknown } }).decoration;
+	const from = decoration?.kind === "scale" && typeof decoration.from === "number" ? decoration.from : 1;
+	const to = decoration?.kind === "scale" && typeof decoration.to === "number" ? decoration.to : 10;
+	const total = Number(scalar(at(source, block.paths[0]))) || 0;
+	const frame = add(box, doc, "div", "scale");
+	add(frame, doc, "span", "scale-label", block.label);
+	for (let step = from; step <= to; step += 1) {
+		const mark = add(frame, doc, "span", "scale-step", String(step));
+		if (step === total) mark.classList.add(`${ROOT}__scale-step--current`);
+	}
 }
 
 function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
@@ -354,7 +376,15 @@ function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresent
 }
 
 /* The cartouche prints its own banner label; formation columns print one subhead per column. */
-const TITLED_ELSEWHERE = new Set(["name-card", "game-parameters", "formation-columns"]);
+// The Malus column prints its labels on the band of each frame, as the paper sheet does.
+const TITLED_ELSEWHERE = new Set(["name-card", "game-parameters", "formation-columns", "fatigue-circles", "shock-circles", "malus-scale"]);
+
+function titledElsewhere(block: AdrenalinePresentationBlock, source: AdrenalineDocument): boolean {
+	if (TITLED_ELSEWHERE.has(block.form ?? "")) return true;
+	if (block.form !== "status-frames" || lastSegment(block.paths[0]) === "etats") return false;
+	const found = at(source, block.paths[0]);
+	return !Array.isArray(found) && !asRecord(found);
+}
 
 function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: AdrenalinePjData, source: AdrenalineDocument): HTMLElement {
 	const box = node(doc, "div", block.id);
@@ -365,9 +395,10 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: Ad
 		if (block.placement.rowSpan) box.classList.add(`${ROOT}__row-span-${block.placement.rowSpan}`);
 		if (block.placement.columnSpan) box.classList.add(`${ROOT}__col-span-${block.placement.columnSpan}`);
 	}
-	if (!TITLED_ELSEWHERE.has(block.form ?? "")) subhead(doc, box, block.label);
+	if (!titledElsewhere(block, source)) subhead(doc, box, block.label);
 	const body = block.form === "formation-columns" ? add(box, doc, "div", "block-grid") : block.form === "identity-fields" ? add(box, doc, "div", "field-rows") : box;
-	switch (block.form) {
+	// Forms published after the pinned schema-adrenaline (shock-circles, malus-scale) are read as plain strings.
+	switch (block.form as string | undefined) {
 		case "name-card": renderNameCard(doc, box, block, source); break;
 		case "game-parameters": renderGameParameters(doc, box, block, source); break;
 		case "formation-columns": renderFormationColumns(doc, body, block, data); break;
@@ -379,7 +410,9 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: Ad
 		case "stress-dice": renderStressDice(doc, box, block, source); break;
 		case "threshold-rows": renderThresholdRows(doc, box, block, source); break;
 		case "status-frames": renderStatusFrames(doc, box, block, source); break;
-		case "fatigue-circles": renderFatigueCircles(doc, box, block, source); break;
+		case "fatigue-circles":
+		case "shock-circles": renderShockCircles(doc, box, block, source); break;
+		case "malus-scale": renderMalusScale(doc, box, block, source); break;
 		default: renderUnknown(doc, box, block, source);
 	}
 	return box;

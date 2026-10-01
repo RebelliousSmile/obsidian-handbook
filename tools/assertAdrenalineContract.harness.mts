@@ -103,6 +103,31 @@ if ((formationBlock.formationFields?.competence ?? []).indexOf("caracteristique"
 } else {
 	assert.doesNotMatch(characteristicRender, /\(DEX\)/, "an older contract leaves the characteristic to the roll");
 }
+/* The Malus column follows the paper sheet once published: Choc circles, a Divers frame, the circled total. */
+const pjForms = new Set(PJ_PRESENTATION.sections.flatMap((section) => section.blocks).map((block) => block.form as string | undefined));
+if (pjForms.has("malus-scale")) {
+	const malusSource = `${pjSource.replace(/\[etatDePartie\.malus\][\s\S]*?(?=\n\[\[?(?!etatDePartie\.malus))/, "")}
+[etatDePartie.malus]
+divers = "1 malus (froid)"
+total = 3
+
+[etatDePartie.malus.choc]
+rounds = 2
+`;
+	const malusData = pjBlock.parse(malusSource);
+	assert.ok(malusData, "a PJ with the published Malus column parses");
+	const malusRender = pjBlock.render(malusData, doc as unknown as Document) as unknown as El;
+	const area = (id: string): El => {
+		const found = allElements(malusRender).find((element) => element.classes.includes(`brumes-adrenaline-pj__${id}`));
+		assert.ok(found, `PJ block ${id} is rendered`);
+		return found;
+	};
+	assert.equal(allElements(area("choc")).filter((element) => element.classes.includes("brumes-adrenaline-pj__dot-filled")).length, 2, "Choc fills one circle per shock malus");
+	assert.match(text(area("divers")), /1 malus \(froid\)/, "Divers prints its free text");
+	const current = allElements(area("total-malus")).filter((element) => element.classes.includes("brumes-adrenaline-pj__scale-step--current"));
+	assert.deepEqual(current.map(text), ["3"], "Total des malus circles the current total only");
+	assert.doesNotMatch(text(area("choc")) + text(area("divers")) + text(area("total-malus")), /%/, "no malus is a percentage");
+}
 /* An unpublished form degrades to plain lines instead of throwing or vanishing. */
 const probe = PJ_PRESENTATION.sections[0].blocks[0] as { form?: string };
 if (!Object.isFrozen(probe)) {
