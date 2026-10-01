@@ -1,9 +1,10 @@
 /**
  * Read-only git observations.
  *
- * The supervisor never checks out, pulls, commits or pushes on its own. The
- * only command here that writes is `git fetch`, and it writes remote-tracking
- * refs, never the working tree or HEAD.
+ * The supervisor never checks out, pulls, commits or pushes on its own (the
+ * one exception, `commit`, does so on an id typed on a terminal; see
+ * commit.mjs). The only command here that writes is `git fetch`, and it writes
+ * remote-tracking refs, never the working tree or HEAD.
  *
  * `SUPERVISOR_GIT` replaces the binary, as `SUPERVISOR_GH` does for gh: a
  * value ending in `.mjs` is run with the current node.

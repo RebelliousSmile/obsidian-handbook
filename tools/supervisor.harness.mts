@@ -1116,6 +1116,59 @@ scenario("preview plans from what the train's providers publish, and installs th
 	assert.match(refused.stderr, /nothing to show without --vault/);
 });
 
+// The commit of a provider and its consumers.
+
+function commitMessage(world: World, id: string, message: string): void {
+	writeFileSync(join(world.dir(id), ".git", "SUPERVISOR_COMMIT_MSG"), `${message}\n`);
+}
+
+function originMain(world: World, id: string): string {
+	return git(world.dir(id), "rev-parse", "origin/main");
+}
+
+scenario("commit lands a provider and its consumers on one typed id, never the train records", (world) => {
+	const topology = testTopology(world);
+	const repos = ["schema-adrenaline", "obsidian-handbook", "lantern"];
+	world.write("schema-adrenaline", { "src/malus.ts": "export {};\n" });
+	world.write("lantern", { "src/sheet.tsx": "export {};\n" });
+	world.write("obsidian-handbook", { "src/pj.ts": "export {};\n", "supervisor/trains/draft.json": "{}\n" });
+	commitMessage(world, "schema-adrenaline", "feat(malus)!: follow the paper sheet");
+	commitMessage(world, "lantern", "feat(adrenaline-pj): print the Malus column");
+	const before = Object.fromEntries(repos.map((id) => [id, originMain(world, id)]));
+	const untouched = originMain(world, "schema-pbta");
+
+	let result = superviseTty(world, ["commit", "schema-adrenaline"], "schema-adrenaline\n", topology);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stdout, /obsidian-handbook: uncommitted changes but no message/);
+	assert.ok(result.stdout.includes("nothing was committed"), result.stdout);
+	for (const id of repos) assert.equal(git(world.dir(id), "rev-parse", "HEAD"), before[id], `${id} moved on a refused commit`);
+
+	commitMessage(world, "obsidian-handbook", "feat(adrenaline-pj): print the Malus column");
+	result = superviseTty(world, ["commit", "lantern"], "lantern\n", topology);
+	assert.equal(result.status, 2, result.stdout);
+	result = world.supervise(["commit", "schema-adrenaline"], { topology, input: "schema-adrenaline\n" });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stderr, /interactive terminal/);
+	result = superviseTty(world, ["commit", "schema-adrenaline"], "yes\n", topology);
+	assert.equal(result.status, 1, result.stdout);
+	for (const id of repos) assert.equal(git(world.dir(id), "rev-parse", "HEAD"), before[id], `${id} moved without the typed id`);
+
+	const done = ok(superviseTty(world, ["commit", "schema-adrenaline"], "schema-adrenaline\n", topology), "commit");
+	for (const id of repos) {
+		assert.notEqual(originMain(world, id), before[id], `${id} was not pushed`);
+		assert.equal(git(world.dir(id), "rev-parse", "HEAD"), originMain(world, id), `${id} HEAD is not origin/main`);
+		assert.ok(!existsSync(join(world.dir(id), ".git", "SUPERVISOR_COMMIT_MSG")), `${id} kept its message`);
+	}
+	assert.equal(git(world.dir("schema-adrenaline"), "log", "-1", "--format=%s"), "feat(malus)!: follow the paper sheet");
+	assert.match(done, /lantern: [0-9a-f]+ feat\(adrenaline-pj\): print the Malus column/);
+	assert.equal(git(world.dir("obsidian-handbook"), "status", "--porcelain"), "?? supervisor/trains/draft.json");
+	assert.equal(originMain(world, "schema-pbta"), untouched, "an unconcerned provider moved");
+
+	result = superviseTty(world, ["commit", "schema-adrenaline"], "schema-adrenaline\n", topology);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stdout, /nothing to commit or push/);
+});
+
 function main(): void {
 	const handbookBefore = sh(HANDBOOK, "git", ["status", "--porcelain"]).stdout;
 	const only = process.env.SUPERVISOR_SCENARIO;

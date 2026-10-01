@@ -11,7 +11,7 @@ The supervisor observes, records and tells who does what next. It never writes c
 - The five repositories cloned side by side, under the names of the topology (`supervisor/topology.json`, `path` field): `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` names their parent directory (default: the parent of Handbook).
 - `git`, and `gh` authenticated on `RebelliousSmile`.
 - Node 20 or later, on Linux, macOS or native Windows. Neither a POSIX shell nor WSL is required.
-- `approve`, and `link --create` without `--yes`, need a real terminal.
+- `approve`, `commit`, and `link --create` without `--yes`, need a real terminal (Claude Code's `!` prefix is not one).
 
 ## The train record
 
@@ -55,6 +55,14 @@ pnpm supervise next [--json]
 Sorts each item into `done`, `ready` or `blocked`, recomputed from GitHub on every call. An item is `done` when its issue is closed **and** its closing commit is reachable from `origin/main`. A closed issue without that commit shows as `closed, not proven`. A merged provider unblocks its consumers.
 
 **Human**: the corrections themselves, in each repository, in the order `next` gives.
+
+**Landing the work**: `present` and `preview` accept only clean repositories on `origin/main`. For a provider and its consumers:
+
+```bash
+pnpm supervise commit schema-adrenaline
+```
+
+Each repository's message is prepared in its `.git/SUPERVISOR_COMMIT_MSG` (outside the checkout, so it never dirties it). Everything is checked before the first write: every repository on `main`, none behind `origin/main`, a message for each changed repository and no message without changes. The command shows the plan, waits for the provider id typed on a terminal, commits the three repositories, then pushes them. Handbook's train records are never part of it, and no release is published.
 
 ### 4. `present`: the evidence, publishing nothing
 

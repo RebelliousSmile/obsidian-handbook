@@ -14,6 +14,7 @@ import { activeTrain } from "./supervisor/train.mjs";
 import { TRAIN_COMMANDS } from "./supervisor/trainCommands.mjs";
 import { APPROVAL_COMMANDS } from "./supervisor/approvalCommands.mjs";
 import { PUBLISH_COMMANDS } from "./supervisor/publishCommands.mjs";
+import { COMMIT_COMMANDS } from "./supervisor/commit.mjs";
 import { DEFAULT_TOPOLOGY, HANDBOOK_ROOT, loadTopology, SupervisorError } from "./supervisor/topology.mjs";
 
 const COMMON = {
@@ -36,6 +37,7 @@ const COMMANDS = {
 		},
 	},
 	...TRAIN_COMMANDS,
+	...COMMIT_COMMANDS,
 	...APPROVAL_COMMANDS,
 	...PUBLISH_COMMANDS,
 };

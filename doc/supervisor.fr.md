@@ -11,7 +11,7 @@ Le superviseur observe, consigne et dit qui fait quoi ensuite. Il n'écrit jamai
 - Les cinq dépôts clonés côte à côte, sous les noms de la topologie (`supervisor/topology.json`, champ `path`) : `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` désigne leur dossier parent (par défaut, le parent de Handbook).
 - `git` et `gh` authentifié sur `RebelliousSmile`.
 - Node 20 ou plus récent, sous Linux, macOS ou Windows natif. Aucun shell POSIX ni WSL n'est exigé.
-- `approve` et `link --create` sans `--yes` demandent un vrai terminal.
+- `approve`, `commit` et `link --create` sans `--yes` demandent un vrai terminal (le préfixe `!` de Claude Code n'en est pas un).
 
 ## Le dossier de train
 
@@ -55,6 +55,14 @@ pnpm supervise next [--json]
 Classe chaque élément en `done`, `ready` ou `blocked`, recalculé depuis GitHub à chaque appel. Un élément est `done` quand son issue est fermée **et** que son commit de fermeture est atteignable depuis `origin/main`. Une issue fermée sans ce commit apparaît `closed, not proven`. Un fournisseur fusionné débloque ses consommateurs.
 
 **Humain** : les corrections elles-mêmes, dans chaque dépôt, dans l'ordre que `next` indique.
+
+**Poser le travail** : `present` et `preview` n'acceptent que des dépôts propres, sur `origin/main`. Pour un fournisseur et ses consommateurs :
+
+```bash
+pnpm supervise commit schema-adrenaline
+```
+
+Le message de chaque dépôt est préparé dans son `.git/SUPERVISOR_COMMIT_MSG` (hors du checkout, il ne le salit pas). Tout est vérifié avant la première écriture : chaque dépôt sur `main`, aucun en retard sur `origin/main`, un message pour chaque dépôt modifié et rien à commiter sans message. La commande affiche le plan, attend l'identifiant du fournisseur tapé au terminal, commite les trois dépôts puis les pousse. Les dossiers de train de Handbook n'en font jamais partie, et aucune release n'est publiée.
 
 ### 4. `present` : les preuves, sans rien publier
 
