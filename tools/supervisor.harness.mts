@@ -962,9 +962,18 @@ scenario("publish --run converges by itself: each consumer adopts the final, eve
 	assert.match(output, /Every consumer pins every final on origin\/main: schema-pbta v1\.1\.0/);
 	assert.match(output, /Next: release Lantern, then Handbook, then run supervise close/);
 	for (const id of ["obsidian-handbook", "lantern"]) {
-		assert.equal(lastSubject(world, id), `chore(deps): adopt schema-pbta v${NEXT}`);
 		assert.ok(originFile(world, id, "package.json").includes(final.url), `${id} does not pin the final`);
 	}
+	assert.equal(lastSubject(world, "obsidian-handbook"), `chore(deps): adopt schema-pbta v${NEXT}`);
+	assert.equal(lastSubject(world, "lantern"), `chore(release-train): register schema-pbta v${NEXT}`);
+	const matrix = JSON.parse(originFile(world, "lantern", "release-train.matrix.json"));
+	const head = originMain(world, "schema-pbta");
+	assert.equal(matrix.handbook.ref, originMain(world, "obsidian-handbook"), "the registry does not read the Handbook that pins the final");
+	const pbtaEntry = matrix.providers.find((entry: any) => entry.provider === "schema-pbta");
+	assert.equal(pbtaEntry.ref, head, "the registry does not read schema-pbta where its manifest is");
+	assert.deepEqual(pbtaEntry.manifests.map((manifest: any) => `${manifest.path} ${manifest.validatorRef}`), [`release-train/earlier.json ${"0".repeat(40)}`, `release-train/schema-pbta-v${NEXT}.json ${head}`]);
+	assert.ok(matrix.providers.filter((entry: any) => entry.provider !== "schema-pbta").every((entry: any) => entry.ref === "0".repeat(40)), "a provider outside the train moved");
+	assert.ok(originFile(world, "lantern", "release-train.matrix.json").startsWith("{\n    \"protocol\": 1,"), "the registry lost its layout");
 	const installed = (id: string) => `${basename(world.dir(id))} install --frozen-lockfile`;
 	assert.deepEqual(installs(world).sort(), [installed("lantern"), installed("lantern"), installed("obsidian-handbook"), installed("obsidian-handbook")].sort(), "each consumer installs the candidate, then the final");
 	const convergence = readRecord(world).convergence;

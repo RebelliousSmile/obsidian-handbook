@@ -30,9 +30,29 @@ const ADAPTERS = { pbta, adrenaline, mist };
 
 const POLL_MS = 2000;
 const POLL_ATTEMPTS = 30;
+const WATCH_MS = 15000;
 
 function sleep(ms) {
 	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Follow a run until it completes and return its conclusion. One line per
+ * status change: `gh run watch` redraws every job each few seconds, which
+ * buries the supervisor's own lines in a log.
+ */
+function followRun(repo, id) {
+	let last = null;
+	for (;;) {
+		const view = ghJson(["run", "view", String(id), "-R", repo.repository, "--json", "status,conclusion"]);
+		if (view.status === "completed") {
+			console.log(`  completed: ${view.conclusion || "unknown"}`);
+			return view.conclusion || "unknown";
+		}
+		if (view.status !== last) console.log(`  ${view.status}`);
+		last = view.status;
+		sleep(WATCH_MS);
+	}
 }
 
 /** Providers of the train in dependency order; items order breaks ties. */
@@ -177,23 +197,20 @@ function dispatch(file, topology, repo, step) {
 		next.runs = [...(next.runs ?? []), entry];
 	});
 	console.log(`Watching ${run.url}`);
-	gh(["run", "watch", String(run.databaseId), "-R", repo.repository, "--exit-status"], { inherit: true });
-	const view = ghJson(["run", "view", String(run.databaseId), "-R", repo.repository, "--json", "status,conclusion"]);
-	const conclusion = view.status === "completed" ? view.conclusion || "unknown" : null;
+	const conclusion = followRun(repo, run.databaseId);
 	updateRecord(file, topology, repo.id, (next) => {
 		next.runs = next.runs.map((recorded) => (recorded.id === run.databaseId ? { ...recorded, conclusion } : recorded));
 	});
-	if (conclusion !== "success") throw new SupervisorError(`publish: ${step.workflow} run ${run.url} concluded ${conclusion ?? "without a conclusion"}; run supervise publish again once it is understood`, 1);
+	if (conclusion !== "success") throw new SupervisorError(`publish: ${step.workflow} run ${run.url} concluded ${conclusion}; run supervise publish again once it is understood`, 1);
 }
 
 /** Watch a run until it concludes; a failure stops here rather than being dispatched again unseen. */
 function watch(repo, step) {
 	if (!step.id) throw new SupervisorError(`publish: ${step.instruction}; its run id is unknown, so it cannot be watched`, 1);
 	console.log(`Watching ${step.run}`);
-	gh(["run", "watch", String(step.id), "-R", repo.repository], { inherit: true });
-	const view = ghJson(["run", "view", String(step.id), "-R", repo.repository, "--json", "status,conclusion"]);
-	if (view.status === "completed" && view.conclusion !== "success") {
-		throw new SupervisorError(`publish: run ${step.run} concluded ${view.conclusion || "unknown"}; run supervise publish again once it is understood`, 1);
+	const conclusion = followRun(repo, step.id);
+	if (conclusion !== "success") {
+		throw new SupervisorError(`publish: run ${step.run} concluded ${conclusion}; run supervise publish again once it is understood`, 1);
 	}
 }
 

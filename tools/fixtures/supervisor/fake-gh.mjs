@@ -189,12 +189,10 @@ switch (command) {
 		done(0, JSON.stringify(runs.slice(0, Number(option("--limit", "-L") ?? 20))));
 		break;
 	}
-	case "run view":
-	case "run watch": {
+	case "run view": {
 		const run = ((state.runs ?? {})[repo] ?? []).find((entry) => String(entry.databaseId) === args[2]);
 		if (!run) done(1, "", "run not found");
-		if (command === "run view") done(0, JSON.stringify(run));
-		done(args.includes("--exit-status") && run.conclusion !== "success" ? 1 : 0, `run ${run.databaseId} ${run.conclusion}`);
+		done(0, JSON.stringify(run));
 		break;
 	}
 	case "run download": {

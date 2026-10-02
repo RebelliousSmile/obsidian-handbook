@@ -40,6 +40,11 @@ function readReceipt(ctx, run) {
 	return receipt;
 }
 
+/** The train manifest of `finalTag`, the one a consumer registry lists. */
+export function trainManifest(repo, finalTag) {
+	return `release-train/${repo.package}-${finalTag}.json`;
+}
+
 export function observe(ctx, base) {
 	const { root, topology, repo, dir, sha, version, record } = ctx;
 	const { tags, finalTag } = base;
@@ -67,7 +72,7 @@ export function observe(ctx, base) {
 	const { candidate } = seenCandidate;
 	const entry = candidate ? manifests.find(({ manifest }) => manifest.candidate.stagingTag === candidate.tag) ?? null : null;
 	const candidatePath = entry?.path ?? (candidate ? `${CANDIDATES}/${repo.package}-${candidate.tag}.json` : null);
-	const trainPath = `release-train/${repo.package}-${finalTag}.json`;
+	const trainPath = trainManifest(repo, finalTag);
 	inputs.stage = { mode: "stage", provider_commit: sha, config: candidatePath };
 	inputs.train = { provider_commit: sha, config: trainPath };
 	inputs.promote = { mode: "promote", provider_commit: sha, config: trainPath };

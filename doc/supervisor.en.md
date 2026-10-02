@@ -107,7 +107,7 @@ pnpm supervise publish         # shows the next step and its exact command
 pnpm supervise publish --run   # chains every step, up to convergence
 ```
 
-Without `--run`, nothing runs, and two calls in a row say the same thing. With `--run`, `publish` runs a step, observes again, then runs the next one. It follows each run to its end and stops only on a failure or a human step. The approval is checked again **before every step**. Providers go one after the other, in the dependency order of the train: the second starts once the final of the first is published. Once every final is published, `publish --run` chains `converge --run`. Each step is recomputed from what GitHub and the repositories show: a failed run is retried, a candidate already published is never published again. Before any dispatch, `publish` stops and names what is missing: a secret (for example `RELEASE_TOKEN` on `schema-pbta`) or an input the workflow does not declare. A final whose bytes differ from the candidate stops it too, naming both digests.
+Without `--run`, nothing runs, and two calls in a row say the same thing. With `--run`, `publish` runs a step, observes again, then runs the next one. It follows each run to its end, polling its status every 15 seconds and printing one line per change, and stops only on a failure or a human step. The approval is checked again **before every step**. Providers go one after the other, in the dependency order of the train: the second starts once the final of the first is published. Once every final is published, `publish --run` chains `converge --run`. Each step is recomputed from what GitHub and the repositories show: a failed run is retried, a candidate already published is never published again. Before any dispatch, `publish` stops and names what is missing: a secret (for example `RELEASE_TOKEN` on `schema-pbta`) or an input the workflow does not declare. A final whose bytes differ from the candidate stops it too, naming both digests.
 
 A step is one of these kinds:
 
@@ -124,7 +124,7 @@ pnpm supervise converge         # checks, writing nothing
 pnpm supervise converge --run   # adopts the finals and lands the convergence files
 ```
 
-Requires each provider of the train to have its final published, an approval that holds and clean checkouts at `origin/main`. Without `--run`, each consumer still on a candidate is named, with the URL it pins and the final's URL. With `--run`, it adopts the final: these are the same bytes as the candidate already validated, so only the frozen install runs before the commit. Then, behind the guard:
+Requires each provider of the train to have its final published, an approval that holds and clean checkouts at `origin/main`. Without `--run`, each consumer still on a candidate is named, with the URL it pins and the final's URL. With `--run`, it adopts the final: these are the same bytes as the candidate already validated, so only the frozen install runs before the commit. It then updates the provider registry of a consumer that keeps one (the `matrix` field of the topology, Lantern's `release-train.matrix.json`): `handbook.ref` moves to Handbook's `origin/main`, which pins the finals, and each provider of the train to its `origin/main`, with its train manifest added (same commit as `validatorRef`). Not to the commit of the final tag: the one of `schema-pbta` names the provider commit, which precedes the manifest. The registry is a train file, so that commit keeps the approval. Without `--run`, a stale registry is named and fails the convergence. Then, behind the guard:
 
 - the consumers' `convergence` commands (topology): Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs` and `assert:release-train-matrix`;
 - each provider's convergence step (see below).
@@ -148,7 +148,7 @@ Requires a `passed` convergence, an approval that holds, `origin/main` heads tha
 
 | | What it covers |
 | --- | --- |
-| **Automated** | observing repositories and pins (`status`, `next`); validations and checks behind the guard (`present`, `converge`); after the approval, all the train work through `publish --run`: dispatches, local promotions, Handbook and Lantern adopting the candidate then the final, train manifests and records, the final tag of `schema-adrenaline`, the convergence file of `schema-in-the-mist`, convergence; commenting on and closing issues (`close --run`) |
+| **Automated** | observing repositories and pins (`status`, `next`); validations and checks behind the guard (`present`, `converge`); after the approval, all the train work through `publish --run`: dispatches, local promotions, Handbook and Lantern adopting the candidate then the final, train manifests and records, the final tag of `schema-adrenaline`, Lantern's provider registry, the convergence file of `schema-in-the-mist`, convergence; commenting on and closing issues (`close --run`) |
 | **Human** | the corrections; the approval typed on the terminal; the consumer releases; bringing a dirty or diverged checkout back to `origin/main`; a successful run without a result, to inspect |
 | **Never before approval** | any release, workflow dispatch, `git push` or `git tag`, any write through `gh api`. `present` and `converge` run behind the guard, and `publish --run` checks the approval again before every step |
 

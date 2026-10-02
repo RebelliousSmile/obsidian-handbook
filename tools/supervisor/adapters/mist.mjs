@@ -38,6 +38,11 @@ function mistCandidate(o) {
 	return { packageName: o.repo.package, ...fields };
 }
 
+/** The train manifest of `finalTag`, the one a consumer registry lists. */
+export function trainManifest(repo, finalTag) {
+	return `release-trains/${finalTag}.json`;
+}
+
 export function observe(ctx, base) {
 	const { repo, version, record, evidenceDir } = ctx;
 	const { tags, finalTag } = base;
@@ -46,7 +51,7 @@ export function observe(ctx, base) {
 	if (base.final) return { ...base, candidate: settleCandidate(record.candidate, null), runs };
 	const tag = record.candidate?.tag ?? candidateRun?.inputs?.tag ?? nextCandidateTag(tags, version);
 	const seen = observeCandidate(ctx, base, tag);
-	const trainPath = `release-trains/${finalTag}.json`;
+	const trainPath = trainManifest(repo, finalTag);
 	const provenance = join(evidenceDir, `${repo.id}-${finalTag}.provenance.json`);
 	runs.assert = lastRun(record, "assert");
 	runs.promote = lastRun(record, "promote");
@@ -91,7 +96,7 @@ export function nextStep(o) {
  */
 export function observeConvergence(ctx) {
 	const { root, topology, repo, dir, finalTag, final, consumers, evidenceDir } = ctx;
-	const trainPath = `release-trains/${finalTag}.json`;
+	const trainPath = trainManifest(repo, finalTag);
 	const convergencePath = `release-trains/${finalTag}.convergence.json`;
 	const manifest = originJson(dir, trainPath);
 	let finalProblem = null;

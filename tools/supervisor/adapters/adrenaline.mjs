@@ -14,6 +14,11 @@ import {
 	observeCandidate, observeTrainManifest, pending, settleCandidate, succeeded, tagExists, tagStep, wait, workflowStep,
 } from "./common.mjs";
 
+/** The train manifest of `finalTag`, the one a consumer registry lists. */
+export function trainManifest(repo, finalTag) {
+	return `release-train/${repo.package}-${finalTag}.json`;
+}
+
 /** The newest `release.yml` run for the final tag: the push of the tag, or a recorded dispatch. */
 function releaseRun(repo, record, finalTag) {
 	const listed = ghJson(["run", "list", "-R", repo.repository, "--workflow", "release.yml", "--limit", "20", "--json", "databaseId,headBranch,status,conclusion,url,createdAt"])
@@ -32,7 +37,7 @@ export function observe(ctx, base) {
 	if (base.final) return { ...base, candidate: settleCandidate(record.candidate, null), runs };
 	const tag = record.candidate?.tag ?? candidateRun?.inputs?.tag ?? nextCandidateTag(tags, version);
 	const seen = observeCandidate(ctx, base, tag);
-	const trainPath = `release-train/${repo.package}-${finalTag}.json`;
+	const trainPath = trainManifest(repo, finalTag);
 	const inputs = { candidate: { tag }, train: { manifest: trainPath }, promote: { tag: finalTag } };
 	runs.train = lastRun(record, "release-train", inputs.train);
 	const tagPushed = seen.adopted ? tagExists(dir, finalTag) : false;

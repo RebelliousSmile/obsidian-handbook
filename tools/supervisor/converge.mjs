@@ -10,8 +10,9 @@
  * convergence commands run, and each provider's convergence tool, behind the
  * same guard as `present`: a check cannot release, push or tag. The
  * release-train files a provider's convergence needs are landed with `--run`.
- * The result is recorded in the train with the SHAs it was proved on; `close`
- * accepts nothing less.
+ * A consumer that keeps a provider registry (`matrix`) has it pointed at the
+ * finals, landed with `--run` too. The result is recorded in the train with
+ * the SHAs it was proved on; `close` accepts nothing less.
  */
 import { resolve } from "node:path";
 import { assertApproval } from "./approval.mjs";
@@ -21,6 +22,7 @@ import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
 import { adoptArchive, landFiles, readyCheckout } from "./land.mjs";
+import { matrixUpdate } from "./matrix.mjs";
 import { checkCheckouts, runGuarded } from "./present.mjs";
 import { providerOrder, quote } from "./publish.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
@@ -99,6 +101,13 @@ export function convergeTrain(context, file, { run = false } = {}) {
 			assertApproval(root, topology, readTrain(file, topology));
 		}
 		for (const repo of repos) readyCheckout(repo, repoDir(root, repo), "converge");
+		const finals = published.map(({ repo, final }) => `${repo.package} ${final.tag}`).join(", ");
+		for (const repo of repos.filter((entry) => entry.matrix)) {
+			const content = matrixUpdate(root, topology, published, repo, "converge");
+			if (content === null) continue;
+			assertApproval(root, topology, readTrain(file, topology));
+			landFiles(root, topology, { repo: repo.id, files: { [repo.matrix]: content }, message: `chore(release-train): register ${finals}` }, "converge");
+		}
 	}
 	const heads = checkCheckouts(root, repos, "converge");
 	const at = new Date().toISOString();
@@ -116,6 +125,12 @@ export function convergeTrain(context, file, { run = false } = {}) {
 		return fail(`consumers do not pin every final: ${gaps.map((gap) => gap.message).join("; ")}`);
 	}
 	console.log(`Every consumer pins every final on origin/main: ${published.map(({ repo, final }) => `${repo.id} ${final.tag}`).join(", ")}.`);
+	const stale = repos.filter((repo) => repo.matrix && matrixUpdate(root, topology, published, repo, "converge") !== null);
+	if (stale.length > 0) {
+		const registries = stale.map((repo) => `${repo.matrix} of ${repo.id}`).join(", ");
+		console.log(`Next step: point ${registries} at the finals and the Handbook that pins them (supervise converge --run does it), then run supervise converge again.`);
+		return fail(`${registries} does not register the finals`);
+	}
 
 	const consumers = repos.filter((repo) => repo.role !== "provider");
 	for (const repo of consumers) {

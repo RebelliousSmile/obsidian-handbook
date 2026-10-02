@@ -46,6 +46,7 @@
 				"CHANGELOG.md",
 				"release-train/"
 			],
+			"matrix": "release-train.matrix.json",
 			"validations": [
 				[
 					"npm",

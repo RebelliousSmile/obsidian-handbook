@@ -282,6 +282,21 @@ export const WORKFLOWS: Record<string, Record<string, string>> = {
 	},
 };
 
+/**
+ * Lantern's provider registry, laid out as Lantern lays it out: the Handbook it
+ * reads its release inputs at, and each provider with one earlier manifest.
+ */
+function matrixFile(): string {
+	const handbook = TOPOLOGY.repos.find((repo: any) => repo.id === "obsidian-handbook");
+	const providers = PROVIDERS.map((provider: any) => ({
+		provider: provider.id,
+		repository: provider.repository,
+		ref: "0".repeat(40),
+		manifests: [{ path: `${provider.trainFiles[0]}earlier.json`, validatorRef: "0".repeat(40) }],
+	}));
+	return `${JSON.stringify({ protocol: 1, handbook: { repository: handbook.repository, ref: "0".repeat(40) }, providers }, null, 4)}\n`;
+}
+
 /** The five repositories, every consumer on the latest final of every provider. */
 export function createWorld(): World {
 	const world = new World();
@@ -305,7 +320,7 @@ export function createWorld(): World {
 	});
 	world.createRepo("lantern", {
 		...consumerFiles(finals, true),
-		"release-train.matrix.json": "{}\n",
+		"release-train.matrix.json": matrixFile(),
 		"CHANGELOG.md": "# Changelog\n",
 		"src/index.ts": "export {};\n",
 	});

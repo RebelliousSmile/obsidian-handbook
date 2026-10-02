@@ -78,6 +78,12 @@ export function checkTopology(topology, source = "topology") {
 		}
 	}
 
+	for (const repo of topology.repos) {
+		if (repo.matrix && !isTrainFile(repo, repo.matrix)) {
+			throw new SupervisorError(`${source}: ${repo.id} keeps its registry in ${repo.matrix}, which is not one of its train files`);
+		}
+	}
+
 	const coordinators = topology.repos.filter((repo) => repo.role === "coordinator");
 	if (coordinators.length !== 1) {
 		throw new SupervisorError(
