@@ -20,8 +20,8 @@ const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
  * Freezing the full version made every upstream release a red build here, with nothing broken.
  */
 export function assertAdrenalineContractVersion(version: unknown): asserts version is string {
-	if (typeof version !== "string" || !/^2\.\d+\.\d+$/.test(version)) {
-		throw new Error(`schema-adrenaline package must be a 2.x contract, received ${String(version)}`);
+	if (typeof version !== "string" || !/^3\.\d+\.\d+$/.test(version)) {
+		throw new Error(`schema-adrenaline package must be a 3.x contract, received ${String(version)}`);
 	}
 }
 

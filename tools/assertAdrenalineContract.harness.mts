@@ -19,11 +19,11 @@ const doc = { createElement: (tag: string) => new El(tag) };
 const text = (element: El): string => element.textContent + element.children.map(text).join("");
 const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre" } as const;
 
-assertAdrenalineContractVersion("2.0.0");
+assertAdrenalineContractVersion("3.0.0");
 /* An upstream minor or patch is adopted without a code change; the next contract major is not. */
-assertAdrenalineContractVersion("2.4.2");
-assert.throws(() => assertAdrenalineContractVersion("1.0.0"), /must be a 2.x contract/);
-assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 2.x contract/);
+assertAdrenalineContractVersion("3.4.2");
+assert.throws(() => assertAdrenalineContractVersion("2.6.0"), /must be a 3.x contract/);
+assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 3.x contract/);
 const cases = loadAdrenalineContractCases();
 assert.ok(cases.length > 0, "the published Adrenaline contract corpus must not be empty");
 assert.ok(cases.some((entry) => entry.expect === "accept"), "the published corpus must include accepted documents");
