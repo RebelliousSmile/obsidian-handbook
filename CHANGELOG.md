@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.31.0] - 2026-10-02
+
+### Added
+
+- Print the Zombiology PJ sheet as the paper sheet lays it out, from the published schema-adrenaline presentation: identity beside the characteristics on one profile row (two fields per line), every published formation column even when empty, competences with their characteristic ("Tir · Fusil (DEX)") and published percentage, and the Malus column with its Choc circles, Divers frame and circled malus total. An older installed contract keeps its previous layout.
+- Add `pnpm supervise preview --vault <vault>`, which builds a train's providers and Handbook against their checkouts, installs their packs and deploys the plugin to a vault, and serves each consumer on the same checkouts.
+
+### Changed
+
+- Require schema-adrenaline 3.x: the Malus column makes 3.0.0 a breaking contract, and the version guard now expects it.
+- Run the supervisor's validations and local publish steps on Windows, behind a single publication guard in Node.
+
+### Fixed
+
+- Print a scalar PJ characteristic as its creation value instead of leaving the Creation column empty.
+- Keep sheet and block titles, header and health grid areas, callout titles and table headers readable under Obsidian's reading-view styles.
+
 ## [2.30.0] - 2026-09-29
 
 ### Added
