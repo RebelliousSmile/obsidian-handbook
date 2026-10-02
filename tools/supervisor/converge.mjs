@@ -2,12 +2,16 @@
  * `supervise converge`: prove that every consumer adopted every final.
  *
  * Once each provider of the train has its final, the consumers must pin it,
- * in package.json and in every lockfile, on origin/main. A consumer still on
- * a candidate is a person's adoption step, named with the URL it pins and the
- * one it should. Then the consumers' own convergence commands run, and each
- * provider's convergence tool, behind the same guard as `present`: a check
- * cannot release, push or tag. The result is recorded in the train with the
- * SHAs it was proved on; `close` accepts nothing less.
+ * in package.json and in every lockfile, on origin/main. With `--run`, a
+ * consumer still on a candidate adopts the final itself: the same bytes as
+ * the candidate it already validated, so only its frozen install runs before
+ * the commit; the convergence commands prove the rest. Without `--run` it is
+ * named with the URL it pins and the one it should. Then the consumers' own
+ * convergence commands run, and each provider's convergence tool, behind the
+ * same guard as `present`: a check cannot release, push or tag. The
+ * release-train files a provider's convergence needs are landed with `--run`.
+ * The result is recorded in the train with the SHAs it was proved on; `close`
+ * accepts nothing less.
  */
 import { resolve } from "node:path";
 import { assertApproval } from "./approval.mjs";
@@ -16,6 +20,7 @@ import { consumerPin } from "./adapters/common.mjs";
 import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
+import { adoptArchive, landFiles, readyCheckout } from "./land.mjs";
 import { checkCheckouts, runGuarded } from "./present.mjs";
 import { providerOrder, quote } from "./publish.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
@@ -54,11 +59,11 @@ export function pinGaps(root, topology, published, ref = "origin/main") {
 }
 
 function adoptionInstruction(gaps) {
-	const lines = ["Next step (a person): adopt the finals, and land them on origin/main of each consumer named:"];
+	const lines = ["Next step: adopt the finals on origin/main of each consumer named (supervise converge --run does it):"];
 	for (const gap of gaps) lines.push(`  ${gap.message}`);
 	const finals = new Map(gaps.map((gap) => [gap.provider, gap.final]));
 	for (const [provider, final] of finals) lines.push(`  ${provider} ${final.tag}: package.json and every lockfile pin ${final.url}`, `    with integrity ${final.integrity}`);
-	lines.push("  then run the consumer's frozen install and checks before committing, and run supervise converge again.");
+	lines.push("  then run supervise converge again.");
 	return lines.join("\n");
 }
 
@@ -67,13 +72,34 @@ function record(file, topology, convergence) {
 	writeTrain(file, { ...train, convergence }, topology);
 }
 
-export function convergeTrain(context, file) {
+/** Each provider's consumers that do not pin its final adopt it: frozen install, commit, push. */
+function adoptFinals(root, topology, gaps) {
+	const byProvider = new Map();
+	for (const gap of gaps) {
+		const entry = byProvider.get(gap.provider) ?? { final: gap.final, consumers: [] };
+		if (!entry.consumers.includes(gap.consumer)) entry.consumers.push(gap.consumer);
+		byProvider.set(gap.provider, entry);
+	}
+	for (const [provider, { final, consumers }] of byProvider) {
+		adoptArchive(root, topology, repoById(topology, provider), final, consumers, { validate: false, label: "converge" });
+	}
+}
+
+export function convergeTrain(context, file, { run = false } = {}) {
 	const { root, topology } = context;
 	const train = readTrain(file, topology);
 	if (train.status !== "open") throw new SupervisorError(`converge: train "${train.id}" is closed`);
 	const published = publishedProviders(topology, train, "converge");
 	assertApproval(root, topology, train);
 	const repos = concernedRepos(topology, train);
+	if (run) {
+		const gaps = pinGaps(root, topology, published);
+		if (gaps.length > 0) {
+			adoptFinals(root, topology, gaps);
+			assertApproval(root, topology, readTrain(file, topology));
+		}
+		for (const repo of repos) readyCheckout(repo, repoDir(root, repo), "converge");
+	}
 	const heads = checkCheckouts(root, repos, "converge");
 	const at = new Date().toISOString();
 	const shas = repos.map((repo) => ({ repo: repo.id, sha: heads[repo.id] }));
@@ -126,6 +152,15 @@ export function convergeTrain(context, file) {
 				if (ran.has(step.command.join(" "))) return fail(`${repo.id}: ${step.command.join(" ")} succeeded and ${dir} shows nothing new; look at it before running supervise converge again`);
 				ran.add(step.command.join(" "));
 				console.log(`${repo.id}: ${step.description}\n  $ ${step.command.map(quote).join(" ")}   (in ${dir})`);
+				if (step.type === "land") {
+					if (!run) {
+						console.log("Nothing was run. Run it with: pnpm supervise converge --run");
+						return fail(`${repo.id}: ${step.description}: not run without --run`);
+					}
+					assertApproval(root, topology, readTrain(file, topology));
+					landFiles(root, topology, step, "converge");
+					continue;
+				}
 				const result = runGuarded(dir, step.command, "converge");
 				checks.push({ repo: repo.id, command: step.command, status: result.status });
 				if (result.status !== 0) {

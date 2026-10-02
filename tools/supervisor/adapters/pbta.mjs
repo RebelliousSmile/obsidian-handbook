@@ -2,9 +2,9 @@
  * schema-pbta: the manifest path of `release.yml`, and nothing else.
  *
  * `mode=digest` packs the approved commit and hands back a receipt (an
- * artifact, no release); a person commits the candidate manifest; `mode=stage`
- * publishes the candidate from that manifest; the consumers adopt it; a person
- * commits the train manifest; `release-train.yml` proves it; `mode=promote`
+ * artifact, no release); the candidate manifest is landed; `mode=stage`
+ * publishes the candidate from that manifest; the consumers adopt it; the
+ * train manifest is landed; `release-train.yml` proves it; `mode=promote`
  * publishes the final with the same bytes. `publish-candidate.yml` is not
  * used: its candidate is named by no manifest, so the train could not tie it
  * to the approval.
@@ -14,13 +14,14 @@
  * every release URL and SRI it introduces is already known to the train.
  */
 import {
-	adoptionStep, candidateFields, checks, done, human, inspect, lastRun, manifestInstruction, manifestProblem,
+	adoptStep, candidateFields, checks, done, inspect, json, landStep, lastRun, manifestProblem,
 	nextCandidateTag, observeCandidate, observeTrainManifest, originFiles, originJson, pending, releaseUrl,
 	runArtifactJson, settleCandidate, succeeded, wait, workflowStep,
 } from "./common.mjs";
 import { SupervisorError } from "../topology.mjs";
 
 const CANDIDATES = "release-train/candidates";
+const PROOF = { interface: "npm-run-release-train-assert", manifest: "release-train.manifest.json" };
 
 function candidateManifests(dir, sha, finalTag) {
 	return originFiles(dir, CANDIDATES)
@@ -93,16 +94,19 @@ export function nextStep(o) {
 		return workflowStep(repo, "digest", "release.yml", o.inputs.digest, `pack ${o.sha.slice(0, 10)} and compute its candidate digest (no release)`);
 	}
 	const fields = { provider: repo.package, ...candidateFields(o) };
-	if (o.candidateProblem) return human(repo.id, manifestInstruction(o.candidatePath, `it ${o.candidateProblem}`, fields, { protocol: 1 }));
+	if (o.candidateProblem) {
+		return landStep(repo, "candidate-manifest", o.candidatePath, json({ protocol: 1, candidate: fields }), `chore(release-train): add the ${o.candidate.tag} candidate manifest`, `land ${o.candidatePath} (it ${o.candidateProblem})`);
+	}
 	if (!o.published) {
 		if (pending(o.runs.stage)) return wait(o.runs.stage);
 		if (succeeded(o.runs.stage)) return inspect(repo.id, o.runs.stage, `release ${o.candidate.tag} is not published`);
 		return workflowStep(repo, "stage", "release.yml", o.inputs.stage, `publish the candidate ${o.candidate.tag} named by ${o.candidatePath}`);
 	}
-	const adoption = adoptionStep(o);
+	const adoption = adoptStep(o);
 	if (adoption) return adoption;
 	if (o.trainProblem) {
-		return human(repo.id, manifestInstruction(o.trainPath, `it ${o.trainProblem}`, fields, { protocol: 1, consumers: o.consumers }));
+		const consumers = o.consumers.map((entry) => ({ ...entry, path: entry.role, proof: { ...PROOF } }));
+		return landStep(repo, "manifest", o.trainPath, json({ protocol: 1, candidate: fields, consumers }), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`);
 	}
 	if (pending(o.runs.train)) return wait(o.runs.train);
 	if (!succeeded(o.runs.train)) return workflowStep(repo, "release-train", "release-train.yml", o.inputs.train, `prove ${o.trainPath} against the consumers`);

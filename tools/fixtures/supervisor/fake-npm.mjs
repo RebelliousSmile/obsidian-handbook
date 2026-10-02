@@ -1,11 +1,13 @@
 /**
- * A stand-in for `npm run <script>` in a provider checkout, for the local
- * release-train steps of schema-in-the-mist.
+ * A stand-in for `npm run <script>`, `npm ci` and `pnpm install`: the local
+ * release-train steps of a provider, and the install of a consumer adopting
+ * an archive.
  *
  * Every call is appended to `localCalls` of the fake GitHub state
  * (`FAKE_GH_STATE`), with its arguments and working directory. The next
  * queued effect of `localEffects["<repository directory> <script>"]` decides
- * its exit status, and may publish a release in the same fake GitHub, which
+ * its exit status (the script of an install is `install` or `ci`, whatever
+ * its flags), and may publish a release in the same fake GitHub, which
  * is what a local promotion does, or write a file of the checkout, as a
  * convergence writes its evidence. `--output <file>` is written, as the
  * assertion writes its provenance.
@@ -22,12 +24,15 @@ const state = JSON.parse(readFileSync(statePath, "utf8"));
 const args = process.argv.slice(2);
 state.localCalls = [...(state.localCalls ?? []), { args, cwd: process.cwd() }];
 
-if (args[0] !== "run" || !args[1]) {
+const install = args[0] === "install" || args[0] === "ci";
+// `pnpm <script>` is pnpm's shorthand for `pnpm run <script>`.
+const shorthand = !install && args[0] !== "run" && /^[a-z][\w:-]*$/.test(args[0] ?? "");
+if (!install && !shorthand && (args[0] !== "run" || !args[1])) {
 	writeFileSync(statePath, JSON.stringify(state, null, "\t"));
 	process.stderr.write(`fake npm: unsupported command ${args.join(" ")}\n`);
 	process.exit(91);
 }
-const script = args[1];
+const script = install || shorthand ? args[0] : args[1];
 const effect = ((state.localEffects ?? {})[`${basename(process.cwd())} ${script}`] ?? []).shift() ?? {};
 const status = effect.status ?? 0;
 if (status === 0) {

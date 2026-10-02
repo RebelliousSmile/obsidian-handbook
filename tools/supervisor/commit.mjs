@@ -1,6 +1,6 @@
 /**
  * `commit <provider>`: land a provider's work and its consumers' adoption on
- * `origin/main` in one typed yes, so `present` and `preview` can see them.
+ * `origin/main` in one command, so `present` and `preview` can see them.
  *
  * The message of each repository is prepared beforehand in its
  * `.git/SUPERVISOR_COMMIT_MSG` (inside `.git`, so it never dirties the
@@ -8,11 +8,10 @@
  * commits and pushes nothing. The coordinator's train records are never
  * committed here, as `present` never counts them as changes.
  *
- * This is the one place the supervisor commits and pushes, and only on the id
- * typed on a terminal; it publishes no release.
+ * It commits what a person prepared, before any approval; the writes of an
+ * approved train are land.mjs. It publishes no release.
  */
 import { existsSync, readFileSync, rmSync } from "node:fs";
-import { createInterface } from "node:readline/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { TRAINS_PATH } from "./train.mjs";
@@ -55,7 +54,8 @@ export function planCommit(root, repos) {
 		const behind = head && originMain ? Number(gitOut(dir, ["rev-list", "--count", "HEAD..origin/main"])) : 0;
 		if (behind > 0) problems.push(`${repo.id}: ${behind} commit(s) behind origin/main; run: git -C ${dir} pull --ff-only`);
 		const ahead = head && originMain ? Number(gitOut(dir, ["rev-list", "--count", "origin/main..HEAD"])) : 0;
-		const changes = gitOut(dir, ["status", "--porcelain", "--untracked-files=all", ...pathspec(repo)]);
+		// Not gitOut: its trim would eat the leading space of the first status line.
+		const changes = git(dir, ["status", "--porcelain", "--untracked-files=all", ...pathspec(repo)]).stdout.replace(/\s+$/, "");
 		const file = messagePath(dir);
 		const message = existsSync(file) ? readFileSync(file, "utf8").trim() : "";
 		if (changes && !message) problems.push(`${repo.id}: uncommitted changes but no message in ${file}`);
@@ -83,19 +83,6 @@ export function renderCommitPlan(providerId, plan) {
 	return `${lines.join("\n")}\n\n`;
 }
 
-export async function askProviderId(id) {
-	if (!process.stdin.isTTY) {
-		throw new SupervisorError("commit needs an interactive terminal: the yes is the provider id typed by you, there is no --yes", 1);
-	}
-	const prompt = createInterface({ input: process.stdin, output: process.stderr });
-	try {
-		const answer = (await prompt.question(`Type the provider id (${id}) to commit and push, anything else to refuse: `)).trim();
-		return answer === id;
-	} finally {
-		prompt.close();
-	}
-}
-
 function run(dir, args) {
 	const result = git(dir, args);
 	if (result.status !== 0) throw new SupervisorError(`commit: git ${args.join(" ")} failed in ${dir}\n${result.stderr.trim()}`, 1);
@@ -121,14 +108,13 @@ export function executeCommit(plan) {
 
 export const COMMIT_COMMANDS = {
 	commit: {
-		usage: "commit <provider>                         type the provider id to commit and push it with its consumers (messages in .git/SUPERVISOR_COMMIT_MSG)",
+		usage: "commit <provider>                         commit and push a provider with its consumers (messages in .git/SUPERVISOR_COMMIT_MSG)",
 		options: {},
-		async run(context, _values, positionals) {
+		run(context, _values, positionals) {
 			const [providerId, ...extra] = positionals;
 			if (!providerId || extra.length > 0) throw new SupervisorError("commit: name exactly one provider, e.g. supervise commit schema-adrenaline", 2);
 			const plan = planCommit(context.root, commitRepos(context.topology, providerId));
 			process.stderr.write(renderCommitPlan(providerId, plan));
-			if (!(await askProviderId(providerId))) throw new SupervisorError(`commit: the typed id is not "${providerId}"; nothing was committed`, 1);
 			for (const line of executeCommit(plan)) console.log(line);
 			return 0;
 		},

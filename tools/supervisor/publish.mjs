@@ -1,6 +1,9 @@
 /**
  * `supervise publish`: observe a provider, compute its one next step, then
- * show it, or with `--run` execute it and observe again.
+ * show it, or with `--run` execute it and observe again: workflows dispatched
+ * and watched, runs in progress watched, consumers adopting the candidate,
+ * release-train files landed, the final tag pushed. It stops only on a step
+ * that needs a person, or on a failure, which it names.
  *
  * Nothing moves without an approval that holds: it is checked before every
  * step, not once at the start, because a repository can move while a run is
@@ -18,6 +21,7 @@ import { dispatchInputs, listReleases, observeArchive, workflowSecrets } from ".
 import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
+import { adoptArchive, landFiles, pushTag, readyCheckout } from "./land.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 import { spawnCommand } from "./spawn.mjs";
@@ -138,11 +142,11 @@ function checkInputs(dir, step) {
 	return text;
 }
 
-/** What `--run` needs before anything is dispatched or run: a gh session, and every secret the workflow reads. */
+/** What `--run` needs before anything is dispatched or run: a gh session, and every secret the workflow a step starts reads. */
 function preflight(repo, step, workflowText) {
 	const auth = gh(["auth", "status"]);
 	if (auth.status !== 0) throw new SupervisorError(`publish: gh is not authenticated (gh auth status: ${(auth.stderr || auth.stdout).trim()}); nothing was run`, 1);
-	if (step.type !== "workflow") return;
+	if (!workflowText) return;
 	const needed = workflowSecrets(workflowText);
 	if (needed.length === 0) return;
 	const listed = gh(["secret", "list", "-R", repo.repository, "--json", "name"]);
@@ -182,7 +186,30 @@ function dispatch(file, topology, repo, step) {
 	if (conclusion !== "success") throw new SupervisorError(`publish: ${step.workflow} run ${run.url} concluded ${conclusion ?? "without a conclusion"}; run supervise publish again once it is understood`, 1);
 }
 
+/** Watch a run until it concludes; a failure stops here rather than being dispatched again unseen. */
+function watch(repo, step) {
+	if (!step.id) throw new SupervisorError(`publish: ${step.instruction}; its run id is unknown, so it cannot be watched`, 1);
+	console.log(`Watching ${step.run}`);
+	gh(["run", "watch", String(step.id), "-R", repo.repository], { inherit: true });
+	const view = ghJson(["run", "view", String(step.id), "-R", repo.repository, "--json", "status,conclusion"]);
+	if (view.status === "completed" && view.conclusion !== "success") {
+		throw new SupervisorError(`publish: run ${step.run} concluded ${view.conclusion || "unknown"}; run supervise publish again once it is understood`, 1);
+	}
+}
+
+/** Push the final tag, then wait for the run of `step.workflow` the push started: the next observation follows it. */
+function tag(context, repo, step) {
+	pushTag(context.root, context.topology, step, "publish");
+	for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
+		if (attempt > 0) sleep(POLL_MS);
+		const runs = ghJson(["run", "list", "-R", repo.repository, "--workflow", step.workflow, "--limit", "20", "--json", "databaseId,headBranch"]);
+		if (runs.some((run) => run.headBranch === step.tag)) return;
+	}
+	throw new SupervisorError(`publish: ${step.tag} was pushed on ${repo.repository} but no ${step.workflow} run appeared for it; look at its Actions page before running publish again`, 1);
+}
+
 function runLocal(file, topology, repo, dir, evidenceDir, step) {
+	readyCheckout(repo, dir, "publish");
 	mkdirSync(evidenceDir, { recursive: true });
 	console.log(`$ ${step.command.map(quote).join(" ")}   (in ${dir})`);
 	const result = spawnCommand(step.command[0], step.command.slice(1), { cwd: dir, stdio: "inherit" });
@@ -196,11 +223,30 @@ function runLocal(file, topology, repo, dir, evidenceDir, step) {
 function render(repo, dir, step) {
 	if (step.kind === "human") return `Next step for ${step.repo} (a person):\n  ${step.instruction.split("\n").join("\n  ")}\nThen run supervise publish again.`;
 	if (step.kind === "wait") return `Waiting on ${repo.id}: ${step.instruction}`;
-	const where = step.type === "local" ? ` (in ${dir})` : "";
+	if (step.type === "adopt") return `Next step for ${repo.id}: ${step.description}\n  ${step.archive.url}\n  ${step.archive.integrity}`;
+	const where = step.type === "workflow" ? "" : ` (in ${dir})`;
 	return `Next step for ${repo.id}: ${step.description}\n  $ ${step.command.map(quote).join(" ")}${where}`;
 }
 
+/** The identity of an automated step: the same one coming back after it succeeded means it changed nothing. */
+function stepKey(step) {
+	return JSON.stringify([step.repo, step.type, step.step, step.command, step.inputs ?? null]);
+}
+
+function execute(context, file, next) {
+	const { repo, dir, evidenceDir, step } = next;
+	const { topology } = context;
+	if (step.type === "workflow") dispatch(file, topology, repo, step);
+	else if (step.type === "local") runLocal(file, topology, repo, dir, evidenceDir, step);
+	else if (step.type === "adopt") adoptArchive(context.root, topology, repo, step.archive, step.consumers, { validate: step.validate, label: "publish" });
+	else if (step.type === "land") landFiles(context.root, topology, step, "publish");
+	else if (step.type === "tag") tag(context, repo, step);
+	else throw new SupervisorError(`publish: unknown step type ${step.type}`);
+}
+
+/** Returns the exit code, and whether every provider of the train has its final. */
 export function publishTrain(context, file, { run = false } = {}) {
+	const ran = new Set();
 	for (;;) {
 		const train = readTrain(file, context.topology);
 		if (train.status !== "open") throw new SupervisorError(`publish: train "${train.id}" is closed`);
@@ -217,19 +263,27 @@ export function publishTrain(context, file, { run = false } = {}) {
 		}
 		if (!next) {
 			console.log(`Every provider of train ${train.id} is published.`);
-			return 0;
+			return { code: 0, published: true };
 		}
-		const { repo, dir, evidenceDir, step } = next;
-		const workflowText = step.type === "workflow" ? checkInputs(dir, step) : null;
+		const { repo, dir, step } = next;
+		const workflowText = step.type === "workflow" ? checkInputs(dir, step)
+			: step.type === "tag" ? showFile(dir, "origin/main", `.github/workflows/${step.workflow}`) ?? ""
+				: null;
 		console.log(render(repo, dir, step));
-		if (step.kind !== "automated") return 0;
+		if (step.kind === "human") return { code: 0, published: false };
 		if (!run) {
-			console.log("Nothing was run. Run it with: pnpm supervise publish --run");
-			return 0;
+			console.log(step.kind === "wait" ? "Watch it with: pnpm supervise publish --run" : "Nothing was run. Run it with: pnpm supervise publish --run");
+			return { code: 0, published: false };
 		}
+		if (step.kind === "wait") {
+			watch(repo, step);
+			continue;
+		}
+		const key = stepKey(step);
+		if (ran.has(key)) throw new SupervisorError(`publish: ${repo.id}: "${step.description}" succeeded, yet it is still the next step; look at ${repo.id} before running publish again`, 1);
+		ran.add(key);
 		preflight(repo, step, workflowText);
 		assertApproval(context.root, context.topology, readTrain(file, context.topology));
-		if (step.type === "workflow") dispatch(file, context.topology, repo, step);
-		else runLocal(file, context.topology, repo, dir, evidenceDir, step);
+		execute(context, file, next);
 	}
 }

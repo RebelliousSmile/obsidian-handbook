@@ -13,7 +13,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gh, ghJson } from "../gh.mjs";
-import { git, gitOut, revParse, showFile } from "../git.mjs";
+import { git, revParse, showFile } from "../git.mjs";
 import { npmLockPin, pnpmLockPins } from "../pins.mjs";
 import { repoById, repoDir, SupervisorError } from "../topology.mjs";
 
@@ -129,16 +129,6 @@ export function observeAdoption(root, topology, repo, archive) {
 	});
 }
 
-/** HEAD against origin/main and a clean tree: what a local promotion command needs. */
-export function observeCheckout(dir) {
-	return {
-		dir,
-		head: revParse(dir, "HEAD"),
-		originMain: revParse(dir, "origin/main"),
-		clean: gitOut(dir, ["status", "--porcelain"]) === "",
-	};
-}
-
 export function tagExists(dir, tag) {
 	return git(dir, ["ls-remote", "--exit-code", "--tags", "origin", `refs/tags/${tag}`]).status === 0;
 }
@@ -160,7 +150,7 @@ export function succeeded(run) {
 
 export const human = (repo, instruction) => ({ kind: "human", repo, instruction });
 
-export const wait = (run) => ({ kind: "wait", run: run.url, instruction: `run ${run.url} is still in progress; run supervise publish again once it finishes` });
+export const wait = (run) => ({ kind: "wait", run: run.url, id: run.id ?? null, instruction: `run ${run.url} is still in progress; run supervise publish again once it finishes, or with --run it is watched` });
 
 export const done = () => ({ kind: "done" });
 
@@ -182,23 +172,56 @@ export function localStep(repo, step, command, description, extra = {}) {
 	return { kind: "automated", type: "local", step, repo: repo.id, command, description, ...extra };
 }
 
-/** Human steps for the consumers that do not pin the candidate yet, or null when all do. */
-export function adoptionStep(observation) {
-	const missing = observation.adoption.filter((entry) => !entry.adopted);
-	if (missing.length === 0) return null;
-	const { candidate } = observation;
-	return human(missing.map((entry) => entry.repo).join(", "), [
-		`adopt the candidate ${candidate.tag} of ${observation.provider} and land it on origin/main of ${missing.map((entry) => entry.repo).join(" and ")}:`,
-		`  package.json and every lockfile pin ${candidate.url}`,
-		`  with integrity ${candidate.integrity}`,
-		"then run the consumer's frozen install and checks before committing",
-	].join("\n"));
+/** JSON as the providers' release-train files write it. */
+export function json(value) {
+	return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-/** The human step that brings a checkout back to origin/main, or null when it is there and clean. */
-export function checkoutStep(repoId, checkout) {
-	if (checkout.clean && checkout.head && checkout.head === checkout.originMain) return null;
-	return human(repoId, `the local promotion runs in ${checkout.dir}, which must be clean and at origin/main: git -C ${checkout.dir} switch main && git -C ${checkout.dir} pull --ff-only`);
+/** The consumers that do not pin the candidate yet adopt it, each behind its frozen install and validations; null when all do. */
+export function adoptStep(observation) {
+	const missing = observation.adoption.filter((entry) => !entry.adopted).map((entry) => entry.repo);
+	if (missing.length === 0) return null;
+	const { candidate, repo } = observation;
+	return {
+		kind: "automated",
+		type: "adopt",
+		step: "adopt",
+		repo: repo.id,
+		consumers: missing,
+		archive: candidate,
+		validate: true,
+		description: `adopt the candidate ${candidate.tag} of ${repo.id} in ${missing.join(" and ")}: pins rewritten, frozen install and validations, then committed and pushed`,
+		command: ["supervise", "adopt", repo.id, candidate.tag, ...missing],
+	};
+}
+
+/** Write a release-train file on main of the provider, commit it alone and push it. */
+export function landStep(repo, step, path, content, message, description) {
+	return {
+		kind: "automated",
+		type: "land",
+		step,
+		repo: repo.id,
+		files: { [path]: content },
+		message,
+		description,
+		command: ["git", "commit", "-m", message, "--", path],
+	};
+}
+
+/** Push origin/main of the provider as its final tag, which starts `release.yml`. */
+export function tagStep(repo, tag, workflow, description) {
+	return {
+		kind: "automated",
+		type: "tag",
+		step: "tag",
+		repo: repo.id,
+		repository: repo.repository,
+		tag,
+		workflow,
+		description,
+		command: ["git", "push", "origin", `origin/main:refs/tags/${tag}`],
+	};
 }
 
 /**
@@ -259,7 +282,7 @@ export function finalConsumersProblem(root, topology, repo, entries, final) {
 
 /** The consumer block a manifest needs: each consumer at the origin/main commit that adopted the candidate. */
 export function consumerEntries(topology, adoption) {
-	return adoption.map((entry) => ({ repository: repoById(topology, entry.repo).repository, ref: entry.sha }));
+	return adoption.map((entry) => ({ role: CONSUMER_ROLES[entry.repo] ?? entry.repo, repository: repoById(topology, entry.repo).repository, ref: entry.sha }));
 }
 
 /** The train's candidate: the recorded one, else the one just seen; bytes that differ from the record stop the train. */
@@ -280,16 +303,7 @@ export function inspect(repoId, run, missing) {
 	return human(repoId, `${run.url ? `run ${run.url}` : `\`${run.command.join(" ")}\``} succeeded but ${missing}; inspect it before anything else is published`);
 }
 
-/** The instruction to commit a manifest, with the exact values the train expects. */
-export function manifestInstruction(path, problem, candidate, extra = {}) {
-	return [
-		`commit ${path} on main of the provider (${problem}), with this candidate:`,
-		...JSON.stringify({ candidate, ...extra }, null, "\t").split("\n").map((line) => `  ${line}`),
-		"Keep the other fields the provider's release-train README asks for; the supervisor checks these ones.",
-	].join("\n");
-}
-
-/** The fields a manifest's candidate must carry, for the instruction. */
+/** The fields a manifest's candidate carries. */
 export function candidateFields(observation) {
 	const { candidate } = observation;
 	return {

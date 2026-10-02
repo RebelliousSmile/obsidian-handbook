@@ -4,17 +4,18 @@
  *
  * `release-train:assert` proves the committed manifest and writes a
  * provenance file; `release-train:promote` reads it and publishes the final
- * with the candidate's bytes, through the provider's own gh. Both need the
- * checkout clean and at origin/main, which the supervisor never arranges by
- * itself: a checkout elsewhere is a human step. `release-train:stage` is not
- * used: the candidate already comes from `release-candidate.yml`.
+ * with the candidate's bytes, through the provider's own gh. Both run in a
+ * checkout the supervisor brings to origin/main first (fast-forward only; a
+ * dirty or diverged checkout stops it). `release-train:stage` is not used: the
+ * candidate already comes from `release-candidate.yml`.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { showFile } from "../git.mjs";
 import {
-	adoptionStep, candidateFields, checkoutStep, checks, CONSUMER_ROLES, done, finalConsumersProblem, human, inspect, lastRun,
-	localStep, manifestInstruction, nextCandidateTag, originJson, observeCandidate, observeCheckout, observeTrainManifest, pending, settleCandidate, succeeded,
+	adoptStep, candidateFields, checks, CONSUMER_ROLES, done, finalConsumersProblem, human, inspect, json, landStep, lastRun,
+	localStep, nextCandidateTag, originJson, observeCandidate, observeTrainManifest, pending, settleCandidate, succeeded,
 	wait, workflowStep,
 } from "./common.mjs";
 
@@ -38,7 +39,7 @@ function mistCandidate(o) {
 }
 
 export function observe(ctx, base) {
-	const { repo, dir, version, record, evidenceDir } = ctx;
+	const { repo, version, record, evidenceDir } = ctx;
 	const { tags, finalTag } = base;
 	const candidateRun = lastRun(record, "candidate");
 	const runs = { candidate: candidateRun };
@@ -55,7 +56,6 @@ export function observe(ctx, base) {
 		candidateTag: tag,
 		trainPath,
 		trainProblem: observeTrainManifest(ctx, base, seen, trainPath),
-		checkout: observeCheckout(dir),
 		provenance,
 		proven: succeeded(runs.assert) && existsSync(provenance),
 		inputs: { candidate: { tag } },
@@ -70,13 +70,12 @@ export function nextStep(o) {
 		if (pending(o.runs.candidate)) return wait(o.runs.candidate);
 		return workflowStep(repo, "candidate", "release-candidate.yml", o.inputs.candidate, `publish the candidate ${o.candidateTag} from main`);
 	}
-	const adoption = adoptionStep(o);
+	const adoption = adoptStep(o);
 	if (adoption) return adoption;
 	if (o.trainProblem) {
-		return human(repo.id, manifestInstruction(o.trainPath, `it ${o.trainProblem}`, mistCandidate(o), { status: "pending", consumers: mistConsumers(o) }));
+		const manifest = { status: "pending", candidate: mistCandidate(o), consumers: mistConsumers(o) };
+		return landStep(repo, "manifest", o.trainPath, json(manifest), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`);
 	}
-	const checkout = checkoutStep(repo.id, o.checkout);
-	if (checkout) return checkout;
 	if (!o.proven) {
 		return localStep(repo, "assert", ["npm", "run", "release-train:assert", "--", o.trainPath, "--output", o.provenance], `prove ${o.trainPath} locally and write its provenance`);
 	}
@@ -85,9 +84,9 @@ export function nextStep(o) {
 }
 
 /**
- * After the final: the manifest turns `completed` with its `final` block, a
- * person commits it; `release-train:converge` then writes the convergence
- * evidence next to it, a person commits that too; `release-train:validate
+ * After the final: the manifest turns `completed` with its `final` block,
+ * landed by the supervisor; `release-train:converge` then writes the
+ * convergence evidence next to it, landed too; `release-train:validate
  * --require-complete` is the proof.
  */
 export function observeConvergence(ctx) {
@@ -121,7 +120,8 @@ export function observeConvergence(ctx) {
 			consumers: consumers.map((consumer) => ({ role: CONSUMER_ROLES[consumer.repo] ?? consumer.repo, repository: consumer.repository, ref: consumer.sha })),
 		},
 		convergenceCommitted: showFile(dir, "origin/main", convergencePath) !== null,
-		convergenceWritten: existsSync(join(dir, convergencePath)),
+		convergenceWritten: existsSync(join(dir, convergencePath)) ? readFileSync(join(dir, convergencePath), "utf8") : null,
+		manifest: manifest && !manifest.unreadable ? manifest : null,
 		provenance: join(evidenceDir, `${repo.id}-${finalTag}.provenance.json`),
 		provenanceKept: existsSync(join(evidenceDir, `${repo.id}-${finalTag}.provenance.json`)),
 	};
@@ -130,14 +130,13 @@ export function observeConvergence(ctx) {
 export function convergence(o) {
 	const { repo } = o;
 	if (o.finalProblem) {
-		return human(repo.id, [
-			`commit ${o.trainPath} on main of the provider (it ${o.finalProblem}): set "status" to "completed" and add this "final" block, candidate and consumers unchanged:`,
-			...JSON.stringify({ final: o.expectedFinal }, null, "\t").split("\n").map((line) => `  ${line}`),
-		].join("\n"));
+		if (!o.manifest) return human(repo.id, `${o.trainPath} ${o.finalProblem}: the manifest of the promotion must be on origin/main before its final block is added`);
+		const completed = { ...o.manifest, status: "completed", final: o.expectedFinal };
+		return landStep(repo, "final", o.trainPath, json(completed), `chore(release-train): complete the ${o.finalTag} manifest`, `land the final block of ${o.trainPath} (it ${o.finalProblem})`);
 	}
 	if (!o.convergenceCommitted) {
-		if (o.convergenceWritten) {
-			return human(repo.id, `commit ${o.convergencePath}, written by release-train:converge, on main of the provider and push it`);
+		if (o.convergenceWritten !== null) {
+			return landStep(repo, "convergence", o.convergencePath, o.convergenceWritten, `chore(release-train): record the ${o.finalTag} convergence`, `land ${o.convergencePath}, written by release-train:converge`);
 		}
 		if (!o.provenanceKept) {
 			return human(repo.id, `the provenance of the promotion is missing (${o.provenance}): release-train:converge needs it as --candidate-evidence; restore it from the run of supervise publish`);

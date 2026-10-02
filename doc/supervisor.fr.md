@@ -4,14 +4,14 @@
 
 `pnpm supervise` coordonne une correction qui traverse les cinq dépôts : Handbook, Lantern et les trois dépôts de schémas (`schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`). Un ensemble de changements publiés ensemble s'appelle un **train**.
 
-Le superviseur observe, consigne et dit qui fait quoi ensuite. Il n'écrit jamais de code dans un dépôt, ne fait jamais de `pull` ni de `checkout`, et ne publie rien sans un accord lié aux commits qu'il a présentés.
+Le superviseur observe, consigne et dit qui fait quoi ensuite. Il n'écrit jamais de code dans un dépôt et ne publie rien sans un accord lié aux commits qu'il a présentés. Une fois l'accord donné, il fait seul tout le traitement du train : il écrit les fichiers du train (pins, lockfiles, manifestes, records), les commite et les pousse. Il n'avance un checkout qu'en fast-forward sur `origin/main`, et s'arrête sur un checkout sale ou divergent.
 
 ## Prérequis
 
 - Les cinq dépôts clonés côte à côte, sous les noms de la topologie (`supervisor/topology.json`, champ `path`) : `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` désigne leur dossier parent (par défaut, le parent de Handbook).
 - `git` et `gh` authentifié sur `RebelliousSmile`.
 - Node 20 ou plus récent, sous Linux, macOS ou Windows natif. Aucun shell POSIX ni WSL n'est exigé.
-- `approve`, `commit` et `link --create` sans `--yes` demandent un vrai terminal (le préfixe `!` de Claude Code n'en est pas un).
+- `approve` et `link --create` sans `--yes` demandent un vrai terminal (le préfixe `!` de Claude Code n'en est pas un).
 
 ## Le dossier de train
 
@@ -62,7 +62,7 @@ Classe chaque élément en `done`, `ready` ou `blocked`, recalculé depuis GitHu
 pnpm supervise commit schema-adrenaline
 ```
 
-Le message de chaque dépôt est préparé dans son `.git/SUPERVISOR_COMMIT_MSG` (hors du checkout, il ne le salit pas). Tout est vérifié avant la première écriture : chaque dépôt sur `main`, aucun en retard sur `origin/main`, un message pour chaque dépôt modifié et rien à commiter sans message. La commande affiche le plan, attend l'identifiant du fournisseur tapé au terminal, commite les trois dépôts puis les pousse. Les dossiers de train de Handbook n'en font jamais partie, et aucune release n'est publiée.
+Le message de chaque dépôt est préparé dans son `.git/SUPERVISOR_COMMIT_MSG` (hors du checkout, il ne le salit pas). Tout est vérifié avant la première écriture : chaque dépôt sur `main`, aucun en retard sur `origin/main`, un message pour chaque dépôt modifié et rien à commiter sans message. La commande affiche le plan, commite les trois dépôts, puis les pousse. Elle ne demande aucune saisie : un refus survient avant le premier commit. Les dossiers de train de Handbook n'en font jamais partie, et aucune release n'est publiée.
 
 ### 4. `present` : les preuves, sans rien publier
 
@@ -98,32 +98,33 @@ pnpm supervise approve --verify
 
 L'accord se donne en tapant l'identifiant du train au terminal. Aucune option ne le remplace, et sans terminal rien n'est consigné. `approve` refuse une présentation non présentable, une présentation modifiée à la main (son empreinte ne correspond plus) et des dépôts qui ont bougé depuis `present`.
 
-Après l'accord, un dépôt ne peut recevoir que les commits dont le train a besoin : ils ne touchent que ses `trainFiles`, et chaque URL de release ou SRI qu'ils introduisent appartient à une archive observée par le train. Adopter la candidate observée garde donc l'accord valide ; tout autre changement l'annule et renvoie à `present`. `--verify` vérifie que l'accord tient toujours.
+Après l'accord, un dépôt ne peut recevoir que les commits dont le train a besoin : ils ne touchent que ses `trainFiles`, et chaque URL de release ou SRI qu'ils introduisent appartient à une archive observée par le train. Les commits que le superviseur pose lui-même (adoption, manifestes, records) gardent donc l'accord valide ; tout autre changement l'annule et renvoie à `present`. `--verify` vérifie que l'accord tient toujours.
 
-### 6. `publish` : un pas à la fois
+### 6. `publish` : du premier dispatch à la convergence
 
 ```bash
 pnpm supervise publish         # montre le prochain pas et sa commande exacte
-pnpm supervise publish --run   # l'exécute, puis observe à nouveau
+pnpm supervise publish --run   # enchaîne tous les pas, jusqu'à la convergence
 ```
 
-Sans `--run`, rien ne s'exécute, et deux appels successifs disent la même chose. Avec `--run`, l'accord est revérifié **avant chaque pas**. Un seul fournisseur avance à la fois, dans l'ordre des dépendances du train. Chaque pas se recalcule depuis ce que montrent GitHub et les dépôts : un run échoué est relancé, une candidate déjà publiée ne l'est jamais une seconde fois. Avant tout dispatch, `publish` s'arrête et nomme ce qui manque : un secret (par exemple `RELEASE_TOKEN` sur `schema-pbta`) ou une entrée que le workflow ne déclare pas. Une finale dont les octets diffèrent de la candidate l'arrête aussi, avec les deux empreintes.
+Sans `--run`, rien ne s'exécute, et deux appels successifs disent la même chose. Avec `--run`, `publish` exécute un pas, observe à nouveau, puis exécute le suivant. Il suit chaque run jusqu'à sa fin et ne s'arrête que sur un échec ou sur une étape humaine. L'accord est revérifié **avant chaque pas**. Les fournisseurs passent l'un après l'autre, dans l'ordre des dépendances du train : le second démarre quand la finale du premier est publiée. Une fois toutes les finales publiées, `publish --run` enchaîne `converge --run`. Chaque pas se recalcule depuis ce que montrent GitHub et les dépôts : un run échoué est relancé, une candidate déjà publiée ne l'est jamais une seconde fois. Avant tout dispatch, `publish` s'arrête et nomme ce qui manque : un secret (par exemple `RELEASE_TOKEN` sur `schema-pbta`) ou une entrée que le workflow ne déclare pas. Une finale dont les octets diffèrent de la candidate l'arrête aussi, avec les deux empreintes.
 
 Un pas est de l'un de ces types :
 
-- **automatisé** : un `gh workflow run` ou une commande locale, lancés par `--run` ;
-- **humain** : une instruction exacte (JSON à commiter, tag à pousser, pins à adopter), que `--run` n'exécute pas ;
-- **attente** : un run en cours ; relancer `publish` quand il se termine.
+- **automatisé** : exécuté par `--run`. C'est un `gh workflow run`, une commande locale, l'adoption de la candidate par les consommateurs, un manifeste de train à poser sur `main`, ou le tag final à pousser ;
+- **humain** : un état que le superviseur ne répare pas seul, par exemple un run réussi qui n'a pas produit sa release ; il faut l'inspecter avant toute nouvelle publication ;
+- **attente** : un run en cours, que `--run` suit jusqu'à sa fin.
 
-L'adoption de la candidate par Handbook et Lantern est une étape humaine : `package.json` et chaque lockfile pinnent l'URL de la candidate avec son SRI, puis l'installation gelée et les vérifications du consommateur passent avant le commit.
+L'adoption de la candidate par Handbook et Lantern est automatique. Le superviseur réécrit `package.json` et chaque lockfile vers l'URL de la candidate et son SRI, puis lance l'installation gelée (`pnpm install --frozen-lockfile`, ou `npm ci`) et les validations du consommateur, derrière le garde. Il commite ensuite (`chore(deps): adopt <pkg> <tag>`) et pousse. Un consommateur qui échoue est nommé avec la commande en cause : ses pins sont restaurés, et rien de lui n'est commité.
 
 ### 7. `converge` : chaque consommateur sur chaque finale
 
 ```bash
-pnpm supervise converge
+pnpm supervise converge         # vérifie, sans rien écrire
+pnpm supervise converge --run   # adopte les finales et pose les fichiers de convergence
 ```
 
-Exige que chaque fournisseur du train ait sa finale publiée, un accord qui tient et des checkouts propres sur `origin/main`. Chaque consommateur encore sur une candidate est nommé, avec l'URL qu'il pinne et celle de la finale : l'adoption de la finale est une étape humaine. Ensuite, derrière le garde :
+Exige que chaque fournisseur du train ait sa finale publiée, un accord qui tient et des checkouts propres sur `origin/main`. Sans `--run`, chaque consommateur encore sur une candidate est nommé, avec l'URL qu'il pinne et celle de la finale. Avec `--run`, il adopte la finale : ce sont les mêmes octets que la candidate déjà validée, donc seule l'installation gelée tourne avant le commit. Ensuite, derrière le garde :
 
 - les commandes `convergence` des consommateurs (topologie) : Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs` et `assert:release-train-matrix` ;
 - l'étape de convergence de chaque fournisseur (voir plus bas).
@@ -147,8 +148,8 @@ Exige une convergence `passed`, un accord qui tient, des `origin/main` qui **des
 
 | | Ce qui est concerné |
 | --- | --- |
-| **Automatique** | observation des dépôts et des pins (`status`, `next`) ; validations et vérifications derrière le garde (`present`, `converge`) ; dispatch des workflows de publication et commandes locales de promotion (`publish --run`) ; commentaires et fermeture des issues (`close --run`) |
-| **Humain** | les corrections ; l'accord tapé au terminal ; les manifestes de train à commiter ; l'adoption de la candidate puis de la finale par Handbook et Lantern ; le tag final d'`schema-adrenaline` ; le fichier de convergence de `schema-in-the-mist` ; les releases des consommateurs ; un checkout à ramener sur `origin/main` |
+| **Automatique** | observation des dépôts et des pins (`status`, `next`) ; validations et vérifications derrière le garde (`present`, `converge`) ; après l'accord, tout le traitement du train par `publish --run` : dispatchs, promotions locales, adoption de la candidate puis de la finale par Handbook et Lantern, manifestes et records de train, tag final de `schema-adrenaline`, fichier de convergence de `schema-in-the-mist`, convergence ; commentaires et fermeture des issues (`close --run`) |
+| **Humain** | les corrections ; l'accord tapé au terminal ; les releases des consommateurs ; un checkout sale ou divergent à ramener sur `origin/main` ; un run réussi sans résultat, à inspecter |
 | **Jamais avant accord** | toute release, tout dispatch de workflow, tout `git push` et tout `git tag`, toute écriture via `gh api`. `present` et `converge` passent sous le garde, et `publish --run` revérifie l'accord avant chaque pas |
 
 ## Ce que l'accord juge : le design et le fonctionnel
@@ -164,10 +165,10 @@ Deux choses restent à l'humain : l'accord lui-même, et toute suppression (bran
 | | `schema-pbta` | `schema-adrenaline` | `schema-in-the-mist` |
 | --- | --- | --- | --- |
 | Candidate | `release.yml` en `mode=digest` (empaquette et calcule l'empreinte, sans release), puis `mode=stage` (publie la candidate nommée par le manifeste) | `publish-candidate.yml` | `release-candidate.yml` |
-| Manifeste de train | `release-train/candidates/<pkg>-<tag>.json` puis `release-train/<pkg>-<tag>.json`, commités par une personne | `release-train/<pkg>-<tag>.json`, commité par une personne | `release-trains/<tag>.json`, statut `pending`, commité par une personne |
+| Manifeste de train | `release-train/candidates/<pkg>-<tag>.json` puis `release-train/<pkg>-<tag>.json`, posés par le superviseur | `release-train/<pkg>-<tag>.json`, posé par le superviseur | `release-trains/<tag>.json`, statut `pending`, posé par le superviseur |
 | Preuve | `release-train.yml` | `release-train.yml` | `npm run release-train:assert` en local, qui écrit un fichier de provenance |
-| Finale | `release.yml` en `mode=promote`, mêmes octets que la candidate | tag final **poussé par une personne**, qui déclenche `release.yml` | `npm run release-train:promote` en local, dans le checkout du fournisseur, propre et sur `origin/main` |
-| Convergence | aucun outil propre : les pins finaux des deux consommateurs font foi, et le rapport le signale | le JSON exact de `release-train/<pkg>-vX-final.json` à commiter, puis `npm run release-train:verify-final` | manifeste passé à `completed` avec son bloc `final`, puis `release-train:converge`, commit du fichier de convergence, puis `release-train:validate -- --require-complete <tag>` |
+| Finale | `release.yml` en `mode=promote`, mêmes octets que la candidate | tag final poussé par le superviseur (`git push origin origin/main:refs/tags/<tag>`), qui déclenche `release.yml` | `npm run release-train:promote` en local, dans le checkout du fournisseur, propre et sur `origin/main` |
+| Convergence | aucun outil propre : les pins finaux des deux consommateurs font foi, et le rapport le signale | `release-train/<pkg>-vX-final.json` posé par le superviseur, puis `npm run release-train:verify-final` | manifeste passé à `completed` avec son bloc `final` et fichier de convergence de `release-train:converge`, tous deux posés par le superviseur, puis `release-train:validate -- --require-complete <tag>` |
 
 ## En cas de problème
 

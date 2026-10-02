@@ -2,16 +2,16 @@
  * schema-adrenaline: `publish-candidate.yml`, then `release-train.yml`, then
  * `release.yml` on the final tag.
  *
- * `release.yml` runs on the push of a `v*.*.*` tag, or by dispatch for a tag
- * that already exists: either way the final tag must be on origin first.
- * Pushing a tag is a person's gesture, so it is a human step; the supervisor
- * then follows the run that push started, and dispatches it again only when
- * none ran or the last one failed.
+ * The consumers adopt the candidate, the manifest and the final record are
+ * landed on main, all by the supervisor. `release.yml` runs on the push of a
+ * `v*.*.*` tag, or by dispatch for a tag that already exists: the supervisor
+ * pushes the final tag once the train is proven, follows the run that push
+ * started, and dispatches it again only when the last one failed.
  */
 import { ghJson } from "../gh.mjs";
 import {
-	adoptionStep, candidateFields, checks, CONSUMER_ROLES, done, finalConsumersProblem, human, originJson, inspect, lastRun, manifestInstruction, nextCandidateTag,
-	observeCandidate, observeTrainManifest, pending, settleCandidate, succeeded, tagExists, wait, workflowStep,
+	adoptStep, candidateFields, checks, CONSUMER_ROLES, done, finalConsumersProblem, inspect, json, landStep, lastRun, nextCandidateTag, originJson,
+	observeCandidate, observeTrainManifest, pending, settleCandidate, succeeded, tagExists, tagStep, wait, workflowStep,
 } from "./common.mjs";
 
 /** The newest `release.yml` run for the final tag: the push of the tag, or a recorded dispatch. */
@@ -56,23 +56,22 @@ export function nextStep(o) {
 		if (pending(o.runs.candidate)) return wait(o.runs.candidate);
 		return workflowStep(repo, "candidate", "publish-candidate.yml", o.inputs.candidate, `publish the candidate ${o.candidateTag} from main`);
 	}
-	const adoption = adoptionStep(o);
+	const adoption = adoptStep(o);
 	if (adoption) return adoption;
 	if (o.trainProblem) {
-		return human(repo.id, manifestInstruction(o.trainPath, `it ${o.trainProblem}`, { provider: repo.package, ...candidateFields(o) }, { protocol: 1, consumers: o.consumers }));
+		const manifest = { protocol: 1, candidate: { provider: repo.package, ...candidateFields(o) }, consumers: o.consumers };
+		return landStep(repo, "manifest", o.trainPath, json(manifest), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`);
 	}
 	if (pending(o.runs.train)) return wait(o.runs.train);
 	if (!succeeded(o.runs.train)) return workflowStep(repo, "release-train", "release-train.yml", o.inputs.train, `prove ${o.trainPath} against the consumers`);
-	if (!o.tagPushed) {
-		return human(repo.id, `tag origin/main of ${repo.id} (the commit that carries ${o.trainPath}) as ${o.finalTag} and push the tag: git tag ${o.finalTag} origin/main && git push origin ${o.finalTag}. The push starts release.yml, which publishes the final.`);
-	}
+	if (!o.tagPushed) return tagStep(repo, o.finalTag, "release.yml", `tag origin/main (it carries ${o.trainPath}) as ${o.finalTag}; the push starts release.yml, which publishes the final`);
 	if (pending(o.runs.promote)) return wait(o.runs.promote);
 	if (succeeded(o.runs.promote)) return inspect(repo.id, o.runs.promote, `release ${o.finalTag} is not published`);
 	return workflowStep(repo, "promote", "release.yml", o.inputs.promote, `publish ${o.finalTag} with the bytes of ${o.candidate.tag}`);
 }
 
 /**
- * After the final: a person commits the final record the provider's
+ * After the final: the supervisor lands the final record the provider's
  * `release-train:verify-final` reads, which then checks each named consumer
  * against GitHub. `final-convergence.yml` runs the same check on dispatch; the
  * local command gives the same answer without a workflow run.
@@ -94,6 +93,7 @@ export function observeConvergence(ctx) {
 	}
 	return {
 		repo,
+		finalTag,
 		recordPath,
 		recordProblem,
 		expectedRecord: {
@@ -106,10 +106,7 @@ export function observeConvergence(ctx) {
 
 export function convergence(o) {
 	if (o.recordProblem) {
-		return human(o.repo.id, [
-			`commit ${o.recordPath} on main of the provider (it ${o.recordProblem}), with this content:`,
-			...JSON.stringify(o.expectedRecord, null, "\t").split("\n").map((line) => `  ${line}`),
-		].join("\n"));
+		return landStep(o.repo, "final-record", o.recordPath, json(o.expectedRecord), `chore(release-train): record the ${o.finalTag} final`, `land ${o.recordPath} (it ${o.recordProblem})`);
 	}
 	return checks([["npm", "run", "release-train:verify-final"]]);
 }

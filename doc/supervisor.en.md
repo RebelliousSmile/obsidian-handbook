@@ -4,14 +4,14 @@
 
 `pnpm supervise` coordinates a correction that spans the five repositories: Handbook, Lantern and the three schema repositories (`schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`). A set of changes published together is called a **train**.
 
-The supervisor observes, records and tells who does what next. It never writes code in a repository, never pulls or checks out, and never publishes anything without an approval bound to the commits it presented.
+The supervisor observes, records and tells who does what next. It never writes code in a repository and never publishes anything without an approval bound to the commits it presented. Once approved, it does all the train work by itself: it writes the train files (pins, lockfiles, manifests, records), commits and pushes them. It only moves a checkout by fast-forwarding it to `origin/main`, and stops on a dirty or diverged checkout.
 
 ## Requirements
 
 - The five repositories cloned side by side, under the names of the topology (`supervisor/topology.json`, `path` field): `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` names their parent directory (default: the parent of Handbook).
 - `git`, and `gh` authenticated on `RebelliousSmile`.
 - Node 20 or later, on Linux, macOS or native Windows. Neither a POSIX shell nor WSL is required.
-- `approve`, `commit`, and `link --create` without `--yes`, need a real terminal (Claude Code's `!` prefix is not one).
+- `approve`, and `link --create` without `--yes`, need a real terminal (Claude Code's `!` prefix is not one).
 
 ## The train record
 
@@ -62,7 +62,7 @@ Sorts each item into `done`, `ready` or `blocked`, recomputed from GitHub on eve
 pnpm supervise commit schema-adrenaline
 ```
 
-Each repository's message is prepared in its `.git/SUPERVISOR_COMMIT_MSG` (outside the checkout, so it never dirties it). Everything is checked before the first write: every repository on `main`, none behind `origin/main`, a message for each changed repository and no message without changes. The command shows the plan, waits for the provider id typed on a terminal, commits the three repositories, then pushes them. Handbook's train records are never part of it, and no release is published.
+Each repository's message is prepared in its `.git/SUPERVISOR_COMMIT_MSG` (outside the checkout, so it never dirties it). Everything is checked before the first write: every repository on `main`, none behind `origin/main`, a message for each changed repository and no message without changes. The command shows the plan, commits the three repositories, then pushes them. It asks for no input: a refusal comes before the first commit. Handbook's train records are never part of it, and no release is published.
 
 ### 4. `present`: the evidence, publishing nothing
 
@@ -98,32 +98,33 @@ pnpm supervise approve --verify
 
 The approval is given by typing the train id on the terminal. No option replaces it, and without a terminal nothing is recorded. `approve` refuses a presentation that was not presentable, a presentation edited by hand (its fingerprint no longer matches) and repositories that moved since `present`.
 
-After the approval, a repository may only receive the commits the train needs: they touch its `trainFiles` only, and every release URL or SRI they introduce belongs to an archive the train observed. Adopting the observed candidate therefore keeps the approval; any other change voids it and sends you back to `present`. `--verify` checks that the approval still holds.
+After the approval, a repository may only receive the commits the train needs: they touch its `trainFiles` only, and every release URL or SRI they introduce belongs to an archive the train observed. The commits the supervisor lands itself (adoption, manifests, records) therefore keep the approval; any other change voids it and sends you back to `present`. `--verify` checks that the approval still holds.
 
-### 6. `publish`: one step at a time
+### 6. `publish`: from the first dispatch to convergence
 
 ```bash
 pnpm supervise publish         # shows the next step and its exact command
-pnpm supervise publish --run   # runs it, then observes again
+pnpm supervise publish --run   # chains every step, up to convergence
 ```
 
-Without `--run`, nothing runs, and two calls in a row say the same thing. With `--run`, the approval is checked again **before every step**. One provider moves at a time, in the dependency order of the train. Each step is recomputed from what GitHub and the repositories show: a failed run is retried, a candidate already published is never published again. Before any dispatch, `publish` stops and names what is missing: a secret (for example `RELEASE_TOKEN` on `schema-pbta`) or an input the workflow does not declare. A final whose bytes differ from the candidate stops it too, naming both digests.
+Without `--run`, nothing runs, and two calls in a row say the same thing. With `--run`, `publish` runs a step, observes again, then runs the next one. It follows each run to its end and stops only on a failure or a human step. The approval is checked again **before every step**. Providers go one after the other, in the dependency order of the train: the second starts once the final of the first is published. Once every final is published, `publish --run` chains `converge --run`. Each step is recomputed from what GitHub and the repositories show: a failed run is retried, a candidate already published is never published again. Before any dispatch, `publish` stops and names what is missing: a secret (for example `RELEASE_TOKEN` on `schema-pbta`) or an input the workflow does not declare. A final whose bytes differ from the candidate stops it too, naming both digests.
 
 A step is one of these kinds:
 
-- **automated**: a `gh workflow run` or a local command, run by `--run`;
-- **human**: an exact instruction (JSON to commit, tag to push, pins to adopt) that `--run` does not execute;
-- **wait**: a run in progress; run `publish` again once it finishes.
+- **automated**: run by `--run`. It is a `gh workflow run`, a local command, the consumers adopting the candidate, a train manifest to land on `main`, or the final tag to push;
+- **human**: a state the supervisor does not repair by itself, for example a successful run that did not produce its release; inspect it before any new publication;
+- **wait**: a run in progress, which `--run` follows to its end.
 
-Adopting the candidate in Handbook and Lantern is a human step: `package.json` and every lockfile pin the candidate URL with its SRI, then the consumer's frozen install and checks pass before the commit.
+Adopting the candidate in Handbook and Lantern is automated. The supervisor rewrites `package.json` and every lockfile to the candidate URL and its SRI, then runs the frozen install (`pnpm install --frozen-lockfile`, or `npm ci`) and the consumer's validations, behind the guard. It then commits (`chore(deps): adopt <pkg> <tag>`) and pushes. A consumer that fails is named with the failing command: its pins are restored, and nothing of it is committed.
 
 ### 7. `converge`: every consumer on every final
 
 ```bash
-pnpm supervise converge
+pnpm supervise converge         # checks, writing nothing
+pnpm supervise converge --run   # adopts the finals and lands the convergence files
 ```
 
-Requires each provider of the train to have its final published, an approval that holds and clean checkouts at `origin/main`. Each consumer still on a candidate is named, with the URL it pins and the final's URL: adopting the final is a human step. Then, behind the guard:
+Requires each provider of the train to have its final published, an approval that holds and clean checkouts at `origin/main`. Without `--run`, each consumer still on a candidate is named, with the URL it pins and the final's URL. With `--run`, it adopts the final: these are the same bytes as the candidate already validated, so only the frozen install runs before the commit. Then, behind the guard:
 
 - the consumers' `convergence` commands (topology): Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs` and `assert:release-train-matrix`;
 - each provider's convergence step (see below).
@@ -147,8 +148,8 @@ Requires a `passed` convergence, an approval that holds, `origin/main` heads tha
 
 | | What it covers |
 | --- | --- |
-| **Automated** | observing repositories and pins (`status`, `next`); validations and checks behind the guard (`present`, `converge`); dispatching publication workflows and local promotion commands (`publish --run`); commenting on and closing issues (`close --run`) |
-| **Human** | the corrections; the approval typed on the terminal; train manifests to commit; Handbook and Lantern adopting the candidate, then the final; the final tag of `schema-adrenaline`; the convergence file of `schema-in-the-mist`; the consumer releases; bringing a checkout back to `origin/main` |
+| **Automated** | observing repositories and pins (`status`, `next`); validations and checks behind the guard (`present`, `converge`); after the approval, all the train work through `publish --run`: dispatches, local promotions, Handbook and Lantern adopting the candidate then the final, train manifests and records, the final tag of `schema-adrenaline`, the convergence file of `schema-in-the-mist`, convergence; commenting on and closing issues (`close --run`) |
+| **Human** | the corrections; the approval typed on the terminal; the consumer releases; bringing a dirty or diverged checkout back to `origin/main`; a successful run without a result, to inspect |
 | **Never before approval** | any release, workflow dispatch, `git push` or `git tag`, any write through `gh api`. `present` and `converge` run behind the guard, and `publish --run` checks the approval again before every step |
 
 ## What the approval judges: design and behaviour
@@ -164,10 +165,10 @@ Two things stay human: the approval itself, and any deletion (branches, traces, 
 | | `schema-pbta` | `schema-adrenaline` | `schema-in-the-mist` |
 | --- | --- | --- | --- |
 | Candidate | `release.yml` with `mode=digest` (packs and computes the digest, no release), then `mode=stage` (publishes the candidate named by the manifest) | `publish-candidate.yml` | `release-candidate.yml` |
-| Train manifest | `release-train/candidates/<pkg>-<tag>.json` then `release-train/<pkg>-<tag>.json`, committed by a person | `release-train/<pkg>-<tag>.json`, committed by a person | `release-trains/<tag>.json`, status `pending`, committed by a person |
+| Train manifest | `release-train/candidates/<pkg>-<tag>.json` then `release-train/<pkg>-<tag>.json`, landed by the supervisor | `release-train/<pkg>-<tag>.json`, landed by the supervisor | `release-trains/<tag>.json`, status `pending`, landed by the supervisor |
 | Proof | `release-train.yml` | `release-train.yml` | `npm run release-train:assert` locally, which writes a provenance file |
-| Final | `release.yml` with `mode=promote`, same bytes as the candidate | final tag **pushed by a person**, which starts `release.yml` | `npm run release-train:promote` locally, in the provider's checkout, clean and at `origin/main` |
-| Convergence | no tool of its own: the final pins of both consumers are the proof, and the report says so | the exact JSON of `release-train/<pkg>-vX-final.json` to commit, then `npm run release-train:verify-final` | manifest set to `completed` with its `final` block, then `release-train:converge`, commit of the convergence file, then `release-train:validate -- --require-complete <tag>` |
+| Final | `release.yml` with `mode=promote`, same bytes as the candidate | final tag pushed by the supervisor (`git push origin origin/main:refs/tags/<tag>`), which starts `release.yml` | `npm run release-train:promote` locally, in the provider's checkout, clean and at `origin/main` |
+| Convergence | no tool of its own: the final pins of both consumers are the proof, and the report says so | `release-train/<pkg>-vX-final.json` landed by the supervisor, then `npm run release-train:verify-final` | manifest set to `completed` with its `final` block and the convergence file of `release-train:converge`, both landed by the supervisor, then `release-train:validate -- --require-complete <tag>` |
 
 ## Troubleshooting
 

@@ -3,10 +3,12 @@
  * finals to its closed coordination issue.
  *
  * `publish` without `--run` only shows the next step and the exact command;
- * with `--run` it executes the steps a machine may take, one after the other,
- * and stops at the first one that needs a person or has to wait. `converge`
- * proves the consumers adopted every final. `close` checks the consumer
- * releases and, with `--run`, closes the issues, the coordination issue last.
+ * with `--run` it executes every step a machine may take, one after the
+ * other, watches the runs, stops at the first one that needs a person, and
+ * once every final is out goes on with `converge --run`. `converge` proves
+ * the consumers adopted every final; with `--run` it adopts them first.
+ * `close` checks the consumer releases and, with `--run`, closes the issues,
+ * the coordination issue last.
  */
 import { closeTrain } from "./close.mjs";
 import { convergeTrain } from "./converge.mjs";
@@ -22,17 +24,21 @@ function openTrainFile(context, values, label) {
 
 export const PUBLISH_COMMANDS = {
 	publish: {
-		usage: "publish [--run]                           show the next publication step of an approved train; --run executes it",
+		usage: "publish [--run]                           show the next publication step of an approved train; --run executes them all, then converges",
 		options: { train: { type: "string" }, run: { type: "boolean" } },
 		run(context, values) {
-			return publishTrain(context, openTrainFile(context, values, "publish"), { run: Boolean(values.run) });
+			const file = openTrainFile(context, values, "publish");
+			const { code, published } = publishTrain(context, file, { run: Boolean(values.run) });
+			if (!values.run || !published || code !== 0) return code;
+			console.log("");
+			return convergeTrain(context, file, { run: true });
 		},
 	},
 	converge: {
-		usage: "converge                                  prove every consumer pins every final, then run the convergence checks",
-		options: { train: { type: "string" } },
+		usage: "converge [--run]                          prove every consumer pins every final, then run the convergence checks; --run adopts the finals and lands the records first",
+		options: { train: { type: "string" }, run: { type: "boolean" } },
 		run(context, values) {
-			return convergeTrain(context, openTrainFile(context, values, "converge"));
+			return convergeTrain(context, openTrainFile(context, values, "converge"), { run: Boolean(values.run) });
 		},
 	},
 	close: {

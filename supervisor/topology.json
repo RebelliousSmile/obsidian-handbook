@@ -50,7 +50,37 @@
 				[
 					"npm",
 					"run",
-					"check"
+					"lint"
+				],
+				[
+					"npm",
+					"run",
+					"typecheck"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-train"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-identity"
+				],
+				[
+					"npm",
+					"run",
+					"assert:release-train-matrix:unit"
+				],
+				[
+					"npm",
+					"run",
+					"assert:consumer-schema-pins:unit"
+				],
+				[
+					"npm",
+					"run",
+					"assert:workspace"
 				]
 			],
 			"convergence": [

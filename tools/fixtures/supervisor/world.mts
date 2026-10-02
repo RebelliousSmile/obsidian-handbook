@@ -72,9 +72,11 @@ export class World {
 		if (!realGit) throw new Error("the supervisor harness needs git on the PATH");
 		this.realGit = realGit;
 		this.shim("git", FAKE_GIT);
-		// The local release-train scripts of a provider run through this npm.
+		// The local release-train scripts of a provider, and the install of a
+		// consumer adopting an archive, run through this npm and this pnpm.
 		this.shim("npm", FAKE_NPM);
-		this.writeState({ calls: [], releases: {}, issues: {}, prs: {}, events: {}, secrets: {}, runs: {}, workflowEffects: {} });
+		this.shim("pnpm", FAKE_NPM);
+		this.writeState({ calls: [], releases: {}, issues: {}, prs: {}, events: {}, secrets: {}, runs: {}, workflowEffects: {}, tagEffects: {} });
 	}
 
 	/** `bin/<name>` runs `node <script>`: a sh shim for POSIX shells, a `.cmd` one for Windows. */
