@@ -77,7 +77,7 @@ Pour un changement non cassant, on saute les étapes 2 à 4 : tag final, puis PR
 | Étape | État | Notes |
 | --- | --- | --- |
 | 1. CI sur `push` / `pull_request` | done, sauf un point | Déclencheurs posés et gardés par `assert:ci-install`. Sortir `assert:supervisor` du `pnpm check` reste à faire à la main : la modification de `tools/check.mjs` a été refusée à l'agent. |
-| 2. `bump-schema.yml` | done | Handbook : `tools/bump-schema.mjs`. Lantern : idem, avec les deux lockfiles et la matrice pour une finale. Une candidate n'active pas l'auto-merge. Pour une finale, Lantern attend que le `main` de Handbook porte la pin, puisque la matrice nomme ce commit. |
+| 2. `bump-schema.yml` | done en local, jamais exécuté sur GitHub | Handbook : `tools/bump-schema.mjs`. Lantern : idem, avec les deux lockfiles et la matrice pour une finale. Une candidate n'active pas l'auto-merge. Pour une finale, Lantern attend que le `main` de Handbook porte la pin, puisque la matrice nomme ce commit. Les lockfiles sont réécrits en texte (URL et SRI calculé sur l'archive publiée) : laisser pnpm résoudre y inscrit l'URL signée de redirection, sans SRI, ce que refusent les gardes de pins. Le script échoue si l'archive change ses dépendances, cas à résoudre à la main. Essai local : aller-retour `v3.0.0` ↔ `v3.0.0-rc.1` exact sur les deux dépôts. |
 | 3. Schéma | done pour schema-adrenaline, bloqué sur le secret | Job `notify-consumers` dans `publish-candidate.yml` et `release.yml`, *Environment* `release` sur la promotion. Le secret `TRAIN_DISPATCH_TOKEN` est à créer par un humain. |
 | 4. Protection de `main` | pending | |
 | 5. release-please | pending | |
