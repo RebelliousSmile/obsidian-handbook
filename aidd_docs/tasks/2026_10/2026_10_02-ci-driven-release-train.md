@@ -119,3 +119,18 @@ Gestes humains d'un train cassant, au total : pousser et taguer la candidate, fu
 **Non vérifié.** Que `GITHUB_TOKEN` puisse lancer `release-train.yml` et `release.yml` par `gh workflow run` depuis `promote.yml` (attendu avec `actions: write`, à prouver au premier essai). Que le job `converge` puisse pousser sur `main` et que ses permissions de job (`contents: write`, `actions: write`) passent le réglage `default_workflow_permissions: read` du dépôt.
 
 **Vérifié après écriture.** `validate:candidate-workflow`, l'auto-test de `validate-versioning.ts`, `validate:final-convergence`, `release-train:self-test`, `tsc --noEmit` et prettier acceptent le nouveau workflow et le job ajouté, sans modification des validateurs.
+
+## Premier passage sur GitHub : train schema-adrenaline 3.1.0 (2026-10-03)
+
+| Étape du déroulé | Résultat |
+| --- | --- |
+| Commit fournisseur (`c436eff`) | CI verte. |
+| `publish-candidate.yml` | `v3.1.0-rc.1` publiée (prerelease, archive et `.sha256`). Job `notify-consumers` en échec, attendu : `TRAIN_DISPATCH_TOKEN` n'existe pas. |
+| `bump-schema.yml` (lancé à la main) | Bump, commit et push de `schema/schema-adrenaline` réussis dans les deux consommateurs : la réécriture textuelle des lockfiles tient sur GitHub. `gh pr create` échoue : Actions n'a pas le droit de créer des PR. |
+| PR de candidate | Ouvertes à la main : Handbook #72, Lantern #49. Vertes toutes les deux. |
+
+**Trou du plan, corrigé.** Le `npm run check` de Lantern se terminait par la porte de release (`assert:release-inputs`, archives finales exigées) : une PR de candidate ne pouvait pas y être verte, et l'adoption de `v3.0.0-rc.1` était déjà rouge sur `main`. Lantern `0d1a44c` : le workflow `Check` lance `check:candidate` sur un arbre épinglé sur une rc (mêmes contrôles de projet, puis épingles, lockfiles et octets publiés) ; `check` est inchangé et reste ce que lance `release.yml`.
+
+**Reste bloqué sur des réglages de dépôt** (à faire à la main) : droit pour Actions de créer des PR et auto-merge sur Handbook et Lantern, environnement `release` sur schema-adrenaline, secret `TRAIN_DISPATCH_TOKEN`. Sans eux, les PR de finale ne s'ouvrent pas seules et `converge` attendra en vain.
+
+**Toujours non exécuté** : `promote.yml`, la finale et `converge`.
