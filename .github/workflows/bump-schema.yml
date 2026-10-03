@@ -1,0 +1,86 @@
+name: Bump schema
+
+# A provider that publishes a release dispatches here (`schema-published`); the
+# same bump can be asked for by hand. The pin moves on a robot branch and the
+# proof is the CI of its pull request: nothing is validated on a workstation.
+on:
+    repository_dispatch:
+        types: [schema-published]
+    workflow_dispatch:
+        inputs:
+            package:
+                description: Schema package to bump
+                required: true
+                type: choice
+                options:
+                    - schema-adrenaline
+                    - schema-in-the-mist
+                    - schema-pbta
+            tag:
+                description: Published tag (vX.Y.Z or vX.Y.Z-rc.N)
+                required: true
+                type: string
+
+permissions:
+    contents: write
+    pull-requests: write
+    actions: write
+
+concurrency:
+    group: bump-schema-${{ github.event.client_payload.package || inputs.package }}
+    cancel-in-progress: false
+
+jobs:
+    bump:
+        runs-on: ubuntu-latest
+        env:
+            SCHEMA_PACKAGE: ${{ github.event.client_payload.package || inputs.package }}
+            SCHEMA_TAG: ${{ github.event.client_payload.tag || inputs.tag }}
+            GH_TOKEN: ${{ github.token }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  ref: main
+
+            - name: Use pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20.x"
+                  cache: pnpm
+
+            - name: Move the pin and its lockfile
+              run: node tools/bump-schema.mjs "$SCHEMA_PACKAGE" "$SCHEMA_TAG"
+
+            - name: Prove the lockfile installs frozen
+              run: pnpm install --frozen-lockfile
+
+            - name: Open or update the pull request
+              run: |
+                  branch="schema/$SCHEMA_PACKAGE"
+                  title="chore(deps): adopt $SCHEMA_PACKAGE $SCHEMA_TAG"
+                  git add package.json pnpm-lock.yaml
+                  if git diff --cached --quiet; then
+                    echo "main already pins $SCHEMA_PACKAGE $SCHEMA_TAG"
+                    exit 0
+                  fi
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git checkout -B "$branch"
+                  git commit -m "$title"
+                  git push --force origin "$branch"
+                  if gh pr view "$branch" --json state --jq .state | grep -qx OPEN; then
+                    gh pr edit "$branch" --title "$title"
+                  else
+                    gh pr create --base main --head "$branch" --title "$title" \
+                      --body "Opened by the \`Bump schema\` workflow after $SCHEMA_PACKAGE published $SCHEMA_TAG. The CI of this pull request is the proof of the adoption."
+                  fi
+                  # A pull request opened with the workflow token does not start CI on its own.
+                  gh workflow run ci.yml --ref "$branch"
+                  # A candidate waits for a human read; a final merges once CI is green.
+                  case "$SCHEMA_TAG" in
+                    *-rc.*) ;;
+                    *) gh pr merge "$branch" --auto --squash ;;
+                  esac

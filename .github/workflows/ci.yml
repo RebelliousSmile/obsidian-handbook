@@ -1,9 +1,17 @@
 name: CI
 
-# Manual by design: the Obsidian integration is validated locally before an
-# explicit GitHub run, so ordinary commits do not consume Actions minutes.
+# GitHub validates, the workstation only writes the change: the repository is
+# public, so standard runners cost nothing. `workflow_dispatch` stays for the
+# pull requests a workflow opens, which GitHub does not run on its own.
 on:
+    push:
+        branches: [main]
+    pull_request:
     workflow_dispatch:
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
 
 jobs:
     check:

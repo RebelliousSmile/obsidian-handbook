@@ -88,4 +88,14 @@ for (const command of [
 	assert.ok(ci.includes(command), `CI does not run ${command} on pull requests`);
 }
 
+/* The gate runs on GitHub, on every push to main and on every pull request: a manual-only
+   workflow left the proof to an 18-minute local run. */
+const triggers = ci.split("\njobs:")[0];
+for (const trigger of ["push", "pull_request", "workflow_dispatch"]) {
+	assert.ok(
+		new RegExp(`^ {4}${trigger}:`, "m").test(triggers),
+		`ci.yml must trigger on ${trigger}`,
+	);
+}
+
 console.log(`CI install passed: ${installs} pnpm installs, ${tracked} is the only lockfile any of them needs.`);
