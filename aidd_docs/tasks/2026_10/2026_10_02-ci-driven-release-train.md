@@ -26,12 +26,20 @@ GitHub valide et traite. En local, on ne garde que l'écriture du changement. Le
 
 ## Déroulé cible d'un changement cassant (exemple : schema-adrenaline 3.0.0)
 
+Révisé le 2026-10-03 (voir « Replan du 2026-10-03 »).
+
 1. **Fournisseur.** On commite sur `main`, puis la CI du fournisseur valide.
-2. **Candidate.** Le tag `vX.Y.Z-rc.N` déclenche `publish-candidate.yml`. Celui-ci publie l'archive, puis envoie un `repository_dispatch` à chaque consommateur avec l'URL et le SRI.
-3. **Consommateurs.** Un workflow `bump-schema.yml` met à jour la pin et le lockfile, puis ouvre (ou met à jour) une PR. La CI de la PR fait la preuve : gardes de pins, matrice Lantern, e2e Handbook.
-4. **Validation humaine.** Tu relis les PR. La promotion du fournisseur, `release.yml`, attend l'approbation de l'*Environment* `release`, que tu donnes d'un clic.
-5. **Finale.** La promotion tague la finale et redispatche aux consommateurs. Les PR passent à la finale, avec la matrice Lantern mise à jour par le workflow de bump, puis fusionnent automatiquement au vert.
-6. **Releases des consommateurs.** Un tag sur `main`, puis `release.yml`. La version reste ta décision.
+2. **Candidate.** Le tag `vX.Y.Z-rc.N` déclenche `publish-candidate.yml`. Celui-ci publie l'archive, puis envoie un `repository_dispatch` à chaque consommateur avec le paquet et le tag.
+3. **Consommateurs.** Un workflow `bump-schema.yml` met à jour la pin et le lockfile, puis ouvre (ou met à jour) une PR. La CI de la PR fait la preuve : gardes de pins, e2e Handbook.
+4. **Validation humaine.** Tu relis les deux PR de candidate et tu les **fusionnes** : c'est ton accord sur le design et le fonctionnel. `main` porte alors la pin de la candidate, comme avant (`65653b7`). Une candidate refusée ne se fusionne pas : une `rc.N+1` met la même PR à jour.
+5. **Promotion.** Tu lances `promote.yml` sur le fournisseur avec le tag de la candidate. Le workflow :
+   - vérifie que le `main` des deux consommateurs épingle cette candidate, et relève leurs SHA ;
+   - écrit le manifeste protocole 1 `release-train/<paquet>-vX.Y.Z.json`, le commite sur `main` et pose le tag final sur ce commit ;
+   - lance `release-train.yml` sur ce manifeste et attend son succès ;
+   - lance `release.yml`, qui attend l'approbation de l'*Environment* `release`.
+6. **Finale.** `release.yml` publie la finale et redispatche aux consommateurs. Leurs PR de finale fusionnent automatiquement au vert ; celle de Lantern inscrit le manifeste dans sa matrice.
+7. **Convergence.** Un dernier job de `release.yml` attend que les deux `main` épinglent la finale, écrit l'enregistrement protocole 2 `…-final.json`, le commite et lance `final-convergence.yml`.
+8. **Releases des consommateurs.** Un tag sur `main`, puis `release.yml`. La version reste ta décision.
 
 Pour un changement non cassant, on saute les étapes 2 à 4 : tag final, puis PR de bump fusionnée automatiquement au vert.
 
@@ -54,6 +62,12 @@ Pour un changement non cassant, on saute les étapes 2 à 4 : tag final, puis PR
    - `release.yml` passe derrière l'*Environment* `release` avec relecteur obligatoire.
 
    Puis on fait de même pour schema-pbta et schema-in-the-mist.
+
+   3 bis. **Manifestes écrits par le fournisseur** (ajouté au replan), sur schema-adrenaline d'abord :
+   - `promote.yml` (`workflow_dispatch`, entrée : tag de candidate) écrit le manifeste protocole 1, tague la finale, lance `release-train.yml` puis `release.yml` ;
+   - job `converge` de `release.yml` : écrit l'enregistrement protocole 2 et lance `final-convergence.yml` ;
+   - l'écriture des deux fichiers vit dans un outil `tools/` du schéma, couvert par son auto-test comme les validateurs existants ;
+   - les portes de `release.yml`, `release-train.yml` et `final-convergence.yml` restent telles quelles.
 4. **Protection de `main`** sur les consommateurs : checks requis, et auto-merge autorisé.
    - Cela contredit la règle « tout sur `main`, pas de branche » pour **ces PR-là seulement**. Ce sont des branches de robot, et le travail humain reste sur `main`.
 5. **Releases par release-please** (Handbook, Lantern, puis les `schema-*`).
@@ -69,8 +83,9 @@ Pour un changement non cassant, on saute les étapes 2 à 4 : tag final, puis PR
 
 ## Ouvert
 
-- Est-ce qu'on supprime la matrice Lantern (`release-train.matrix.json`) ? Il faut vérifier qu'elle reste nécessaire une fois que les PR de bump prouvent la compatibilité.
-- Les candidates sont-elles encore utiles ? On peut s'en passer si la PR de bump peut viser l'archive d'un commit du fournisseur plutôt qu'un tag rc. À trancher après l'étape 3 sur schema-adrenaline.
+- Matrice Lantern (`release-train.matrix.json`) : **gardée** pour l'instant, puisque le bump de finale l'alimente sans geste humain. Sa suppression se rediscute après le premier train complet sans superviseur.
+- Candidates : **gardées**. La PR de candidate est l'objet que tu relis ; c'est elle qui porte le contrôle visuel.
+- `main` du fournisseur ne peut pas être protégée tant que `promote.yml` y commite avec `GITHUB_TOKEN`. La protection de l'étape 4 ne vise que les consommateurs.
 
 ## Suivi de mise en œuvre
 
@@ -79,10 +94,28 @@ Pour un changement non cassant, on saute les étapes 2 à 4 : tag final, puis PR
 | 1. CI sur `push` / `pull_request` | done, sauf un point | Déclencheurs posés et gardés par `assert:ci-install`. Sortir `assert:supervisor` du `pnpm check` reste à faire à la main : la modification de `tools/check.mjs` a été refusée à l'agent. |
 | 2. `bump-schema.yml` | done en local, jamais exécuté sur GitHub | Handbook : `tools/bump-schema.mjs`. Lantern : idem, avec les deux lockfiles et la matrice pour une finale. Une candidate n'active pas l'auto-merge. Pour une finale, Lantern attend que le `main` de Handbook porte la pin, puisque la matrice nomme ce commit. Les lockfiles sont réécrits en texte (URL et SRI calculé sur l'archive publiée) : laisser pnpm résoudre y inscrit l'URL signée de redirection, sans SRI, ce que refusent les gardes de pins. Le script échoue si l'archive change ses dépendances, cas à résoudre à la main. Essai local : aller-retour `v3.0.0` ↔ `v3.0.0-rc.1` exact sur les deux dépôts. |
 | 3. Schéma | done pour schema-adrenaline, bloqué sur le secret | Job `notify-consumers` dans `publish-candidate.yml` et `release.yml`, *Environment* `release` sur la promotion. Le secret `TRAIN_DISPATCH_TOKEN` est à créer par un humain. |
+| 3 bis. Manifestes écrits par le fournisseur | done pour schema-adrenaline (`d7b957c`), jamais exécuté sur GitHub | `tools/write-release-train.ts` (modes `candidate` et `final`), `promote.yml`, job `converge` de `release.yml`. L'outil refuse d'écraser un enregistrement commité par d'autres faits ; son auto-test, appelé par `release-train:self-test`, recompose chaque `…-final.json` commité. Essai local sur la 3.0.0 : les deux modes refusent, comme attendu (le `main` des consommateurs a bougé depuis). Le pré-contrôle de `promote.yml` lance `release:verify-provider` sans `SCHEMA_ADRENALINE_PENDING_RELEASE`, qui exige un tag final existant. |
 | 4. Protection de `main` | pending | |
 | 5. release-please | pending | |
 | 6. Retrait du superviseur | pending, sous accord | |
 
-## Replan needed
+## Replan du 2026-10-03
 
-- `release.yml` de schema-adrenaline exige `release-train/schema-adrenaline-v<x.y.z>.json` (candidate, SHA256, commits des consommateurs) et un run vert de `release-train.yml`. Ce manifeste était écrit par le superviseur (`present` / `converge`). Le plan ne dit pas qui l'écrit ensuite. À trancher avant l'étape 6 et avant la première finale sans superviseur : soit un workflow du fournisseur l'écrit une fois les deux PR de candidate au vert, soit la preuve portée par les PR de bump le remplace (et la question « Ouvert » sur la matrice Lantern se règle du même coup).
+**Lacune.** `release.yml` de schema-adrenaline exige `release-train/schema-adrenaline-v<x.y.z>.json` (candidate, SHA256, commits des consommateurs) et un run vert de `release-train.yml`. Après la finale, `final-convergence.yml` attend un enregistrement `…-final.json`. Les deux fichiers étaient écrits par le superviseur (`present` / `converge`) ; le plan ne disait pas qui les écrit ensuite.
+
+**Décision : le fournisseur écrit ses manifestes, les portes ne bougent pas.** L'autre option, remplacer le manifeste par la preuve des PR de bump, revenait à retirer des portes de `release.yml` : écartée, puisque la consigne est de ne pas assouplir la CI.
+
+Ce que la décision change par rapport au plan d'origine :
+
+- **La PR de candidate se fusionne.** Le manifeste n'admet que des SHA complets, et `release-train.yml` extrait ces commits. Une branche de robot forcée à chaque bump rendrait ces commits orphelins ; un commit de `main` reste. La fusion par toi devient le geste de validation.
+- **La promotion se lance à la main** (`promote.yml`). Le fournisseur ne peut pas savoir seul que les deux PR sont fusionnées, sauf à poser un second jeton dans chaque consommateur ou à scruter par cron. Un lancement explicite coûte un geste et reste cohérent avec « la version est ta décision ».
+- **L'*Environment* `release` reste**, comme garde contre un tag final poussé par erreur, bien qu'il double le lancement manuel.
+- **La convergence finale n'a pas de geste humain** : les PR de finale fusionnent seules, donc un job peut attendre (au plus 90 min, Lantern attendant déjà Handbook) puis écrire l'enregistrement.
+
+Gestes humains d'un train cassant, au total : pousser et taguer la candidate, fusionner deux PR, lancer la promotion, approuver l'environnement.
+
+**Conséquence sur le test du nouveau train.** La candidate `v3.1.0-rc.1` peut être testée dès que les étapes 1 à 3 sont poussées (étapes 2 à 4 du déroulé). La finale 3.1.0 exige l'étape 3 bis.
+
+**Non vérifié.** Que `GITHUB_TOKEN` puisse lancer `release-train.yml` et `release.yml` par `gh workflow run` depuis `promote.yml` (attendu avec `actions: write`, à prouver au premier essai). Que le job `converge` puisse pousser sur `main` et que ses permissions de job (`contents: write`, `actions: write`) passent le réglage `default_workflow_permissions: read` du dépôt.
+
+**Vérifié après écriture.** `validate:candidate-workflow`, l'auto-test de `validate-versioning.ts`, `validate:final-convergence`, `release-train:self-test`, `tsc --noEmit` et prettier acceptent le nouveau workflow et le job ajouté, sans modification des validateurs.
