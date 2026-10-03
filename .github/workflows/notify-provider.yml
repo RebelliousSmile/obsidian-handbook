@@ -1,0 +1,38 @@
+name: Notify provider
+
+# Merging a candidate's bump pull request is the human read of that candidate.
+# The provider is told so it promotes once both consumers have merged: no
+# workflow is started by hand after the merge.
+on:
+    push:
+        branches: [main]
+        paths: [package.json]
+
+permissions:
+    contents: read
+
+jobs:
+    notify:
+        runs-on: ubuntu-latest
+        env:
+            GH_TOKEN: ${{ secrets.TRAIN_DISPATCH_TOKEN }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Tell each provider whose candidate main now pins
+              run: |
+                  node tools/candidate-pins.mjs > candidates.txt
+                  if ! test -s candidates.txt; then
+                    echo "main pins no schema candidate"
+                    exit 0
+                  fi
+                  if test -z "$GH_TOKEN"; then
+                    echo "::error::TRAIN_DISPATCH_TOKEN is not set: no provider was told of $(tr '\n' ' ' < candidates.txt)"
+                    exit 1
+                  fi
+                  while read -r package tag; do
+                    gh api "repos/RebelliousSmile/$package/dispatches" \
+                      -f event_type=candidate-adopted \
+                      -f "client_payload[tag]=$tag" \
+                      -f "client_payload[consumer]=$GITHUB_REPOSITORY"
+                  done < candidates.txt
