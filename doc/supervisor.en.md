@@ -64,6 +64,14 @@ pnpm supervise commit schema-adrenaline
 
 Each repository's message is prepared in its `.git/SUPERVISOR_COMMIT_MSG` (outside the checkout, so it never dirties it). Everything is checked before the first write: every repository on `main`, none behind `origin/main`, a message for each changed repository and no message without changes. The command shows the plan, commits the three repositories, then pushes them. It asks for no input: a refusal comes before the first commit. Handbook's train records are never part of it, and no release is published.
 
+For one repository alone, whatever its role:
+
+```bash
+pnpm supervise commit lantern --only --message "feat(adrenaline-pj): print the Malus column"
+```
+
+`--only` runs the same checks on that repository alone and leaves the others as they are, changed or not. `--message` stands for the prepared file; both at once are refused.
+
 ### 4. `present`: the evidence, publishing nothing
 
 ```bash

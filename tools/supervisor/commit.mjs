@@ -8,6 +8,9 @@
  * commits and pushes nothing. The coordinator's train records are never
  * committed here, as `present` never counts them as changes.
  *
+ * `commit <repo> --only` lands one repository alone, whatever its role, under
+ * the same checks; `--message` then stands for the prepared file.
+ *
  * It commits what a person prepared, before any approval; the writes of an
  * approved train are land.mjs. It publishes no release.
  */
@@ -35,8 +38,16 @@ export function commitRepos(topology, providerId) {
 	return [provider, ...provider.consumers.map((id) => repoById(topology, id))];
 }
 
-/** What each repository will do, or every reason none of them may. */
-export function planCommit(root, repos) {
+/** One repository alone, whatever its role: the work of a session that touched nothing else. */
+export function commitRepo(topology, repoId) {
+	return [repoById(topology, repoId)];
+}
+
+/**
+ * What each repository will do, or every reason none of them may.
+ * `inline` is a message given on the command line, for a single repository.
+ */
+export function planCommit(root, repos, inline = "") {
 	const problems = [];
 	const plan = [];
 	for (const repo of repos) {
@@ -57,10 +68,12 @@ export function planCommit(root, repos) {
 		// Not gitOut: its trim would eat the leading space of the first status line.
 		const changes = git(dir, ["status", "--porcelain", "--untracked-files=all", ...pathspec(repo)]).stdout.replace(/\s+$/, "");
 		const file = messagePath(dir);
-		const message = existsSync(file) ? readFileSync(file, "utf8").trim() : "";
+		const prepared = existsSync(file) ? readFileSync(file, "utf8").trim() : "";
+		if (prepared && inline) problems.push(`${repo.id}: --message was given but a message already waits in ${file}`);
+		const message = prepared || inline;
 		if (changes && !message) problems.push(`${repo.id}: uncommitted changes but no message in ${file}`);
-		if (!changes && message) problems.push(`${repo.id}: a message waits in ${file} but there is nothing to commit`);
-		plan.push({ repo, dir, file, message, changes, ahead });
+		if (!changes && message) problems.push(`${repo.id}: a message ${prepared ? `waits in ${file}` : "was given"} but there is nothing to commit`);
+		plan.push({ repo, dir, file, message, changes, ahead, inline: !prepared });
 	}
 	if (problems.length > 0) throw new SupervisorError(`commit: nothing was committed\n  ${problems.join("\n  ")}`, 1);
 	if (plan.every((entry) => !entry.changes && entry.ahead === 0)) {
@@ -94,6 +107,10 @@ export function executeCommit(plan) {
 	for (const entry of plan) {
 		if (!entry.changes) continue;
 		run(entry.dir, ["add", "--all", ...pathspec(entry.repo)]);
+		if (entry.inline) {
+			run(entry.dir, ["commit", "--quiet", "-m", entry.message, ...pathspec(entry.repo)]);
+			continue;
+		}
 		run(entry.dir, ["commit", "--quiet", "--file", entry.file, ...pathspec(entry.repo)]);
 		rmSync(entry.file);
 	}
@@ -108,12 +125,16 @@ export function executeCommit(plan) {
 
 export const COMMIT_COMMANDS = {
 	commit: {
-		usage: "commit <provider>                         commit and push a provider with its consumers (messages in .git/SUPERVISOR_COMMIT_MSG)",
-		options: {},
-		run(context, _values, positionals) {
+		usage: "commit <provider> | <repo> --only [--message <text>]  commit and push a provider with its consumers, or one repository alone (messages in .git/SUPERVISOR_COMMIT_MSG)",
+		options: { only: { type: "boolean" }, message: { type: "string" } },
+		run(context, values, positionals) {
 			const [providerId, ...extra] = positionals;
-			if (!providerId || extra.length > 0) throw new SupervisorError("commit: name exactly one provider, e.g. supervise commit schema-adrenaline", 2);
-			const plan = planCommit(context.root, commitRepos(context.topology, providerId));
+			if (!providerId || extra.length > 0) throw new SupervisorError("commit: name exactly one repository, e.g. supervise commit schema-adrenaline", 2);
+			if (values.message !== undefined && !values.only) throw new SupervisorError("commit: --message names one commit, so it goes with --only", 2);
+			const inline = (values.message ?? "").trim();
+			if (values.message !== undefined && !inline) throw new SupervisorError("commit: --message is empty", 2);
+			const repos = values.only ? commitRepo(context.topology, providerId) : commitRepos(context.topology, providerId);
+			const plan = planCommit(context.root, repos, inline);
 			process.stderr.write(renderCommitPlan(providerId, plan));
 			for (const line of executeCommit(plan)) console.log(line);
 			return 0;

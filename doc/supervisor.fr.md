@@ -64,6 +64,14 @@ pnpm supervise commit schema-adrenaline
 
 Le message de chaque dépôt est préparé dans son `.git/SUPERVISOR_COMMIT_MSG` (hors du checkout, il ne le salit pas). Tout est vérifié avant la première écriture : chaque dépôt sur `main`, aucun en retard sur `origin/main`, un message pour chaque dépôt modifié et rien à commiter sans message. La commande affiche le plan, commite les trois dépôts, puis les pousse. Elle ne demande aucune saisie : un refus survient avant le premier commit. Les dossiers de train de Handbook n'en font jamais partie, et aucune release n'est publiée.
 
+Pour un dépôt seul, quel que soit son rôle :
+
+```bash
+pnpm supervise commit lantern --only --message "feat(adrenaline-pj): print the Malus column"
+```
+
+`--only` applique les mêmes vérifications à ce seul dépôt et laisse les autres tels qu'ils sont, modifiés ou non. `--message` remplace le fichier préparé ; les deux à la fois sont refusés.
+
 ### 4. `present` : les preuves, sans rien publier
 
 ```bash

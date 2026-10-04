@@ -1217,6 +1217,80 @@ scenario("commit lands a provider and its consumers in one command, never the tr
 	assert.match(result.stdout, /nothing to commit or push/);
 });
 
+scenario("commit --only lands one repository alone, whatever its role", (world) => {
+	const topology = testTopology(world);
+	const repos = ["schema-adrenaline", "obsidian-handbook", "lantern"];
+	world.write("schema-adrenaline", { "src/malus.ts": "export {};\n" });
+	world.write("lantern", { "src/sheet.tsx": "export {};\n" });
+	world.write("obsidian-handbook", { "src/pj.ts": "export {};\n" });
+	const before = Object.fromEntries(repos.map((id) => [id, originMain(world, id)]));
+	const only = (args: string[]) => {
+		const result = world.supervise(["commit", ...args], { topology });
+		return { ...result, stdout: `${result.stdout}${result.stderr}` };
+	};
+
+	let result = only(["schema-adrenaline", "--message", "feat(malus): follow the paper sheet"]);
+	assert.equal(result.status, 2, result.stdout);
+	assert.match(result.stdout, /--message names one commit/);
+
+	result = only(["lantern", "--only"]);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stdout, /lantern: uncommitted changes but no message/);
+	for (const id of repos) assert.equal(git(world.dir(id), "rev-parse", "HEAD"), before[id], `${id} moved on a refused commit`);
+
+	// A consumer alone, its message on the command line: the provider's dirty checkout is not its concern.
+	ok(only(["lantern", "--only", "--message", "feat(adrenaline-pj): print the Malus column"]), "commit --only");
+	assert.notEqual(originMain(world, "lantern"), before.lantern, "lantern was not pushed");
+	assert.equal(git(world.dir("lantern"), "log", "-1", "--format=%s"), "feat(adrenaline-pj): print the Malus column");
+	for (const id of ["schema-adrenaline", "obsidian-handbook"]) {
+		assert.equal(originMain(world, id), before[id], `${id} moved on another repository's commit`);
+		assert.notEqual(git(world.dir(id), "status", "--porcelain"), "", `${id} lost its uncommitted work`);
+	}
+
+	// A provider alone, its message prepared: its consumers stay where they are.
+	commitMessage(world, "schema-adrenaline", "feat(malus)!: follow the paper sheet");
+	result = only(["schema-adrenaline", "--only", "--message", "another message"]);
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stdout, /a message already waits/);
+	ok(only(["schema-adrenaline", "--only"]), "commit --only");
+	assert.equal(git(world.dir("schema-adrenaline"), "log", "-1", "--format=%s"), "feat(malus)!: follow the paper sheet");
+	assert.ok(!existsSync(join(world.dir("schema-adrenaline"), ".git", "SUPERVISOR_COMMIT_MSG")), "the message was kept");
+	assert.equal(originMain(world, "obsidian-handbook"), before["obsidian-handbook"], "a consumer moved on the provider's commit");
+});
+
+scenario("the supervisor neither runs nor lands a change to its own code", (world) => {
+	const topology = testTopology(world);
+	const before = originMain(world, "obsidian-handbook");
+	const refused = (args: string[], what: string) => {
+		const result = world.supervise(args, { topology });
+		const text = `${result.stdout}${result.stderr}`;
+		assert.equal(result.status, 1, `${what}: ${text}`);
+		assert.match(text, /the supervisor's own code differs from origin\/main/, what);
+		return text;
+	};
+
+	// An edit nobody committed: no write command runs, and `commit` cannot land it.
+	world.write("obsidian-handbook", { "tools/supervisor/commit.mjs": "export {};\n" });
+	assert.match(refused(["commit", "obsidian-handbook", "--only", "--message", "chore: widen the supervisor"], "commit --only"), /tools\/supervisor\/commit\.mjs \(not committed\)/);
+	refused(["open", "self-change", "--title", "Self change"], "open");
+	assert.equal(originMain(world, "obsidian-handbook"), before, "the supervisor pushed its own change");
+	ok(world.supervise(["status"], { topology }), "status");
+
+	// Committed in the checkout but not published: still not the code a person pushed.
+	world.commit("obsidian-handbook", {}, "chore: widen the supervisor");
+	assert.match(refused(["commit", "obsidian-handbook", "--only"], "commit --only, unpublished"), /tools\/supervisor\/commit\.mjs \(committed, not on origin\/main\)/);
+	assert.equal(originMain(world, "obsidian-handbook"), before, "the supervisor pushed its own commit");
+
+	// Pushed by a person: the supervisor acts again. The train records never count as its code.
+	git(world.dir("obsidian-handbook"), "push", "--quiet", "origin", "HEAD:main");
+	world.write("obsidian-handbook", { "supervisor/trains/draft.json": "{}\n", "src/pj.ts": "export {};\n" });
+	ok(world.supervise(["commit", "obsidian-handbook", "--only", "--message", "feat(adrenaline-pj): print the Malus column"], { topology }), "commit --only");
+
+	// The script that starts it is part of it.
+	world.write("obsidian-handbook", { "package.json": `${JSON.stringify({ scripts: { supervise: "node elsewhere.mjs" } })}\n` });
+	assert.match(refused(["commit", "obsidian-handbook", "--only", "--message", "chore: move the entry point"], "commit --only, script"), /package\.json: the "supervise" script/);
+});
+
 function main(): void {
 	const handbookBefore = sh(HANDBOOK, "git", ["status", "--porcelain"]).stdout;
 	const only = process.env.SUPERVISOR_SCENARIO;

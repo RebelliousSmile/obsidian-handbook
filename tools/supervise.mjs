@@ -15,6 +15,7 @@ import { TRAIN_COMMANDS } from "./supervisor/trainCommands.mjs";
 import { APPROVAL_COMMANDS } from "./supervisor/approvalCommands.mjs";
 import { PUBLISH_COMMANDS } from "./supervisor/publishCommands.mjs";
 import { COMMIT_COMMANDS } from "./supervisor/commit.mjs";
+import { assertSelfPublished } from "./supervisor/self.mjs";
 import { DEFAULT_TOPOLOGY, HANDBOOK_ROOT, loadTopology, SupervisorError } from "./supervisor/topology.mjs";
 
 const COMMON = {
@@ -77,6 +78,7 @@ async function main(argv) {
 		root: resolve(values.root ?? resolve(HANDBOOK_ROOT, "..")),
 		topology: loadTopology(values.topology ? resolve(values.topology) : DEFAULT_TOPOLOGY),
 	};
+	if (name !== "status") assertSelfPublished(context.root, context.topology);
 	return await command.run(context, values, positionals);
 }
 
