@@ -27,6 +27,7 @@ Read on demand:
 - [aidd_docs/memory/internal/decisions/game-schema-ownership-and-release-order.md](aidd_docs/memory/internal/decisions/game-schema-ownership-and-release-order.md)
 - [aidd_docs/memory/internal/decisions/print-export-joins-blocks-by-rank.md](aidd_docs/memory/internal/decisions/print-export-joins-blocks-by-rank.md)
 - [aidd_docs/memory/internal/decisions/rendered-context-actions-are-local.md](aidd_docs/memory/internal/decisions/rendered-context-actions-are-local.md)
+- [aidd_docs/memory/internal/decisions/supervisor-orchestrates-github-builds.md](aidd_docs/memory/internal/decisions/supervisor-orchestrates-github-builds.md)
 - [aidd_docs/memory/internal/decisions/upstream-metadata-is-proven-not-imported.md](aidd_docs/memory/internal/decisions/upstream-metadata-is-proven-not-imported.md)
 - [aidd_docs/memory/internal/game-packs.md](aidd_docs/memory/internal/game-packs.md)
 - [aidd_docs/memory/internal/pbta-coverage.md](aidd_docs/memory/internal/pbta-coverage.md)

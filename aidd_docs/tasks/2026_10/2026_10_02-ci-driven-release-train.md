@@ -1,6 +1,19 @@
 # Train de release porté par GitHub Actions
 
-Statut : in-progress (proposé le 2026-10-02, mise en œuvre commencée le 2026-10-03). Remplace à terme le superviseur local (`tools/supervisor/`).
+Statut : **remplacé le 2026-10-04** par l'ADR `aidd_docs/memory/internal/decisions/supervisor-orchestrates-github-builds.md`. Le superviseur reste l'orchestrateur ; GitHub ne garde que la fabrication des archives et les preuves.
+
+Ce qui reste vrai de ce plan :
+
+- l'étape 1 (CI sur `push` / `pull_request`), dont le point ouvert : sortir `assert:supervisor` du `pnpm check` ;
+- l'*Environment* `release` sur la promotion du fournisseur, désormais seule porte humaine d'une finale ;
+- la réécriture en texte des lockfiles (`tools/bump-schema.mjs`) et le `check:candidate` de Lantern ;
+- `tools/write-release-train.ts` côté schema-adrenaline, que le superviseur doit appeler au lieu de composer les manifestes.
+
+Ce qui est abandonné : les étapes 2 (`bump-schema.yml`), 3 bis (`promote.yml`, job `converge`), 4 (protection de `main` et auto-merge) et 6 (retrait du superviseur), ainsi que le secret `TRAIN_DISPATCH_TOKEN`. Les workflows déjà posés servent encore au train 3.1.0 et se retirent après sa finale.
+
+L'étape 5 (release-please, non commencée) n'est pas tranchée par l'ADR.
+
+Le texte ci-dessous est conservé comme historique (proposé le 2026-10-02, mise en œuvre commencée le 2026-10-03).
 
 ## Constat
 
