@@ -24,7 +24,7 @@ export function documentToPnj(value: unknown): AdrenalinePnjData | null {
 	if (!document) return null;
 	warnUnknownKeys(
 		document,
-		["nom", "niveauDeDanger", "description", "identite", "caracteristiques", "sante", "protections", "formations", "competences", "equipement", "narratif", "meta"],
+		["nom", "categorie", "niveauDeDanger", "niveauDeDangerAlternatif", "niveauDeDangerNote", "description", "identite", "caracteristiques", "sante", "protections", "formations", "competences", "equipement", "pistes", "etatDePartie", "narratif", "meta"],
 		"pnj",
 	);
 	const nom = asString(document.nom);

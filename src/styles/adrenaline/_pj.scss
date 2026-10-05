@@ -91,6 +91,7 @@
 	.brumes-adrenaline-pj__columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.brumes-adrenaline-pj__columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
+	.brumes-adrenaline-pj__formation,
 	.brumes-adrenaline-pj__block {
 		display: flex;
 		flex-direction: column;
@@ -146,11 +147,14 @@
 		gap: 5px;
 		min-width: 0;
 	}
-	.brumes-adrenaline-pj__write-label {
+	// Petites capitales des libellés : écriture, caractéristique, unité.
+	.brumes-adrenaline-pj__write-label,
+	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-name,
+	.brumes-adrenaline-pj__unit {
 		@include display(9px);
 		color: var(--adrenaline-rule);
-		white-space: nowrap;
 	}
+	.brumes-adrenaline-pj__write-label { white-space: nowrap; }
 	.brumes-adrenaline-pj__write-field {
 		@include dotted;
 		flex: 1 1 7em;
@@ -273,12 +277,6 @@
 		gap: 10px;
 		min-width: 0;
 	}
-	.brumes-adrenaline-pj__formation {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		min-width: 0;
-	}
 
 	// ── Profil.
 	// Identité : deux champs par ligne publiée, un champ seul sur toute la largeur.
@@ -293,10 +291,6 @@
 	.brumes-adrenaline-pj__field-rows .brumes-adrenaline-pj__write-field { flex: 1 1 0; }
 	.brumes-adrenaline-pj__field-across { grid-column: 1 / -1; }
 	.brumes-adrenaline-pj__characteristic { border: 0; gap: 3px; }
-	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-name {
-		@include display(9px);
-		color: var(--adrenaline-rule);
-	}
 	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-value { border: 1px solid var(--adrenaline-field-border); }
 	.brumes-adrenaline-pj__form-characteristic-rows .brumes-adrenaline-pj__metric-heads { grid-template-columns: minmax(0, 1fr) 42px 42px; gap: 3px; }
 
@@ -315,11 +309,7 @@
 	.brumes-adrenaline-pj__weapon-score,
 	.brumes-adrenaline-pj__weapon-damage,
 	.brumes-adrenaline-pj__unit-value { @include dotted; text-align: center; white-space: nowrap; }
-	.brumes-adrenaline-pj__unit {
-		@include display(9px);
-		color: var(--adrenaline-rule);
-		text-align: end;
-	}
+	.brumes-adrenaline-pj__unit { text-align: end; }
 
 	// ── Santé : stress et seuils, puis la colonne Malus de la fiche (Choc, Divers, Total) et les états.
 	.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress sp sm" "choc etats etats" "divers etats etats" "total etats etats"; }

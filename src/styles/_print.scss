@@ -6,5 +6,15 @@
 	body {
 		print-color-adjust: exact;
 		-webkit-print-color-adjust: exact;
+		background: #fff !important;
+	}
+
+	// Paper is white, whichever pack, polarity or note background is active: a
+	// printed page never carries a full-bleed colour. Blocks keep their own
+	// surfaces; the dark layer of a pack is kept off paper by `buildGameStyle`.
+	.print .markdown-preview-view {
+		--background-primary: #fff !important;
+		background-color: #fff !important;
+		background-image: none !important;
 	}
 }

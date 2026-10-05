@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
 import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { log } from "../src/utils/logger";
 import { NATIVE_CALLOUTS } from "../src/features/callouts/nativeCallouts";
@@ -9,6 +10,10 @@ import { initGameRegistry } from "../src/games/registry";
 import { EMPTY_STYLE } from "../src/games/types";
 
 log.setLevel("warn");
+
+function settingsAliases(id: string): string[] | undefined {
+	return normalizeSettings(undefined).callouts.find((entry) => entry.id === id)?.aliases;
+}
 
 // Fresh vault: no calloutAliases, no callouts -> all native entries with
 // their default aliases.
@@ -37,6 +42,43 @@ log.setLevel("warn");
 	);
 	assert.equal(pbta.every((entry) => !isCalloutAvailable(entry, "unknown-game", [])), true);
 	assert.equal(pbta.every((entry) => isCalloutAvailable(entry, "unknown-game", ["style:pbta"])), true);
+}
+
+// Adrenaline callouts carry the schema's ids and aliases, and need both the
+// Adrenaline game and its style capability: their aliases are plain words.
+{
+	const adrenaline = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:adrenaline");
+	assert.deepEqual(
+		adrenaline.map((entry) => [entry.id, entry.styleKey, entry.aliases]),
+		ADRENALINE_VISUAL_CALLOUTS.map((definition) => [definition.id, definition.id, [...definition.aliases]]),
+	);
+	assert.deepEqual(
+		settingsAliases("adrenaline-exemple"),
+		["exemple", "example"],
+	);
+	assert.equal(adrenaline.every((entry) => isCalloutAvailable(entry, "adrenaline", ["style:adrenaline"])), true);
+	assert.equal(adrenaline.every((entry) => !isCalloutAvailable(entry, "adrenaline", [])), true);
+	assert.equal(adrenaline.every((entry) => !isCalloutAvailable(entry, "city-of-mist", ["style:adrenaline"])), true);
+}
+
+// Saved settings from before the Adrenaline callouts gain them. A default
+// alias the user already claimed is dropped, the other ones are kept.
+{
+	const adrenalineIds = ADRENALINE_VISUAL_CALLOUTS.map((definition) => definition.id as string);
+	const older = NATIVE_CALLOUTS.filter((entry) => adrenalineIds.indexOf(entry.id) === -1);
+	const settings = normalizeSettings({
+		callouts: [
+			...older,
+			{ id: "user-example", name: "My example", aliases: ["example"], scope: "adrenaline", template: "title-body", font: "text", color: { kind: "theme" }, native: false, styleKey: "user-example" },
+			{ id: "user-action", name: "My action", aliases: ["action"], scope: "adrenaline", template: "title-body", font: "text", color: { kind: "theme" }, native: false, styleKey: "user-action" },
+		],
+	});
+	assert.equal(settings.callouts.length, NATIVE_CALLOUTS.length + 2);
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === "adrenaline-exemple")?.aliases, ["exemple"]);
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === "adrenaline-action")?.aliases, ["action-2"]);
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === "adrenaline-formation")?.aliases, ["formation"]);
+	// `description` is City of Mist's alias too, in another scope: no collision.
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === "adrenaline-description")?.aliases, ["description"]);
 }
 
 // Existing saved settings gain the new native entries without changing their

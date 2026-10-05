@@ -40,19 +40,45 @@ assert.match(pj, /--adrenaline-fatigue\)/, "PJ fatigue track must read the fatig
 assert.match(pj, /--adrenaline-condition-border\)/, "PJ state cards must read the condition token");
 assert.match(pj, /@container \(max-width: 600px\)/, "PJ must fold to two columns in a medium note");
 assert.match(pnj, /brumes-adrenaline-pnj--description/, "PNJ must keep a dedicated narrative treatment");
-assert.match(pnj, /overflow-wrap:\s*anywhere/, "PNJ must wrap long values instead of overflowing");
-assert.match(pnj, /\.brumes-adrenaline-pnj--panel\s*\{[\s\S]*?min-width:\s*0/, "PNJ panels must not impose a competing minimum width");
-assert.match(pnj, /@media \(max-width: 520px\)[\s\S]*?max-width:\s*100%/, "PNJ must fill, not exceed, the mobile reading width");
-assert.match(monstre, /brumes-adrenaline-monstre--capability-group/, "monster capabilities must remain visually grouped");
-assert.match(monstre, /overflow-wrap:\s*anywhere/, "monster must wrap long values instead of overflowing");
-assert.match(monstre, /\.brumes-adrenaline-monstre--panel\s*\{[\s\S]*?min-width:\s*0/, "monster panels must not impose a competing minimum width");
-assert.match(monstre, /@media \(max-width: 520px\)[\s\S]*?max-width:\s*100%/, "monster must fill, not exceed, the mobile reading width");
+assert.match(monstre, /brumes-adrenaline-monstre--cards/, "the creature's state cards must have their own layout");
+// The PNJ and monster sheets share their card (`_short-sheet.scss`).
+const shortSheet = scssByFile.get("_short-sheet.scss") ?? "";
+assert.match(
+	shortSheet,
+	/\.brumes-adrenaline-card__section\s*\{[^}]*min-width:\s*0/,
+	"compact card sections must not impose a competing minimum width",
+);
+assert.match(monstre, /\.brumes-adrenaline-card__state-card\s*\{[^}]*min-width:\s*0/, "state cards must not impose a minimum width");
+for (const [sheet, label] of [["pnj", "PNJ"], ["monstre", "monster"]] as const) {
+	const card = new RegExp(String.raw`\.brumes-adrenaline-${sheet}[,\s][^{]*\{[^}]*overflow-wrap:\s*anywhere`);
+	assert.match(shortSheet, card, `${label} must wrap long values instead of overflowing`);
+	const mobile = new RegExp(String.raw`@media \(max-width: 520px\)[^}]*\.brumes-adrenaline-${sheet}[,\s][^{]*\{[^}]*max-width:\s*100%`);
+	assert.match(shortSheet, mobile, `${label} must fill, not exceed, the mobile reading width`);
+}
 
-// 2. Task 1 acceptance criteria: h3 cartouche, h4 red rule, italics, lists, tables, statuses.
+// 2. Task 1 acceptance criteria, revised by schema-adrenaline#40: plain h3,
+// h4 rule, h5, italics, lists, tables, statuses, inline keyword and results.
 const content = scssByFile.get("_content.scss") ?? "";
-assert.match(content, /--adrenaline-band-ink/, "h3 must read the dark cartouche ink token");
-assert.match(content, /--adrenaline-band[^-]/, "h3 must read the dark cartouche background token");
 assert.match(content, /var\(--h3-color, inherit\)/, "h3 must fall back to the plain heading colour");
+// h3 sits over a thin rule and carries no band, grey or garnet.
+assert.doesNotMatch(content, /--adrenaline-band/, "h3 never takes the garnet band of the callouts");
+assert.doesNotMatch(content, /--adrenaline-h3-band/, "h3 carries no band");
+assert.match(content, /--adrenaline-h3-rule/, "h3 must read its rule token");
+assert.match(content, /--h3-font/, "h3 must read its face from the pack");
+assert.match(content, /--adrenaline-inline-code-color/, "inline code must read its colour token");
+const page = scssByFile.get("_page.scss") ?? "";
+assert.doesNotMatch(page, /--adrenaline-cartouche/, "h1 carries no cartouche: the scenario booklet prints it in ink");
+assert.match(page, /--adrenaline-h2-rule/, "h2 must read its rule token");
+assert.match(page, /\.HyperMD-header-1,/, "h1 must be styled in Live Preview too");
+assert.match(page, /\.HyperMD-header-2,/, "h2 must be styled in Live Preview too");
+assert.doesNotMatch(content, /--adrenaline-h4-rule/, "h4 carries no rule");
+for (const token of ["--adrenaline-h1-surface", "--adrenaline-h1-frieze", "--adrenaline-h1-rule"]) {
+	assert.ok(page.indexOf(token) !== -1, `h1 must read ${token}`);
+}
+assert.match(content, /--h5-color/, "h5 must read its colour token");
+assert.match(content, /\.adrenaline-keyword/, "the inline keyword must be styled");
+assert.match(content, /mark\.adrenaline-result-success/, "a success result mark must be styled");
+assert.match(content, /mark\.adrenaline-result-failure/, "a failure result mark must be styled");
 assert.match(content, /--h4-color/, "h4 must read its colour token");
 assert.match(content, /--h4-decoration/, "h4 must read its underline/rule token");
 assert.match(content, /--adrenaline-emphasis-color/, "italics must read the emphasis colour token");
@@ -76,9 +102,21 @@ assert.match(
 );
 assert.match(
 	callouts,
-	/\[data-callout="example"\][^{]*\{[^}]*border-style:\s*dashed/s,
-	"example must use a dashed frame",
+	/\[data-brumes-callout-style="adrenaline-exemple"\][^{]*\{[^}]*border-block:[^;]*dotted/s,
+	"exemple (alias example) must use dotted rules above and below",
 );
+assert.match(callouts, /\[data-callout="note"\][^{]*\{[^}]*--adrenaline-note-surface/s, "note must be the handwritten sheet of the pack");
+assert.match(callouts, /\[data-callout="tip"\][^{]*\{[^}]*--adrenaline-callout-tip/s, "tip must be the peach card of the pack");
+assert.match(callouts, /\[data-callout="info"\]/, "info must take the action card");
+for (const id of ["adrenaline-exemple", "adrenaline-description", "adrenaline-encart", "adrenaline-formation", "adrenaline-action", "adrenaline-roller", "adrenaline-mention"]) {
+	assert.ok(callouts.includes(`[data-brumes-callout-style="${id}"]`), `${id} must carry its booklet anatomy`);
+}
+assert.match(
+	callouts,
+	/\[data-brumes-callout-style="adrenaline-mention"\][^{]*\{[^}]*--callout-icon:\s*var\(--adrenaline-mention-icon/s,
+	"mention must take its icon from the pack",
+);
+assert.match(callouts, /\[data-callout-metadata~="fond"\]/, "formation must honour the fond modifier");
 assert.match(
 	callouts,
 	/\[data-callout="question"\][^{]*\{[^}]*border-inline-start/s,
@@ -96,6 +134,7 @@ class El {
 	tagName: string;
 	children: El[] = [];
 	textContent = "";
+	dataset: Record<string, string> = {};
 	classes: string[] = [];
 	classList = { add: (...names: string[]) => this.classes.push(...names) };
 	constructor(tagName: string) {
@@ -115,30 +154,34 @@ assert.ok(witness, "a canonical PNJ TOML case must be available");
 const parsed = adrenalinePnjBlock.parse(witness);
 assert.ok(parsed, "adrenaline-pnj witness must parse");
 const rendered = adrenalinePnjBlock.render(parsed, doc) as unknown as El;
-const narrativeSection = rendered.children.find((child) =>
-	child.classes.includes("brumes-adrenaline-pnj--panel") &&
-	child.children.some((grandChild) => grandChild.classes.includes("brumes-adrenaline-pnj--description")),
-);
-assert.ok(narrativeSection, "the description must render inside the narrative panel");
-const description = narrativeSection!.children.find((child) =>
-	child.classes.includes("brumes-adrenaline-pnj--description"),
-);
+const narrativeSection = rendered.children.find((child) => child.classes.includes("brumes-adrenaline-pnj--description"));
+assert.ok(narrativeSection, "the description must render in its own section");
+const description = narrativeSection!.children[0]?.children[0];
 assert.equal(description!.tagName, "p", "the description must be its own paragraph, not a bullet");
 assert.equal(description!.textContent, parsed.description, "the description text must render verbatim");
 
 const minimal = adrenalinePnjBlock.parse('nom = "Silhouette"\n');
 assert.ok(minimal, "a name-only PNJ must still parse");
 const minimalRendered = adrenalinePnjBlock.render(minimal, doc) as unknown as El;
-assert.equal(minimalRendered.children.length, 1, "a minimal PNJ must render only its header, no empty panel");
-assert.equal(minimalRendered.children[0]!.tagName, "header");
+// The booklet always prints the three malus tracks; nothing else is drawn empty.
+assert.deepEqual(
+	minimalRendered.children.map((child) => child.classes.filter((name) => name.startsWith("brumes-adrenaline-pnj--"))[0]),
+	["brumes-adrenaline-pnj--entete", "brumes-adrenaline-pnj--sante"],
+	"a minimal PNJ must render its banner and its malus tracks, no empty panel",
+);
+assert.deepEqual(
+	minimalRendered.children[1]!.children.slice(1).map((child) => child.classes.includes("brumes-adrenaline-card__form-malus-tracks")),
+	[true],
+	"the minimal health section holds the tracks alone",
+);
 
 const groupedMonster = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\ntraitsSpeciaux = ["Traque"]\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);
 assert.ok(groupedMonster, "a grouped monster must parse");
 const groupedRendered = adrenalineMonsterBlock.render(groupedMonster, doc) as unknown as El;
-const groups = groupedRendered.children
-	.flatMap((child) => child.children)
-	.filter((child) => child.classes.includes("brumes-adrenaline-monstre--capability-group"));
-assert.equal(groups.length, 1, "a monster must render only its populated capability group");
-assert.equal(groups[0]!.children[0]!.textContent, "Traits", "the populated group must be labelled");
+const meneur = groupedRendered.children.filter((child) => child.classes.includes("brumes-adrenaline-monstre--meneur"));
+assert.equal(meneur.length, 1, "a monster's traits must render in the game-master section");
+assert.equal(meneur[0]!.tagName, "details", "the game-master section folds");
+assert.equal(meneur[0]!.children[0]!.textContent, "Meneur", "the folded section must be labelled");
+assert.match(JSON.stringify(meneur[0]), /Traque/);
 
 console.log("Adrenaline Zombiology style assertions passed.");

@@ -52,6 +52,7 @@ import {
 	setShapeOverrides,
 } from "./features/blocks/shape";
 import { loadBrumesBlocks } from "./features/blocks/registry";
+import { bindRollerCallouts } from "./features/rollers/callout";
 import { loadTomlExportCommands } from "./features/blocks/tomlExports";
 import { registerBrumesContextMenu } from "./contextMenu";
 import {
@@ -118,9 +119,11 @@ export default class BrumesPlugin extends Plugin {
 			},
 		});
 
+		bindRollerCallouts(this, activeDocument);
 		this.registerEvent(
 			this.app.workspace.on("window-open", (win) => {
 				this.dressDocument(win.doc);
+				bindRollerCallouts(this, win.doc);
 			}),
 		);
 		this.registerEvent(

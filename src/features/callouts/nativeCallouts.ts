@@ -1,3 +1,4 @@
+import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
 import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { CalloutDefinition } from "./types";
 
@@ -43,6 +44,36 @@ const PBTA_CALLOUTS: CalloutDefinition[] = [
 		capability: entry.capability,
 	})),
 ];
+
+const ADRENALINE_VISUAL_ICONS: Record<(typeof ADRENALINE_VISUAL_CALLOUTS)[number]["id"], string> = {
+	"adrenaline-exemple": "message-square-quote",
+	"adrenaline-description": "scroll-text",
+	"adrenaline-encart": "panel-top",
+	"adrenaline-formation": "backpack",
+	"adrenaline-action": "swords",
+	"adrenaline-roller": "dices",
+	"adrenaline-mention": "bookmark",
+};
+
+// The schema owns ids and default aliases; the pack's `requires` gates them.
+// Unlike the namespaced PbtA aliases, these are plain words (`action`,
+// `example`): scoping them to the Adrenaline game leaves them free for user
+// callouts in every other game.
+const ADRENALINE_CALLOUTS: CalloutDefinition[] = ADRENALINE_VISUAL_CALLOUTS.map(
+	(entry): CalloutDefinition => ({
+		id: entry.id,
+		name: entry.label,
+		aliases: [...entry.aliases],
+		scope: "adrenaline",
+		template: entry.template,
+		icon: ADRENALINE_VISUAL_ICONS[entry.id],
+		font: "header",
+		color: { kind: "theme" },
+		native: true,
+		styleKey: entry.id,
+		capability: entry.capability,
+	}),
+);
 
 /**
  * The 7 historical styles, verrouillées : styleKey/scope/aliases par défaut
@@ -137,4 +168,5 @@ export const NATIVE_CALLOUTS: CalloutDefinition[] = [
 		styleKey: "read-aloud",
 	},
 	...PBTA_CALLOUTS,
+	...ADRENALINE_CALLOUTS,
 ];

@@ -1,25 +1,24 @@
 import {
 	MarkdownPostProcessor,
 	MarkdownPostProcessorContext,
-	MarkdownRenderChild,
 	TFile,
 } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
-import { LayoutRegion, LayoutRegionParseResult, parseLayoutRegions } from "./parser";
+import { LayoutRegionParseResult, parseLayoutRegions } from "./parser";
 import { isPrintExport, printLayoutRegions } from "./printProcessor";
-import { mapRegionToBlocks, SourceBlock, wrapBlocksInRegion } from "./sectionMapper";
+import { holdWholeNote, releaseWholeNote } from "./renderWindow";
+import { FLOW_BLOCK, FLOW_HOST, flowColumns, flowsInRegion } from "./sectionMapper";
 import { warnOnce } from "./warnOnce";
 
+const NO_REGION: LayoutRegionParseResult = { diagnostics: [], regions: [] };
 const sourceByParent = new WeakMap<HTMLElement, { text: string; parsed: LayoutRegionParseResult }>();
-const pendingRegions = new WeakMap<HTMLElement, Map<number, number>>();
-const observers = new WeakMap<HTMLElement, { context: MarkdownPostProcessorContext; regions: readonly LayoutRegion[] }>();
+const observers = new WeakMap<HTMLElement, { context: MarkdownPostProcessorContext }>();
 
 export function layoutRegionsPostProcessor(plugin: BrumesPlugin): MarkdownPostProcessor {
 	return (element, context) => {
 		if (isPrintExport(element, context)) return printLayoutRegions(plugin, element, context);
 
-		const sectionInfo = context.getSectionInfo(element);
-		if (!sectionInfo) return;
+		if (!context.getSectionInfo(element)) return;
 		const process = (attempt: number) => {
 			const parent = element.parentElement;
 			// Obsidian may invoke post-processors before it attaches a rendered
@@ -29,16 +28,38 @@ export function layoutRegionsPostProcessor(plugin: BrumesPlugin): MarkdownPostPr
 				return;
 			}
 			if (!parent.classList.contains("markdown-preview-section")) return;
-			const parsed = sourceRegions(plugin, context, parent, sectionInfo.text);
-			observeRegions(parent, context, parsed.regions);
-			for (const region of parsed.regions) {
-				if (sectionInfo.lineStart === region.closeLine && sectionInfo.lineEnd === region.closeLine) {
-					scheduleRegion(parent, context, region);
-				}
-			}
+			observeBlocks(plugin, parent, context);
+			flowBlocks(plugin, parent, context);
 		};
 		process(0);
 	};
+}
+
+/**
+ * Mark every rendered block of a region, in place. Obsidian keeps only the
+ * sections near the viewport in the DOM and owns their order, so a region is
+ * never wrapped: its blocks are adopted one by one as they are drawn.
+ */
+function flowBlocks(
+	plugin: BrumesPlugin,
+	parent: HTMLElement,
+	context: MarkdownPostProcessorContext,
+): void {
+	let parsed: LayoutRegionParseResult | null = null;
+	for (const block of Array.from(parent.children) as HTMLElement[]) {
+		const info = context.getSectionInfo(block);
+		if (info && !parsed) parsed = sourceRegions(plugin, context, parent, info.text);
+		block.classList.toggle(FLOW_BLOCK, flowsInRegion((parsed ?? NO_REGION).regions, info));
+	}
+	// No block carries source lines: nothing is known, so nothing changes.
+	if (!parsed) return;
+	const columns = flowColumns(parsed.regions);
+	if (columns === null) releaseWholeNote(parent);
+	// A note whose sections cannot all be kept drawn stays in a single column.
+	const flowing = columns !== null && holdWholeNote(plugin, parent);
+	parent.classList.toggle(FLOW_HOST, flowing);
+	if (flowing) parent.style.setProperty("--handbook-layout-columns", String(columns));
+	else parent.style.removeProperty("--handbook-layout-columns");
 }
 
 function sourceRegions(
@@ -51,7 +72,7 @@ function sourceRegions(
 	if (existing?.text === sourceText) return existing.parsed;
 
 	const file = plugin.app.vault.getAbstractFileByPath(context.sourcePath);
-	if (!(file instanceof TFile)) return { diagnostics: [], regions: [] };
+	if (!(file instanceof TFile)) return NO_REGION;
 
 	const parsed = parseLayoutRegions(sourceText);
 	sourceByParent.set(parent, { text: sourceText, parsed });
@@ -61,77 +82,43 @@ function sourceRegions(
 			`Ignored invalid layout directive at source line ${diagnostic.line + 1}: ${diagnostic.reason}.`,
 		);
 	}
+	const columns = flowColumns(parsed.regions);
+	for (const region of parsed.regions) {
+		if (region.columns > 1 && region.columns !== columns) {
+			warnOnce(
+				context.sourcePath,
+				`Layout region at source line ${region.openLine + 1} flows in ${columns} columns: the first region of a note sets the count.`,
+			);
+		}
+	}
 	return parsed;
 }
 
-function observeRegions(
+/**
+ * A section drawn later, or shifted by an edit elsewhere in the note, is marked
+ * as it arrives. The observer outlives the section that started it: Obsidian
+ * does not run post-processors again on the sections an edit left untouched.
+ */
+function observeBlocks(
+	plugin: BrumesPlugin,
 	parent: HTMLElement,
 	context: MarkdownPostProcessorContext,
-	regions: readonly LayoutRegion[],
 ): void {
 	const existing = observers.get(parent);
 	if (existing) {
 		existing.context = context;
-		existing.regions = regions;
-		const active = new Set(regions.map((region) => region.openLine));
-		for (const [line, timer] of pendingRegions.get(parent) ?? []) {
-			if (active.has(line)) continue;
-			parent.win.clearTimeout(timer);
-			pendingRegions.get(parent)?.delete(line);
-		}
 		return;
 	}
-	if (regions.length === 0) return;
 
-	const state = { context, regions };
-	const observer = new MutationObserver(() => {
-		for (const region of state.regions) scheduleRegion(parent, state.context, region);
+	observers.set(parent, { context });
+	// The callback reads its target from the records: capturing `parent` here
+	// would keep the view of a closed note alive until the plugin unloads.
+	const observer = new MutationObserver((records) => {
+		const target = records[0]?.target;
+		if (!target || !target.instanceOf(HTMLElement)) return;
+		const state = observers.get(target);
+		if (state) flowBlocks(plugin, target, state.context);
 	});
 	observer.observe(parent, { childList: true });
-	observers.set(parent, state);
-	context.addChild(new RegionObserverChild(parent, observer));
-}
-
-function scheduleRegion(
-	parent: HTMLElement,
-	context: MarkdownPostProcessorContext,
-	region: LayoutRegion,
-): void {
-	if (hasRegion(parent, region)) return;
-	const pending = pendingRegions.get(parent) ?? new Map<number, number>();
-	const existing = pending.get(region.openLine);
-	if (existing !== undefined) parent.win.clearTimeout(existing);
-	pending.set(region.openLine, parent.win.setTimeout(() => {
-		pending.delete(region.openLine);
-		if (!parent.isConnected || hasRegion(parent, region)) return;
-		const rendered = Array.from(parent.children).map((block): SourceBlock<HTMLElement> => ({
-			block: block as HTMLElement,
-			info: context.getSectionInfo(block as HTMLElement),
-		}));
-		const blocks = mapRegionToBlocks(region, rendered);
-		if (!blocks) return;
-		const wrapped = wrapBlocksInRegion(blocks, region.columns);
-		if (wrapped) wrapped.dataset.openLine = String(region.openLine);
-	}, 500));
-	pendingRegions.set(parent, pending);
-}
-
-function hasRegion(parent: HTMLElement, region: LayoutRegion): boolean {
-	return parent.querySelector(`:scope > .handbook-layout-region[data-open-line="${region.openLine}"]`) !== null;
-}
-
-class RegionObserverChild extends MarkdownRenderChild {
-
-	constructor(containerEl: HTMLElement, private readonly observer: MutationObserver) {
-		super(containerEl);
-	}
-
-	onunload(): void {
-		this.observer.disconnect();
-		observers.delete(this.containerEl);
-		for (const timer of pendingRegions.get(this.containerEl)?.values() ?? []) {
-			this.containerEl.win.clearTimeout(timer);
-		}
-		pendingRegions.delete(this.containerEl);
-	}
+	plugin.register(() => observer.disconnect());
 }

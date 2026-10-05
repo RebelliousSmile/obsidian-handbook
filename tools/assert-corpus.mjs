@@ -24,6 +24,7 @@ writeFileSync(
 	stub,
 	`export class Notice { constructor() {} }
 export class Menu {}
+export function getLanguage() { return "en"; }
 export class MenuItem {}
 export class Editor {}
 export class Plugin {}

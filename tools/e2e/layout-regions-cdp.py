@@ -227,7 +227,7 @@ def capture_print(include_name, width=None):
                 await instance.print(host, new Component(), {json.dumps(include_name)});
                 const view = host.querySelector(':scope > .markdown-preview-view');
                 const top = [...(view ? view.children : host.children)];
-                const tracks = element => getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).length;
+                const flowing = view ? [...view.querySelectorAll(':scope > .handbook-layout-flow')] : [];
                 return JSON.stringify({{
                   hostClasses: host.className,
                   viewClasses: view ? view.className : null,
@@ -239,13 +239,14 @@ def capture_print(include_name, width=None):
                     childCount: child.children.length,
                     text: (child.textContent || '').trim().slice(0, 48)
                   }})),
-                  regions: [...host.querySelectorAll('.handbook-layout-region')].map(region => ({{
-                    direct: region.parentElement === view,
-                    columns: region.children.length,
-                    tracks: tracks(region),
-                    variable: getComputedStyle(region).getPropertyValue('--handbook-layout-columns').trim(),
-                    titles: [...region.querySelectorAll('h2')].map(heading => heading.textContent)
-                  }})),
+                  flow: {{
+                    host: Boolean(view && view.classList.contains('handbook-layout-flowing')),
+                    variable: view ? view.style.getPropertyValue('--handbook-layout-columns') : '',
+                    blocks: flowing.length,
+                    tracks: new Set(flowing.map(block => Math.round(block.getBoundingClientRect().left))).size,
+                    titles: flowing.reduce((titles, block) => titles.concat([...block.querySelectorAll('h2')].map(heading => heading.textContent)), []),
+                    wrappers: host.querySelectorAll('.handbook-layout-region').length
+                  }},
                   html: host.innerHTML
                 }});
               }} finally {{
@@ -313,14 +314,16 @@ def title_positions(pdf_path):
 
 
 def bare_structure(capture):
-    """Every top-level block stays a bare wrapper, a rule or the frontmatter: nothing was regrouped."""
+    """Every top-level block stays a wrapper, a rule or the frontmatter: nothing was regrouped."""
     return all(
-        child["tag"] == "HR" or child["classes"] in ("", "mod-frontmatter mod-ui")
+        child["tag"] in ("HR", "H1") or child["classes"] in ("", "handbook-layout-flow", "mod-frontmatter mod-ui")
         for child in capture["children"]
     )
 
 
 def probe_print_dom():
+    # The detached print container takes the width of the window.
+    set_width(1200)
     install_export_hook()
     wait_for("Boolean(app.vault.getAbstractFileByPath('%s'))" % PRINT_PROBE)
     create_print_notes()
@@ -350,26 +353,26 @@ def probe_print_dom():
     print_pdf(pdf_path)
 
     for label, capture in (("without title", without_title), ("with title", with_title), *themed.items()):
-        regions = capture["regions"]
-        if len(regions) != 1 or not regions[0]["direct"] or regions[0]["columns"] != 6 or regions[0]["tracks"] != 3 or regions[0]["variable"] != "3":
-            raise RuntimeError(f"The print DOM ({label}) did not group the three-column region: {regions}")
-        if regions[0]["titles"] != TITLES:
-            raise RuntimeError(f"The print DOM ({label}) lost or reordered sections: {regions[0]['titles']}")
-    if [region["tracks"] for region in narrow["regions"]] != [1]:
-        raise RuntimeError(f"A printable width under 520px must fold to one track: {narrow['regions']}")
+        flow = capture["flow"]
+        if not flow["host"] or flow["variable"] != "3" or flow["blocks"] != 12 or flow["tracks"] != 3 or flow["wrappers"] != 0:
+            raise RuntimeError(f"The print DOM ({label}) did not flow the three-column region: {flow}")
+        if flow["titles"] != TITLES:
+            raise RuntimeError(f"The print DOM ({label}) lost or reordered sections: {flow['titles']}")
+        if not bare_structure(capture):
+            raise RuntimeError(f"The print DOM ({label}) was regrouped: {capture['children']}")
+    if not 1 <= narrow["flow"]["tracks"] < 3:
+        raise RuntimeError(f"A narrow printable width must drop columns: {narrow['flow']}")
     if with_title["directTitle"] is None or with_title["children"][0]["tag"] != "H1":
         raise RuntimeError("includeName no longer prints a direct title heading; the join assumptions changed.")
 
     positions = title_positions(pdf_path)
     columns = sorted({x for x, _ in positions.values()})
     rows = sorted({y for _, y in positions.values()})
-    if len(columns) != 3 or len(rows) != 2:
-        raise RuntimeError(f"The PDF must place six titles on 3 columns and 2 rows: {positions}")
-    if not (positions["Alpha"][0] < positions["Bravo"][0] < positions["Charlie"][0]
-            and positions["Alpha"][0] == positions["Delta"][0]
-            and positions["Alpha"][1] == positions["Bravo"][1] == positions["Charlie"][1]
-            and positions["Alpha"][1] > positions["Delta"][1]):  # PDF y grows upward
-        raise RuntimeError(f"The PDF column and row order is wrong: {positions}")
+    abscissas = [positions[title][0] for title in TITLES]
+    if len(columns) != 3 or abscissas != sorted(abscissas):
+        raise RuntimeError(f"The PDF must flow six titles down three columns, in order: {positions}")
+    if len(rows) < 2:
+        raise RuntimeError(f"The PDF columns must hold more than one title: {positions}")
 
     # Control: the same note without any region keeps its native DOM and prints on one abscissa.
     open_export(PRINT_FLAT)
@@ -377,16 +380,16 @@ def probe_print_dom():
     flat_pdf = os.path.join(output_dir, "layout-regions-print-flat.pdf")
     print_pdf(flat_pdf)
     flat_positions = title_positions(flat_pdf)
-    if flat["regions"] or not bare_structure(flat):
-        raise RuntimeError(f"A note without region must print untouched: {flat['regions']}")
+    if flat["flow"]["host"] or flat["flow"]["blocks"] or not bare_structure(flat):
+        raise RuntimeError(f"A note without region must print untouched: {flat['flow']}")
     if len({x for x, _ in flat_positions.values()}) != 1:
         raise RuntimeError(f"The control PDF must keep a single column: {flat_positions}")
 
     open_export(PRINT_SINGLE)
     single = capture_print(False)
     evaluate("(() => { globalThis.__handbookExport?.close?.(); return true; })()")
-    if [region["tracks"] for region in single["regions"]] != [1] or single["regions"][0]["variable"] != "1":
-        raise RuntimeError(f"A columns=1 region must stay one track: {single['regions']}")
+    if single["flow"]["host"] or single["flow"]["blocks"] or not bare_structure(single):
+        raise RuntimeError(f"A columns=1 region must print as a single column: {single['flow']}")
 
     capture = {
         "facts": facts,
@@ -431,9 +434,33 @@ if os.environ.get("HANDBOOK_E2E_PRINT_ONLY") == "1":
     only = probe_print_dom()
     print(json.dumps({"print": {"children": len(only["withoutTitle"]["children"]), "pdf": only["pdf"]}}))
     sys.exit(0)
-# Render the whole probe in one pass. Obsidian virtualizes offscreen sections
-# and can replace wrappers after a viewport resize.
-set_width(1200, 8000)
+FLOW = """JSON.stringify((() => {
+  const sizer = document.querySelector('.markdown-preview-sizer');
+  const blocks = [...sizer.querySelectorAll(':scope > .handbook-layout-flow')].filter(block => block.getBoundingClientRect().height > 0);
+  return {
+    flowing: sizer.classList.contains('handbook-layout-flowing'),
+    variable: sizer.style.getPropertyValue('--handbook-layout-columns'),
+    columnCount: getComputedStyle(sizer).columnCount,
+    tracks: new Set(blocks.map(block => Math.round(block.getBoundingClientRect().left))).size,
+    callouts: sizer.querySelectorAll(':scope > .handbook-layout-flow .callout').length,
+    tableFlows: Boolean(sizer.querySelector(':scope > .handbook-layout-flow table')),
+    wrappers: document.querySelectorAll('.handbook-layout-region').length
+  };
+})())"""
+
+
+def flow():
+    return json.loads(evaluate(FLOW))
+
+
+def wait_for_tracks(expected):
+    try:
+        wait_for("JSON.parse(%s).tracks === %d" % (FLOW, expected), timeout=10)
+    except RuntimeError as error:
+        raise RuntimeError(f"Expected {expected} column tracks: {flow()}") from error
+
+
+set_width(1200)
 opened = evaluate(
     """
     (async () => {
@@ -458,74 +485,33 @@ if evaluate("app.workspace.getMostRecentLeaf()?.view?.getMode?.()") != "preview"
     wait_for("app.workspace.getMostRecentLeaf()?.view?.getMode?.() === 'preview'")
 evaluate("app.plugins.plugins['obsidian-handbook'].applySettings({refreshMarkdown: true})")
 
-# Reading view renders blocks lazily: the tall window includes both markers.
-wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
-set_width(1200)
-wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
-wide = evaluate(
-    """
-    JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({
-      children: region.children.length,
-      columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length,
-      variable: getComputedStyle(region).getPropertyValue('--handbook-layout-columns').trim(),
-      blocks: region.querySelectorAll('.callout').length
-    })))
-    """
-)
-wide = json.loads(wide)
-if wide != [
-    {"children": 6, "columns": 3, "variable": "3", "blocks": 6},
-    {"children": 1, "columns": 1, "variable": "1", "blocks": 0},
-]:
+# A flowing note keeps every section drawn: both regions are known at once.
+wait_for("JSON.parse(%s).callouts === 6" % FLOW)
+wait_for_tracks(3)
+wide = flow()
+if wide != {"flowing": True, "variable": "3", "columnCount": "3", "tracks": 3, "callouts": 6, "tableFlows": False, "wrappers": 0}:
     raise RuntimeError(f"Unexpected wide layout: {wide}")
 screenshot("layout-regions-wide.png")
 
 # A game theme can also flow the complete note into two editorial columns.
-# A local layout region needs the full note width for its own three columns.
+# A note with a region keeps the count its own region asks for.
 game_classes = ["brumes--adrenaline", "brumes--urban-shadows", "brumes--monsterhearts"]
 original_game_classes = json.loads(evaluate(
     "JSON.stringify([...document.body.classList].filter(name => name.startsWith('brumes--')))"
 ))
 evaluate("document.body.classList.remove('brumes--adrenaline', 'brumes--urban-shadows', 'brumes--monsterhearts')")
 evaluate("document.body.classList.add('brumes--adrenaline')")
-adrenaline = json.loads(evaluate("""
-    JSON.stringify({
-      editorialColumns: getComputedStyle(document.querySelector('.markdown-preview-sizer')).columnCount,
-      regionColumns: getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length
-    })
-    """))
-if adrenaline != {"editorialColumns": "1", "regionColumns": 3}:
-    raise RuntimeError(f"Adrenaline theme fragmented the three-column region: {adrenaline}")
+adrenaline = flow()
+if adrenaline["columnCount"] != "3" or adrenaline["tracks"] != 3:
+    raise RuntimeError(f"Adrenaline theme changed the three-column flow: {adrenaline}")
 evaluate("document.body.classList.remove('brumes--adrenaline')")
 evaluate("document.body.classList.add('brumes--monsterhearts')")
 evaluate("app.workspace.leftSplit.collapse()")
 set_width(750)
-wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
-game_layout = json.loads(evaluate("""
-    JSON.stringify((() => {
-      const sizer = document.querySelector('.markdown-preview-sizer');
-      const region = document.querySelector('.handbook-layout-region');
-      const columns = [...region.children].map(column => ({
-        left: column.getBoundingClientRect().left,
-        top: column.getBoundingClientRect().top
-      }));
-      return {
-        editorialColumns: getComputedStyle(sizer).columnCount,
-        regionColumns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length,
-        sizerWidth: sizer.getBoundingClientRect().width,
-        sectionWidth: region.parentElement.getBoundingClientRect().width,
-        columns
-      };
-    })())
-    """))
-if game_layout["editorialColumns"] != "1" or game_layout["regionColumns"] != 3 or not (
-    game_layout["columns"][0]["left"] < game_layout["columns"][1]["left"] < game_layout["columns"][2]["left"]
-    and game_layout["columns"][3]["left"] < game_layout["columns"][4]["left"] < game_layout["columns"][5]["left"]
-    and game_layout["columns"][0]["top"] == game_layout["columns"][1]["top"] == game_layout["columns"][2]["top"]
-    and game_layout["columns"][3]["top"] == game_layout["columns"][4]["top"] == game_layout["columns"][5]["top"]
-    and game_layout["columns"][0]["top"] < game_layout["columns"][3]["top"]
-):
-    raise RuntimeError(f"Game theme fragmented the three-column region: {game_layout}")
+wait_for_tracks(3)
+game_layout = flow()
+if game_layout["columnCount"] != "3" or game_layout["callouts"] != 6:
+    raise RuntimeError(f"Game theme changed the three-column flow: {game_layout}")
 screenshot("layout-regions-game-theme.png")
 evaluate("document.body.classList.remove('brumes--monsterhearts')")
 for game_class in original_game_classes:
@@ -533,20 +519,19 @@ for game_class in original_game_classes:
         evaluate(f"document.body.classList.add('{game_class}')")
 set_width(1200)
 
+# Columns are never narrower than their minimum width: a narrow pane drops them one by one.
 evaluate("document.querySelector('.markdown-preview-section').style.width = '500px'")
-wait_for("document.querySelector('.handbook-layout-region') && getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 1")
+wait_for_tracks(2)
+evaluate("document.querySelector('.markdown-preview-section').style.width = '320px'")
+wait_for_tracks(1)
 screenshot("layout-regions-narrow-pane.png")
 evaluate("document.querySelector('.markdown-preview-section').style.removeProperty('width')")
-wait_for("document.querySelector('.handbook-layout-region') && getComputedStyle(document.querySelector('.handbook-layout-region')).gridTemplateColumns.trim().split(/\\s+/).length === 3")
+wait_for_tracks(3)
 
 set_width(600)
-wait_for("document.querySelectorAll('.handbook-layout-region').length === 2")
-narrow = json.loads(
-    evaluate(
-        "JSON.stringify([...document.querySelectorAll('.handbook-layout-region')].map(region => ({columns: getComputedStyle(region).gridTemplateColumns.trim().split(/\\s+/).length, blocks: region.querySelectorAll('.callout').length})))"
-    )
-)
-if narrow != [{"columns": 1, "blocks": 6}, {"columns": 1, "blocks": 0}]:
+time.sleep(1)
+narrow = flow()
+if not narrow["flowing"] or narrow["tracks"] >= 3 or narrow["callouts"] != 6:
     raise RuntimeError(f"Unexpected narrow layout: {narrow}")
 screenshot("layout-regions-narrow.png")
 

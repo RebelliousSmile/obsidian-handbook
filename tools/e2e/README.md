@@ -67,20 +67,24 @@ The command writes `REPORT.md`, one screenshot per journey step, downloaded comp
 
 `layout-regions-journey.ps1` on Windows and `layout-regions-journey.sh` on Linux
 exercise the same committed Markdown fixture and CDP assertions in a temporary
-vault. They verify three columns at 1200 px with and without the Adrenaline
-editorial theme, three columns in a 750 px window with the Monsterhearts theme,
-and the one-column fallback in a narrow pane and at 600 px. The temporary vault
-is removed after the run.
+vault. A region no longer builds a grid: its blocks stay where Obsidian drew
+them and the text flows down one column, then the next. The journey verifies
+three column tracks at 1200 px with and without the Adrenaline editorial theme,
+three in a 750 px window with the Monsterhearts theme, two then one as a pane
+narrows (a column is never narrower than 10rem), fewer than three at 600 px, and
+that a `columns=1` region stays out of the flow. The temporary vault is removed
+after the run.
 
 The journey also exports the print probe (`fixtures/layout-regions-print-probe.md`)
 through Obsidian's own export: it captures the export dialog instance, calls
 `print()` on a detached `.print` container and `printToPdf()` with a file path in
 the output directory, so no native dialog opens and nothing is written to a vault.
-It asserts on the print DOM (one `.handbook-layout-region` directly in
-`.markdown-preview-view`, six columns, three grid tracks, one track under 520 px,
-the same result under the Adrenaline and Monsterhearts classes) and on the real
-PDF: `pypdf` must find the six titles on three distinct abscissas and two
-distinct ordinates, while a control note without regions keeps a single one.
+It asserts on the print DOM (`.markdown-preview-view` marked as the flowing
+host, twelve marked blocks left in their order with no wrapper, three column
+tracks, fewer in a 480 px container, the same result under the Adrenaline and
+Monsterhearts classes) and on the real PDF: `pypdf` must find the six titles on
+three distinct abscissas that never decrease in reading order, while a control
+note without regions and a `columns=1` note print untouched.
 The dialog is not reached through `require("obsidian")`, which is unavailable
 outside plugins, but through the prototypes of live instances. The DOM and PDF
 positions land in `print-dom.json` and `layout-regions-print-*.pdf`.

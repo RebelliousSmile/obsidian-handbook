@@ -1,201 +1,119 @@
-import {
-	CHARACTERISTIC_KEYS,
-	Characteristics,
-	EquipmentWeapon,
-	Protections,
-	ProtectionSide,
-} from "../adrenaline/document";
-import {
-	adrenalineList,
-	adrenalineSection,
-	renderCharacteristics,
-	renderHealth,
-} from "../adrenaline/view";
-import { displayedCompetenceTotal } from "../adrenaline/document";
-import { BlockZone, renderZones } from "../blocks/shape";
+import { MONSTRE_PRESENTATION } from "schema-adrenaline/presentation";
+import { adrenalineSourceDocument, asRecord, type AdrenalineDocument } from "../adrenaline/document";
+import { COMPACT_CARD_CLASS, compactCardElement, compactCardRoot, renderCompactSection, type CompactCardState } from "../adrenaline/compactCard";
+import { renderZones, type ZoneBuilder } from "../blocks/shape";
 import { AdrenalineMonsterData } from "./parser";
-import { adrenalineMonsterShape } from "./shape";
+import { monsterToDocument } from "./schema";
+import { adrenalineMonsterShape, MONSTER_CARD_SECTIONS } from "./shape";
 
-function section(doc: Document, zone: BlockZone): HTMLElement {
-	return adrenalineSection(doc, zone.heading ?? "", "brumes-adrenaline-monstre--panel");
+const BASE = "base";
+const LEGACY_STATE = "alternatif-historique";
+const STATE_KEYS = ["etatActif", "etatAlternatif", "etats"];
+
+interface MonsterState {
+	id: string;
+	nom: string;
+	declencheurs: string[];
+	delta: AdrenalineDocument;
+	notes?: string;
 }
 
-function characteristicSummary(characteristics: Characteristics): string {
-	return CHARACTERISTIC_KEYS
-		.filter((key) => characteristics[key] !== undefined)
-		.map((key) => `${key.toUpperCase()} ${characteristics[key]} %`)
-		.join(" · ");
+interface StateCard {
+	card: "principal" | "secondaire";
+	source: AdrenalineDocument;
+	state: CompactCardState;
 }
 
-function weaponSummary(weapon: EquipmentWeapon): string {
-	const details = [
-		weapon.pourcentage === undefined ? undefined : `${weapon.pourcentage} %`,
-		weapon.desDeDegats === undefined ? undefined : `${weapon.desDeDegats}d10`,
-		weapon.type,
-		weapon.notes,
-	].filter((value): value is string => Boolean(value));
-	return `${weapon.nom}${details.length === 0 ? "" : ` · ${details.join(" · ")}`}`;
+function strings(value: unknown): string[] {
+	return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item !== "") : [];
 }
 
-function protectionSummary(label: string, protection: ProtectionSide | undefined): string[] {
-	if (!protection) return [];
-	const lines: string[] = [];
-	if (protection.solidite !== undefined) lines.push(`Solidité ${label} : ${protection.solidite}`);
-	if (protection.armure) {
-		const name = protection.armure.nom ? `${protection.armure.nom} · ` : "";
-		lines.push(`Armure : ${name}${protection.armure.points} points · ${protection.armure.localisations.join(", ")}`);
+function text(value: unknown): string {
+	return typeof value === "string" ? value : "";
+}
+
+/** The base of the creature: the document without its alternative states. */
+function baseOf(source: AdrenalineDocument): AdrenalineDocument {
+	const base: AdrenalineDocument = {};
+	for (const key of Object.keys(source)) if (STATE_KEYS.indexOf(key) < 0) base[key] = source[key];
+	return base;
+}
+
+/** The entered states; the legacy `etatAlternatif` reads as one state whose characteristics overlay the base. */
+function statesOf(source: AdrenalineDocument): MonsterState[] {
+	const legacy = asRecord(source.etatAlternatif);
+	if (legacy) {
+		const delta: AdrenalineDocument = {};
+		const characteristics = asRecord(legacy.caracteristiques);
+		if (characteristics) delta.caracteristiques = { ...(asRecord(source.caracteristiques) ?? {}), ...characteristics };
+		for (const key of ["zoneDeDetection", "deplacement", "actionsParRound"]) if (legacy[key] !== undefined) delta[key] = legacy[key];
+		const notes = text(legacy.notes);
+		return [{ id: LEGACY_STATE, nom: text(legacy.nom) || "État alternatif", declencheurs: strings(legacy.declencheurs), delta, ...(notes ? { notes } : {}) }];
 	}
-	if (protection.caractere) {
-		lines.push(`Caractère : ${protection.caractere.trait} · ${protection.caractere.points} points · ${protection.caractere.localisations.join(", ")}`);
+	const states: MonsterState[] = [];
+	for (const item of Array.isArray(source.etats) ? source.etats : []) {
+		const state = asRecord(item);
+		const id = text(state?.id);
+		if (!state || !id) continue;
+		states.push({ id, nom: text(state.nom) || id, declencheurs: strings(state.declencheurs), delta: asRecord(state.delta) ?? {} });
 	}
-	if (protection.bouclier) {
-		const properties = protection.bouclier.proprietes?.join(", ");
-		lines.push(`Bouclier : ${protection.bouclier.nom}${properties ? ` · ${properties}` : ""}`);
-	}
-	return lines;
+	return states;
 }
 
-function protectionsSummary(protections: Protections): string[] {
-	return [
-		...protectionSummary("physique", protections.physiques),
-		...protectionSummary("mentale", protections.mentales),
-	];
+/**
+ * The principal card prints `etatPrincipal`, or the base; the secondary card
+ * prints the other one: the base when the principal is a state, else the
+ * first state. A creature without states has one card. A state overlays the
+ * base field by field, as entered.
+ */
+function stateCards(source: AdrenalineDocument): StateCard[] {
+	const base = baseOf(source);
+	const states = statesOf(source);
+	const known = (id: string): boolean => id === BASE || states.some((state) => state.id === id);
+	const principal = known(text(source.etatPrincipal)) ? text(source.etatPrincipal) : BASE;
+	const secondary = principal !== BASE ? BASE : states.length > 0 ? states[0].id : undefined;
+	const active = known(text(source.etatActif)) ? text(source.etatActif) : BASE;
+	const baseState = asRecord(source.etatDeBase);
+	const resolve = (card: StateCard["card"], id: string): StateCard => {
+		const state = states.filter((candidate) => candidate.id === id)[0];
+		return {
+			card,
+			source: state ? { ...base, ...state.delta } : base,
+			state: {
+				name: state ? state.nom : text(baseState?.nom) || "État de base",
+				triggers: state ? state.declencheurs : strings(baseState?.declencheurs),
+				active: states.length > 0 && active === id,
+				...(state?.notes ? { note: state.notes } : {}),
+			},
+		};
+	};
+	return secondary === undefined ? [resolve("principal", principal)] : [resolve("principal", principal), resolve("secondaire", secondary)];
 }
 
-function competenceLines(data: AdrenalineMonsterData): string[] {
-	return (data.competences ?? []).map((competence) => {
-		const details = [
-			competence.specialite,
-			`${displayedCompetenceTotal(competence, data.caracteristiques) ?? competence.pourcentage} %`,
-			...(competence.avantages ?? []),
-			competence.notes,
-		].filter((value): value is string => Boolean(value));
-		return `${competence.nom} · ${details.join(" · ")}`;
-	});
-}
-
-function alternateStateLines(data: AdrenalineMonsterData): string[] {
-	const lines: string[] = [];
-	if (data.etatAlternatif) {
-		lines.push(`État : ${data.etatAlternatif.nom}`);
-		lines.push(...(data.etatAlternatif.declencheurs ?? []).map((trigger) => `Déclencheur : ${trigger}`));
-		if (data.etatAlternatif.caracteristiques) lines.push(`Caractéristiques : ${characteristicSummary(data.etatAlternatif.caracteristiques)}`);
-		if (data.etatAlternatif.zoneDeDetection) lines.push(`Détection : ${data.etatAlternatif.zoneDeDetection}`);
-		if (data.etatAlternatif.deplacement) lines.push(`Déplacement : ${data.etatAlternatif.deplacement}`);
-		if (data.etatAlternatif.actionsParRound !== undefined) lines.push(`${data.etatAlternatif.actionsParRound} actions par round`);
-		if (data.etatAlternatif.notes) lines.push(data.etatAlternatif.notes);
-	}
-	return lines;
-}
-
-function equipmentLines(data: AdrenalineMonsterData): string[] {
-	const lines: string[] = [];
-	if (data.equipement) {
-		lines.push(...(data.equipement.possessions ?? []));
-		if (data.equipement.equipementFavori) lines.push(`Équipement favori : ${data.equipement.equipementFavori}`);
-		for (const weapon of data.equipement.armesPhysiques ?? []) lines.push(`Arme physique : ${weaponSummary(weapon)}`);
-		for (const weapon of data.equipement.armesMentales ?? []) lines.push(`Arme mentale : ${weaponSummary(weapon)}`);
-	}
-	return lines;
-}
-
-function contagionLines(data: AdrenalineMonsterData): string[] {
-	const lines: string[] = [];
-	if (data.contagion) {
-		if (data.contagion.agent) lines.push(`Agent : ${data.contagion.agent}`);
-		if (data.contagion.delaiAvantEffet) lines.push(data.contagion.delaiAvantEffet);
-		if (data.contagion.issue) lines.push(data.contagion.issue);
-		for (const vector of data.contagion.vecteurs ?? []) lines.push(`${vector.nom}${vector.probabilite === undefined ? "" : ` · ${vector.probabilite} %`}${vector.notes ? ` · ${vector.notes}` : ""}`);
-		for (const modulation of data.contagion.modulations ?? []) lines.push(`${modulation.profil}${modulation.delaiAvantEffet ? ` · ${modulation.delaiAvantEffet}` : ""}${modulation.issue ? ` · ${modulation.issue}` : ""}`);
-	}
-	return lines;
-}
-
-function narrativeLines(data: AdrenalineMonsterData): string[] {
-	const lines: string[] = [];
-	const narrative = data.narratif;
-	if (narrative) {
-		for (const key of ["role", "attitude", "historique", "evolutionPossible"] as const) if (narrative[key]) lines.push(narrative[key] ?? "");
-		for (const key of ["personnalite", "interpretation", "repliques", "notesMj"] as const) if (narrative[key]) lines.push(...(narrative[key] ?? []));
-	}
-	return lines;
-}
-
-function capabilityGroup(doc: Document, heading: string, lines: string[]): HTMLElement | null {
-	if (lines.length === 0) return null;
-	const group = doc.createElement("section");
-	group.classList.add("brumes-adrenaline-monstre--capability-group");
-	const title = doc.createElement("h5");
-	title.textContent = heading;
-	group.appendChild(title);
-	group.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-monstre--capability-list"));
-	return group;
-}
-
+/** The compact creature card: the banner and description, then one card per printed state. */
 export function renderAdrenalineMonster(data: AdrenalineMonsterData, doc: Document): HTMLElement {
-	const root = doc.createElement("article");
-	root.classList.add(adrenalineMonsterShape.root);
-	renderZones(root, adrenalineMonsterShape, {
-		header: () => {
-			const header = doc.createElement("header");
-			const title = doc.createElement("h3");
-			title.textContent = data.nom;
-			header.appendChild(title);
-			for (const value of [data.typeDeCorps, data.typeInfecte, data.instinct]) {
-				if (!value) continue;
-				const span = doc.createElement("span");
-				span.textContent = value;
-				header.appendChild(span);
+	const source = adrenalineSourceDocument(data) ?? monsterToDocument(data);
+	const root = compactCardRoot(doc, adrenalineMonsterShape.root, MONSTRE_PRESENTATION, source);
+	const base = baseOf(source);
+	const builders: Record<string, ZoneBuilder> = {
+		cards: () => {
+			const frame = compactCardElement(doc, "div", "cards");
+			for (const card of stateCards(source)) {
+				const element = frame.appendChild(compactCardElement(doc, "section", "state-card"));
+				element.classList.add(`${COMPACT_CARD_CLASS}__state-card--${card.card}`);
+				if (card.state.active) element.classList.add(`${COMPACT_CARD_CLASS}__state-card--active`);
+				for (const section of MONSTER_CARD_SECTIONS) {
+					if ((section.cards ?? []).indexOf(card.card) < 0) continue;
+					const rendered = renderCompactSection(doc, section, card.source, MONSTRE_PRESENTATION, card.state);
+					if (rendered) element.appendChild(rendered);
+				}
 			}
-			if (data.niveauDeDanger !== undefined) {
-				const danger = doc.createElement("strong");
-				danger.textContent = `ND ${data.niveauDeDanger}`;
-				header.appendChild(danger);
-			}
-			return header;
+			return frame;
 		},
-		mobility: (zone) => {
-			const lines = [data.zoneDeDetection, data.deplacement].filter((value): value is string => Boolean(value));
-			if (lines.length === 0) return null;
-			const element = section(doc, zone);
-			element.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-monstre--mobility-list"));
-			return element;
-		},
-		behaviour: (zone) => {
-			const lines = [...(data.comportement ?? [])];
-			if (data.actionsParRound !== undefined) lines.unshift(`${data.actionsParRound} actions par round`);
-			if (data.description) lines.push(data.description);
-			if (lines.length === 0) return null;
-			const element = section(doc, zone);
-			element.appendChild(adrenalineList(doc, lines, "brumes-adrenaline-monstre--behaviour-list"));
-			return element;
-		},
-		characteristics: (zone) => {
-			const element = section(doc, zone);
-			element.appendChild(renderCharacteristics(doc, data.caracteristiques));
-			return element;
-		},
-		health: (zone) => {
-			if (!data.sante && !data.protections) return null;
-			const element = section(doc, zone);
-			if (data.sante) element.appendChild(renderHealth(doc, data.sante));
-			if (data.protections) element.appendChild(adrenalineList(doc, protectionsSummary(data.protections), "brumes-adrenaline-monstre--protection-list"));
-			return element;
-		},
-		capabilities: (zone) => {
-			const element = section(doc, zone);
-			const groups = [
-				capabilityGroup(doc, "Traits", data.traitsSpeciaux ?? []),
-				capabilityGroup(doc, "État alternatif", alternateStateLines(data)),
-				capabilityGroup(doc, "Compétences", competenceLines(data)),
-				capabilityGroup(doc, "Équipement", equipmentLines(data)),
-				capabilityGroup(doc, "Contagion", contagionLines(data)),
-				capabilityGroup(doc, "Informations de jeu", narrativeLines(data)),
-			];
-			for (const group of groups) if (group) element.appendChild(group);
-			if (element.children.length === 1) return null;
-			return element;
-		},
-	});
+	};
+	for (const section of MONSTRE_PRESENTATION.sections) {
+		if (!("cards" in section)) builders[section.id] = () => renderCompactSection(doc, section, base, MONSTRE_PRESENTATION);
+	}
+	renderZones(root, adrenalineMonsterShape, builders);
 	return root;
 }

@@ -14,84 +14,43 @@
 	overflow-x: auto;
 }
 
+// A source region flows its blocks into columns. Obsidian keeps only the
+// sections near the viewport in the DOM, so the blocks are never moved: their
+// container is the column box, and whatever sits outside a region spans it.
+// The column width is a floor: a narrow pane falls back to a single column.
+.handbook-layout-flowing {
+	--handbook-layout-columns: 1;
+	columns: var(--handbook-layout-columns) 10rem;
+	column-gap: var(--size-4-8, 2rem);
+	// Obsidian reserves the height of its sections as a single stack; every
+	// section of a flowing note is drawn, so the columns set the height.
+	min-height: 0 !important;
+}
+
+.handbook-layout-flowing > :not(.handbook-layout-flow) {
+	column-span: all;
+}
+
+.handbook-layout-flowing > .handbook-layout-flow {
+	&:has(> :is(h1, h2, h3, h4, h5, h6)) {
+		break-after: avoid;
+	}
+
+	&:has(> :is(.callout, table, pre, blockquote)) {
+		break-inside: avoid;
+	}
+}
+
 // Character sheets use compact, ink-first panels rather than Obsidian's
 // coloured semantic callouts. This keeps their printed playbook structure
 // while retaining accessible callout markup in the source note.
 .brumes--monsterhearts .handbook-layout-region {
 	gap: clamp(1.25rem, 3vw, 2.5rem);
-
-	.callout[data-callout^="mh-"] {
-		--callout-color: var(--text-normal);
-		margin: 0 0 1rem;
-		padding: 0.45rem 0 0.75rem;
-		border: 0;
-		border-top: 1px solid var(--text-normal);
-		border-radius: 0;
-		background: transparent;
-		box-shadow: none;
-	}
-
-	.callout-title {
-		font-family: var(--font-header-theme);
-		font-size: 1.05em;
-		font-variant: small-caps;
-		letter-spacing: 0.04em;
-	}
-
-	.callout-icon {
-		display: none;
-	}
-
-	.callout-content > :first-child {
-		margin-top: 0;
-	}
-
-	.callout-content > :last-child {
-		margin-bottom: 0;
-	}
-
-	.callout[data-callout="mh-fiction"] {
-		border-top: 0;
-		font-style: italic;
-	}
-
-	.callout[data-callout="mh-move"] {
-		border-top-width: 2px;
-	}
-
-	.callout[data-callout="mh-choice"],
-	.callout[data-callout="mh-identity"],
-	.callout[data-callout="mh-stats"],
-	.callout[data-callout="mh-history"] {
-		border-top-style: double;
-	}
-
-	.callout[data-callout="mh-darkest-self"] {
-		padding-inline: 0.75rem;
-		border: 1px solid var(--text-normal);
-		background: color-mix(in srgb, var(--text-normal) 6%, transparent);
-	}
-
-	.callout[data-callout="mh-intimacy"],
-	.callout[data-callout="mh-mc"] {
-		border-top-style: dotted;
-	}
-
-	.callout[data-callout="mh-advance"] {
-		border-top-width: 2px;
-		border-bottom: 1px solid var(--text-normal);
-	}
-
-	.callout[data-callout="mh-guidance"] {
-		border-top: 0;
-		padding-top: 0;
-		font-size: 0.92em;
-	}
 }
 
 // Reading view owns the grid. Live Preview has no generated grid wrapper, so
 // apply the same visual language directly to the dedicated callout types.
-.brumes--monsterhearts .markdown-source-view .callout[data-callout^="mh-"] {
+.brumes--monsterhearts :is(.handbook-layout-region, .markdown-source-view) .callout[data-callout^="mh-"] {
 	--callout-color: var(--text-normal);
 	margin: 0 0 1rem;
 	padding: 0.45rem 0 0.75rem;
@@ -100,7 +59,12 @@
 	border-radius: 0;
 	background: transparent;
 	box-shadow: none;
+}
 
+// In a region every callout loses its icon; in Live Preview only the
+// dedicated types do.
+.brumes--monsterhearts .handbook-layout-region,
+.brumes--monsterhearts .markdown-source-view .callout[data-callout^="mh-"] {
 	.callout-title {
 		font-family: var(--font-header-theme);
 		font-size: 1.05em;
@@ -119,7 +83,10 @@
 	.callout-content > :last-child {
 		margin-bottom: 0;
 	}
+}
 
+.brumes--monsterhearts .handbook-layout-region .callout,
+.brumes--monsterhearts .markdown-source-view .callout[data-callout^="mh-"] {
 	&[data-callout="mh-fiction"] {
 		border-top: 0;
 		font-style: italic;

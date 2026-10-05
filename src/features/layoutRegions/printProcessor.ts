@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import { parseLayoutRegions } from "./parser";
 import { mapPrintRegions } from "./printMapper";
-import { wrapBlocksInRegion } from "./sectionMapper";
+import { FLOW_BLOCK, FLOW_HOST, flowColumns } from "./sectionMapper";
 import { warnOnce } from "./warnOnce";
 
 /**
@@ -16,13 +16,13 @@ export function isPrintExport(element: HTMLElement, context: MarkdownPostProcess
 		&& context.getSectionInfo(element) === null;
 }
 
-/** Resolves once the regions are grouped; the export waits for it before printing. */
+/** Resolves once the regions flow; the export waits for it before printing. */
 export async function printLayoutRegions(
 	plugin: BrumesPlugin,
 	element: HTMLElement,
 	context: MarkdownPostProcessorContext,
 ): Promise<void> {
-	if (element.querySelector(":scope > .handbook-layout-region")) return;
+	if (element.classList.contains(FLOW_HOST)) return;
 	const file = plugin.app.vault.getAbstractFileByPath(context.sourcePath);
 	if (!(file instanceof TFile)) return;
 
@@ -57,9 +57,14 @@ export async function printLayoutRegions(
 			`Layout region at source line ${region.openLine + 1} left ungrouped in the PDF export: its blocks are not contiguous.`,
 		);
 	}
-	// Every selection was computed on the original children, so wrapping one region never shifts another.
+	const columns = flowColumns(parsed.regions);
+	if (columns === null) return;
+	// Nothing is moved: the printed view becomes the column box and every block
+	// outside a region spans it, exactly as in the reading view.
+	element.classList.add(FLOW_HOST);
+	element.style.setProperty("--handbook-layout-columns", String(columns));
 	for (const { region, blocks } of mapped.selections) {
-		const wrapped = wrapBlocksInRegion(blocks, region.columns);
-		if (wrapped) wrapped.dataset.openLine = String(region.openLine);
+		if (region.columns <= 1) continue;
+		for (const block of blocks) block.classList.add(FLOW_BLOCK);
 	}
 }

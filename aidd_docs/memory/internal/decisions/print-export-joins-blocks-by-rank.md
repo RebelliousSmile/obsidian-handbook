@@ -18,7 +18,19 @@ sections `html` réduites à des commentaires) aux enfants de premier niveau du
 conteneur `.print > .markdown-preview-view` (privés d'un `h1` direct de tête),
 par rang. Il n'agit que si tous les blocs jusqu'à la fin de la dernière région
 concordent de type ; à la première divergence, le DOM reste intact et un
-`warnOnce` le signale. Il réutilise `wrapBlocksInRegion`.
+`warnOnce` le signale.
+
+Révision du 2026-10-04 : les blocs ne sont plus déplacés ni enveloppés. Ceux
+d'une région à plus d'une colonne reçoivent `handbook-layout-flow`, le conteneur
+`handbook-layout-flowing` et `--handbook-layout-columns` ; le texte coule en
+colonnes CSS (`columns`), de haut en bas puis colonne suivante, et tout bloc hors
+région s'étend sur toute la largeur (`column-span: all`). La jointure par rang
+et sa garde de types sont inchangées. La lecture fait de même ; comme Obsidian
+n'y dessine que les sections proches de la fenêtre et les place d'après une pile
+unique, une note qui coule garde toutes ses sections dessinées
+(`renderWindow.ts`, sur un interne vérifié avant usage : s'il manque, la note
+reste sur une colonne). Une note n'a qu'un nombre de colonnes : la première
+région multicolonne le fixe.
 
 ## Alternatives
 
@@ -36,5 +48,5 @@ Toute évolution du DOM se mesure avec `pnpm e2e:layout-regions -PrintOnly`
 (DOM et PDF lus par `pypdf`), jamais à l'œil ; les mesures de référence sont
 dans `aidd_docs/tasks/2026_09/2026_09_18_pdf-layout-regions/evidence/print-dom.md`.
 La section `yaml` correspond à `div.mod-frontmatter` quand les propriétés sont
-affichées, sinon elle est retirée de la jointure. Une colonne plus haute qu'une
-page n'est pas coupée (`break-inside: avoid`).
+affichées, sinon elle est retirée de la jointure. Un encadré, une table ou un
+bloc de code n'est pas coupé entre deux colonnes (`break-inside: avoid`).

@@ -25,9 +25,12 @@ try {
 		"brumes-os-creation",
 	]) {
 		const selector = `.brumes--otherscape .${root}`;
-		const declarations = css.match(
-			new RegExp(`${selector.replaceAll(".", "\\.")}\\s*\\{([^}]*)\\}`),
-		)?.[1];
+		// The root may share its rule with other cards and be refined by its
+		// own: gather every rule that names it as a whole selector-list item.
+		const escaped = selector.replaceAll(".", "\\.");
+		const declarations = [
+			...css.matchAll(new RegExp(`(?:^|[},]\\s*)${escaped}\\s*(?:,[^{]*)?\\{([^}]*)\\}`, "gm")),
+		].map((match) => match[1]).join("\n") || undefined;
 
 		assert.ok(declarations, `missing Otherscape card root: ${selector}`);
 		assert.match(

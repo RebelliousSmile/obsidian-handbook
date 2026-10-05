@@ -28,7 +28,7 @@ assert.equal(redirectEntry.includes("release-assets.githubusercontent.com"), fal
 const bundle = "tools/.assert-adrenaline-contract.mjs";
 const stub = "tools/.obsidian-stub.mjs";
 try {
-	writeFileSync(stub, "export class Notice {} export class Menu {} export class MenuItem {} export class Editor {} export class Plugin {} export class PluginSettingTab {} export class Setting {} export class Modal {} export class ItemView {} export class TFile {} export function setIcon() {}\n");
+	writeFileSync(stub, "export class Notice {} export class Menu {} export class MenuItem {} export class Editor {} export class Plugin {} export class PluginSettingTab {} export class Setting {} export class Modal {} export class ItemView {} export class TFile {} export function setIcon() {} export function getLanguage() { return \"en\"; }\n");
 	buildSync({ entryPoints: ["tools/assertAdrenalineContract.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["schema-adrenaline", "postcss", "postcss-selector-parser"], alias: { obsidian: resolve(stub) }, logLevel: "warning" });
 	process.exitCode = spawnSync(process.execPath, [bundle], { stdio: "inherit" }).status ?? 1;
 } finally { rmSync(bundle, { force: true }); rmSync(stub, { force: true }); }

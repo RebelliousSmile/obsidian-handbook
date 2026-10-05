@@ -11,6 +11,10 @@
 			position: absolute;
 			z-index: 0;
 			inset: 0;
+			// A game theme may paint its own page texture on this pseudo-element
+			// (opaque colour, blend mode): the note's image replaces it whole.
+			background-color: transparent;
+			background-blend-mode: normal;
 			background-image: var(--brumes-note-background-image);
 			background-position: var(--brumes-note-background-position);
 			background-repeat: var(--brumes-note-background-repeat);
@@ -22,7 +26,7 @@
 	}
 
 	.markdown-source-view > .cm-editor,
-	.markdown-reading-view > .markdown-preview-sizer {
+	.markdown-reading-view > .markdown-preview-view {
 		position: relative;
 		z-index: 1;
 	}

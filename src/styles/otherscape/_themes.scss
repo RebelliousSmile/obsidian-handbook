@@ -38,8 +38,5 @@
 	body.brumes--variant-cairo & .brumes-os-theme { border-width: 1px 3px; box-shadow: 0.25rem 0.25rem 0 var(--os-card-accent); }
 	body.brumes--variant-tokyo & .brumes-os-theme { border-inline-start-width: 0.6rem; box-shadow: 0.45rem 0.2rem 0 color-mix(in srgb, var(--os-card-accent) 35%, transparent); }
 
-	@media (max-width: 520px) {
-		.brumes-os-theme { grid-template-columns: minmax(0, 1fr); }
-		.brumes-os-theme > * { grid-column: 1; min-width: 0; }
-	}
+	// The narrow fold lives in `_cards.scss`.
 }

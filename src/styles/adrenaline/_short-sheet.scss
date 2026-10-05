@@ -1,0 +1,139 @@
+// The compact card of the PNJ and creature sheets (`surface: "compact-card"`):
+// a banner coloured by category, then the published sections. Layout only;
+// every colour is a token of the pack. Each sheet partial keeps what sets it apart.
+@mixin sheet {
+	.brumes-adrenaline-pnj,
+	.brumes-adrenaline-monstre {
+		display: flex;
+		flex-direction: column;
+		max-width: 36rem;
+		margin-inline: auto;
+		overflow-wrap: anywhere;
+	}
+
+	.brumes-adrenaline-card {
+		--adrenaline-banner: var(--adrenaline-banner-garnet);
+		border: 1px solid var(--adrenaline-rule);
+		font-size: 0.84em;
+		line-height: 1.25;
+		color: var(--text-normal);
+		background: var(--background-primary);
+	}
+	.brumes-adrenaline-card--banner-blue { --adrenaline-banner: var(--adrenaline-banner-blue); }
+	.brumes-adrenaline-card--banner-orange { --adrenaline-banner: var(--adrenaline-banner-orange); }
+
+	// A section is its title band, then its padded blocks: no rule between sections.
+	.brumes-adrenaline-card__section { min-width: 0; }
+	.brumes-adrenaline-card__section-title {
+		padding: 0.1rem 0.5rem;
+		font-weight: 700;
+		color: var(--adrenaline-section-band-ink);
+		background: var(--adrenaline-section-band);
+	}
+	details.brumes-adrenaline-card__section > summary { cursor: pointer; }
+
+	// The banner: the category on the coloured line, then icon, name and danger
+	// level on the grey band.
+	.brumes-adrenaline-card__banner-category {
+		padding: 0.1rem 0.5rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		color: var(--adrenaline-banner-ink);
+		background: var(--adrenaline-banner);
+	}
+	.brumes-adrenaline-card__banner-identity {
+		display: flex;
+		gap: 0.4rem;
+		align-items: center;
+		padding: 0.2rem 0.5rem;
+		color: var(--adrenaline-section-band-ink);
+		background: var(--adrenaline-section-band);
+	}
+	.brumes-adrenaline-card__banner-icon { display: inline-flex; }
+	.brumes-adrenaline-card__banner-icon svg { width: 1.3em; height: 1.3em; }
+	.brumes-adrenaline-card__banner-name { flex: 1 1 auto; font-size: 1.2em; text-transform: uppercase; }
+	.brumes-adrenaline-card__banner-danger { font-weight: 700; }
+	.brumes-adrenaline-card__banner-note { display: block; padding: 0.1rem 0.5rem; font-size: 0.85em; }
+
+	// Blocks, values typeset after their label.
+	.brumes-adrenaline-card__layout-banner > .brumes-adrenaline-card__block { padding: 0; }
+	.brumes-adrenaline-card__block { padding: 0.2rem 0.5rem; }
+	.brumes-adrenaline-card__paragraph { margin: 0; }
+	.brumes-adrenaline-card__list { margin-block: 0.15rem 0; padding-inline-start: 1.1rem; }
+	.brumes-adrenaline-card__line { display: flex; flex-wrap: wrap; gap: 0 0.35rem; }
+	// A figure (percentage, total, solidity) sits where the published
+	// `values.align` puts it; prose values always follow their label.
+	.brumes-adrenaline-card--values-end .brumes-adrenaline-card__figure {
+		margin-inline-start: auto;
+		text-align: end;
+		white-space: nowrap;
+	}
+	.brumes-adrenaline-card__grid {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 0.12rem 0.5rem;
+	}
+	.brumes-adrenaline-card__cell { display: flex; gap: 0.3rem; }
+	.brumes-adrenaline-card__thresholds {
+		display: grid;
+		grid-template-columns: 2.2rem repeat(4, minmax(0, 1fr));
+		gap: 0.4rem;
+	}
+	.brumes-adrenaline-card__track { display: flex; flex-wrap: wrap; gap: 0 0.5rem; align-items: center; }
+	.brumes-adrenaline-card__track .brumes-adrenaline-card__line-label { min-width: 8.5rem; }
+	.brumes-adrenaline-card__circles { display: inline-flex; gap: 0.18rem; }
+	.brumes-adrenaline-card__circle-mark {
+		display: inline-block;
+		width: 0.62rem;
+		height: 0.62rem;
+		border: 1px solid var(--adrenaline-track, var(--adrenaline-rule));
+		border-radius: 50%;
+	}
+	.brumes-adrenaline-card__circle-bold { border-width: 2px; border-color: var(--adrenaline-track, var(--text-normal)); }
+	// The two malus tracks take their colour from the pack; stress keeps the ink.
+	.brumes-adrenaline-card__track--shock { --adrenaline-track: var(--adrenaline-malus-shock); }
+	.brumes-adrenaline-card__track--wound { --adrenaline-track: var(--adrenaline-malus-wound); }
+	.brumes-adrenaline-card__inline-list { margin: 0; }
+
+	// Skills and actions: the line, then the dice badge and its properties.
+	.brumes-adrenaline-card__skill,
+	.brumes-adrenaline-card__action { display: flex; flex-wrap: wrap; gap: 0.15rem 0.4rem; align-items: baseline; }
+	// The skill's name and its figure share the first line; damage and notes follow under it.
+	.brumes-adrenaline-card__skill-head { display: flex; flex: 1 0 100%; flex-wrap: wrap; gap: 0 0.35rem; align-items: baseline; }
+	.brumes-adrenaline-card__skill + .brumes-adrenaline-card__skill,
+	.brumes-adrenaline-card__action + .brumes-adrenaline-card__action { margin-block-start: 0.15rem; }
+	.brumes-adrenaline-card__follow-up {
+		display: flex;
+		flex-basis: 100%;
+		flex-wrap: wrap;
+		gap: 0.15rem 0.4rem;
+		align-items: baseline;
+		margin-inline-start: 0.9rem;
+	}
+	.brumes-adrenaline-card__damage { display: inline-flex; flex-wrap: wrap; gap: 0.15rem 0.3rem; align-items: baseline; }
+	.brumes-adrenaline-card__dice-badge {
+		padding: 0 0.3rem;
+		border-radius: 0.2rem;
+		font-weight: 700;
+		color: var(--adrenaline-dice-badge-ink);
+		background: var(--adrenaline-dice-badge-bg);
+	}
+	.brumes-adrenaline-card__damage-detail,
+	.brumes-adrenaline-card__note { font-size: 0.9em; }
+	.brumes-adrenaline-card__trigger {
+		display: inline-block;
+		padding: 0 0.3rem;
+		border-radius: 0.2rem;
+		font-size: 0.85em;
+		font-weight: 700;
+		color: var(--adrenaline-trigger-ink);
+		background: var(--adrenaline-trigger-bg);
+	}
+
+	@media (max-width: 520px) {
+		.brumes-adrenaline-pnj,
+		.brumes-adrenaline-monstre { max-width: 100%; }
+		.brumes-adrenaline-card__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		.brumes-adrenaline-card__thresholds { grid-template-columns: 2.2rem repeat(2, minmax(0, 1fr)); }
+	}
+}

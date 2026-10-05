@@ -1,14 +1,14 @@
+import { PNJ_PRESENTATION } from "schema-adrenaline/presentation";
 import { BlockShape } from "../blocks/shape";
 
+/** One zone per published section, in the descriptor's order. */
 export const adrenalinePnjShape: BlockShape = {
-	block: "adrenaline-pnj",
+	block: PNJ_PRESENTATION.sheet.id,
 	root: "brumes-adrenaline-pnj",
-	zones: [
-		{ name: "header", holds: "name, role and danger level" },
-		{ name: "narrative", holds: "description and play guidance", heading: "Présentation", optional: true },
-		{ name: "characteristics", holds: "available characteristics", heading: "Caractéristiques", optional: true },
-		{ name: "health", holds: "health and protections", heading: "Santé et protections", optional: true },
-		{ name: "competences", holds: "formations and competences", heading: "Formations et compétences", optional: true },
-		{ name: "equipment", holds: "possessions and weapons", heading: "Équipement", optional: true },
-	],
+	zones: PNJ_PRESENTATION.sections.map((section) => ({
+		name: section.id,
+		holds: section.blocks.map((block) => block.label).join(", "),
+		...("showTitle" in section && section.showTitle === false ? {} : { heading: section.label }),
+		optional: section.id !== "entete",
+	})),
 };

@@ -97,7 +97,7 @@ export function documentToMonster(value: unknown): AdrenalineMonsterData | null 
 	if (!document) return null;
 	warnUnknownKeys(
 		document,
-		["nom", "typeDeCorps", "instinct", "typeInfecte", "description", "niveauDeDanger", "caracteristiques", "sante", "protections", "zoneDeDetection", "deplacement", "actionsParRound", "etatAlternatif", "comportement", "traitsSpeciaux", "competences", "equipement", "contagion", "narratif", "meta"],
+		["nom", "categorie", "typeDeCorps", "instinct", "typeInfecte", "description", "niveauDeDanger", "niveauDeDangerAlternatif", "niveauDeDangerNote", "caracteristiques", "sante", "etatsPermanents", "malusAvantHs", "protections", "zoneDeDetection", "deplacement", "actionsParRound", "defense", "actions", "etatDeBase", "etatPrincipal", "etats", "etatActif", "etatDePartie", "etatAlternatif", "comportement", "traitsSpeciaux", "competences", "equipement", "contagion", "narratif", "meta"],
 		"monstre",
 	);
 	const nom = asString(document.nom);

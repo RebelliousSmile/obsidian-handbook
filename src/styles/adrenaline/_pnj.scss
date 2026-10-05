@@ -1,47 +1,6 @@
+// The card itself lives in `_short-sheet.scss`.
 @mixin sheet {
-	.brumes-adrenaline-pnj {
-		display: flex;
-		flex-direction: column;
-		max-width: 36rem;
-		margin-inline: auto;
-		overflow-wrap: anywhere;
-		border: 1px solid var(--adrenaline-rule);
-		font-size: 0.84em;
-		line-height: 1.25;
-		background: var(--background-primary);
-	}
-
-	.brumes-adrenaline-pnj header {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.2rem 0.65rem;
-		align-items: baseline;
-		padding: 0.32rem 0.48rem;
-		color: var(--adrenaline-band-ink);
-		background: var(--adrenaline-band);
-	}
-
-	.brumes-adrenaline-pnj h3,
-	.brumes-adrenaline-pnj h4 { text-transform: uppercase; }
-	.brumes-adrenaline-pnj h3 { margin: 0; }
-	.brumes-adrenaline-pnj header h3 { color: inherit; }
-	.brumes-adrenaline-pnj--panel { min-width: 0; padding: 0.42rem 0.5rem; border-top: 1px solid var(--adrenaline-rule); background: var(--adrenaline-panel); }
-	.brumes-adrenaline-pnj--description {
-		margin: 0 0 0.3rem;
+	.brumes-adrenaline-pnj--description .brumes-adrenaline-card__paragraph {
 		font-style: var(--adrenaline-emphasis-style, italic);
-		color: var(--adrenaline-emphasis-color, inherit);
-	}
-	.brumes-adrenaline-pnj--narrative-list {
-		margin-block-start: 0.4rem;
-	}
-	.brumes-adrenaline-pnj--panel:has(.brumes-adrenaline-pnj--description) {
-		padding-block: 0.55rem;
-	}
-	.brumes-adrenaline-pnj ul { margin-block: 0.22rem 0; padding-inline-start: 1.1rem; }
-	.brumes-adrenaline-pnj--protection-rows > div { margin-block-start: 0.18rem; }
-
-	@media (max-width: 520px) {
-		.brumes-adrenaline-pnj { max-width: 100%; }
-		.brumes-adrenaline--health { grid-template-columns: minmax(0, 1fr); }
 	}
 }

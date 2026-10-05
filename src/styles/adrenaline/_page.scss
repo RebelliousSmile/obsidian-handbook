@@ -1,3 +1,6 @@
+// Reading view and Live Preview share most rules; print keeps its own selector.
+$views: ":is(.markdown-source-view, .markdown-reading-view)";
+
 @mixin page {
 	// Obsidian's real PDF export never nests content under
 	// `.markdown-reading-view`/`.markdown-source-view` — `printToPdf()` builds a
@@ -40,20 +43,15 @@
 		outline-offset: 2px;
 	}
 
-	.markdown-source-view .inline-title,
-	.markdown-reading-view .inline-title,
+	#{$views} .inline-title,
 	.print .markdown-preview-view .inline-title,
-	.markdown-source-view h1,
-	.markdown-reading-view h1,
+	#{$views} h1,
 	.print .markdown-preview-view h1,
-	.markdown-source-view h2,
-	.markdown-reading-view h2,
+	#{$views} h2,
 	.print .markdown-preview-view h2,
-	.markdown-source-view h3,
-	.markdown-reading-view h3,
+	#{$views} h3,
 	.print .markdown-preview-view h3,
-	.markdown-source-view h4,
-	.markdown-reading-view h4,
+	#{$views} h4,
 	.print .markdown-preview-view h4 {
 		border-inline-start: none;
 		font-family: var(--font-header-theme);
@@ -61,64 +59,52 @@
 		text-wrap: balance;
 	}
 
-	.markdown-source-view :is(.inline-title, h1, h2, h3, h4)::before,
-	.markdown-reading-view :is(.inline-title, h1, h2, h3, h4)::before,
+	#{$views} :is(.inline-title, h1, h2, h3, h4)::before,
 	.print .markdown-preview-view :is(.inline-title, h1, h2, h3, h4)::before {
 		display: none;
 		content: none;
 	}
 
-	.markdown-source-view .inline-title,
-	.markdown-reading-view .inline-title,
+	#{$views} .inline-title,
 	.print .markdown-preview-view .inline-title {
 		text-transform: var(--inline-title-text-transform, none);
 		font-weight: var(--inline-title-weight, inherit);
+		color: var(--h1-color, inherit);
 	}
 
-	.markdown-source-view h1,
-	.markdown-reading-view h1,
+	// Live Preview draws a heading as a `.HyperMD-header-N` line, not an `hN`.
+	.HyperMD-header-1,
+	.HyperMD-header-2 {
+		letter-spacing: 0.035em;
+	}
+
+	#{$views} h1,
+	.HyperMD-header-1,
 	.print .markdown-preview-view h1 {
 		text-transform: var(--h1-text-transform, none);
 		font-weight: var(--h1-weight, inherit);
+		color: var(--h1-color, inherit);
 	}
 
-	.markdown-source-view h2,
-	.markdown-reading-view h2,
+	// The booklet prints h1 on a panel closed by a rule, behind a vertical
+	// frieze. A pack without these tokens keeps a bare h1.
+	#{$views} h1,
+	.markdown-source-view.mod-cm6 .HyperMD-header-1,
+	.print .markdown-preview-view h1 {
+		padding: 0.15em 0.5em 0.1em;
+		border-inline-start: 0.5rem solid var(--adrenaline-h1-frieze, transparent);
+		border-block-end: 1px solid var(--adrenaline-h1-rule, transparent);
+		background: var(--adrenaline-h1-surface, none);
+	}
+
+	#{$views} h2,
+	.HyperMD-header-2,
 	.print .markdown-preview-view h2 {
 		padding-block-end: 0.16em;
 		text-transform: var(--h2-text-transform, none);
 		font-weight: var(--h2-weight, inherit);
 		color: var(--h2-color, inherit);
-		border-block-end: 1px solid var(--adrenaline-rule);
-	}
-
-	&.theme-light:not(.brumes--colour-dark),
-	&.brumes--colour-light {
-		.markdown-source-view .inline-title,
-		.markdown-reading-view .inline-title,
-		.print .markdown-preview-view .inline-title,
-		.markdown-source-view h1,
-		.markdown-reading-view h1,
-		.print .markdown-preview-view h1 {
-			padding: 0.18em 0.32em;
-			color: var(--adrenaline-cartouche-ink);
-			background: var(--adrenaline-cartouche);
-		}
-	}
-
-	&.theme-dark:not(.brumes--colour-light),
-	&.brumes--colour-dark {
-		.markdown-source-view .inline-title,
-		.markdown-reading-view .inline-title,
-		.print .markdown-preview-view .inline-title,
-		.markdown-source-view h1,
-		.markdown-reading-view h1,
-		.print .markdown-preview-view h1 {
-			padding: 0.28em 0.42em;
-			color: var(--adrenaline-cartouche-ink);
-			background: var(--adrenaline-cartouche);
-			text-shadow: 0.04em 0.04em 0 var(--background-primary);
-		}
+		border-block-end: 1px solid var(--adrenaline-h2-rule, var(--adrenaline-rule));
 	}
 
 	.markdown-reading-view .markdown-preview-sizer > :is(

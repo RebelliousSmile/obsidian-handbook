@@ -1,3 +1,6 @@
+@use "sass:list";
+@use "sass:map";
+
 // The colours a list needs are the pack's — the tick and its mark are the
 // game's leather and parchment. What stays here is spacing, and the images the
 // checkboxes are drawn with, which the pack names by role and this file places.
@@ -24,13 +27,29 @@
 	-webkit-mask-position-y: unset;
 }
 
-@mixin letter-checkbox($letter) {
-	input[data-task="#{$letter}"]:checked:after,
-	li[data-task="#{$letter}"] > input:checked:after,
-	li[data-task="#{$letter}"] > p > input:checked:after {
+// Every letter shares one rule over `:is(...)` (which weighs one attribute,
+// like a single letter did); each letter then sets only its own glyph. The
+// symbol checkboxes do the same with their image.
+@function tasks($marks) {
+	$list: ();
+	@each $mark in $marks {
+		$list: list.append($list, '[data-task="#{$mark}"]', $separator: comma);
+	}
+	@return ":is(#{$list})";
+}
+
+@mixin checkbox {
+	--checkbox-margin-inline-start: 0px;
+	--checkbox-size: 20px;
+
+	$letters: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "?";
+	$letter: tasks($letters);
+
+	input#{$letter}:checked:after,
+	li#{$letter} > input:checked:after,
+	li#{$letter} > p > input:checked:after {
 		@include reset-checkbox;
 
-		content: "#{$letter}";
 		color: var(--checkbox-marker-color);
 		font-family: "Labrada", serif;
 		text-transform: uppercase;
@@ -45,87 +64,44 @@
 		align-items: center;
 		transform: translateY(-1px);
 	}
-}
 
-@mixin consequence-checkbox {
-	input[data-task="-"]:checked,
-	li[data-task="-"] > input:checked,
-	li[data-task="-"] > p > input:checked {
+	@each $mark in $letters {
+		input[data-task="#{$mark}"]:checked:after,
+		li[data-task="#{$mark}"] > input:checked:after,
+		li[data-task="#{$mark}"] > p > input:checked:after {
+			content: "#{$mark}";
+		}
+	}
+
+	// Consequence (-), success (+) and mixed success (~) draw a pack image.
+	$images: ("-": minus, "+": plus, "~": tilde);
+	$symbol: tasks(map.keys($images));
+
+	input#{$symbol}:checked,
+	li#{$symbol} > input:checked,
+	li#{$symbol} > p > input:checked {
 		--checkbox-color: transparent;
 		--checkbox-color-hover: transparent;
 	}
 
-	input[data-task="-"]:checked:after,
-	li[data-task="-"] > input:checked:after,
-	li[data-task="-"] > p > input:checked:after {
+	input#{$symbol}:checked:after,
+	li#{$symbol} > input:checked:after,
+	li#{$symbol} > p > input:checked:after {
 		@include reset-checkbox;
 
 		content: "";
 		width: var(--checkbox-size);
 		height: var(--checkbox-size);
-		background-image: var(--brumes-image-checkbox-minus);
 		background-repeat: no-repeat;
 		background-size: contain;
 		background-position: center;
 	}
-}
 
-@mixin success-checkbox {
-	input[data-task="+"]:checked,
-	li[data-task="+"] > input:checked,
-	li[data-task="+"] > p > input:checked {
-		--checkbox-color: transparent;
-		--checkbox-color-hover: transparent;
+	@each $mark, $image in $images {
+		input[data-task="#{$mark}"]:checked:after,
+		li[data-task="#{$mark}"] > input:checked:after,
+		li[data-task="#{$mark}"] > p > input:checked:after {
+			background-image: var(--brumes-image-checkbox-#{$image});
+		}
 	}
-
-	input[data-task="+"]:checked:after,
-	li[data-task="+"] > input:checked:after,
-	li[data-task="+"] > p > input:checked:after {
-		@include reset-checkbox;
-
-		content: "";
-		width: var(--checkbox-size);
-		height: var(--checkbox-size);
-		background-image: var(--brumes-image-checkbox-plus);
-		background-repeat: no-repeat;
-		background-size: contain;
-		background-position: center;
-	}
-}
-
-@mixin mixed-success-checkbox {
-	input[data-task="~"]:checked,
-	li[data-task="~"] > input:checked,
-	li[data-task="~"] > p > input:checked {
-		--checkbox-color: transparent;
-		--checkbox-color-hover: transparent;
-	}
-
-	input[data-task="~"]:checked:after,
-	li[data-task="~"] > input:checked:after,
-	li[data-task="~"] > p > input:checked:after {
-		@include reset-checkbox;
-
-		content: "";
-		width: var(--checkbox-size);
-		height: var(--checkbox-size);
-		background-image: var(--brumes-image-checkbox-tilde);
-		background-repeat: no-repeat;
-		background-size: contain;
-		background-position: center;
-	}
-}
-
-@mixin checkbox {
-	--checkbox-margin-inline-start: 0px;
-	--checkbox-size: 20px;
-
-	$letters: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "?";
-	@each $letter in $letters {
-		@include letter-checkbox($letter);
-	}
-
-	@include consequence-checkbox;
-	@include success-checkbox;
-	@include mixed-success-checkbox;
 }

@@ -55,5 +55,9 @@ assert.match(css, /\.markdown-reading-view/);
 assert.match(css, /background-image:\s*none\s*!important/);
 assert.match(css, /opacity:\s*var\(--brumes-note-background-opacity\)/);
 assert.match(css, /pointer-events:\s*none/);
+// A game theme's page texture shares this pseudo-element: its opaque colour and
+// blend mode must not leak into the note's own image.
+assert.match(css, /background-color:\s*transparent/);
+assert.match(css, /background-blend-mode:\s*normal/);
 
 console.log("note-local backgrounds: green");

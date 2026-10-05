@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PJ_PRESENTATION } from "schema-adrenaline/presentation";
+import { MONSTRE_PRESENTATION, PJ_PRESENTATION, PNJ_PRESENTATION } from "schema-adrenaline/presentation";
 import { adrenalinePjBlock } from "../src/features/adrenalinePj/block";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../src/features/adrenalineMonstre/block";
@@ -33,10 +33,33 @@ class El {
 }
 
 const doc = { createElement: (tagName: string) => new El(tagName) } as unknown as Document;
+const CARD = "brumes-adrenaline-card";
+
+/** Every element under `root` (itself included) carrying the class. */
+function findAll(root: El, className: string): El[] {
+	const found = root.classes.includes(className) ? [root] : [];
+	return root.children.reduce((all, child) => all.concat(findAll(child, className)), found);
+}
+
+function textOf(root: El): string {
+	return [root.textContent, ...root.children.map(textOf)].filter(Boolean).join(" ");
+}
+
+function only(root: El, className: string, why: string): El {
+	const found = findAll(root, className);
+	assert.equal(found.length, 1, why);
+	return found[0];
+}
+
+const monsterCardSections = MONSTRE_PRESENTATION.sections.filter((section) => "cards" in section);
+const monsterZones = MONSTRE_PRESENTATION.sections.reduce<string[]>((zones, section) => {
+	if (!("cards" in section)) return zones.concat(section.id);
+	return section === monsterCardSections[0] ? zones.concat("cards") : zones;
+}, []);
 const expectedZones = new Map([
 	[adrenalinePjBlock.id, PJ_PRESENTATION.sections.map((section) => section.id)],
-	[adrenalinePnjBlock.id, ["header", "narrative", "characteristics", "health", "competences", "equipment"]],
-	[adrenalineMonsterBlock.id, ["header", "mobility", "behaviour", "characteristics", "health", "capabilities"]],
+	[adrenalinePnjBlock.id, PNJ_PRESENTATION.sections.map((section) => section.id)],
+	[adrenalineMonsterBlock.id, monsterZones],
 ]);
 
 for (const block of [adrenalinePjBlock, adrenalinePnjBlock, adrenalineMonsterBlock]) {
@@ -69,18 +92,92 @@ assert.doesNotMatch(
 	/Zombiology|Tous droits réservés/,
 	"monster rendering must preserve Lantern metadata without printing it in Handbook",
 );
-const capabilityPanel = richMonsterRendered.children.find((child) =>
-	child.children.some((grandChild) => grandChild.classes.includes("brumes-adrenaline-monstre--capability-group")),
-);
-assert.ok(capabilityPanel, "a rich monster must render its capability panel");
-const capabilityHeadings = capabilityPanel.children
-	.filter((child) => child.classes.includes("brumes-adrenaline-monstre--capability-group"))
-	.map((child) => child.children[0]?.textContent);
+// The legacy alternate state reads as a second card: the base on the principal one, the state beside it.
+const richCards = findAll(richMonsterRendered, `${CARD}__state-card`);
 assert.deepEqual(
-	capabilityHeadings,
-	["Traits", "État alternatif", "Compétences", "Équipement", "Contagion", "Informations de jeu"],
-	"monster capability families must remain separate and ordered",
+	richCards.map((card) => card.classes.filter((name) => name.startsWith(`${CARD}__state-card--`))),
+	[[`${CARD}__state-card--principal`, `${CARD}__state-card--active`], [`${CARD}__state-card--secondaire`]],
+	"a legacy alternate state must print the base, active, then the alternate state",
 );
+assert.equal(only(richCards[0], `${CARD}__state-label`, "one state name per card").textContent, "État de base");
+assert.equal(only(richCards[1], `${CARD}__state-label`, "one state name per card").textContent, "Surchargé");
+assert.deepEqual(findAll(richCards[1], `${CARD}__trigger`).map((trigger) => trigger.textContent), ["Entend une alarme"]);
+assert.match(textOf(richCards[0]), /30 m/, "the base card prints the base detection zone");
+assert.match(textOf(richCards[1]), /80 m/, "the alternate card overlays its detection zone");
+assert.doesNotMatch(textOf(richCards[1]), /30 m/, "the alternate card must not print the base value it overrides");
+assert.match(textOf(richCards[1]), /3 actions par round/);
+assert.equal(findAll(richCards[1], `${CARD}__section-agir`).length, 0, "the action section sits on the principal card only");
+assert.equal(findAll(richCards[0], `${CARD}__section-equipement`).length, 0, "equipment sits on the secondary card only");
+const richMeneur = only(richMonsterRendered, `${CARD}__section-meneur`, "the game-master material is printed once");
+assert.equal(richMeneur.tagName, "details", "the game-master material folds");
+assert.match(textOf(richMeneur), /Souche A-7/);
+
+// The booklet examples, printed as entered: nothing is totalled, nothing is derived.
+const npcExample = adrenalinePnjBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "pnj", "agent-de-securite.toml"), "utf8"));
+assert.ok(npcExample, "the security guard example must parse");
+const npcCard = adrenalinePnjBlock.render(npcExample, doc) as unknown as El;
+assert.deepEqual(
+	npcCard.children.map((child) => child.classes.filter((name) => name.startsWith("brumes-adrenaline-pnj--"))[0]),
+	PNJ_PRESENTATION.sections.filter((section) => section.id !== "meneur").map((section) => `brumes-adrenaline-pnj--${section.id}`),
+	"every section of the security guard prints, but the game-master notes it has none of",
+);
+assert.ok(npcCard.classes.includes(`${CARD}--banner-garnet`), "a PNJ category prints on the garnet banner");
+assert.equal(only(npcCard, `${CARD}__banner-icon`, "one banner icon").dataset.icon, "user");
+assert.equal(only(npcCard, `${CARD}__banner-danger`, "one danger level").textContent, "ND 17");
+assert.deepEqual(
+	findAll(npcCard, `${CARD}__skill-name`).slice(0, 2).map((skill) => skill.textContent),
+	["Arme à feu (Pistolet) 40 % + DEX", "Art martial (Judo) 40 % + DEX"],
+	"a skill prints its entered score and characteristic",
+);
+assert.deepEqual(
+	findAll(npcCard, `${CARD}__skill-head`).slice(0, 2).map((head) => findAll(head, `${CARD}__figure`).map((figure) => figure.textContent)),
+	[["70 %"], ["80 %"]],
+	"the entered total is the skill's figure, apart from its name",
+);
+assert.ok(npcCard.classes.includes(`${CARD}--values-${PNJ_PRESENTATION.appearance.values.align}`), "the card carries the published value alignment");
+assert.deepEqual(findAll(npcCard, `${CARD}__dice-badge`).map((badge) => badge.textContent), ["3d10", "1d10"]);
+assert.match(textOf(npcCard), /Munitions 12/);
+assert.match(textOf(npcCard), /−5 contre Tranchante, Perforante/);
+assert.match(textOf(npcCard), /Calme · −1d10 · Anxiété, Peur, Colère/);
+const npcTracks = findAll(npcCard, `${CARD}__track`);
+assert.equal(npcTracks.length, 3, "the three malus tracks always print");
+assert.deepEqual(
+	npcTracks.map((track) => [findAll(track, `${CARD}__circle-mark`).length, findAll(track, `${CARD}__circle-bold`).length]),
+	[[10, 2], [10, 0], [10, 0]],
+	"ten circles per track, the entered stress bold",
+);
+assert.deepEqual(
+	npcTracks.map((track) => track.classes.filter((name) => name.startsWith(`${CARD}__track--`))[0]),
+	[`${CARD}__track--stress`, `${CARD}__track--shock`, `${CARD}__track--wound`],
+	"each track names the colour it takes from the pack",
+);
+
+const zy2 = adrenalineMonsterBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "monstre", "infecte-zy-2.toml"), "utf8"));
+assert.ok(zy2, "the Zy-2 example must parse");
+const zy2Card = adrenalineMonsterBlock.render(zy2, doc) as unknown as El;
+assert.ok(zy2Card.classes.includes(`${CARD}--banner-garnet`));
+assert.equal(only(zy2Card, `${CARD}__banner-icon`, "one banner icon").dataset.icon, "biohazard");
+const zy2Cards = findAll(zy2Card, `${CARD}__state-card`);
+assert.equal(zy2Cards.length, 2, "Zy-2 prints two state cards");
+assert.equal(only(zy2Cards[0], `${CARD}__state-label`, "one state name").textContent, "Stimulé", "the principal card prints etatPrincipal");
+assert.equal(only(zy2Cards[1], `${CARD}__state-label`, "one state name").textContent, "Non stimulé");
+assert.ok(!zy2Cards[0].classes.includes(`${CARD}__state-card--active`), "without etatActif, the base is the current state");
+assert.ok(zy2Cards[1].classes.includes(`${CARD}__state-card--active`));
+assert.deepEqual(findAll(zy2Cards[1], `${CARD}__trigger`).map((trigger) => trigger.textContent), ["1d10 min consécutives sans détecter de proie"]);
+assert.match(only(zy2Cards[0], `${CARD}__section-corps`, "one body section").children[0].textContent, /^Corps \(Corps faible\)$/);
+assert.match(textOf(zy2Cards[0]), /2 actions par round/);
+assert.match(textOf(zy2Cards[1]), /1 action par round/);
+assert.match(textOf(zy2Cards[0]), /Défense Non \+4/);
+const zy2Actions = findAll(zy2Cards[0], `${CARD}__action`);
+assert.equal(zy2Actions.length, 2, "the stimulated state carries two actions");
+assert.equal(findAll(zy2Actions[0], `${CARD}__follow-up`).length, 2, "the first action has two follow-ups");
+assert.deepEqual(findAll(zy2Actions[0], `${CARD}__dice-badge`).map((badge) => badge.textContent), ["1d10", "2d10", "1d10"]);
+assert.equal(findAll(zy2Actions[0], `${CARD}__damage-link`)[0]?.textContent, "ou");
+assert.equal(findAll(zy2Actions[0], `${CARD}__trigger`)[0]?.textContent, "Attaque gratuite PREMIÈRE FOIS");
+assert.match(textOf(zy2Actions[0]), /Art martial \(Zombie\) 10 % \+ FOR = 40 %/);
+assert.equal(findAll(zy2Cards[1], `${CARD}__action`).length, 0, "the base state has no action of its own");
+assert.match(textOf(zy2Cards[1]), /Vêtements déchirés/, "equipment sits on the secondary card");
+
 for (const callout of [
 	"info",
 	"success",
@@ -100,11 +197,15 @@ for (const callout of [
 const minimal = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);
 assert.ok(minimal);
 const minimalRendered = adrenalineMonsterBlock.render(minimal, doc) as unknown as El;
-assert.equal(minimalRendered.children.length, 2);
 assert.deepEqual(
-	minimalRendered.children.map((child) => child.classes[0]),
-	["brumes-adrenaline-monstre--header", "brumes-adrenaline--section"],
+	minimalRendered.children.map((child) => child.classes.filter((name) => name.startsWith("brumes-adrenaline-monstre--"))[0]),
+	["brumes-adrenaline-monstre--entete", "brumes-adrenaline-monstre--cards"],
+	"a minimal creature prints its banner and one card",
 );
+assert.equal(findAll(minimalRendered, `${CARD}__state-card`).length, 1, "a creature without states prints one card");
+assert.equal(findAll(minimalRendered, `${CARD}__form-state-header`).length, 1);
+assert.ok(minimalRendered.classes.includes(`${CARD}--banner-garnet`), "the fallback category is garnet");
+assert.equal(only(minimalRendered, `${CARD}__banner-label`, "one banner label").textContent, "Créature");
 
 for (const scheme of ["light", "dark"] as const) {
 	const css = buildGameStyle(
@@ -125,9 +226,13 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 assert.match(scss, /@media \(max-width: 520px\)/);
 assert.match(scss, /brumes-adrenaline-pj__columns-3[^}]*grid-template-columns:\s*repeat\(3/);
 assert.match(scss, /@container \(max-width: 420px\)[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
-assert.match(scss, /\.brumes-adrenaline-pnj\s*\{[\s\S]*?max-width:\s*36rem/);
-assert.match(scss, /\.brumes-adrenaline-monstre\s*\{[\s\S]*?max-width:\s*36rem/);
-assert.match(scss, /brumes-adrenaline-monstre--capability-group/);
+assert.match(scss, /\.brumes-adrenaline-pnj[,\s][^{]*\{[^}]*max-width:\s*36rem/);
+assert.match(scss, /\.brumes-adrenaline-monstre[,\s][^{]*\{[^}]*max-width:\s*36rem/);
+// Layout only: the banner, the badges and the triggers take their colours from the pack.
+for (const token of ["banner-garnet", "banner-blue", "banner-orange", "banner-ink", "trigger-bg", "trigger-ink", "dice-badge-bg", "dice-badge-ink"]) {
+	assert.match(scss, new RegExp(`var\\(--adrenaline-${token}\\)`), `the compact card must read --adrenaline-${token}`);
+}
+assert.match(scss, /\.brumes-adrenaline-monstre--cards\s*\{[^}]*display:\s*grid/, "the creature's state cards sit side by side");
 // One column by default: multi-column text only comes from a marked layout region.
 assert.doesNotMatch(scss, /column-count/, "Adrenaline must not split notes into columns by default");
 assert.doesNotMatch(scss, /adrenaline-one-column/, "the one-column escape hatch has nothing left to escape");

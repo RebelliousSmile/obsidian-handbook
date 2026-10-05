@@ -163,36 +163,74 @@ export function buildGameStyle(
 		// Same selector as `base`, written after it: at equal specificity the
 		// later block wins, which is exactly the relation wanted here.
 		blocks.push(
-			renderLayer(
-				noteSelector(mode),
-				workspaceSelector(mode),
-				values[polarities[0]],
-				workspaceTheme,
+			offPaper(
+				polarities[0],
+				renderLayer(
+					noteSelector(mode),
+					workspaceSelector(mode),
+					values[polarities[0]],
+					workspaceTheme,
+				),
 			),
 		);
 	} else if (colourScheme === "obsidian") {
 		for (const polarity of polarities) {
 			blocks.push(
-				renderLayer(
-					noteSelector(mode, polarity, colourScheme),
-					workspaceSelector(mode, polarity, colourScheme),
-					values[polarity],
-					workspaceTheme,
+				offPaper(
+					polarity,
+					renderLayer(
+						noteSelector(mode, polarity, colourScheme),
+						workspaceSelector(mode, polarity, colourScheme),
+						values[polarity],
+						workspaceTheme,
+					),
 				),
 			);
 		}
 	} else if (polarities.includes(colourScheme)) {
 		blocks.push(
-			renderLayer(
-				noteSelector(mode, colourScheme, colourScheme),
-				workspaceSelector(mode, colourScheme, colourScheme),
-				values[colourScheme],
-				workspaceTheme,
+			offPaper(
+				colourScheme,
+				renderLayer(
+					noteSelector(mode, colourScheme, colourScheme),
+					workspaceSelector(mode, colourScheme, colourScheme),
+					values[colourScheme],
+					workspaceTheme,
+				),
+			),
+		);
+	}
+
+	if (polarities.length > 1 && polarities.includes("light")) {
+		// Paper is light whatever the screen shows: the light layer is written
+		// once more for print on the bare mode selector, after `base`, so it
+		// holds without counting on a theme or colour-scheme class.
+		blocks.push(
+			mediaBlock(
+				"print",
+				renderLayer(
+					noteSelector(mode),
+					workspaceSelector(mode),
+					values.light,
+					workspaceTheme,
+				),
 			),
 		);
 	}
 
 	return blocks.filter((block) => block.length > 0).join("\n\n");
+}
+
+function mediaBlock(query: string, css: string): string {
+	return css ? `@media ${query} {\n${css}\n}` : "";
+}
+
+/**
+ * A dark layer never reaches paper: it is written for the screen only. A pack
+ * with no light layer then prints its `base` on the white page of `_print.scss`.
+ */
+function offPaper(polarity: GamePolarity, css: string): string {
+	return polarity === "dark" ? mediaBlock("screen", css) : css;
 }
 
 /**

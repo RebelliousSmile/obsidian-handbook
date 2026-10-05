@@ -22,33 +22,31 @@ export function mapRegionToBlocks(
 	return selected.map(({ block }) => block);
 }
 
-export function wrapBlocksInRegion(
-	blocks: readonly HTMLElement[],
-	columns: number,
-): HTMLElement | null {
-	const first = blocks[0];
-	if (!first) return null;
+/** Class of a rendered block that flows in the columns of its region. */
+export const FLOW_BLOCK = "handbook-layout-flow";
+/** Class of the block container once it is the column box of its regions. */
+export const FLOW_HOST = "handbook-layout-flowing";
 
-	const container = first.ownerDocument.createElement("div");
-	container.classList.add("handbook-layout-region");
-	container.style.setProperty("--handbook-layout-columns", String(columns));
-	first.before(container);
-
-	const headingLevel = blocks.map(blockHeadingLevel).find((level) => level !== null);
-	let group: HTMLElement | null = null;
-	let groupHasHeading = false;
-	for (const block of blocks) {
-		const level = blockHeadingLevel(block);
-		if (!group || (groupHasHeading && level !== null && headingLevel != null && level <= headingLevel)) {
-			group = first.ownerDocument.createElement("div");
-			group.classList.add("handbook-layout-column");
-			container.appendChild(group);
-			groupHasHeading = false;
-		}
-		group.appendChild(block);
-		if (level !== null) groupHasHeading = true;
+/**
+ * The column count the regions of one note flow in. A single column box holds
+ * every region of the note, so the first multi-column region decides.
+ */
+export function flowColumns(regions: readonly LayoutRegion[]): number | null {
+	for (const region of regions) {
+		if (region.columns > 1) return region.columns;
 	}
-	return container;
+	return null;
+}
+
+/** Whether a rendered block lies entirely inside a multi-column region. */
+export function flowsInRegion(
+	regions: readonly LayoutRegion[],
+	info: { lineStart: number; lineEnd: number } | null,
+): boolean {
+	if (!info) return false;
+	return regions.some((region) =>
+		region.columns > 1 && info.lineStart >= region.lineStart && info.lineEnd <= region.lineEnd,
+	);
 }
 
 /** Wrap explicit groups of rendered blocks; contract layouts do not need headings or source markers. */
@@ -64,13 +62,4 @@ export function wrapBlocksInColumns(first: HTMLElement, columns: readonly (reado
 		for (const block of blocks) column.appendChild(block);
 	}
 	return container;
-}
-
-function blockHeadingLevel(block: HTMLElement): number | null {
-	const match = /^el-h([1-6])$/.exec(block.className);
-	if (match) return Number(match[1]);
-	// The print export wraps each block in a bare div instead of an `el-hN` section.
-	const only = block.tagName === "DIV" && block.className === "" && block.children.length === 1 ? block.children[0] : null;
-	const heading = /^H([1-6])$/.exec(only?.tagName ?? "");
-	return heading ? Number(heading[1]) : null;
 }

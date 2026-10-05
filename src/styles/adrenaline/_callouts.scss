@@ -10,9 +10,10 @@
 		break-inside: avoid;
 
 		.callout-title {
-			font-family: var(--font-header-theme);
+			font-family: var(--adrenaline-callout-title-font, inherit);
+			font-weight: var(--adrenaline-callout-title-weight, 700);
 			text-transform: uppercase;
-			--callout-title-size: 1.35em;
+			--callout-title-size: 1.15em;
 			--callout-title-color: var(--adrenaline-callout-title);
 			color: var(--adrenaline-callout-title);
 		}
@@ -23,51 +24,90 @@
 		}
 	}
 
-	// Note: pinned index card. A tack marks the corner, the surface behaves
-	// like a loose sheet of paper rather than a coloured block.
+	// Note: a found document. A loose sheet held by a paper clip, the title
+	// centred, title and body in the pack's handwriting face.
 	.callout[data-callout="note"] {
-		background: var(--adrenaline-callout-surface);
-		box-shadow: 0.12rem 0.12rem 0 rgba(0, 0, 0, 0.18);
+		overflow: visible;
+		margin-block-start: 1rem;
+		border: none;
+		border-radius: 0;
+		color: var(--adrenaline-note-ink, var(--adrenaline-callout-ink));
+		background: var(--adrenaline-note-surface, var(--adrenaline-callout-surface));
+		box-shadow: 0.15rem 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
 
 		&::after {
 			content: "";
 			position: absolute;
-			top: -0.3rem;
-			left: 0.9rem;
-			width: 0.6rem;
-			height: 0.6rem;
-			border-radius: 50%;
-			background: var(--adrenaline-signal);
-			box-shadow: 0 0.08rem 0.12rem rgba(0, 0, 0, 0.35);
+			top: -0.7rem;
+			left: 1rem;
+			width: 0.55rem;
+			height: 1.7rem;
+			border: 2px solid var(--text-faint);
+			border-radius: 0.3rem;
+			transform: rotate(-8deg);
+		}
+
+		.callout-icon {
+			display: none;
+		}
+
+		.callout-title {
+			justify-content: center;
+			font-family: var(--adrenaline-note-font, var(--font-header-theme));
+			--callout-title-color: var(--adrenaline-note-ink, var(--adrenaline-callout-title));
+		}
+
+		.callout-content {
+			font-family: var(--adrenaline-note-font, inherit);
+			color: var(--adrenaline-note-ink, var(--adrenaline-callout-ink));
 		}
 	}
 
-	.callout[data-callout="summary"],
-	.callout[data-callout="abstract"],
-	.callout[data-callout="tldr"],
-	.callout[data-callout="quote"] {
+	.callout:is([data-callout="summary"], [data-callout="abstract"], [data-callout="tldr"], [data-callout="quote"]) {
 		background: var(--adrenaline-callout-quote);
 	}
 
-	.callout[data-callout="info"],
 	.callout[data-callout="todo"] {
 		background: var(--adrenaline-callout-info);
 	}
 
-	.callout[data-callout="tip"],
-	.callout[data-callout="hint"],
-	.callout[data-callout="important"],
-	.callout[data-callout="success"],
-	.callout[data-callout="check"],
-	.callout[data-callout="done"] {
+	.callout:is([data-callout="hint"], [data-callout="important"], [data-callout="success"], [data-callout="check"], [data-callout="done"]) {
 		background: var(--adrenaline-callout-success);
+	}
+
+	// Tip: a short play aid (phase, soundtrack). A small rounded peach card
+	// inside a garnet rule, compact lines under a small bold label.
+	.callout[data-callout="tip"] {
+		border: 1px solid var(--adrenaline-callout-tip-border, var(--adrenaline-callout-border));
+		border-radius: 0.6rem;
+		color: var(--adrenaline-callout-tip-ink, var(--adrenaline-callout-ink));
+		background: var(--adrenaline-callout-tip, var(--adrenaline-callout-success));
+
+		.callout-title {
+			font-family: inherit;
+			font-weight: 700;
+			--callout-title-size: 0.85em;
+			--callout-title-color: var(--adrenaline-callout-tip-ink, var(--adrenaline-callout-title));
+		}
+
+		.callout-icon .svg-icon,
+		.callout-content {
+			color: var(--adrenaline-callout-tip-ink, var(--adrenaline-callout-ink));
+		}
+
+		.callout-content {
+			font-size: 0.9em;
+			line-height: var(--line-height-tight, 1.3);
+		}
+
+		.callout-content > p {
+			margin-block: 0.15rem;
+		}
 	}
 
 	// Question/interroger: rule panel. No fill, a thick rule carries the
 	// intent instead of a coloured background.
-	.callout[data-callout="question"],
-	.callout[data-callout="help"],
-	.callout[data-callout="faq"] {
+	.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) {
 		background: var(--adrenaline-callout-question);
 		border: none;
 		border-inline-start: 0.35rem solid var(--adrenaline-rule);
@@ -80,19 +120,23 @@
 
 	// Warning/danger family: banner cartouche. The title band takes the same
 	// dark cartouche treatment as h1/inline-title so the alert reads as a
-	// stamped banner, not a coloured card.
-	.callout[data-callout="warning"],
-	.callout[data-callout="caution"],
-	.callout[data-callout="attention"],
-	.callout[data-callout="failure"],
-	.callout[data-callout="danger"],
-	.callout[data-callout="error"],
-	.callout[data-callout="bug"] {
-		border-block-start: 0.4rem solid var(--adrenaline-signal);
-		background-image: var(--adrenaline-warning-texture, none);
-		background-repeat: repeat-x;
-		background-position: top;
-		background-size: 7rem 0.4rem;
+	// stamped banner, not a coloured card. One hazard tape runs along the top:
+	// the pack's stripe, cut from square tiles so it is never squashed, over the
+	// signal colour when the pack ships no image. The body sits on the callout
+	// surface itself, with no plate of its own.
+	.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"], [data-callout="failure"], [data-callout="danger"], [data-callout="error"], [data-callout="bug"]) {
+		--adrenaline-warning-tape: 0.5rem;
+		padding-block-start: calc(var(--size-4-3, 0.75rem) + var(--adrenaline-warning-tape));
+
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 0 0 auto;
+			height: var(--adrenaline-warning-tape);
+			background-color: var(--adrenaline-signal);
+			background-image: var(--adrenaline-warning-texture, none);
+			background-size: 3rem 3rem;
+		}
 
 		.callout-title {
 			margin: 0 0 0.4rem;
@@ -103,30 +147,234 @@
 			color: var(--adrenaline-callout-cartouche-ink);
 			background: var(--adrenaline-callout-cartouche-bg);
 		}
-
-		.callout-content {
-			background: var(--adrenaline-text-backplate);
-		}
 	}
 
-	.callout[data-callout="warning"],
-	.callout[data-callout="caution"],
-	.callout[data-callout="attention"] {
+	.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) {
 		background-color: var(--adrenaline-callout-warning);
 	}
 
-	.callout[data-callout="failure"],
-	.callout[data-callout="danger"],
-	.callout[data-callout="error"],
-	.callout[data-callout="bug"] {
+	.callout:is([data-callout="failure"], [data-callout="danger"], [data-callout="error"], [data-callout="bug"]) {
 		background: var(--adrenaline-callout-danger);
 	}
 
-	// Example: dashed box. No fill beyond the paper tint, the dashed frame
-	// marks it as a worked case rather than a rule statement.
-	.callout[data-callout="example"] {
-		border-style: dashed;
-		border-width: 2px;
-		background: var(--adrenaline-callout-example);
+	@include booklet;
+}
+
+// The seven booklet callouts of `ADRENALINE_VISUAL_CALLOUTS`. They match the
+// canonical style key, so a user alias keeps the anatomy; `example` is one of
+// the default aliases of `adrenaline-exemple`. Except for the mention, the
+// booklet draws no icons: the icon stays for the insertion menu only.
+@mixin booklet {
+	// Only the booklet callouts carry an `adrenaline-` style key. The native
+	// `info` takes the action card of the scenario booklet with them.
+	.callout:is([data-brumes-callout-style^="adrenaline-"], [data-callout="info"]) {
+		--adrenaline-callout-pad: 0.6rem;
+		padding: 0;
+		border-radius: 0;
+
+		.callout-icon {
+			display: none;
+		}
+
+		// Each booklet callout sets only the `--booklet-*` values of its title:
+		// the bar (whole title line), the label (title text) and their ink.
+		.callout-title {
+			justify-content: var(--booklet-align, flex-start);
+			padding: var(--booklet-bar-pad, 0);
+			background: var(--booklet-bar, none);
+			--callout-title-color: var(--booklet-ink);
+		}
+
+		.callout-title-inner {
+			padding: 0.12em 0.6em;
+			background: var(--booklet-label, none);
+		}
+
+		.callout-content {
+			padding: 0.4rem var(--adrenaline-callout-pad);
+		}
+
+		.callout-content > :first-child {
+			margin-block-start: 0;
+		}
+
+		.callout-content > :last-child {
+			margin-block-end: 0;
+		}
+	}
+
+	// Exemple: dotted rules above and below, no fill, the label on a dark
+	// cartouche at the right, an italic body.
+	.callout[data-brumes-callout-style="adrenaline-exemple"] {
+		border: none;
+		border-block: 2px dotted var(--adrenaline-example-rule, var(--background-modifier-border));
+		background: none;
+		--booklet-align: flex-end;
+		--booklet-ink: var(--adrenaline-callout-cartouche-ink);
+		--booklet-label: var(--adrenaline-callout-cartouche-bg);
+
+		.callout-content {
+			padding-inline: 0;
+			font-style: var(--adrenaline-emphasis-style, italic);
+			color: var(--adrenaline-emphasis-color, var(--text-normal));
+		}
+	}
+
+	// Description: text read aloud. The dotted rules of the exemple, the label
+	// on a garnet cartouche at the right, an upright body on the pack's surface.
+	// The cartouche sits on top of the upper rule: the rules and the surface
+	// belong to the body, not to the whole callout.
+	.callout[data-brumes-callout-style="adrenaline-description"] {
+		border: none;
+		background: none;
+		--booklet-align: flex-end;
+		--booklet-ink: var(--adrenaline-description-label-ink, var(--adrenaline-callout-cartouche-ink));
+		--booklet-label: var(--adrenaline-description-label-bg, var(--adrenaline-callout-cartouche-bg));
+
+		.callout-content {
+			border-block: 2px dotted var(--adrenaline-description-rule, var(--background-modifier-border));
+			background: var(--adrenaline-description-surface, none);
+			color: var(--text-normal);
+		}
+	}
+
+	// Encart: the title on a garnet band as wide as its text, the body on the
+	// rosy surface inside a garnet rule.
+	.callout[data-brumes-callout-style="adrenaline-encart"] {
+		border: 1px solid var(--adrenaline-callout-border);
+		background: var(--adrenaline-callout-surface);
+		--booklet-ink: var(--adrenaline-band-ink);
+		--booklet-label: var(--adrenaline-band);
+	}
+
+	// Formation: a dark band across the whole width, then the body on the page.
+	// `[!formation|fond]` puts the body on a grey surface and turns its first
+	// paragraph into an italic garnet lead.
+	.callout[data-brumes-callout-style="adrenaline-formation"] {
+		border: none;
+		background: none;
+		--booklet-bar-pad: 0.12em 0;
+		--booklet-bar: var(--adrenaline-callout-cartouche-bg);
+		--booklet-ink: var(--adrenaline-callout-cartouche-ink);
+
+		.callout-content {
+			padding-inline: 0;
+			color: var(--text-normal);
+		}
+
+		&[data-callout-metadata~="fond"] .callout-content {
+			padding-inline: var(--adrenaline-callout-pad);
+			background: var(--adrenaline-formation-surface);
+			color: var(--adrenaline-callout-ink);
+
+			> p:first-child {
+				font-style: var(--adrenaline-emphasis-style, italic);
+				color: var(--adrenaline-emphasis-color, inherit);
+			}
+		}
+	}
+
+	// Action: a rounded card with a peach title. The native `info` shares the
+	// card, not the test line below.
+	.callout:is([data-brumes-callout-style="adrenaline-action"], [data-callout="info"]) {
+		border: 1px solid var(--adrenaline-action-border, var(--adrenaline-callout-border));
+		border-radius: 0.6rem;
+		background: var(--adrenaline-card-surface);
+		--booklet-bar-pad: 0.2em 0;
+		--booklet-bar: var(--adrenaline-action-title-bg);
+		--booklet-ink: var(--adrenaline-action-title-ink);
+	}
+
+	// The first body paragraph of an action is the garnet band of its test
+	// line, bled to the card edges. Bold keeps the band's ink.
+	.callout[data-brumes-callout-style="adrenaline-action"] .callout-content > p:first-child {
+		margin: -0.4rem calc(-1 * var(--adrenaline-callout-pad)) 0.5rem;
+		padding: 0.2em var(--adrenaline-callout-pad);
+		font-family: var(--adrenaline-callout-title-font, inherit);
+		font-weight: var(--adrenaline-callout-title-weight, 700);
+		color: var(--adrenaline-band-ink);
+		background: var(--adrenaline-band);
+
+		strong {
+			color: inherit;
+		}
+	}
+
+	// Roller: a table to roll on. The frame and the fitted garnet band of the
+	// encart, no surface; the table (striped by the content rules) fills it.
+	.callout[data-brumes-callout-style="adrenaline-roller"] {
+		border: 1px solid var(--adrenaline-callout-border);
+		background: none;
+		--booklet-ink: var(--adrenaline-band-ink);
+		--booklet-label: var(--adrenaline-band);
+
+		.callout-content {
+			padding: 0;
+			color: var(--text-normal);
+		}
+
+		table {
+			width: 100%;
+			margin: 0;
+			border: none;
+		}
+	}
+
+	// Mention: one line inside a thin rounded rule. The only booklet callout
+	// that draws its icon, picked by the modifier from the pack's icon names;
+	// then the bold label and the body after it, in the page's own weight.
+	.callout[data-brumes-callout-style="adrenaline-mention"] {
+		--callout-icon: var(--adrenaline-mention-icon, lucide-bookmark);
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 0.5rem;
+		align-items: baseline;
+		width: fit-content;
+		max-width: 100%;
+		padding: 0.2rem 0.7rem;
+		border: 1px solid var(--adrenaline-mention-border, var(--adrenaline-callout-border));
+		border-radius: 0.6rem;
+		background: var(--adrenaline-mention-surface, none);
+		--booklet-ink: var(--adrenaline-mention-title, var(--adrenaline-callout-title));
+
+		@each $modifier in (video, audio, livre, lien) {
+			&[data-callout-metadata~="#{$modifier}"] {
+				--callout-icon: var(--adrenaline-mention-icon-#{$modifier}, var(--adrenaline-mention-icon, lucide-bookmark));
+			}
+		}
+
+		.callout-title {
+			flex: 0 0 auto;
+			gap: 0.4rem;
+			align-items: center;
+			font-family: inherit;
+			font-weight: var(--adrenaline-keyword-weight, 700);
+			text-transform: var(--adrenaline-keyword-transform, uppercase);
+			--callout-title-size: 1em;
+		}
+
+		.callout-icon {
+			display: flex;
+		}
+
+		.callout-icon .svg-icon {
+			color: var(--booklet-ink);
+		}
+
+		.callout-title-inner {
+			padding: 0;
+		}
+
+		.callout-content {
+			flex: 0 1 auto;
+			min-width: 0;
+			padding: 0;
+			font-weight: 400;
+			color: var(--text-normal);
+		}
+
+		.callout-content > p {
+			margin: 0;
+		}
 	}
 }

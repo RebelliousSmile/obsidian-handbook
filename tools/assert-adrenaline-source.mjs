@@ -22,6 +22,7 @@ export class Setting {}
 export class Modal {}
 export class ItemView {}
 export function setIcon() {}
+export function getLanguage() { return "en"; }
 `);
 try {
 	buildSync({ entryPoints: ["tools/assertAdrenalineSource.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["postcss", "postcss-selector-parser"], alias: { obsidian: stub }, logLevel: "warning" });

@@ -122,11 +122,11 @@ def right_click_table(index):
     rect = tables[index]
     call("Input.dispatchMouseEvent", {"type": "mousePressed", "x": rect["x"], "y": rect["y"], "button": "right", "buttons": 2, "clickCount": 1})
     call("Input.dispatchMouseEvent", {"type": "mouseReleased", "x": rect["x"], "y": rect["y"], "button": "right", "buttons": 0, "clickCount": 1})
-    wait_for("[...document.querySelectorAll('.menu-item-title')].some(item => item.textContent === 'Roll and copy result')")
+    wait_for("[...document.querySelectorAll('.menu-item-title')].some(item => /^(Roll and copy result|Lancer et copier le résultat)$/.test(item.textContent))")
 
 
 def choose_roll():
-    evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => item.textContent === 'Roll and copy result'); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.click(); return true; })()")
+    evaluate("(() => { const title = [...document.querySelectorAll('.menu-item-title')].find(item => /^(Roll and copy result|Lancer et copier le résultat)$/.test(item.textContent)); const item = title?.closest('.menu-item'); if (!item) throw new Error('Roller menu item was not visible'); item.click(); return true; })()")
 
 
 def instrument_dice_roller():

@@ -75,12 +75,13 @@ Renommés : `manifest.json`, `package.json`, README, chaînes visibles de `src/`
 - Les polices **ne sont plus embarquées** : chaque pack `schema-in-the-mist/handbook/<id>` publie ses WOFF2 et son `styles/fonts.css`. `assert:mist-font-packs` impose `dist/styles.css` < 150 000 octets et sans `@font-face`.
 - Réglage fin : `<plugin>/overrides.json` (valeurs et `shapes` zone par zone). Aucune dépendance réseau à l'exécution. Format gelé : jamais renommer ni supprimer un champ sans chemin de lecture de l'ancienne forme.
 - Un thème de jeu doit fixer `--code-normal` / `--code-background`.
+- **Impression (export PDF) : le papier est blanc et clair, toujours.** `_print.scss` force le fond de page à `#fff` ; `buildGameStyle` écrit toute couche `dark` sous `@media screen` et réécrit la couche `light` sous `@media print` ; `setBrumesColourSchemeClass` remplace `brumes--colour-dark` par `brumes--colour-light` tant qu'un `.print` est dans le `body`. Une règle sombre statique en SCSS doit rester derrière `.theme-dark` ou `.brumes--colour-dark`, jamais sur le sélecteur nu. Preuve : `pnpm assert:style-scope`.
 
 ## Release
 
 - Version unique sur `package.json`, `manifest.json`, `versions.json` et la dernière section de `CHANGELOG.md`, tenue par `pnpm assert:release-version`.
 - Bumper par **`pnpm version <x.y.z>`**, jamais à la main. Ne pas rétro-remplir `versions.json`.
-- Pousser un tag ne publie rien : `gh workflow run release.yml --ref v<x.y.z>` (sur le **tag**, pas sur `main`).
+- La release passe par le superviseur : `pnpm supervise release --run` (enchaîné par `ship`) pousse le tag `v<x.y.z>` puis lance `release.yml` sur ce **tag**, pas sur `main` — pousser un tag seul ne publie rien. La version et le `CHANGELOG` se préparent avec le changement.
 - Workflows : `pnpm install --frozen-lockfile` uniquement (gardé par `assert:ci-install`). Les versions des `schema-*` se lisent dans `package.json`, jamais recopiées en littéral.
 
 ## Git

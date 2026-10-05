@@ -21,6 +21,7 @@ export class Setting {}
 export class Modal {}
 export class ItemView {}
 export function setIcon() {}
+export function getLanguage() { return "en"; }
 `,
 );
 

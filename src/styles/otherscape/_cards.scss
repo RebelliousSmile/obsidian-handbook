@@ -1,0 +1,34 @@
+// What the Otherscape blocks share. `record` frames the challenge profile and
+// the character creation card; `narrow` folds every block to one column and
+// comes after them so it overrides their grids.
+@mixin record {
+	.brumes-os-profile,
+	.brumes-os-creation {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+		max-width: 100%;
+		overflow-wrap: anywhere;
+		padding: 1rem;
+		border: 2px solid var(--color-accent);
+		background: var(--background-primary-alt);
+		color: var(--text-normal);
+	}
+	:is(.brumes-os-profile, .brumes-os-creation) {
+		header { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; }
+		header small { margin-inline-start: auto; }
+		h3 { margin: 0; text-transform: uppercase; }
+		section { min-width: 0; border-top: 1px solid var(--color-accent); }
+	}
+	body.brumes--variant-cairo & :is(.brumes-os-profile, .brumes-os-creation) { border-width: 1px 4px; }
+}
+
+@mixin narrow {
+	@media (max-width: 520px) {
+		.brumes-os-theme,
+		.brumes-os-profile,
+		.brumes-os-creation { grid-template-columns: minmax(0, 1fr); }
+		:is(.brumes-os-theme, .brumes-os-profile, .brumes-os-creation) > * { grid-column: 1; }
+		.brumes-os-theme > * { min-width: 0; }
+	}
+}

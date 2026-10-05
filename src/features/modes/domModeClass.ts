@@ -57,19 +57,60 @@ export function setBrumesWorkspaceThemeClass(enabled: boolean, doc: Document) {
 	body.classList.remove(WORKSPACE_THEME_CLASS);
 }
 
+interface PaperWatch {
+	observer: MutationObserver;
+	colourScheme: ColourScheme;
+}
+
+const paperWatches = new WeakMap<Document, PaperWatch>();
+
+/** Obsidian's PDF export renders the note in a `.print` child of `body`. */
+function isPrinting(body: HTMLElement): boolean {
+	for (let index = 0; index < body.children.length; index++) {
+		if (body.children[index].classList.contains("print")) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function writeColourSchemeClass(colourScheme: ColourScheme, doc: Document) {
+	const body = doc.body;
+	// Paper is light: Obsidian swaps `theme-dark` for `theme-light` before it
+	// prints, and a dark scheme forced by Handbook gives way the same way.
+	const shown =
+		colourScheme === "dark" && isPrinting(body) ? "light" : colourScheme;
+	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);
+
+	if (shown === "light") {
+		body.classList.add(COLOUR_SCHEME_LIGHT_CLASS);
+	} else if (shown === "dark") {
+		body.classList.add(COLOUR_SCHEME_DARK_CLASS);
+	}
+}
+
 /** Apply a Handbook-only polarity without changing Obsidian's own theme. */
 export function setBrumesColourSchemeClass(
 	colourScheme: ColourScheme,
 	doc: Document,
 ) {
-	const body = doc.body;
-	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);
+	const watch = paperWatches.get(doc);
 
-	if (colourScheme === "light") {
-		body.classList.add(COLOUR_SCHEME_LIGHT_CLASS);
-	} else if (colourScheme === "dark") {
-		body.classList.add(COLOUR_SCHEME_DARK_CLASS);
+	if (watch) {
+		watch.colourScheme = colourScheme;
+	} else if (typeof MutationObserver !== "undefined") {
+		const created: PaperWatch = {
+			colourScheme,
+			observer: new MutationObserver(() => {
+				writeColourSchemeClass(created.colourScheme, doc);
+			}),
+		};
+		created.observer.observe(doc.body, { childList: true });
+		paperWatches.set(doc, created);
 	}
+
+	writeColourSchemeClass(colourScheme, doc);
 }
 
 /**
@@ -110,6 +151,8 @@ export function clearBrumesModeClasses(doc: Document) {
 	}
 
 	body.classList.remove(WORKSPACE_THEME_CLASS);
+	paperWatches.get(doc)?.observer.disconnect();
+	paperWatches.delete(doc);
 	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);
 	setBrumesMissingAssetClasses([], doc);
 }

@@ -281,7 +281,7 @@ export function readCompetences(value: unknown): Competence[] {
 	for (const record of asRecordList(value)) {
 		warnUnknownKeys(
 			record,
-			["nom", "specialite", "pourcentage", "caracteristique", "total", "avantages", "notes"],
+			["nom", "specialite", "pourcentage", "caracteristique", "total", "avantages", "degats", "action", "notes"],
 			"competence",
 		);
 		const nom = asString(record.nom);

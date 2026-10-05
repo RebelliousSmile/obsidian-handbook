@@ -3,9 +3,11 @@ import { readFileSync } from "node:fs";
 import { parseLayoutRegions } from "../src/features/layoutRegions/parser";
 import { CacheSection, mapPrintRegions } from "../src/features/layoutRegions/printMapper";
 import {
+	flowColumns,
+	flowsInRegion,
 	mapRegionToBlocks,
-	wrapBlocksInRegion,
 } from "../src/features/layoutRegions/sectionMapper";
+import { wrapInLayoutRegion } from "../src/features/layoutRegions/insertion";
 import { applyContractLayout } from "../src/features/layoutRegions/contractLayout";
 
 const source = [
@@ -127,16 +129,20 @@ assert.equal(mapRegionToBlocks(region, [
 	{ block: renderedBlocks[1] as unknown as HTMLElement, info: null },
 	{ block: renderedBlocks[2] as unknown as HTMLElement, info: { lineStart: 4, lineEnd: 4 } },
 ]), null);
-const container = wrapBlocksInRegion(
-	mapped!,
-	3,
-) as unknown as FakeElement;
-
-assert.equal(container.classList.values.has("handbook-layout-region"), true);
-assert.equal(container.style.values.get("--handbook-layout-columns"), "3");
-assert.deepEqual(parent.children, [open, container, close]);
-assert.equal(container.children.length, 3);
-assert.deepEqual(container.children.map((group) => group.children), renderedBlocks.map((block) => [block]));
+// A region flows in place: its blocks are marked where Obsidian drew them, and
+// the block container never gains a wrapper it would have to keep in order.
+assert.deepEqual(parent.children, [open, ...renderedBlocks, close]);
+const sourceRegions = parseLayoutRegions(source).regions;
+assert.equal(flowColumns(sourceRegions), 3, "the first region wider than one column sets the count");
+assert.equal(flowColumns([sourceRegions[1]]), null, "a single-column region never flows");
+assert.equal(flowColumns([]), null);
+assert.equal(flowsInRegion(sourceRegions, { lineStart: 2, lineEnd: 4 }), true);
+assert.equal(flowsInRegion(sourceRegions, { lineStart: 3, lineEnd: 3 }), true);
+assert.equal(flowsInRegion(sourceRegions, { lineStart: 1, lineEnd: 1 }), false, "the opening marker spans the columns");
+assert.equal(flowsInRegion(sourceRegions, { lineStart: 5, lineEnd: 5 }), false, "the closing marker spans the columns");
+assert.equal(flowsInRegion(sourceRegions, { lineStart: 4, lineEnd: 6 }), false, "a block that leaves the region spans the columns");
+assert.equal(flowsInRegion(sourceRegions, { lineStart: 8, lineEnd: 9 }), false, "a single-column region spans the columns");
+assert.equal(flowsInRegion(sourceRegions, null), false, "a block without source lines spans the columns");
 
 // Schema layouts select rendered regions, not source lines. The selected regions
 // may be separated by other content and an optional region may be absent.
@@ -207,13 +213,10 @@ for (const withTitle of [false, true]) {
 	assert.equal(mapped.selections.length, 1);
 	assert.equal(mapped.selections[0].blocks.length, 12);
 	assert.equal(mapped.selections[0].blocks[0], printed[withTitle ? 4 : 3]);
-	const container = wrapBlocksInRegion(mapped.selections[0].blocks, mapped.selections[0].region.columns) as unknown as FakeElement;
-	assert.equal(container.style.values.get("--handbook-layout-columns"), "3");
-	assert.equal(container.children.length, 6, "each heading opens its own column");
-	assert.ok(container.children.every((column) => column.children.length === 2));
-	assert.equal(view.children.filter((child) => child === container).length, 1);
-	assert.equal(view.children[view.children.indexOf(container) - 1], printed[withTitle ? 3 : 2], "the introduction stays before the region");
-	assert.equal(view.children[view.children.indexOf(container) + 1].tagName, "HR", "the rule stays after the region");
+	assert.equal(flowColumns([mapped.selections[0].region]), 3);
+	const last = mapped.selections[0].blocks[11] as unknown as FakeElement;
+	assert.equal(view.children[view.children.indexOf(last) + 1].tagName, "HR", "the rule stays after the region");
+	assert.deepEqual(view.children, printed, "the print DOM keeps its order");
 }
 
 // Two successive regions: every selection is taken before any wrapping.
@@ -236,9 +239,8 @@ const twoMapped = mapPrintRegions(twoRegions, twoSections, twoSource.split(/\r?\
 assert.equal(twoMapped.ok, true);
 if (twoMapped.ok) {
 	assert.deepEqual(twoMapped.selections.map(({ blocks }) => blocks.length), [4, 1]);
-	const wrappedRegions = twoMapped.selections.map(({ region, blocks }) => wrapBlocksInRegion(blocks, region.columns) as unknown as FakeElement);
-	assert.deepEqual(twoView.children, [twoPrinted[0], wrappedRegions[0], twoPrinted[5], wrappedRegions[1]]);
-	assert.equal(wrappedRegions[1].style.values.get("--handbook-layout-columns"), "1");
+	assert.equal(flowColumns(twoMapped.selections.map(({ region }) => region)), 2);
+	assert.deepEqual(twoView.children, twoPrinted);
 }
 
 // A type that diverges (a paragraph where the cache says heading) leaves the DOM untouched.
@@ -263,5 +265,18 @@ assert.equal(noProperties.ok && noProperties.selections.length, 1);
 const plain = mapPrintRegions([], probeSections, probeSource.split(/\r?\n/), asElements(probePrinted(false)));
 assert.deepEqual(plain, { ok: true, selections: [], unmatched: [] });
 
+// The insertion writes a pair the parser reads back, around a selection or
+// around nothing yet (an empty region is reported, never rendered).
+const inserted = parseLayoutRegions(wrapInLayoutRegion("\n# One\n\n# Two\n"));
+assert.deepEqual(inserted.diagnostics, []);
+assert.deepEqual(
+	inserted.regions.map((region) => [region.columns, region.lineStart, region.lineEnd]),
+	[[2, 2, 4]],
+);
+assert.deepEqual(
+	parseLayoutRegions(wrapInLayoutRegion("")).diagnostics.map((entry) => entry.reason),
+	["empty"],
+);
+
 console.log("Layout-region source directives accept only safe, non-literal pairs.");
-console.log("Print export groups regions by rank and refuses any block that disagrees.");
+console.log("Print export selects regions by rank and refuses any block that disagrees.");

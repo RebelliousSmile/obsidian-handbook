@@ -138,7 +138,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 				setting.setDesc("No pack installed.");
 				return;
 			}
-			setting.setDesc(`Pack ${installation.version}${bundled ? ` · Bundled schema ${bundled}` : ""}`);
+			// The schema and the appearance pack are versioned apart: name each one,
+			// schema first, so a pack behind the schema's number does not read as stale.
+			setting.setDesc(bundled ? `Schema ${bundled} · Appearance pack ${installation.version}` : `Appearance pack ${installation.version}`);
 		});
 	}
 

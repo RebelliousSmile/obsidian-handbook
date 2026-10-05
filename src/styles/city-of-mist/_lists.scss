@@ -1,3 +1,5 @@
+@use "sass:list";
+
 @mixin unordered-list {
 	--list-indent-editing: 0em;
 }
@@ -13,13 +15,28 @@
 	-webkit-mask-position-y: unset;
 }
 
-@mixin letter-checkbox($letter) {
-	input[data-task="#{$letter}"]:checked:after,
-	li[data-task="#{$letter}"] > input:checked:after,
-	li[data-task="#{$letter}"] > p > input:checked:after {
+// Every letter shares one rule over `:is(...)` (which weighs one attribute,
+// like a single letter did); each letter then sets only its own glyph.
+@function tasks($letters) {
+	$list: ();
+	@each $letter in $letters {
+		$list: list.append($list, '[data-task="#{$letter}"]', $separator: comma);
+	}
+	@return ":is(#{$list})";
+}
+
+@mixin checkbox {
+	--checkbox-margin-inline-start: 0px;
+	--checkbox-size: 18px;
+
+	$letters: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "?";
+	$any: tasks($letters);
+
+	input#{$any}:checked:after,
+	li#{$any} > input:checked:after,
+	li#{$any} > p > input:checked:after {
 		@include reset-checkbox;
 
-		content: "#{$letter}";
 		color: var(--checkbox-marker-color);
 		font-family: "PT Serif", serif;
 		text-transform: uppercase;
@@ -35,22 +52,20 @@
 		transform: translateY(-1px);
 	}
 
-	div[data-task="#{$letter}"] > span,
-	li[data-task="#{$letter}"] {
+	div#{$any} > span,
+	li#{$any} {
 		letter-spacing: var(--h6-letter-spacing);
 		line-height: var(--h6-line-height);
 		font-style: var(--h6-style);
 		font-family: var(--h6-font);
 		text-transform: var(--h6-text-transform);
 	}
-}
 
-@mixin checkbox {
-	--checkbox-margin-inline-start: 0px;
-	--checkbox-size: 18px;
-
-	$letters: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "?";
 	@each $letter in $letters {
-		@include letter-checkbox($letter);
+		input[data-task="#{$letter}"]:checked:after,
+		li[data-task="#{$letter}"] > input:checked:after,
+		li[data-task="#{$letter}"] > p > input:checked:after {
+			content: "#{$letter}";
+		}
 	}
 }

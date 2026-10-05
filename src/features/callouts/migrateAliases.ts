@@ -1,4 +1,5 @@
 import type { BrumesCalloutAliasesSettings } from "../../settings/types";
+import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
 import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { logScope } from "../../utils/logger";
 import { NATIVE_CALLOUTS } from "./nativeCallouts";
@@ -72,23 +73,36 @@ export function normalizeCallouts(
 		}
 	}
 
-	const usedAliases = new Set<string>();
-	for (const entry of normalized) {
-		for (const alias of entry.aliases) usedAliases.add(alias);
-	}
-	for (const definition of PBTA_VISUAL_CALLOUTS) {
-		if (normalized.some((entry) => entry.id === definition.id)) continue;
-		const native = NATIVE_CALLOUTS.find((entry) => entry.id === definition.id);
+	// Callouts a schema added after the user's settings were saved. A default
+	// alias the user already claimed is dropped; if none is left, the first one
+	// gets a numeric suffix so the callout stays reachable. Only a callout
+	// visible from the same game can claim an alias: `description` belongs to
+	// City of Mist and to Adrenaline alike, each in its own scope.
+	const schemaCalloutIds: string[] = [];
+	for (const definition of PBTA_VISUAL_CALLOUTS) schemaCalloutIds.push(definition.id);
+	for (const definition of ADRENALINE_VISUAL_CALLOUTS) schemaCalloutIds.push(definition.id);
+	for (const id of schemaCalloutIds) {
+		if (normalized.some((entry) => entry.id === id)) continue;
+		const native = NATIVE_CALLOUTS.find((entry) => entry.id === id);
 		if (!native) continue;
-		const base = native.aliases[0];
-		let alias = base;
-		let suffix = 2;
-		while (usedAliases.has(alias)) {
-			alias = `${base}-${suffix}`;
-			suffix += 1;
+		const isClaimed = (alias: string): boolean =>
+			normalized.some(
+				(entry) =>
+					(entry.scope === "all" || native.scope === "all" || entry.scope === native.scope) &&
+					entry.aliases.indexOf(alias) !== -1,
+			);
+		const aliases = native.aliases.filter((alias) => !isClaimed(alias));
+		if (aliases.length === 0) {
+			const base = native.aliases[0];
+			let alias = base;
+			let suffix = 2;
+			while (isClaimed(alias)) {
+				alias = `${base}-${suffix}`;
+				suffix += 1;
+			}
+			aliases.push(alias);
 		}
-		usedAliases.add(alias);
-		normalized.push({ ...native, aliases: [alias] });
+		normalized.push({ ...native, aliases });
 	}
 
 	return normalized;
