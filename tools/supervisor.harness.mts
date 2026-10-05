@@ -85,13 +85,7 @@ scenario("an edge to an undeclared repository is refused before any git command"
 	const result = world.supervise(["status"], { topology: resolve(HANDBOOK, "tools/fixtures/supervisor/topology-unknown-edge.json") });
 	assert.equal(result.status, 2, result.stderr);
 	assert.match(result.stderr, /edge schema-pbta -> ghost points to an undeclared repository/);
-	let calls = "";
-	try {
-		calls = readFileSync(world.gitLog, "utf8");
-	} catch {
-		calls = "";
-	}
-	assert.equal(calls, "", "git ran before the topology was accepted");
+	assert.deepEqual(world.gitCalls(), [], "git ran before the topology was accepted");
 	assert.equal(world.readState().calls.length, 0, "gh ran before the topology was accepted");
 });
 
@@ -571,7 +565,7 @@ scenario("a validation cannot release, push or tag: the guard refuses on both pa
 	const calls = readFileSync(ghLog, "utf8");
 	assert.equal(calls, "issue list\nissue list\n", `the real gh saw: ${calls}`);
 	assert.equal(git(mist, "ls-remote", "origin", "refs/heads/main", "refs/tags/*"), remote, "a validation moved the remote");
-	const gitCalls = readFileSync(world.gitLog, "utf8");
+	const gitCalls = world.gitCalls().join("\n");
 	assert.doesNotMatch(gitCalls, /^push/m, "a push reached git");
 	assert.doesNotMatch(gitCalls, /^tag v9/m, "a tag reached git");
 
@@ -1173,7 +1167,7 @@ function remoteTag(world: World, id: string, tag: string): string {
 
 /** The tag pushes the supervisor made, as git received them. */
 function tagPushes(world: World): string[] {
-	return readFileSync(world.gitLog, "utf8").split("\n").filter((line) => line.startsWith("push") && line.includes("origin/main:refs/tags/v1.0.0"));
+	return world.gitCalls().filter((line) => line.startsWith("push") && line.includes("origin/main:refs/tags/v1.0.0"));
 }
 
 function handbookDispatches(world: World): string[][] {
@@ -1694,20 +1688,32 @@ scenario("ship refuses a repository engaged by another open train, by name, and 
 	assert.deepEqual(dispatches(world), []);
 });
 
+/** The git verbs a scenario ran, most frequent first: where its time goes. */
+function gitVerbs(world: World): string {
+	const counts: Record<string, number> = {};
+	for (const line of world.gitCalls()) {
+		const verb = line.split(" ").slice(0, 2).join(" ");
+		counts[verb] = (counts[verb] ?? 0) + 1;
+	}
+	return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([verb, count]) => `${count} ${verb}`).join(" | ");
+}
+
 function main(): void {
 	const handbookBefore = sh(HANDBOOK, "git", ["status", "--porcelain"]).stdout;
 	const only = process.env.SUPERVISOR_SCENARIO;
 	let failed = 0;
 	for (const { name, run } of scenarios) {
 		if (only && !name.includes(only)) continue;
+		const started = Date.now();
 		const world = createWorld();
 		try {
 			run(world);
-			console.log(`ok   ${name}`);
+			console.log(`ok   ${name} (${Date.now() - started} ms; ${world.spent.calls} supervise in ${world.spent.ms} ms, ${world.spent.gitCalls} git calls)`);
 		} catch (error) {
 			failed += 1;
 			console.error(`FAIL ${name}\n${(error as Error).stack ?? error}`);
 		} finally {
+			if (process.env.SUPERVISOR_VERBS) console.log(gitVerbs(world));
 			world.dispose();
 		}
 	}

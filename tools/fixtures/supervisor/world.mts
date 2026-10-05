@@ -9,7 +9,7 @@
  */
 import { spawnSync } from "child_process";
 import { createHash } from "crypto";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { basename, delimiter, dirname, join, resolve } from "path";
 import { findExecutable, pathKey } from "../../supervisor/spawn.mjs";
@@ -17,7 +17,8 @@ import { findExecutable, pathKey } from "../../supervisor/spawn.mjs";
 export const HANDBOOK = process.cwd();
 export const SUPERVISE = resolve(HANDBOOK, "tools/supervise.mjs");
 export const FAKE_GH = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-gh.mjs");
-export const FAKE_GIT = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-git.mjs");
+const APPLY_TAG_EFFECT = resolve(HANDBOOK, "tools/fixtures/supervisor/apply-tag-effect.mjs");
+export const FAKE_GIT =resolve(HANDBOOK, "tools/fixtures/supervisor/fake-git.mjs");
 export const FAKE_NPM = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-npm.mjs");
 export const TOPOLOGY = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/topology.json"), "utf8"));
 export const PROVIDERS = TOPOLOGY.repos.filter((repo: any) => repo.role === "provider");
@@ -51,6 +52,8 @@ export class World {
 	gitLog: string;
 	realGit = "";
 	archives = new Map<string, Archive>();
+	/** What the `supervise` calls of this world cost: how many, how long, and how many git calls they made. */
+	spent = { calls: 0, ms: 0, gitCalls: 0 };
 
 	constructor() {
 		this.tmp = mkdtempSync(join(tmpdir(), "handbook-supervisor-"));
@@ -144,9 +147,9 @@ export class World {
 		return {
 			...env,
 			SUPERVISOR_GH: FAKE_GH,
-			SUPERVISOR_GIT: FAKE_GIT,
 			FAKE_GH_STATE: this.statePath,
-			FAKE_GIT_LOG: this.gitLog,
+			// The supervisor runs the real git; git itself records each command it runs.
+			GIT_TRACE: this.gitLog,
 			FAKE_GIT_REAL: this.realGit,
 			[key]: [this.bin, process.env[key]].filter(Boolean).join(delimiter),
 			...extra,
@@ -156,13 +159,39 @@ export class World {
 	supervise(args: string[], options: { env?: NodeJS.ProcessEnv; input?: string; topology?: string } = {}): Result {
 		const topology = options.topology ? ["--topology", options.topology] : [];
 		const [command, ...rest] = args;
-		return sh(HANDBOOK, process.execPath, [SUPERVISE, command, "--root", this.root, ...topology, ...rest], this.env(options.env), options.input);
+		const started = Date.now();
+		const before = this.gitCallCount();
+		const result = sh(HANDBOOK, process.execPath, [SUPERVISE, command, "--root", this.root, ...topology, ...rest], this.env(options.env), options.input);
+		this.spent.calls += 1;
+		this.spent.ms += Date.now() - started;
+		this.spent.gitCalls += this.gitCallCount() - before;
+		return result;
+	}
+
+	/** Every git command the supervisor ran, as the arguments git was given: read from `GIT_TRACE`. */
+	gitCalls(): string[] {
+		if (!existsSync(this.gitLog)) return [];
+		const calls: string[] = [];
+		for (const line of readFileSync(this.gitLog, "utf8").split("\n")) {
+			const call = /trace: built-in: git (.+)$/.exec(line);
+			if (call) calls.push(call[1]);
+		}
+		return calls;
+	}
+
+	private gitCallCount(): number {
+		return this.gitCalls().length;
 	}
 
 	/** Create a repository with its bare remote, commit `files`, push `main`. */
 	createRepo(id: string, files: Record<string, string>): void {
 		const remote = join(this.tmp, "remotes", `${id}.git`);
 		git(this.tmp, "init", "--quiet", "--bare", "-b", "main", remote);
+		// What GitHub does when a tag lands: a `post-receive` hook applies the queued effect (see apply-tag-effect.mjs).
+		const hook = join(remote, "hooks", "post-receive");
+		const portable = (path: string): string => path.replace(/\\/g, "/");
+		writeFileSync(hook, `#!/bin/sh\nwhile read old new ref; do\n\tcase "$ref" in\n\t\trefs/tags/*) "${portable(process.execPath)}" "${portable(APPLY_TAG_EFFECT)}" "${id}" "\${ref#refs/tags/}" ;;\n\tesac\ndone\n`);
+		chmodSync(hook, 0o755);
 		git(this.root, "clone", "--quiet", remote, id);
 		this.commit(id, files, `init ${id}`);
 		git(this.dir(id), "push", "--quiet", "-u", "origin", "main");
