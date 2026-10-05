@@ -5,6 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.32.0] - 2026-10-05
+
+### Added
+
+- Draw Adrenaline NPC and creature blocks as the compact cards of the Zombiology booklets, from the presentation published by schema-adrenaline 3.1.0: a banner coloured by category, then the published sections in order. Every value is shown as entered; the card computes nothing.
+- Add the seven Adrenaline visual callouts published by schema-adrenaline (example, description, inset, formation, action, roller and mention), available in the Adrenaline game only.
+- Roll on a table placed in a `roller` callout from its context menu: a two-column table headed by a die is looked up by the rolled value, any other table yields one row at random.
+- Add `pnpm supervise ship`, which takes a validated change from commit to a closed train in one command and replaces `approve`.
+
+### Changed
+
+- Require schema-adrenaline 3.1.0.
+- Keep every section of a note drawn while layout regions arrange it in columns, so a region no longer loses the blocks Obsidian had not rendered yet.
+
+### Fixed
+
+- Print on white paper with the light colours of the game, whatever the colour scheme on screen: a dark theme no longer exports a dark PDF.
+
 ## [2.31.0] - 2026-10-02
 
 ### Added
