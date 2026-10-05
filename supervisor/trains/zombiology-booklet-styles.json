@@ -1,0 +1,346 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "zombiology-booklet-styles",
+	"title": "Zombiology scenario booklet page styles and compact NPC and creature cards",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 71,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/71"
+	},
+	"items": [
+		{
+			"repo": "schema-adrenaline",
+			"issue": 43,
+			"url": "https://github.com/RebelliousSmile/schema-adrenaline/issues/43",
+			"title": "Publish the role callout and the white h2 rule for the Zombiology booklet",
+			"baseSha": "de899b060ef14b0d082a4fe41d80563e77bf08f7",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 74,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/74",
+			"title": "Style the role callout and ship callout menus, French locale and print page breaks",
+			"baseSha": "c189c1f0841bcdd70a6d20687de4b0a3ceadd940",
+			"dependsOn": [
+				"schema-adrenaline"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main"
+			]
+		}
+	],
+	"approval": null,
+	"publication": {
+		"schema-adrenaline": {
+			"runs": [
+				{
+					"step": "candidate",
+					"workflow": "publish-candidate.yml",
+					"inputs": {
+						"tag": "v3.2.0-rc.1"
+					},
+					"id": 37340179751,
+					"url": "https://github.com/RebelliousSmile/schema-adrenaline/actions/runs/37340179751",
+					"conclusion": "success",
+					"at": "2026-10-05T16:21:20.689Z"
+				},
+				{
+					"step": "release-train",
+					"workflow": "release-train.yml",
+					"inputs": {
+						"manifest": "release-train/schema-adrenaline-v3.2.0.json"
+					},
+					"id": 37343857893,
+					"url": "https://github.com/RebelliousSmile/schema-adrenaline/actions/runs/37343857893",
+					"conclusion": "success",
+					"at": "2026-10-05T16:50:11.824Z"
+				}
+			],
+			"candidate": {
+				"tag": "v3.2.0-rc.1",
+				"url": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v3.2.0-rc.1/schema-adrenaline-3.2.0.tgz",
+				"sha256": "306bbd199224e441d2c8341affffd757afab49f23569054b8809a1b98b1706f3",
+				"integrity": "sha512-9J2nvZDcpp4u2L/1S1MLrVWXafe6foKq+JQsY4hZe+2UmV6VTUQnLc4nn7CoCteBofGjwdfm54hFe3lfW5JPJQ=="
+			},
+			"final": {
+				"tag": "v3.2.0",
+				"url": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v3.2.0/schema-adrenaline-3.2.0.tgz",
+				"sha256": "306bbd199224e441d2c8341affffd757afab49f23569054b8809a1b98b1706f3",
+				"integrity": "sha512-9J2nvZDcpp4u2L/1S1MLrVWXafe6foKq+JQsY4hZe+2UmV6VTUQnLc4nn7CoCteBofGjwdfm54hFe3lfW5JPJQ=="
+			}
+		}
+	},
+	"presentation": {
+		"presentedAt": "2026-10-05T18:14:49.419Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:4548e6b13a0e4bcbee7e8bcc808cd3c941246bf49eb937b255150c1cd14bcf8c",
+		"repos": [
+			{
+				"repo": "schema-adrenaline",
+				"role": "provider",
+				"sha": "dbc35b632458d3a2878b862f26200672c01301ef",
+				"baseSha": "de899b060ef14b0d082a4fe41d80563e77bf08f7",
+				"commits": [
+					{
+						"sha": "dbc35b632458d3a2878b862f26200672c01301ef",
+						"subject": "chore(release): record the v3.2.0 convergence"
+					},
+					{
+						"sha": "622655a43e2880682cb0e5a8817e7899eed9f27c",
+						"subject": "chore(release-train): add the v3.2.0 manifest"
+					},
+					{
+						"sha": "62691b13a64f7805ca783f7bd5ecc1cd6bee1dc2",
+						"subject": "fix: extract the release tarball with paths a GNU tar accepts"
+					},
+					{
+						"sha": "491b394cc656d48d9493fe5c6c40e0e10094228a",
+						"subject": "feat: publish the role callout and the white h2 rule as 3.2.0"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  16 ++\n .../comparaison.png                                | Bin 0 -> 667125 bytes\n .../2026_10_02_fiche-monstre-maquette/monstre.jpg  | Bin 0 -> 364464 bytes\n .../2026_10_02_fiche-monstre-maquette/preview.html | 281 +++++++++++++++++++++\n .../2026_10_02_fiche-pnj-maquette/comparaison.png  | Bin 0 -> 722858 bytes\n .../2026_10/2026_10_02_fiche-pnj-maquette/pnj.jpg  | Bin 0 -> 392254 bytes\n .../2026_10_02_fiche-pnj-maquette/preview.html     | 234 +++++++++++++++++\n handbook.json                                      |   2 +-\n handbook/adrenaline/callout-contract.md            |   3 +-\n handbook/adrenaline/callouts-example.md            |   5 +\n handbook/adrenaline/pack.json                      |   8 +-\n package-lock.json                                  |   2 +-\n package.json                                       |   2 +-\n release-train/schema-adrenaline-v3.2.0-final.json  |  22 ++\n release-train/schema-adrenaline-v3.2.0.json        |  25 ++\n src/callouts.ts                                    |  10 +\n tools/prepare-release.ts                           |   7 +-\n tools/validate-handbook-pack.ts                    |   1 -\n tools/verify-final-convergence.ts                  |   6 +-\n 19 files changed, 613 insertions(+), 11 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"check"
+						],
+						"status": 0,
+						"tail": "> tsx tools/prepare-release.ts --verify\n\n✓ release preparation is reproducible by canonical package contents\n\n> schema-adrenaline@3.2.0 validate:packs\n> tsx tools/validate-packs.ts\n\n\n> schema-adrenaline@3.2.0 validate:pack\n> tsx tools/validate-handbook-pack.ts handbook\\adrenaline\\pack.json\n\nHandbook catalogue: green (1 pack, 9 assets, 792682 bytes)\n✓ 1 pack manifest validated.\n\n> schema-adrenaline@3.2.0 validate:pack\n> tsx tools/validate-handbook-pack.ts\n\nHandbook catalogue: green (1 pack, 9 assets, 792682 bytes)\n\n> schema-adrenaline@3.2.0 validate:handbook\n> tsx tools/validate-handbook-pack.ts --self-test\n\nHandbook catalogue: green (1 pack, 9 assets, 792682 bytes)\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					}
+				]
+			},
+			{
+				"repo": "lantern",
+				"role": "consumer",
+				"sha": "3ffa40faeb116b23e6135510fececbd76bdbe1fa",
+				"baseSha": null,
+				"commits": [],
+				"diffstat": "",
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"lint"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 lint\n> eslint .\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"typecheck"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 typecheck\n> tsc -b\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 assert:release-train\n> node tools/release-train-protocol.harness.mjs\n\nRelease-train protocol-1 and protocol-2 consumer proofs verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-identity"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 assert:release-identity\n> node tools/assert-release-identity.mjs && node tools/release-identity.harness.mjs\n\nRelease metadata verified for v0.18.0.\nRelease identity fixtures verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train-matrix:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 assert:release-train-matrix:unit\n> node tools/release-train-matrix.harness.mjs\n\nRelease train matrix covers 9 real manifests and rejects mutable, duplicate, or fixture inputs.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:consumer-schema-pins:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 assert:consumer-schema-pins:unit\n> node tools/consumer-schema-pins.harness.mjs\n\nConsumer pin checks reject candidate URLs, lock drift, redirects, and wrong published bytes.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options."
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:workspace"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.18.0 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:131611:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:131137:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:131276:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:27017:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:131270:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:131356:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-smnIz1/workspace.mjs:131613:31"
+					}
+				]
+			},
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "5c1a04409054a7e4fdf23db5af6d7561e422fc14",
+				"baseSha": "c189c1f0841bcdd70a6d20687de4b0a3ceadd940",
+				"commits": [
+					{
+						"sha": "5c1a04409054a7e4fdf23db5af6d7561e422fc14",
+						"subject": "chore(tools): make the core check fail fast and skip green replays"
+					},
+					{
+						"sha": "4067a6540ddaccab37dfca796dea530e7f99fba6",
+						"subject": "chore(deps): adopt schema-adrenaline v3.2.0 (#75)"
+					},
+					{
+						"sha": "2623f31bcb0d8aacb88a3fdab27699da733174f5",
+						"subject": "chore(deps): adopt schema-adrenaline v3.2.0-rc.1"
+					},
+					{
+						"sha": "640a6017faf7515df5aa855ee524c531490a0c2e",
+						"subject": "feat: callout menus, French locale, print page breaks and the role callout"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  16 +\n .../2026_10_05_callout-menus-i18n-print/review.md  |  71 +++++\n manifest.json                                      |   2 +-\n package.json                                       |   6 +-\n pnpm-lock.yaml                                     |  12 +-\n src/BrumesPlugin.ts                                |  12 +-\n src/contextMenu/index.ts                           |  21 +-\n src/features/blocks/copyAsToml.ts                  |  12 +-\n src/features/blocks/pasteToml.ts                   |  17 +-\n src/features/blocks/registry.ts                    |   3 +-\n src/features/callouts/contextMenu.ts               | 146 +++++++--\n src/features/callouts/nativeCallouts.ts            |   5 +-\n src/features/callouts/retarget.ts                  |  54 ++++\n src/features/layoutRegions/insertion.ts            |   3 +-\n src/features/layoutRegions/postProcessor.ts        |   6 +-\n src/features/osCharacterCreation/block.ts          |   4 +-\n src/features/osThemes/block.ts                     |   4 +-\n src/features/printPageBreaks/index.ts              | 152 ++++++++++\n src/features/rollers/contextMenu.ts                |  24 +-\n src/features/tags/contextMenu.ts                   |   3 +-\n src/locales/fr.ts                                  | 331 +++++++++++++++++++++\n src/locales/index.ts                               |  10 +\n src/locales/types.ts                               |   2 +\n src/settings/calloutsModal.ts                      |  55 ++--\n src/settings/index.ts                              | 281 +++++++++--------\n src/settings/packIntegrationModal.ts               |  49 +--\n src/settings/pbtaCoverageModal.ts                  |  43 +--\n src/settings/sourceModal.ts                        |  25 +-\n src/settings/starterKitModal.ts                    |  17 +-\n src/settings/themeContentsModal.ts                 |  21 +-\n src/styles/_print.scss                             |  42 +++\n src/styles/adrenaline/_callouts.scss               |  15 +\n src/styles/adrenaline/_content.scss                |   6 +-\n src/styles/adrenaline/_page.scss                   |  10 +-\n src/utils/contextSubMenu.ts                        |  16 +\n src/utils/i18n.ts                                  |  24 ++\n tools/assert-callout-retarget.mjs                  |  26 ++\n tools/assert-callouts.mjs                          |   4 +-\n tools/assert-layout-regions.mjs                    |   3 +\n tools/assert-pack-integration-modal.mjs            |   3 +-\n tools/assert-pbta-pack-coverage.mjs                |   2 +-\n tools/assert-print-page-breaks.mjs                 |  50 ++++\n tools/assert-settings-ui.mjs                       |  12 +-\n tools/assert-tag-widget.mjs                        |   3 +\n tools/calloutRetarget.harness.mts                  |  37 +++\n tools/check.mjs                                    | 145 +++++++--\n tools/fixtures/supervisor/apply-tag-effect.mjs     |  47 +++\n tools/fixtures/supervisor/fake-git.mjs             |  61 +---\n tools/fixtures/supervisor/world.mts                |  39 ++-\n tools/obsidianStub.mjs                             |  14 +\n tools/printPageBreaks.harness.mts                  |  24 ++\n tools/supervisor.harness.mts                       |  26 +-\n versions.json                                      |   3 +-\n 53 files changed, 1616 insertions(+), 403 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "ok   publish --run completes the schema-in-the-mist manifest, lands its convergence file and validates it (22533 ms; 7 supervise in 19074 ms, 977 git calls)\nok   the convergence step of each provider is pure: it lands what is missing and leaves a person only what it cannot know (2538 ms; 0 supervise in 0 ms, 0 git calls)\nok   preview plans from what the train's providers publish, and installs their packs without touching data.json (5530 ms; 5 supervise in 1998 ms, 55 git calls)\nok   commit lands a provider and its consumers in one command, never the train records (5957 ms; 4 supervise in 3118 ms, 148 git calls)\nok   commit --only lands one repository alone, whatever its role (5373 ms; 5 supervise in 2455 ms, 86 git calls)\nok   the supervisor neither runs nor lands a change to its own code (5697 ms; 7 supervise in 2811 ms, 100 git calls)\nok   ship --run takes an uncommitted change to a closed train in one command, without reading a line (29037 ms; 5 supervise in 25468 ms, 1325 git calls)\nok   ship without --run shows every step of the cycle and commits, presents and dispatches nothing (7614 ms; 7 supervise in 4007 ms, 165 git calls)\nok   a red validation stops ship --run after present: the commits are landed, nothing is published (8431 ms; 5 supervise in 4943 ms, 189 git calls)\nok   ship --run again after an interrupted publication resumes at the missing step, without a second commit or presentation (32124 ms; 6 supervise in 28718 ms, 1491 git calls)\nok   ship refuses to run on supervisor code nobody published, before any step (5406 ms; 5 supervise in 1953 ms, 55 git calls)\nok   ship refuses a repository engaged by another open train, by name, and commits nothing (5647 ms; 5 supervise in 2161 ms, 67 git calls)\n\nSupervisor scenarios passed.\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.33.0 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-pLDh53\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-pLDh53\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-pLDh53\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-pLDh53\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-pLDh53\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-pLDh53\\harness.cjs:306:5)"
+					}
+				]
+			}
+		],
+		"trainFiles": {
+			"schema-adrenaline": [
+				"release-train/"
+			],
+			"lantern": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"package-lock.json",
+				"release-train.matrix.json",
+				"CHANGELOG.md",
+				"release-train/"
+			],
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"schema-adrenaline: release candidate of schema-adrenaline",
+			"schema-adrenaline: final release of schema-adrenaline, same bytes as the candidate",
+			"lantern: release",
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-05T18:15:09.933Z",
+		"repos": [
+			{
+				"repo": "schema-adrenaline",
+				"sha": "dbc35b632458d3a2878b862f26200672c01301ef"
+			},
+			{
+				"repo": "lantern",
+				"sha": "fd6452bef08b27bbc13739300d39eb40a0b43be9"
+			},
+			{
+				"repo": "obsidian-handbook",
+				"sha": "5c1a04409054a7e4fdf23db5af6d7561e422fc14"
+			}
+		],
+		"checks": [
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-train-matrix"
+				],
+				"status": 0
+			},
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			},
+			{
+				"repo": "schema-adrenaline",
+				"command": [
+					"npm",
+					"run",
+					"release-train:verify-final"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "lantern",
+			"version": "0.18.0",
+			"tag": "v0.18.0",
+			"sha": "fd6452bef08b27bbc13739300d39eb40a0b43be9",
+			"url": "https://github.com/RebelliousSmile/lantern/releases/tag/v0.18.0"
+		},
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.33.0",
+			"tag": "v2.33.0",
+			"sha": "5c1a04409054a7e4fdf23db5af6d7561e422fc14",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.33.0"
+		}
+	],
+	"closedAt": "2026-10-05T18:32:48.912Z"
+}

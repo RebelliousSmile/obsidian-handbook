@@ -1,0 +1,110 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "layout-marker-gap",
+	"title": "Layout regions: marker sections and PDF action callout",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 76,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/76"
+	},
+	"items": [
+		{
+			"repo": "obsidian-handbook",
+			"issue": 77,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/77",
+			"title": "Layout regions: marker-only sections leave a gap; PDF action callout loses its style",
+			"baseSha": "5c1a04409054a7e4fdf23db5af6d7561e422fc14",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {},
+	"presentation": {
+		"presentedAt": "2026-10-05T20:52:47.209Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:90e961b78301ff2337b257633c21760d4ae1dc40f8d0b052520db4f1a70ac703",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "7adf980b2209bfba7a24ea8809c67bf0e8b56427",
+				"baseSha": "5c1a04409054a7e4fdf23db5af6d7561e422fc14",
+				"commits": [
+					{
+						"sha": "7adf980b2209bfba7a24ea8809c67bf0e8b56427",
+						"subject": "chore(layout): close the marker gap issue"
+					},
+					{
+						"sha": "bf5a1923614f6a33c7cd1b96fe83fc45a6421476",
+						"subject": "fix(layout): keep marker-only sections out of the columns and style callouts in the PDF"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                 |  7 +++++++\n manifest.json                                |  2 +-\n package.json                                 |  2 +-\n src/features/callouts/aliasSupport.ts        |  5 +++++\n src/features/layoutRegions/postProcessor.ts  |  4 +++-\n src/features/layoutRegions/printProcessor.ts |  6 +++++-\n src/features/layoutRegions/sectionMapper.ts  |  6 ++++++\n src/styles/_layout-regions.scss              | 22 ++++++++++++++++++++++\n versions.json                                |  3 ++-\n 9 files changed, 52 insertions(+), 5 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "\n> obsidian-handbook@2.33.1 assert:starter-kits C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-starter-kits.mjs\n\nstarter kits: green\n\n> check: assert:style-scope\n\n> obsidian-handbook@2.33.1 assert:style-scope C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-style-scope.mjs\n\ngame styles stay inside notes and rendered block scopes\n\n> check: assert:supervisor skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.33.1 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-uWFHWP\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-uWFHWP\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-uWFHWP\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-uWFHWP\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-uWFHWP\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-uWFHWP\\harness.cjs:306:5)"
+					}
+				]
+			}
+		],
+		"trainFiles": {
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-05T20:52:53.653Z",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"sha": "7adf980b2209bfba7a24ea8809c67bf0e8b56427"
+			}
+		],
+		"checks": [
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.33.1",
+			"tag": "v2.33.1",
+			"sha": "7adf980b2209bfba7a24ea8809c67bf0e8b56427",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.33.1"
+		}
+	],
+	"closedAt": "2026-10-05T21:22:44.241Z"
+}
