@@ -1,6 +1,7 @@
 import { Modal, Setting } from "obsidian";
 import type { App } from "obsidian";
 import type BrumesPlugin from "../BrumesPlugin";
+import { t } from "../utils/i18n";
 import {
 	currentPackIntegration,
 	type PackIntegrationFinding,
@@ -10,17 +11,17 @@ import {
 function describeFinding(finding: PackIntegrationFinding): string {
 	switch (finding.kind) {
 		case "missing-manifest":
-			return "No plugin manifest installed.";
+			return t("No plugin manifest installed.");
 		case "unsupported-capability":
-			return `Unsupported capability: ${finding.detail}.`;
+			return t("Unsupported capability: {detail}.", { detail: finding.detail });
 		case "unavailable-block":
-			return `Block unavailable: ${finding.detail}.`;
+			return t("Block unavailable: {detail}.", { detail: finding.detail });
 		case "unavailable-style":
-			return `Style unavailable: ${finding.detail}.`;
+			return t("Style unavailable: {detail}.", { detail: finding.detail });
 		case "missing-resource":
-			return `Resource unavailable: ${finding.detail}.`;
+			return t("Resource unavailable: {detail}.", { detail: finding.detail });
 		case "resolution-failure":
-			return `Could not inspect this pack: ${finding.detail}.`;
+			return t("Could not inspect this pack: {detail}.", { detail: finding.detail });
 	}
 }
 
@@ -42,8 +43,8 @@ export class PackIntegrationModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle("Pack integration check");
-		this.contentEl.createEl("p", { text: "Checking every registered pack…" });
+		this.setTitle(t("Pack integration check"));
+		this.contentEl.createEl("p", { text: t("Checking every registered pack…") });
 		void this.refresh();
 	}
 
@@ -54,7 +55,7 @@ export class PackIntegrationModal extends Modal {
 
 	private async refresh(): Promise<void> {
 		this.contentEl.empty();
-		this.contentEl.createEl("p", { text: "Checking every registered pack…" });
+		this.contentEl.createEl("p", { text: t("Checking every registered pack…") });
 		try {
 			const report = await this.loadReport(this.plugin);
 			if (!this.isOpen) return;
@@ -68,9 +69,9 @@ export class PackIntegrationModal extends Modal {
 	private renderFailure(error: unknown): void {
 		this.contentEl.empty();
 		new Setting(this.contentEl)
-			.setName("Pack integration check failed")
-			.setDesc(`Try again. ${error instanceof Error ? error.message : String(error)}`)
-			.addButton((button) => button.setButtonText("Retry").onClick(() => {
+			.setName(t("Pack integration check failed"))
+			.setDesc(t("Try again. {reason}", { reason: error instanceof Error ? error.message : String(error) }))
+			.addButton((button) => button.setButtonText(t("Retry")).onClick(() => {
 				void this.refresh();
 			}));
 	}
@@ -79,24 +80,30 @@ export class PackIntegrationModal extends Modal {
 		this.contentEl.empty();
 		this.contentEl.createEl("p", {
 			text: report.packs.length === 0
-				? "No game pack is registered in this vault."
-				: `${report.installed} installed · ${report.ready} ready · ${report.attention} need attention.`,
+				? t("No game pack is registered in this vault.")
+				: t("{installed} installed · {ready} ready · {attention} need attention.", {
+					installed: report.installed,
+					ready: report.ready,
+					attention: report.attention,
+				}),
 		});
 		if (report.packs.length === 0) return;
 
-		this.contentEl.createEl("h3", { text: "Registered packs" });
+		this.contentEl.createEl("h3", { text: t("Registered packs") });
 		for (const pack of report.packs) {
 			const details = [
-				pack.installed ? "Plugin manifest installed." : "Plugin manifest missing.",
+				pack.installed ? t("Plugin manifest installed.") : t("Plugin manifest missing."),
 				pack.declaredCapabilities.length === 0
-					? "No declared capabilities."
-					: `Capabilities: ${pack.declaredCapabilities.join(", ")}.`,
-				pack.availableBlocks.length > 0 ? `Blocks: ${pack.availableBlocks.join(", ")}.` : "No declared blocks.",
-				pack.availableStyles.length > 0 ? `Styles: ${pack.availableStyles.join(", ")}.` : "No declared styles.",
+					? t("No declared capabilities.")
+					: t("Capabilities: {list}.", { list: pack.declaredCapabilities.join(", ") }),
+				pack.availableBlocks.length > 0 ? t("Blocks: {list}.", { list: pack.availableBlocks.join(", ") }) : t("No declared blocks."),
+				pack.availableStyles.length > 0 ? t("Styles: {list}.", { list: pack.availableStyles.join(", ") }) : t("No declared styles."),
 				...pack.findings.map(describeFinding),
 			];
 			new Setting(this.contentEl)
-				.setName(`${pack.ready ? "Ready" : "Needs attention"}: ${pack.label}`)
+				.setName(pack.ready
+					? t("Ready: {label}", { label: pack.label })
+					: t("Needs attention: {label}", { label: pack.label }))
 				.setDesc(details.join(" "));
 		}
 	}

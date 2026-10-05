@@ -4,6 +4,7 @@ import {
 	TFile,
 } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
+import { markPrintPageBreaks } from "../printPageBreaks";
 import { LayoutRegionParseResult, parseLayoutRegions } from "./parser";
 import { isPrintExport, printLayoutRegions } from "./printProcessor";
 import { holdWholeNote, releaseWholeNote } from "./renderWindow";
@@ -16,7 +17,10 @@ const observers = new WeakMap<HTMLElement, { context: MarkdownPostProcessorConte
 
 export function layoutRegionsPostProcessor(plugin: BrumesPlugin): MarkdownPostProcessor {
 	return (element, context) => {
-		if (isPrintExport(element, context)) return printLayoutRegions(plugin, element, context);
+		if (isPrintExport(element, context)) {
+			return printLayoutRegions(plugin, element, context)
+				.then(() => markPrintPageBreaks(element));
+		}
 
 		if (!context.getSectionInfo(element)) return;
 		const process = (attempt: number) => {

@@ -247,6 +247,21 @@
 		--booklet-label: var(--adrenaline-band);
 	}
 
+	// Role card: the frame and surface of the encart, with the title in the
+	// display face of the page headings.
+	.callout[data-brumes-callout-style="adrenaline-role"] {
+		border: 1px solid var(--adrenaline-callout-border);
+		background: var(--adrenaline-callout-surface);
+		--booklet-ink: var(--adrenaline-band-ink);
+		--booklet-label: var(--adrenaline-band);
+
+		.callout-title {
+			font-family: var(--font-header-theme, inherit);
+			font-weight: var(--h2-weight, 800);
+			letter-spacing: 0.02em;
+		}
+	}
+
 	// Formation: a dark band across the whole width, then the body on the page.
 	// `[!formation|fond]` puts the body on a grey surface and turns its first
 	// paragraph into an italic garnet lead.

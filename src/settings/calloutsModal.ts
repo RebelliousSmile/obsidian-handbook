@@ -11,6 +11,7 @@ import {
 } from "../features/callouts/types";
 import { GAME_PACKS } from "../games/registry";
 import { log } from "../utils/logger";
+import { t } from "../utils/i18n";
 
 const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Handbook settings";
 const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
@@ -69,7 +70,7 @@ export class CalloutsModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle(this.existing ? "Modifier le callout" : "Nouveau callout");
+		this.setTitle(this.existing ? t("Edit callout") : t("New callout"));
 		this.render();
 	}
 
@@ -81,15 +82,15 @@ export class CalloutsModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 
-		new Setting(contentEl).setName("Nom").addText((text) =>
+		new Setting(contentEl).setName(t("Name")).addText((text) =>
 			text.setValue(this.name).onChange((value) => {
 				this.name = value;
 			}),
 		);
 
 		new Setting(contentEl)
-			.setName("Alias")
-			.setDesc("Un alias par ligne. Le premier est inséré depuis le menu contextuel.")
+			.setName(t("Aliases"))
+			.setDesc(t("One alias per line. The first one is inserted from the context menu."))
 			.addTextArea((text) => {
 				text.setValue(this.aliases.join("\n"));
 				text.inputEl.rows = Math.max(3, this.aliases.length || 1);
@@ -99,10 +100,10 @@ export class CalloutsModal extends Modal {
 			});
 
 		new Setting(contentEl)
-			.setName("Portée")
-			.setDesc("Où ce callout est disponible.")
+			.setName(t("Scope"))
+			.setDesc(t("Where this callout is available."))
 			.addDropdown((drop) => {
-				drop.addOption("all", "Tous les jeux");
+				drop.addOption("all", t("All games"));
 				for (const pack of GAME_PACKS) {
 					drop.addOption(pack.id, pack.label);
 				}
@@ -112,11 +113,11 @@ export class CalloutsModal extends Modal {
 			});
 
 		new Setting(contentEl)
-			.setName("Gabarit")
+			.setName(t("Template"))
 			.addDropdown((drop) =>
 				drop
-					.addOption("title-body", "Titre + corps")
-					.addOption("body-only", "Corps seul")
+					.addOption("title-body", t("Title + body"))
+					.addOption("body-only", t("Body only"))
 					.setValue(this.template)
 					.onChange((value) => {
 						this.template = value as CalloutTemplate;
@@ -124,25 +125,25 @@ export class CalloutsModal extends Modal {
 			);
 
 		const iconSetting = new Setting(contentEl)
-			.setName("Icône")
-			.setDesc("Nom d'icône (facultatif).")
+			.setName(t("Icon"))
+			.setDesc(t("Icon name (optional)."))
 			.addText((text) => {
 				text.setValue(this.icon).onChange((value) => {
 					this.icon = value.trim();
 					if (this.icon.length === 0 || getIconIds().includes(this.icon)) {
-						iconSetting.setDesc("Nom d'icône (facultatif).");
+						iconSetting.setDesc(t("Icon name (optional)."));
 					} else {
-						iconSetting.setDesc(`Icône inconnue : "${this.icon}".`);
+						iconSetting.setDesc(t("Unknown icon: \"{icon}\".", { icon: this.icon }));
 					}
 				});
 			});
 
 		new Setting(contentEl)
-			.setName("Police")
+			.setName(t("Font"))
 			.addDropdown((drop) =>
 				drop
-					.addOption("header", "Titre")
-					.addOption("text", "Texte")
+					.addOption("header", t("Heading"))
+					.addOption("text", t("Text"))
 					.setValue(this.font)
 					.onChange((value) => {
 						this.font = value as CalloutFontRole;
@@ -151,11 +152,11 @@ export class CalloutsModal extends Modal {
 
 		let colorPickerSetting: Setting;
 		new Setting(contentEl)
-			.setName("Couleur")
+			.setName(t("Colour"))
 			.addDropdown((drop) =>
 				drop
-					.addOption("fixed", "Fixe")
-					.addOption("theme", "Suit le thème")
+					.addOption("fixed", t("Fixed"))
+					.addOption("theme", t("Follows the theme"))
 					.setValue(this.colorKind)
 					.onChange((value) => {
 						this.colorKind = value as "fixed" | "theme";
@@ -164,7 +165,7 @@ export class CalloutsModal extends Modal {
 			);
 
 		colorPickerSetting = new Setting(contentEl)
-			.setName("Couleur fixe")
+			.setName(t("Fixed colour"))
 			.addColorPicker((picker) =>
 				picker.setValue(this.colorHex).onChange((value) => {
 					this.colorHex = value;
@@ -175,10 +176,10 @@ export class CalloutsModal extends Modal {
 		this.errorEl = contentEl.createDiv({ cls: "setting-item-description" });
 
 		new Setting(contentEl)
-			.addButton((button) => button.setButtonText("Annuler").onClick(() => this.close()))
+			.addButton((button) => button.setButtonText(t("Cancel")).onClick(() => this.close()))
 			.addButton((button) =>
 				button
-					.setButtonText("Enregistrer")
+					.setButtonText(t("Save"))
 					.setCta()
 					.onClick(() => this.save()),
 			);
@@ -187,12 +188,12 @@ export class CalloutsModal extends Modal {
 	private save(): void {
 		const name = this.name.trim();
 		if (name.length === 0) {
-			this.showError("Le nom est obligatoire.");
+			this.showError(t("The name is required."));
 			return;
 		}
 
 		if (this.icon.length > 0 && !getIconIds().includes(this.icon)) {
-			this.showError(`Icône inconnue : "${this.icon}".`);
+			this.showError(t("Unknown icon: \"{icon}\".", { icon: this.icon }));
 			return;
 		}
 
@@ -206,7 +207,7 @@ export class CalloutsModal extends Modal {
 			);
 			if (conflict) {
 				this.showError(
-					`L'alias "${alias}" est déjà utilisé par "${conflict.name}" dans une portée qui recouvre celle-ci.`,
+						t("The alias \"{alias}\" is already used by \"{name}\" in a scope that overlaps this one.", { alias, name: conflict.name }),
 				);
 				return;
 			}
@@ -242,7 +243,7 @@ export class CalloutsModal extends Modal {
 	private runSave(entry: CalloutDefinition): void {
 		void this.persist(entry).catch((error: unknown) => {
 			log.error(SETTINGS_SAVE_LOG_MESSAGE, error);
-			new Notice(SETTINGS_SAVE_NOTICE);
+			new Notice(t(SETTINGS_SAVE_NOTICE));
 		});
 	}
 

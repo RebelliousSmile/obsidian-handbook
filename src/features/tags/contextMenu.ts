@@ -1,4 +1,5 @@
 import { Menu, Editor } from "obsidian";
+import { t } from "../../utils/i18n";
 
 export function hasTagInsertion(): boolean {
 	return true;
@@ -10,7 +11,7 @@ export function contributeTagInsertion(
 ): number {
 	menu.addItem((item) =>
 		item
-			.setTitle("Tag, status or limit")
+			.setTitle(t("Tag, status or limit"))
 			.setIcon("tag")
 			.onClick(() => insertRandomTag(editor)),
 	);

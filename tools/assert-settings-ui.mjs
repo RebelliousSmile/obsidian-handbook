@@ -1,4 +1,10 @@
-import { readFileSync } from "node:fs";
+import { readFileSync as readSource } from "node:fs";
+
+// Settings texts go through t("English"): the checks below read the English literal.
+const unwrapTranslations = (text) =>
+	text.replace(/\bt\(("(?:[^"\\]|\\.)*")(?:,\s*\{[^}]*\})?\)/g, "$1");
+const readFileSync = (path, encoding) => unwrapTranslations(readSource(path, encoding));
+const frenchDictionary = readSource("src/locales/fr.ts", "utf8");
 
 const source = readFileSync("src/settings/index.ts", "utf8");
 const generalSettingsModule = readFileSync("src/settings/generalSettings.ts", "utf8");
@@ -48,7 +54,7 @@ if (!sourceModal.includes('setTitle("Remove schema source")') || !sourceModal.in
 	failures.push("Schema source removal is not confirmed with its installed-pack impact.");
 }
 
-if (!sourceModal.includes("Schema source was not installed: ${message}")) {
+if (!sourceModal.includes("Schema source was not installed: {reason}")) {
 	failures.push("Schema installation failures hide the actionable cause from the notice.");
 }
 
@@ -81,7 +87,7 @@ if (!source.includes('variants.length < 2')) {
 	failures.push("The game variant selector is not hidden for packs without choices.");
 }
 
-if (!source.includes('.setName("Univers")')) {
+if (!source.includes('.setName("Universe")') || !frenchDictionary.includes('"Universe": "Univers"')) {
 	failures.push("The game variant selector has no French-first visible label.");
 }
 

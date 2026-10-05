@@ -1,6 +1,7 @@
 import { getLanguage, Menu, Notice } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import type { RollerData } from "./parser";
+import { t } from "../../utils/i18n";
 import { rollTable, type DiceRollerApi } from "./roll";
 
 export interface RollerStrings {
@@ -10,23 +11,14 @@ export interface RollerStrings {
 	failed: string;
 }
 
-const ENGLISH: RollerStrings = {
-	action: "Roll and copy result",
-	missingDiceRoller: "Dice roller must be enabled to roll this table.",
-	copied: "Roll result copied to clipboard.",
-	failed: "Could not roll or copy this table result.",
-};
-
-const FRENCH: RollerStrings = {
-	action: "Lancer et copier le résultat",
-	missingDiceRoller: "Dice roller doit être activé pour lancer cette table.",
-	copied: "Résultat du tirage copié dans le presse-papiers.",
-	failed: "Impossible de lancer cette table ou d'en copier le résultat.",
-};
-
-/** The roller's visible strings in Obsidian's interface language; English otherwise. */
+/** The roller's visible strings in the interface language (`language`); English when untranslated. */
 export function rollerStrings(language: string): RollerStrings {
-	return language.toLowerCase().indexOf("fr") === 0 ? FRENCH : ENGLISH;
+	return {
+		action: t("Roll and copy result", {}, language),
+		missingDiceRoller: t("Dice roller must be enabled to roll this table.", {}, language),
+		copied: t("Roll result copied to clipboard.", {}, language),
+		failed: t("Could not roll or copy this table result.", {}, language),
+	};
 }
 
 export function addRollerAction(menu: Menu, plugin: BrumesPlugin, data: RollerData): boolean {

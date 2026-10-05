@@ -18,3 +18,45 @@
 		background-image: none !important;
 	}
 }
+
+// Page breaks of the export. `markPrintPageBreaks` measures each block against
+// the page, since CSS cannot: a tall block takes a page of its own, a shorter
+// one is only kept from splitting, inside a layout column as well.
+@media print {
+	.print .markdown-preview-view .handbook-print-keep-together {
+		break-inside: avoid;
+	}
+
+	// Headings just before a full-page block start its page with it, so a title
+	// never stays alone at the foot of the previous one.
+	.print .markdown-preview-view .handbook-print-page-lead {
+		break-before: page;
+		break-after: avoid;
+	}
+
+	.print .markdown-preview-view :is(h1, h2, h3, h4, h5, h6).handbook-print-page-lead + * {
+		break-before: avoid;
+	}
+
+	.print .markdown-preview-view .handbook-print-full-page {
+		break-before: page;
+		break-inside: avoid;
+	}
+
+	.print .markdown-preview-view .handbook-print-full-page.handbook-print-led {
+		break-before: avoid;
+	}
+
+	// A bare image carries the class itself: only a block box can break before.
+	.print .markdown-preview-view img.handbook-print-full-page {
+		display: block;
+	}
+
+	.print .markdown-preview-view .handbook-print-full-page img,
+	.print .markdown-preview-view img.handbook-print-full-page {
+		max-height: 95vh;
+		width: auto;
+		max-width: 100%;
+		object-fit: contain;
+	}
+}

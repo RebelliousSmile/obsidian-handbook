@@ -63,6 +63,7 @@ import {
 import { LANTERN_LOGO_SVG } from "./views/lanternLogo";
 import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
 import { buildCalloutStyleCss } from "./features/callouts/styleWriter";
+import { cleanUndeclaredCalloutsWithNotice } from "./features/callouts/contextMenu";
 import { clearCalloutCommands, syncCalloutCommands } from "./features/callouts/commands";
 import { StarterKitModal } from "./settings/starterKitModal";
 import {
@@ -70,6 +71,7 @@ import {
 	refreshNoteBackground,
 } from "./features/noteBackground";
 import { loadLayoutRegions } from "./features/layoutRegions";
+import { t } from "./utils/i18n";
 
 interface ApplySettingsOptions {
 	refreshEditor?: boolean;
@@ -113,9 +115,17 @@ export default class BrumesPlugin extends Plugin {
 
 		this.addCommand({
 			id: "reload-style-overrides",
-			name: "Reload illustrations and personal overrides",
+			name: t("Reload illustrations and personal overrides"),
 			callback: () => {
 				void this.reloadStyleSources();
+			},
+		});
+
+		this.addCommand({
+			id: "clean-undeclared-callouts",
+			name: t("Clean up callouts the game does not declare"),
+			editorCallback: (editor) => {
+				cleanUndeclaredCalloutsWithNotice(editor, this.settings, this.settings.mode);
 			},
 		});
 

@@ -11,6 +11,7 @@ import {
 import { resolveGameVariant } from "../games/variants";
 import { OVERRIDE_FILE_NAME } from "../games/overrides";
 import { log } from "../utils/logger";
+import { t } from "../utils/i18n";
 import { CalloutDefinition } from "../features/callouts/types";
 import { isCalloutAvailable } from "../features/callouts/types";
 import { calloutCommandName } from "../features/callouts/commands";
@@ -49,20 +50,20 @@ export class BrumesSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		const versionsSection = this.createSection(containerEl);
-		versionsSection.setHeading("Installed versions");
+		versionsSection.setHeading(t("Installed versions"));
 		this.renderActiveSchemaStatus(versionsSection);
 
 		const generalSection = this.createSection(containerEl);
-		generalSection.setHeading("Game and appearance");
+		generalSection.setHeading(t("Game and appearance"));
 		generalSection.addSetting((setting) => {
 			setting
-				.setName("Game mode")
+				.setName(t("Game mode"))
 				.setDesc(
-					"Choose the game line you are preparing for. This updates the main style and the editor context menu.",
+					t("Choose the game line you are preparing for. This updates the main style and the editor context menu."),
 				)
 				.addDropdown((drop) => {
 					if (GAME_PACKS.length === 0) {
-						drop.addOption("none", "No game installed");
+						drop.addOption("none", t("No game installed"));
 					}
 					// The list is the registry: a fourth pack shows up here
 					// without a line being written, and its name comes from
@@ -104,15 +105,15 @@ export class BrumesSettingTab extends PluginSettingTab {
 		this.renderLanternSettings(lanternSection);
 
 		const sourcesSection = this.createSection(containerEl);
-		sourcesSection.setHeading("Schema sources");
+		sourcesSection.setHeading(t("Schema sources"));
 		renderSchemaSourceSettingsDomain(this, sourcesSection);
 
 		const calloutsSection = this.createSection(containerEl);
-		calloutsSection.setHeading("Callouts");
+		calloutsSection.setHeading(t("Callouts"));
 		renderCalloutSettingsDomain(this, calloutsSection);
 
 		const advancedSection = this.createSection(containerEl);
-		advancedSection.setHeading("Advanced");
+		advancedSection.setHeading(t("Advanced"));
 		this.renderAdvancedSection(advancedSection);
 	}
 
@@ -135,12 +136,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting.setName(registration.pack.label);
 			if (!installation) {
-				setting.setDesc("No pack installed.");
+				setting.setDesc(t("No pack installed."));
 				return;
 			}
 			// The schema and the appearance pack are versioned apart: name each one,
 			// schema first, so a pack behind the schema's number does not read as stale.
-			setting.setDesc(bundled ? `Schema ${bundled} · Appearance pack ${installation.version}` : `Appearance pack ${installation.version}`);
+			setting.setDesc(bundled
+				? t("Schema {schema} · Appearance pack {pack}", { schema: bundled, pack: installation.version })
+				: t("Appearance pack {pack}", { pack: installation.version }));
 		});
 	}
 
@@ -148,19 +151,27 @@ export class BrumesSettingTab extends PluginSettingTab {
 		const sources = this.plugin.settings.schemaSources;
 		section.addSetting((setting) => {
 			setting
-				.setName("Repositories")
-				.setDesc(sources.length === 0 ? "No schema repository is registered yet." : `${sources.length} schema ${sources.length === 1 ? "repository is" : "repositories are"} registered.`)
-				.addButton((button) => button.setButtonText("Add source").onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }));
+				.setName(t("Repositories"))
+				.setDesc(sources.length === 0
+						? t("No schema repository is registered yet.")
+						: sources.length === 1
+							? t("1 schema repository is registered.")
+							: t("{count} schema repositories are registered.", { count: sources.length }))
+				.addButton((button) => button.setButtonText(t("Add source")).onClick(() => { new SchemaSourceModal(this.app, this.plugin, null, () => this.redisplay()).open(); }));
 		});
 		for (const source of sources) {
 			section.addSetting((setting) => {
-				const reference = source.reference.kind === "latest" ? "Latest release" : `${source.reference.kind}: ${source.reference.value}`;
+				const reference = source.reference.kind === "latest"
+					? t("Latest release")
+					: source.reference.kind === "tag"
+						? t("Tag: {value}", { value: source.reference.value })
+						: t("Branch: {value}", { value: source.reference.value });
 				setting
 					.setName(source.repository)
-					.setDesc(`${reference} · Checking installed version…`);
-				if (source.reference.kind !== "tag") setting.addButton((button) => button.setButtonText("Check for update").onClick(() => {
+					.setDesc(t("{reference} · Checking installed version…", { reference }));
+				if (source.reference.kind !== "tag") setting.addButton((button) => button.setButtonText(t("Check for update")).onClick(() => {
 					button.setDisabled(true);
-					const progress = new Notice(`Checking ${source.repository}…`, 0);
+					const progress = new Notice(t("Checking {repository}…", { repository: source.repository }), 0);
 					void (async () => {
 						try {
 							const before = await this.plugin.readInstalledSchemaSource(source);
@@ -168,11 +179,11 @@ export class BrumesSettingTab extends PluginSettingTab {
 							const after = await this.plugin.readInstalledSchemaSource(source);
 							this.redisplay();
 							new Notice(before?.revision === after?.revision
-								? `${source.repository} is already up to date.`
-								: `${source.repository} updated.`, 10000);
+								? t("{repository} is already up to date.", { repository: source.repository })
+								: t("{repository} updated.", { repository: source.repository }), 10000);
 						} catch (error) {
 							log.error("Failed to update schema source", error);
-							new Notice(`Schema update failed: ${error instanceof Error ? error.message : String(error)}`, 10000);
+							new Notice(t("Schema update failed: {reason}", { reason: error instanceof Error ? error.message : String(error) }), 10000);
 						} finally {
 							progress.hide();
 							button.setDisabled(false);
@@ -180,14 +191,14 @@ export class BrumesSettingTab extends PluginSettingTab {
 					})();
 				}));
 				setting
-					.addButton((button) => button.setButtonText("Edit").onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
+					.addButton((button) => button.setButtonText(t("Edit")).onClick(() => { new SchemaSourceModal(this.app, this.plugin, source, () => this.redisplay()).open(); }))
 					.addButton((button) => {
 						button.buttonEl.classList.add("mod-warning");
-						button.setButtonText("Remove").onClick(() => { new SchemaSourceRemovalModal(this.app, this.plugin, source, () => this.redisplay()).open(); });
+						button.setButtonText(t("Remove")).onClick(() => { new SchemaSourceRemovalModal(this.app, this.plugin, source, () => this.redisplay()).open(); });
 					});
 				void this.plugin.readInstalledSchemaSource(source).then((installed) => {
 					if (!this.containerEl.contains(setting.settingEl)) return;
-					setting.setDesc(`${reference} · ${installed ? "Installed" : "Not installed"}`);
+					setting.setDesc(t("{reference} · {status}", { reference, status: installed ? t("Installed") : t("Not installed") }));
 				});
 			});
 		}
@@ -206,8 +217,8 @@ export class BrumesSettingTab extends PluginSettingTab {
 		);
 		section.addSetting((setting) => {
 			setting
-				.setName("Univers")
-				.setDesc("Choisissez l'identité visuelle appliquée à tout le coffre.")
+				.setName(t("Universe"))
+				.setDesc(t("Choose the visual identity applied to the whole vault."))
 				.addDropdown((drop) => {
 					for (const variant of variants) {
 						drop.addOption(variant.id, variant.label);
@@ -243,13 +254,13 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Colour scheme")
-				.setDesc("The active game has both a light and a dark scheme. Follow Obsidian to keep them aligned, or choose one scheme for the plugin.")
+				.setName(t("Colour scheme"))
+				.setDesc(t("The active game has both a light and a dark scheme. Follow Obsidian to keep them aligned, or choose one scheme for the plugin."))
 				.addDropdown((drop) =>
 					drop
-						.addOption("obsidian", "Follow Obsidian")
-						.addOption("light", "Light")
-						.addOption("dark", "Dark")
+						.addOption("obsidian", t("Follow Obsidian"))
+						.addOption("light", t("Light"))
+						.addOption("dark", t("Dark"))
 						.setValue(this.plugin.settings.colourScheme)
 						.onChange((value) => {
 							this.runTask(
@@ -274,10 +285,10 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Theme features")
-				.setDesc("Review the callouts and code blocks declared for the active game.")
+				.setName(t("Theme features"))
+				.setDesc(t("Review the callouts and code blocks declared for the active game."))
 				.addButton((button) =>
-					button.setButtonText("View").onClick(() => {
+					button.setButtonText(t("View")).onClick(() => {
 						new ThemeContentsModal(
 							this.app,
 							registration,
@@ -291,13 +302,13 @@ export class BrumesSettingTab extends PluginSettingTab {
 	renderPersonalOverrides(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
-				.setName("Personal overrides")
+				.setName(t("Personal overrides"))
 				.addButton((button) =>
-					button.setButtonText("Reload").onClick(() => {
+					button.setButtonText(t("Reload")).onClick(() => {
 						this.runTask(
 							async () => {
 								await this.plugin.reloadStyleSources();
-								new Notice("Personal overrides reloaded.");
+								new Notice(t("Personal overrides reloaded."));
 							},
 							"Failed to reload the personal overrides",
 							"Failed to reload the personal overrides.",
@@ -312,11 +323,11 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			const diceRollerEnabled = this.diceRollerEnabled();
 			setting
-				.setName("Roller tables")
+				.setName(t("Roller tables"))
 				.setDesc(
 					diceRollerEnabled
-						? "Enable generic table rollers that use Dice Roller and copy results."
-						: "Enable Dice Roller first to use generic table rollers.",
+						? t("Enable generic table rollers that use Dice Roller and copy results.")
+						: t("Enable Dice Roller first to use generic table rollers."),
 				)
 				.setDisabled(!diceRollerEnabled)
 				.addToggle((toggle) =>
@@ -339,9 +350,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Workspace theme")
+				.setName(t("Workspace theme"))
 				.setDesc(
-					"Paint the whole window in the colours of the game, not only the notes. No other game has one yet.",
+					t("Paint the whole window in the colours of the game, not only the notes. No other game has one yet."),
 				)
 				.addToggle((toggle) =>
 					toggle
@@ -364,9 +375,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 	private renderLanternSettings(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
-				.setName("Lantern in the Mist integration") // eslint-disable-line obsidianmd/ui/sentence-case
+				.setName(t("Lantern in the Mist integration"))
 				.setDesc(
-					"Show the ribbon icon and keep the embedded Lantern in the Mist view available.", // eslint-disable-line obsidianmd/ui/sentence-case
+					t("Show the ribbon icon and keep the embedded Lantern in the Mist view available."),
 				)
 				.addToggle((toggle) =>
 					toggle
@@ -391,9 +402,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Lantern in the Mist URL") // eslint-disable-line obsidianmd/ui/sentence-case
+				.setName(t("Lantern in the Mist URL"))
 				.setDesc(
-					"Address used by the Lantern in the Mist ribbon action and embedded tab.", // eslint-disable-line obsidianmd/ui/sentence-case
+					t("Address used by the Lantern in the Mist ribbon action and embedded tab."),
 				)
 				.setDisabled(!this.plugin.settings.features.lanternIntegration)
 				.addText((text) =>
@@ -423,9 +434,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Theme card parser")
+				.setName(t("Theme card parser"))
 				.setDesc(
-					"Enable the com-theme-card code block parser and context menu action.",
+					t("Enable the com-theme-card code block parser and context menu action."),
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -452,9 +463,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Danger profile parser")
+				.setName(t("Danger profile parser"))
 				.setDesc(
-					"Enable the com-danger code block parser and context menu action.",
+					t("Enable the com-danger code block parser and context menu action."),
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -479,11 +490,11 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Iceberg canvas snippet")
+				.setName(t("Iceberg canvas snippet"))
 				.setDisabled(!isActive)
 				.addButton((button) =>
 					button
-						.setButtonText("Copy snippet")
+						.setButtonText(t("Copy snippet"))
 						.setDisabled(!isActive)
 						.onClick(() => {
 							this.runTask(
@@ -492,7 +503,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 										ADVANCED_CANVAS_ICEBERG_SNIPPET,
 									);
 									new Notice(
-										"Iceberg canvas snippet copied to clipboard.",
+										t("Iceberg canvas snippet copied to clipboard."),
 									);
 								},
 								"Failed to copy iceberg snippet",
@@ -509,9 +520,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Theme card parser")
+				.setName(t("Theme card parser"))
 				.setDesc(
-					"Enable the theme-card code block parser and context menu action. The older story-theme ID keeps working.",
+					t("Enable the theme-card code block parser and context menu action. The older story-theme ID keeps working."),
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -538,9 +549,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Challenge parser")
+				.setName(t("Challenge parser"))
 				.setDesc(
-					"Enable the litm-challenge code block parser and context menu action.",
+					t("Enable the litm-challenge code block parser and context menu action."),
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -565,9 +576,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Journey parser")
+				.setName(t("Journey parser"))
 				.setDesc(
-					"Enable the litm-journey code block parser and context menu action.",
+					t("Enable the litm-journey code block parser and context menu action."),
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -592,9 +603,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Theme kit parser")
+				.setName(t("Theme kit parser"))
 				.setDesc(
-					"Enable the litm-theme-kit code block parser and context menu action.",
+					t("Enable the litm-theme-kit code block parser and context menu action."),
 				)
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
@@ -619,11 +630,11 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting
-				.setName("Mountain canvas snippet")
+				.setName(t("Mountain canvas snippet"))
 				.setDisabled(!isActive)
 				.addButton((button) =>
 					button
-						.setButtonText("Copy snippet")
+						.setButtonText(t("Copy snippet"))
 						.setDisabled(!isActive)
 						.onClick(() => {
 							this.runTask(
@@ -632,7 +643,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 										ADVANCED_CANVAS_MOUNTAIN_SNIPPET,
 									);
 									new Notice(
-										"Mountain canvas snippet copied to clipboard.",
+										t("Mountain canvas snippet copied to clipboard."),
 									);
 								},
 								"Failed to copy mountain snippet",
@@ -646,12 +657,12 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	renderOtherscapeSettings(section: SettingGroup) {
 		const isActive = this.plugin.settings.mode === "otherscape";
-		this.addOtherscapeToggle(section, "Thèmes", "os-theme", "osThemeParser", isActive);
-		this.addOtherscapeToggle(section, "Kits de thème", "os-theme-kit", "osThemeKitParser", isActive);
-		this.addOtherscapeToggle(section, "Challenges", "os-challenge", "osChallengeParser", isActive);
-		this.addOtherscapeToggle(section, "Power Sets", "os-power-set", "osPowerSetParser", isActive);
-		this.addOtherscapeToggle(section, "Tropes de personnage", "os-character-trope", "osCharacterTropeParser", isActive);
-		this.addOtherscapeToggle(section, "Objets d'équipement", "os-loadout-item", "osLoadoutItemParser", isActive);
+		this.addOtherscapeToggle(section, t("Themes"), "os-theme", "osThemeParser", isActive);
+		this.addOtherscapeToggle(section, t("Theme kits"), "os-theme-kit", "osThemeKitParser", isActive);
+		this.addOtherscapeToggle(section, t("Challenges"), "os-challenge", "osChallengeParser", isActive);
+		this.addOtherscapeToggle(section, t("Power sets"), "os-power-set", "osPowerSetParser", isActive);
+		this.addOtherscapeToggle(section, t("Character tropes"), "os-character-trope", "osCharacterTropeParser", isActive);
+		this.addOtherscapeToggle(section, t("Loadout items"), "os-loadout-item", "osLoadoutItemParser", isActive);
 	}
 
 	private addOtherscapeToggle(
@@ -664,7 +675,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 		section.addSetting((setting) => {
 			setting
 				.setName(name)
-				.setDesc(`Active le bloc TOML ${blockId} et son insertion.`)
+				.setDesc(t("Enable the {block} TOML block and its insertion.", { block: blockId }))
 				.setDisabled(!isActive)
 				.addToggle((toggle) =>
 					toggle
@@ -683,35 +694,35 @@ export class BrumesSettingTab extends PluginSettingTab {
 	private renderAdvancedSection(section: SettingGroup) {
 		section.addSetting((setting) => {
 			setting
-				.setName("Validate installed packs")
-				.setDesc("Check pack manifests, declared capabilities, and local resources. This does not download updates.")
-				.addButton((button) => button.setButtonText("Validate").onClick(() => {
+				.setName(t("Validate installed packs"))
+				.setDesc(t("Check pack manifests, declared capabilities, and local resources. This does not download updates."))
+				.addButton((button) => button.setButtonText(t("Validate")).onClick(() => {
 					new PackIntegrationModal(this.app, this.plugin).open();
 				}));
 		});
 		const pbtaReport = currentPbtaCoverage();
 		if (pbtaReport.packs.length > 0) section.addSetting((setting) => {
 			setting
-				.setName("PbtA playbook coverage") // eslint-disable-line obsidianmd/ui/sentence-case
+				.setName(t("PbtA playbook coverage"))
 				.setDesc(pbtaCoverageSummary(pbtaReport))
-				.addButton((button) => button.setButtonText("View coverage").onClick(() => {
+				.addButton((button) => button.setButtonText(t("View coverage")).onClick(() => {
 					new PbtaCoverageModal(this.app, currentPbtaCoverage()).open();
 				}));
 		});
 		section.addSetting((setting) => {
 			setting
-				.setName("Log level")
+				.setName(t("Log level"))
 				.setDesc(
-					"Control how much information is logged to the developer console.",
+					t("Control how much information is logged to the developer console."),
 				)
 				.addDropdown((drop) =>
 					drop
 						.addOptions({
-							debug: "Debug (verbose)",
-							info: "Info",
-							warn: "Warnings",
-							error: "Errors only",
-							none: "None (disable logs)",
+							debug: t("Debug (verbose)"),
+							info: t("Info"),
+							warn: t("Warnings"),
+							error: t("Errors only"),
+							none: t("None (disable logs)"),
 						})
 						.setValue(this.plugin.settings.logLevel)
 						.onChange((value) => {
@@ -745,15 +756,11 @@ export class BrumesSettingTab extends PluginSettingTab {
 			section.addSetting((setting) => {
 				setting
 					.setName(entry.name)
-					.setDesc(
-						`Portée : ${this.calloutScopeLabel(entry.scope)} · alias : ${
-							entry.aliases.join(", ") || "aucun"
-						}.${this.calloutShortcutHint(entry)}`,
-					)
+					.setDesc(this.calloutDescription(entry))
 					.addExtraButton((button) =>
 						button
 							.setIcon("pencil")
-							.setTooltip("Modifier")
+							.setTooltip(t("Edit"))
 							.onClick(() => {
 								new CalloutsModal(this.app, this.plugin, entry, () => {
 
@@ -764,9 +771,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 					.addExtraButton((button) =>
 						button
 							.setIcon("trash")
-							.setTooltip("Supprimer")
+							.setTooltip(t("Delete"))
 							.onClick(() => {
-								if (!activeWindow.confirm(`Supprimer le callout "${entry.name}" ?`)) {
+								if (!activeWindow.confirm(t("Delete the callout \"{name}\"?", { name: entry.name }))) {
 									return;
 								}
 								this.runTask(
@@ -789,7 +796,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 		section.addSetting((setting) => {
 			setting.addButton((button) =>
-				button.setButtonText("+ nouveau callout").onClick(() => {
+				button.setButtonText(t("+ new callout")).onClick(() => {
 					new CalloutsModal(this.app, this.plugin, null, () => {
 
 						this.redisplay();
@@ -804,7 +811,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 			setting
 				.setName(`🔒 ${entry.name}`)
 				.setDesc(
-					`Portée : ${this.calloutScopeLabel(entry.scope)}. Seuls les alias sont modifiables ici, un par ligne.${this.calloutShortcutHint(entry)}`,
+					this.nativeCalloutDescription(entry),
 				)
 				.addTextArea((text) => {
 					text.setValue(entry.aliases.join("\n"));
@@ -829,10 +836,28 @@ export class BrumesSettingTab extends PluginSettingTab {
 
 	private calloutScopeLabel(scope: string): string {
 		if (scope === "all") {
-			return "Tous les jeux";
+			return t("All games");
 		}
 		const pack = GAME_PACKS.find((p) => p.id === scope);
 		return pack?.label ?? scope;
+	}
+
+	private calloutDescription(entry: CalloutDefinition): string {
+		const values = {
+			scope: this.calloutScopeLabel(entry.scope),
+			aliases: entry.aliases.join(", ") || t("none"),
+			hint: this.calloutShortcutHint(entry),
+		};
+		return values.hint
+			? t("Scope: {scope} · aliases: {aliases}. {hint}", values)
+			: t("Scope: {scope} · aliases: {aliases}.", values);
+	}
+
+	private nativeCalloutDescription(entry: CalloutDefinition): string {
+		const values = { scope: this.calloutScopeLabel(entry.scope), hint: this.calloutShortcutHint(entry) };
+		return values.hint
+			? t("Scope: {scope}. Only the aliases can be edited here, one per line. {hint}", values)
+			: t("Scope: {scope}. Only the aliases can be edited here, one per line.", values);
 	}
 
 	/** No alias means no command is registered for this entry — no hint to give then. */
@@ -841,9 +866,9 @@ export class BrumesSettingTab extends PluginSettingTab {
 			return "";
 		}
 
-		return ` Raccourci : Réglages → Raccourcis clavier → rechercher "${calloutCommandName(
-			entry,
-		)}".`;
+		return t("Shortcut: Settings → Hotkeys → search for \"{command}\".", {
+			command: calloutCommandName(entry),
+		});
 	}
 
 
@@ -855,45 +880,55 @@ export class BrumesSettingTab extends PluginSettingTab {
 		const fragment = this.containerEl.doc.createDocumentFragment();
 		const pack = resolveGamePack(this.plugin.settings.mode);
 
-		fragment.append("The active pack is ");
-		fragment.createEl("strong", { text: pack.label });
-		fragment.append(
-			". To change a colour or a font of your own, write the custom properties into ",
-		);
-		fragment.createEl("code", { text: OVERRIDE_FILE_NAME });
-		fragment.append(
-			", in this plugin's folder in the vault. What the file leaves out keeps the value of the game; removing the file restores it whole.",
+		this.appendTemplate(
+			fragment,
+			t("The active pack is {pack}. To change a colour or a font of your own, write the custom properties into {file}, in this plugin's folder in the vault. What the file leaves out keeps the value of the game; removing the file restores it whole."),
+			{
+				pack: (host) => host.createEl("strong", { text: pack.label }),
+				file: (host) => host.createEl("code", { text: OVERRIDE_FILE_NAME }),
+			},
 		);
 
 		return fragment;
 	}
 
 	private createIcebergDescription(): DocumentFragment {
+		return this.createCanvasSnippetDescription("iceberg.css");
+	}
+
+	private createMountainDescription(): DocumentFragment {
+		return this.createCanvasSnippetDescription("mountain.css");
+	}
+
+	private createCanvasSnippetDescription(file: string): DocumentFragment {
 		const fragment = this.containerEl.doc.createDocumentFragment();
-		fragment.append("Install ");
-		this.appendLink(
+		this.appendTemplate(
 			fragment,
-			"Advanced Canvas",
-			"https://github.com/Developer-Mike/obsidian-advanced-canvas",
-		);
-		fragment.append(
-			" by Developer-Mike, then go to Settings > Appearance > CSS snippets, create a snippet named iceberg.css, paste the copied content into that file, and enable the snippet.",
+			t("Install {link} by Developer-Mike, then go to Settings > Appearance > CSS snippets, create a snippet named {file}, paste the copied content into that file, and enable the snippet."),
+			{
+				link: (host) => this.appendLink(
+					host,
+					"Advanced Canvas",
+					"https://github.com/Developer-Mike/obsidian-advanced-canvas",
+				),
+				file: () => fragment.append(file),
+			},
 		);
 		return fragment;
 	}
 
-	private createMountainDescription(): DocumentFragment {
-		const fragment = this.containerEl.doc.createDocumentFragment();
-		fragment.append("Install ");
-		this.appendLink(
-			fragment,
-			"Advanced Canvas",
-			"https://github.com/Developer-Mike/obsidian-advanced-canvas",
-		);
-		fragment.append(
-			" by Developer-Mike, then go to Settings > Appearance > CSS snippets, create a snippet named mountain.css, paste the copied content into that file, and enable the snippet.",
-		);
-		return fragment;
+	/** Fill a translated sentence, its `{slot}` markers replaced by nodes, so no fragment is translated apart. */
+	private appendTemplate(
+		parent: DocumentFragment,
+		template: string,
+		slots: Record<string, (host: DocumentFragment) => void>,
+	) {
+		for (const piece of template.split(/(\{\w+\})/)) {
+			const slot = /^\{(\w+)\}$/.exec(piece)?.[1];
+			const fill = slot === undefined ? undefined : slots[slot];
+			if (fill) fill(parent);
+			else if (piece) parent.append(piece);
+		}
 	}
 
 	private appendLink(parent: DocumentFragment, label: string, href: string) {
@@ -929,7 +964,7 @@ export class BrumesSettingTab extends PluginSettingTab {
 	) {
 		void task().catch((error: unknown) => {
 			log.error(logMessage, error);
-			new Notice(noticeMessage);
+			new Notice(t(noticeMessage));
 		});
 	}
 }

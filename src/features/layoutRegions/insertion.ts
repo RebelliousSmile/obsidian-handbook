@@ -1,4 +1,5 @@
 import type { Editor, Menu } from "obsidian";
+import { t } from "../../utils/i18n";
 
 const DEFAULT_COLUMNS = 2;
 
@@ -27,7 +28,7 @@ export function contributeLayoutRegionInsertion(
 ): number {
 	menu.addItem((item) =>
 		item
-			.setTitle("Multi-column region")
+			.setTitle(t("Multi-column region"))
 			.setIcon("columns-2")
 			.onClick(() => insertLayoutRegion(editor)),
 	);

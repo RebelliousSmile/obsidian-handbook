@@ -4,6 +4,7 @@ import type BrumesPlugin from "../../BrumesPlugin";
 import { MIST_SOURCE_CONVERSION_CODECS } from "schema-in-the-mist";
 import { looksLikeToml } from "./schemaValues";
 import type { TomlExport } from "./copyAsToml";
+import { t, tNoun } from "../../utils/i18n";
 
 interface RenderedTomlContext {
 	sourcePath: string;
@@ -32,7 +33,7 @@ export function contributeRenderedTomlPaste(menu: Menu, plugin: BrumesPlugin): b
 	}
 
 	menu.addItem((item) => item
-		.setTitle(`Paste toml into ${context.spec.noun}`)
+		.setTitle(t("Paste toml into {noun}", { noun: tNoun(context.spec.noun) }))
 		.setIcon("clipboard-paste")
 		.onClick(() => {
 			void pasteTomlIntoRenderedBlock(
@@ -90,7 +91,7 @@ export async function pasteTomlIntoRenderedBlock<T>(
 	spec: TomlExport<T>,
 ): Promise<void> {
 	if (!section) {
-		new Notice("Could not locate this block in the note.");
+		new Notice(t("Could not locate this block in the note."));
 		return;
 	}
 
@@ -98,33 +99,33 @@ export async function pasteTomlIntoRenderedBlock<T>(
 	try {
 		clipboard = await navigator.clipboard.readText();
 	} catch {
-		new Notice("Could not read toml from the clipboard.");
+		new Notice(t("Could not read toml from the clipboard."));
 		return;
 	}
 
 	const replacement = tomlToBlockSource(clipboard, spec);
 	if (replacement === null) {
-		new Notice(`Clipboard does not match this ${spec.noun} TOML document.`);
+		new Notice(t("Clipboard does not match this {noun} TOML document.", { noun: tNoun(spec.noun) }));
 		return;
 	}
 
 	const file = plugin.app.vault.getAbstractFileByPath(sourcePath);
 	if (!(file instanceof TFile)) {
-		new Notice("The source note is no longer available.");
+		new Notice(t("The source note is no longer available."));
 		return;
 	}
 
 	const note = await plugin.app.vault.read(file);
 	const next = replaceSectionBody(note, section, renderedSource, replacement);
 	if (next === null) {
-		new Notice("This block changed before it could be updated; nothing was overwritten.");
+		new Notice(t("This block changed before it could be updated; nothing was overwritten."));
 		return;
 	}
 
 	try {
 		await plugin.app.vault.modify(file, next);
-		new Notice(`Pasted TOML into the ${spec.noun}.`);
+		new Notice(t("Pasted TOML into the {noun}.", { noun: tNoun(spec.noun) }));
 	} catch {
-		new Notice("Could not update the source note.");
+		new Notice(t("Could not update the source note."));
 	}
 }

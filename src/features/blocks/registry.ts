@@ -25,6 +25,7 @@ import {
 	tomlExportForBlock,
 } from "./tomlExports";
 import { rememberRenderedTomlContext } from "./pasteToml";
+import { t } from "../../utils/i18n";
 
 const log = logScope("Blocks");
 
@@ -168,7 +169,7 @@ export function contributeBlockInsertions(
 
 		menu.addItem((item: MenuItem) =>
 			item
-				.setTitle(block.label)
+				.setTitle(t(block.label))
 				.setIcon(block.icon)
 				.onClick(() =>
 					editor.replaceRange(block.template(settings), editor.getCursor()),

@@ -1,4 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
+import { t } from "../utils/i18n";
 import { BRUMES_BLOCKS } from "../features/blocks/registry";
 import type { BrumesBlock } from "../features/blocks/types";
 import type { CalloutDefinition } from "../features/callouts/types";
@@ -49,41 +50,41 @@ export class ThemeContentsModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle(`${this.registration.pack.label} features`);
+		this.setTitle(t("{game} features", { game: this.registration.pack.label }));
 		const contents = resolveThemeContents(this.registration, this.callouts);
 
-		this.contentEl.createEl("h3", { text: "Handouts" });
+		this.contentEl.createEl("h3", { text: t("Handouts") });
 		if (contents.handouts.length === 0) {
-			this.contentEl.createEl("p", { text: "No handout is declared for this game." });
+			this.contentEl.createEl("p", { text: t("No handout is declared for this game.") });
 		} else {
 			for (const handout of contents.handouts) {
 				new Setting(this.contentEl)
 					.setName(handout.label)
-					.setDesc(`Code block: ${handout.id}`);
+					.setDesc(t("Code block: {ids}", { ids: handout.id }));
 			}
 		}
 
-		this.contentEl.createEl("h3", { text: "Callouts" });
+		this.contentEl.createEl("h3", { text: t("Callouts") });
 		if (contents.callouts.length === 0) {
-			this.contentEl.createEl("p", { text: "No callout is declared for this game." });
+			this.contentEl.createEl("p", { text: t("No callout is declared for this game.") });
 		} else {
 			for (const callout of contents.callouts) {
 				const syntax = callout.aliases.map((alias) => `[!${alias}]`);
 				new Setting(this.contentEl)
 					.setName(callout.name)
-					.setDesc(syntax.length > 0 ? syntax.join(", ") : `ID: ${callout.id}`);
+					.setDesc(syntax.length > 0 ? syntax.join(", ") : t("ID: {id}", { id: callout.id }));
 			}
 		}
 
-		this.contentEl.createEl("h3", { text: "Code blocks" });
+		this.contentEl.createEl("h3", { text: t("Code blocks") });
 		if (contents.blocks.length === 0) {
-			this.contentEl.createEl("p", { text: "No code block is declared for this game." });
+			this.contentEl.createEl("p", { text: t("No code block is declared for this game.") });
 		} else {
 			for (const block of contents.blocks) {
 				const ids = [block.id, ...(block.aliases ?? [])];
 				new Setting(this.contentEl)
 					.setName(block.label)
-					.setDesc(`Code block: ${ids.join(", ")}`);
+					.setDesc(t("Code block: {ids}", { ids: ids.join(", ") }));
 			}
 		}
 	}

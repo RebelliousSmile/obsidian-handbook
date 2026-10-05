@@ -3,8 +3,10 @@
 // lists, tables, status marks) to the pack's custom properties. Every rule
 // falls back to a neutral value so an older pack that does not declare a
 // given token still renders a readable, unstyled equivalent.
-// Reading view and Live Preview share every rule below.
-$views: ":is(.markdown-source-view, .markdown-reading-view)";
+// Reading view and Live Preview share every rule below, and so does the PDF
+// export: `printToPdf()` renders into a sibling `.print .markdown-preview-view`
+// that is never nested under either view.
+$views: ":is(.markdown-source-view, .markdown-reading-view, .print .markdown-preview-view)";
 
 @mixin content {
 	#{$views} h3,

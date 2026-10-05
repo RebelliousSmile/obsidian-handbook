@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [2.33.0] - 2026-10-05
+
+### Added
+
+- Style the `[!role]` callout (schema-adrenaline 3.2.0): the role card of the scenario booklet, its title in the display face on a garnet band over the rosy surface of the encart.
+- Offer "Insert callout" and "Change callout type" as submenus of the Handbook context menu, listing only the callouts the active game declares.
+- Add "Clean up callouts the game does not declare", in the context menu and the command palette: every callout of the note the game does not declare is pointed at the game's first callout, keeping its modifiers, fold marker and body. Fenced code is left alone.
+- Translate the texts Handbook adds (menus, commands, notices, settings) into French when Obsidian runs in French. Other languages are one dictionary file in `src/locales/`; a text without a translation stays English.
+- Export to PDF: a block at least 40 % of a page tall takes a page of its own with the headings just above it, shrunk if it would not fit; a shorter block is kept from splitting across two pages.
+
+### Changed
+
+- Print the Adrenaline body text and headings with the pack's fonts, as on screen, and give a level 1 heading a minimum height and a right padding so a long title wraps early in a column.
+
 ## [2.32.0] - 2026-10-05
 
 ### Added

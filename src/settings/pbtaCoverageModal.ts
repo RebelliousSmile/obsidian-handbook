@@ -1,5 +1,6 @@
 import { Modal, Setting } from "obsidian";
 import type { App } from "obsidian";
+import { t } from "../utils/i18n";
 import { GAME_REGISTRATIONS } from "../games/registry";
 import {
 	PbtaCoverageInput,
@@ -49,39 +50,39 @@ export class PbtaCoverageModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle("PbtA playbook coverage"); // eslint-disable-line obsidianmd/ui/sentence-case
+		this.setTitle(t("PbtA playbook coverage"));
 		const report = this.report;
 		const findings = describePbtaCoverage(report);
 
 		this.contentEl.createEl("p", {
 			text: findings.length === 0
-				? "No PbtA format gaps detected. Formats for other game packs are available when those packs are installed."
-				: "Some playbook formats are not fully readable in this vault.",
+				? t("No PbtA format gaps detected. Formats for other game packs are available when those packs are installed.")
+				: t("Some playbook formats are not fully readable in this vault."),
 		});
 		for (const finding of findings) {
 			this.contentEl.createEl("p", { text: finding });
 		}
 
-		this.contentEl.createEl("h3", { text: "Game-specific formats" });
+		this.contentEl.createEl("h3", { text: t("Game-specific formats") });
 		if (report.projected.length === 0) {
-			this.contentEl.createEl("p", { text: "This build reads no game-specific playbook format." });
+			this.contentEl.createEl("p", { text: t("This build reads no game-specific playbook format.") });
 		} else {
 			for (const target of report.projected) {
 				new Setting(this.contentEl)
 					.setName(target)
 					.setDesc(report.missingPacks.indexOf(target) >= 0
-						? `Supported by this build. Install the "${expectedPackId(target)}" pack to use it.`
-						: `Readable. Expects the "${expectedPackId(target)}" pack, installed.`);
+						? t("Supported by this build. Install the \"{pack}\" pack to use it.", { pack: expectedPackId(target) })
+						: t("Readable. Expects the \"{pack}\" pack, installed.", { pack: expectedPackId(target) }));
 			}
 		}
 
 		if (report.aliases.length > 0) {
-			this.contentEl.createEl("h3", { text: "Formats read as a portable playbook" });
+			this.contentEl.createEl("h3", { text: t("Formats read as a portable playbook") });
 			this.contentEl.createEl("p", {
-				text: "Expected, not a problem: these games describe a playbook the portable schema already covers, so their documents are read as generic playbooks and their game definition carries what is specific to them.",
+				text: t("Expected, not a problem: these games describe a playbook the portable schema already covers, so their documents are read as generic playbooks and their game definition carries what is specific to them."),
 			});
 			for (const target of report.aliases) {
-				new Setting(this.contentEl).setName(target).setDesc("No distinguishing field.");
+				new Setting(this.contentEl).setName(target).setDesc(t("No distinguishing field."));
 			}
 		}
 
@@ -90,20 +91,19 @@ export class PbtaCoverageModal extends Modal {
 			report.packs.some((id) => target.startsWith(`${id}-`)),
 		);
 		if (unresolvedInVault.length > 0) {
-			this.contentEl.createEl("h3", { text: "Formats not read yet" });
+			this.contentEl.createEl("h3", { text: t("Formats not read yet") });
 			this.contentEl.createEl("p", {
-				text: "The installed schema source carries these playbook formats and this build does not read them yet. Their documents still render as generic playbooks, without whatever each format adds.",
+				text: t("The installed schema source carries these playbook formats and this build does not read them yet. Their documents still render as generic playbooks, without whatever each format adds."),
 			});
 			for (const target of unresolvedInVault) {
-				new Setting(this.contentEl).setName(target).setDesc("Newer than this build.");
+				new Setting(this.contentEl).setName(target).setDesc(t("Newer than this build."));
 			}
 		}
 
-		// eslint-disable-next-line obsidianmd/ui/sentence-case
-		this.contentEl.createEl("h3", { text: "Installed PbtA packs" });
+		this.contentEl.createEl("h3", { text: t("Installed PbtA packs") });
 		this.contentEl.createEl("p", {
 			text: report.packs.length === 0
-				? "No installed pack declares a PbtA capability."
+				? t("No installed pack declares a PbtA capability.")
 				: report.packs.join(", "),
 		});
 	}
@@ -117,8 +117,11 @@ export class PbtaCoverageModal extends Modal {
 export function pbtaCoverageSummary(report: PbtaCoverageReport): string {
 	const findings = describePbtaCoverage(report);
 	const installedFormats = report.projected.length - report.missingPacks.length;
-	const readable = `${installedFormats} installed game-specific ${installedFormats === 1 ? "format" : "formats"} readable`;
-	return findings.length === 0
-		? `PbtA coverage: ${readable}, no format gaps.`
-		: `PbtA coverage: ${readable}, ${findings.length} ${findings.length === 1 ? "finding" : "findings"}.`;
+	const readable = installedFormats === 1
+		? t("1 installed game-specific format readable")
+		: t("{count} installed game-specific formats readable", { count: installedFormats });
+	if (findings.length === 0) return t("PbtA coverage: {readable}, no format gaps.", { readable });
+	return findings.length === 1
+		? t("PbtA coverage: {readable}, 1 finding.", { readable })
+		: t("PbtA coverage: {readable}, {count} findings.", { readable, count: findings.length });
 }

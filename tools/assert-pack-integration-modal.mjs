@@ -30,7 +30,8 @@ try {
 							setDesc(value) { events.push(value); return this; }
 							addButton(callback) { callback({ setButtonText: (value) => { events.push(value); return { onClick: () => undefined }; } }); return this; }
 						}
-						module.exports = { Modal, Setting };
+						const getLanguage = () => "en";
+						module.exports = { Modal, Setting, getLanguage };
 					`,
 					loader: "js",
 				}));

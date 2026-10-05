@@ -14,7 +14,9 @@ import {
 	hasTagInsertion,
 } from "../features/tags/contextMenu";
 import {
+	contributeCalloutCleanup,
 	contributeCalloutInsertions,
+	contributeCalloutTypeChange,
 	getAvailableCalloutInsertions,
 } from "../features/callouts/contextMenu";
 import { contributeLayoutRegionInsertion } from "../features/layoutRegions/insertion";
@@ -24,10 +26,10 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 	return plugin.app.workspace.on(
 		"editor-menu",
 		(menu: Menu, editor: Editor) => {
+			const callouts = getAvailableCalloutInsertions(plugin.settings, plugin.settings.mode);
 			const hasAnyItems =
 				hasTagInsertion() ||
-				getAvailableCalloutInsertions(plugin.settings, plugin.settings.mode)
-					.length > 0 ||
+				callouts.length > 0 ||
 				hasBlockInsertions(plugin.settings);
 
 			if (!hasAnyItems) {
@@ -40,20 +42,13 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			const tagItems = contributeTagInsertion(submenu, editor);
 			hasItems = tagItems > 0;
 
-			if (
-				getAvailableCalloutInsertions(plugin.settings, plugin.settings.mode)
-					.length > 0 &&
-				hasItems
-			) {
+			if (callouts.length > 0 && hasItems) {
 				submenu.addSeparator();
 			}
-			const calloutItems = contributeCalloutInsertions(
-				submenu,
-				editor,
-				plugin.settings,
-				plugin.settings.mode,
-			);
+			const calloutItems = contributeCalloutInsertions(submenu, editor, callouts);
 			hasItems = hasItems || calloutItems > 0;
+			contributeCalloutTypeChange(submenu, editor, callouts);
+			contributeCalloutCleanup(submenu, editor, plugin.settings, plugin.settings.mode);
 
 			if (hasItems) {
 				submenu.addSeparator();

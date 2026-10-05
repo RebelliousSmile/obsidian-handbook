@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { writeObsidianStub } from "./obsidianStub.mjs";
 
 const temporaryDirectory = await mkdtemp(
 	join(tmpdir(), "handbook-layout-regions-"),
@@ -12,6 +13,7 @@ const output = join(temporaryDirectory, "assert-layout-regions.mjs");
 const stylesheet = join(temporaryDirectory, "styles.css");
 
 try {
+	const stub = await writeObsidianStub(temporaryDirectory);
 	await build({
 		entryPoints: ["tools/layoutRegions.harness.mts"],
 		bundle: true,
@@ -19,6 +21,7 @@ try {
 		format: "esm",
 		outfile: output,
 		logLevel: "silent",
+		alias: { obsidian: stub },
 	});
 	await import(pathToFileURL(output).href);
 	await build({

@@ -45,10 +45,13 @@ const PBTA_CALLOUTS: CalloutDefinition[] = [
 	})),
 ];
 
-const ADRENALINE_VISUAL_ICONS: Record<(typeof ADRENALINE_VISUAL_CALLOUTS)[number]["id"], string> = {
+// Keyed by id as text: Handbook picks the icon of a callout the schema declares, and a schema
+// release that adds one must not break the build of a Handbook that has not adopted it yet.
+const ADRENALINE_VISUAL_ICONS: Record<string, string> = {
 	"adrenaline-exemple": "message-square-quote",
 	"adrenaline-description": "scroll-text",
 	"adrenaline-encart": "panel-top",
+	"adrenaline-role": "id-card",
 	"adrenaline-formation": "backpack",
 	"adrenaline-action": "swords",
 	"adrenaline-roller": "dices",

@@ -16,14 +16,14 @@ const themeDocument = (kit: boolean) => [
 
 export const osThemeBlock: BrumesBlock<OsThemeData> = {
 	id: OS_BLOCK_IDS.theme, mode: "otherscape", flag: OS_FEATURE_FLAGS.theme,
-	label: "Thème :Otherscape", icon: "file-plus", shape: osThemeShape,
+	label: "Theme :Otherscape", icon: "file-plus", shape: osThemeShape,
 	parse: parseOsTheme, render: renderOsTheme,
 	template: () => `\`\`\`${OS_BLOCK_IDS.theme}\n${themeDocument(false)}\n\`\`\`\n`,
 };
 
 export const osThemeKitBlock: BrumesBlock<OsThemeData> = {
 	id: OS_BLOCK_IDS.themeKit, mode: "otherscape", flag: OS_FEATURE_FLAGS.themeKit,
-	label: "Kit de thème :Otherscape", icon: "book-open", shape: osThemeKitShape,
+	label: "Theme kit :Otherscape", icon: "book-open", shape: osThemeKitShape,
 	parse: parseOsThemeKit, render: renderOsTheme,
 	template: () => `\`\`\`${OS_BLOCK_IDS.themeKit}\n${themeDocument(true)}\n\`\`\`\n`,
 };

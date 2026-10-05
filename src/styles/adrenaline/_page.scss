@@ -33,6 +33,10 @@ $views: ":is(.markdown-source-view, .markdown-reading-view)";
 	.print .markdown-preview-view {
 		background-color: var(--background-primary);
 		background-image: none;
+		// Obsidian reads the body font from `--font-text`, computed on `body`
+		// where the pack's `--font-text-theme` is not set: without this the
+		// exported text falls back to the default sans-serif stack.
+		font-family: var(--font-text-theme, var(--font-text));
 	}
 
 	// The editable area itself is a focus target: outlining it drew a frame around the whole note.
@@ -91,7 +95,11 @@ $views: ":is(.markdown-source-view, .markdown-reading-view)";
 	#{$views} h1,
 	.markdown-source-view.mod-cm6 .HyperMD-header-1,
 	.print .markdown-preview-view h1 {
-		padding: 0.15em 0.5em 0.1em;
+		// The right padding and the minimum height make a long title wrap early
+		// in a narrow column instead of running to the panel edge.
+		box-sizing: border-box;
+		min-height: 2.4em;
+		padding: 0.15em 1.5em 0.1em 0.5em;
 		border-inline-start: 0.5rem solid var(--adrenaline-h1-frieze, transparent);
 		border-block-end: 1px solid var(--adrenaline-h1-rule, transparent);
 		background: var(--adrenaline-h1-surface, none);

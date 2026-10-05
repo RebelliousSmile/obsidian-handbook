@@ -30,3 +30,19 @@ export function getOrCreateBrumesSubmenu(menu: Menu): Menu {
 
 	return brumesSubmenu;
 }
+
+/** A titled entry of `menu` that opens a menu of its own. */
+export function addSubmenu(menu: Menu, title: string, icon: string): Menu {
+	let submenu: Menu | null = null;
+
+	menu.addItem((item: MenuItem) => {
+		item.setTitle(title).setIcon(icon);
+		submenu = createSubmenu(item);
+	});
+
+	if (!submenu) {
+		throw new Error(`Failed to create the "${title}" submenu.`);
+	}
+
+	return submenu;
+}

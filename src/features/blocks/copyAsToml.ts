@@ -5,6 +5,7 @@ import type { MistSourceConversionTarget } from "schema-in-the-mist";
 import { logScope } from "../../utils/logger";
 import { BrumesBlock, blockIds } from "./types";
 import { isAvailableBlock } from "./registry";
+import { t, tNoun } from "../../utils/i18n";
 
 const log = logScope("BlockToml");
 
@@ -127,18 +128,17 @@ async function copyAsToml<T>(
 
 	if (data === null) {
 		new Notice(
-			`Cannot copy this ${spec.noun}: ${spec.describeFailure(source)}.`,
+			t("Cannot copy this {noun}: {reason}.", { noun: tNoun(spec.noun), reason: spec.describeFailure(source) }),
 		);
 		return;
 	}
 
 	try {
 		await navigator.clipboard.writeText(spec.toToml(data));
-		new Notice(`Copied the ${spec.noun} as TOML.`);
+		new Notice(t("Copied the {noun} as TOML.", { noun: tNoun(spec.noun) }));
 	} catch (error) {
 		log.error("Could not write the TOML to the clipboard", error);
-		// eslint-disable-next-line obsidianmd/ui/sentence-case
-		new Notice("Could not write the TOML to the clipboard.");
+		new Notice(t("Could not write the TOML to the clipboard."));
 	}
 }
 
@@ -150,7 +150,7 @@ export function contributeTomlSource<T>(
 ): void {
 	menu.addItem((item) =>
 		item
-			.setTitle(`Copy ${spec.noun} as TOML`)
+			.setTitle(t("Copy {noun} as TOML", { noun: tNoun(spec.noun) }))
 			.setIcon("copy")
 			.onClick(() => {
 				void copyAsToml(source, spec);
@@ -201,7 +201,7 @@ export function loadCopyAsTomlCommand<T>(
 ): void {
 	plugin.addCommand({
 		id: spec.commandId,
-		name: `Copy ${spec.noun} as TOML`,
+		name: t("Copy {noun} as TOML", { noun: tNoun(spec.noun) }),
 		editorCheckCallback: (checking: boolean, editor: Editor) => {
 			if (!isAvailableBlock(spec.block, plugin.settings)) {
 				return false;
