@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.33.1] - 2026-10-05
+
+### Fixed
+
+- Layout regions: the section holding only a marker comment no longer takes a line at the top of the first column, a region starts flush with its columns, and a full-width heading after a region keeps a gap from the last block.
+- Export to PDF: callouts of the game (the action card of the scenario booklet) keep their game rendering instead of the generic callout.
+
 ## [2.33.0] - 2026-10-05
 
 ### Added

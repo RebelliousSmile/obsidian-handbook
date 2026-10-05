@@ -24,6 +24,12 @@ export function mapRegionToBlocks(
 
 /** Class of a rendered block that flows in the columns of its region. */
 export const FLOW_BLOCK = "handbook-layout-flow";
+export const MARKER_BLOCK = "handbook-layout-marker";
+/** A section holding only a marker comment: no element, no text, and no inline style such as a page break. */
+export function isMarkerBlock(block: HTMLElement): boolean {
+	return block.childElementCount === 0 && (block.textContent ?? "").trim() === "" && !block.hasAttribute("style");
+}
+
 /** Class of the block container once it is the column box of its regions. */
 export const FLOW_HOST = "handbook-layout-flowing";
 

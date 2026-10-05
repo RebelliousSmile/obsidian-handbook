@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import { parseLayoutRegions } from "./parser";
 import { mapPrintRegions } from "./printMapper";
-import { FLOW_BLOCK, FLOW_HOST, flowColumns } from "./sectionMapper";
+import { FLOW_BLOCK, FLOW_HOST, MARKER_BLOCK, flowColumns, isMarkerBlock } from "./sectionMapper";
 import { warnOnce } from "./warnOnce";
 
 /**
@@ -66,5 +66,9 @@ export async function printLayoutRegions(
 	for (const { region, blocks } of mapped.selections) {
 		if (region.columns <= 1) continue;
 		for (const block of blocks) block.classList.add(FLOW_BLOCK);
+	}
+	// A block that only holds a marker comment draws nothing: it must not take a line of the column.
+	for (const block of Array.from(element.children) as HTMLElement[]) {
+		block.classList.toggle(MARKER_BLOCK, isMarkerBlock(block));
 	}
 }

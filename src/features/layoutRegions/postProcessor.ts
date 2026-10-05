@@ -8,7 +8,7 @@ import { markPrintPageBreaks } from "../printPageBreaks";
 import { LayoutRegionParseResult, parseLayoutRegions } from "./parser";
 import { isPrintExport, printLayoutRegions } from "./printProcessor";
 import { holdWholeNote, releaseWholeNote } from "./renderWindow";
-import { FLOW_BLOCK, FLOW_HOST, flowColumns, flowsInRegion } from "./sectionMapper";
+import { FLOW_BLOCK, FLOW_HOST, flowColumns, flowsInRegion, isMarkerBlock, MARKER_BLOCK } from "./sectionMapper";
 import { warnOnce } from "./warnOnce";
 
 const NO_REGION: LayoutRegionParseResult = { diagnostics: [], regions: [] };
@@ -54,6 +54,8 @@ function flowBlocks(
 		const info = context.getSectionInfo(block);
 		if (info && !parsed) parsed = sourceRegions(plugin, context, parent, info.text);
 		block.classList.toggle(FLOW_BLOCK, flowsInRegion((parsed ?? NO_REGION).regions, info));
+		// A section that only holds a marker comment draws nothing: it must not take a line of the column.
+		block.classList.toggle(MARKER_BLOCK, isMarkerBlock(block));
 	}
 	// No block carries source lines: nothing is known, so nothing changes.
 	if (!parsed) return;

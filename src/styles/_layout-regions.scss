@@ -31,6 +31,28 @@
 	column-span: all;
 }
 
+.handbook-layout-flowing > .handbook-layout-marker {
+	display: none;
+}
+
+// Whatever spans the width after a region keeps a gap from its last block.
+.handbook-layout-flowing > :is(.handbook-layout-flow, .handbook-layout-marker) + :not(.handbook-layout-flow),
+.handbook-layout-flowing > .handbook-layout-flow + .handbook-layout-marker + :not(.handbook-layout-flow) {
+	margin-top: var(--size-4-6, 1.5rem);
+}
+
+// The top of a region starts flush with its first column.
+.handbook-layout-flowing > .handbook-layout-flow:first-child,
+.handbook-layout-flowing > :not(.handbook-layout-flow) + .handbook-layout-flow,
+.handbook-layout-flowing > .handbook-layout-marker + .handbook-layout-flow {
+	margin-top: 0;
+	padding-top: 0;
+
+	> :first-child {
+		margin-top: 0;
+	}
+}
+
 .handbook-layout-flowing > .handbook-layout-flow {
 	&:has(> :is(h1, h2, h3, h4, h5, h6)) {
 		break-after: avoid;

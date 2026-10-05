@@ -41,6 +41,11 @@ export function loadCalloutAliasFeature(plugin: BrumesPlugin): () => void {
 	});
 
 	plugin.register(() => observer.disconnect());
+	// The PDF export renders in a document the observer does not watch: the
+	// rendered note is stamped as it is handed to post-processors.
+	plugin.registerMarkdownPostProcessor((element) =>
+		syncCalloutAliases(element, plugin.settings, plugin.settings.mode),
+	);
 	syncAliases();
 
 	return syncAliases;
