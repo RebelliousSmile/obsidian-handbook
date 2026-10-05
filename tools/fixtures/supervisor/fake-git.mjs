@@ -10,7 +10,9 @@
  * push: the next queued effect of `tagEffects["<repository directory> <tag>"]`
  * in the fake GitHub state (`FAKE_GH_STATE`) starts a run of its `workflow`
  * in its `repository` on the tag, ending in `conclusion` (success by
- * default), and a successful run publishes its `createRelease`.
+ * default), and a successful run publishes its `createRelease`. An effect with
+ * a `status` leaves the run open: `fake-gh.mjs` completes it on a later
+ * `run view`, from the same queue.
  */
 import { spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -40,13 +42,14 @@ if (result.status === 0 && args[0] === "push" && statePath && existsSync(statePa
 		state.runs = state.runs ?? {};
 		state.runs[repo] = state.runs[repo] ?? [];
 		const id = 1000 + Object.keys(state.runs).reduce((count, name) => count + state.runs[name].length, 0);
-		const conclusion = effect.conclusion ?? "success";
+		const conclusion = effect.status ? null : effect.conclusion ?? "success";
 		state.runs[repo].unshift({
 			databaseId: id,
 			workflowName: effect.workflow,
 			headBranch: tag,
-			status: "completed",
+			status: effect.status ?? "completed",
 			conclusion,
+			effects: ["tagEffects", `${basename(process.cwd())} ${tag}`],
 			inputs: {},
 			createdAt: new Date(Date.UTC(2026, 8, 29, 12, 0, id - 1000)).toISOString(),
 			url: `https://github.com/${repo}/actions/runs/${id}`,

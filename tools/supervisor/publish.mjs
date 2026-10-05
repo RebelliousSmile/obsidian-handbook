@@ -5,7 +5,7 @@
  * release-train files landed, the final tag pushed. It stops only on a step
  * that needs a person, or on a failure, which it names.
  *
- * Nothing moves without an approval that holds: it is checked before every
+ * Nothing moves without a presentation that holds: it is checked before every
  * step, not once at the start, because a repository can move while a run is
  * watched. One provider at a time, in the dependency order of the train. A
  * step is recomputed from what GitHub and the repositories show; the runs the
@@ -16,7 +16,7 @@ import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { gh, ghJson } from "./gh.mjs";
 import { showFile } from "./git.mjs";
-import { assertApproval } from "./approval.mjs";
+import { assertBinding, boundSha } from "./binding.mjs";
 import { dispatchInputs, listReleases, observeArchive, workflowSecrets } from "./adapters/common.mjs";
 import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
@@ -31,8 +31,11 @@ const ADAPTERS = { pbta, adrenaline, mist };
 const POLL_MS = 2000;
 const POLL_ATTEMPTS = 30;
 const WATCH_MS = 15000;
+/** How long one command follows one run: a release takes minutes, so a run still open after this is looked at by a person. */
+const WATCH_LIMIT_MS = 30 * 60 * 1000;
+const FOLLOW_COMMAND = "pnpm supervise publish --run";
 
-function sleep(ms) {
+export function sleep(ms) {
 	Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
@@ -40,18 +43,31 @@ function sleep(ms) {
  * Follow a run until it completes and return its conclusion. One line per
  * status change: `gh run watch` redraws every job each few seconds, which
  * buries the supervisor's own lines in a log.
+ *
+ * The watch is bounded: past `limitMs` it stops and names the run, its last
+ * status and `command`, which follows the same run again. A run `waiting` is
+ * held by the required reviewers of an environment and no amount of watching
+ * ends it, so it stops at once. The two delays are parameters for the harness alone: no
+ * command sets them.
  */
-function followRun(repo, id) {
+export function followRun(repo, run, command, { watchMs = WATCH_MS, limitMs = WATCH_LIMIT_MS } = {}) {
+	const deadline = Date.now() + limitMs;
 	let last = null;
 	for (;;) {
-		const view = ghJson(["run", "view", String(id), "-R", repo.repository, "--json", "status,conclusion"]);
+		const view = ghJson(["run", "view", String(run.id), "-R", repo.repository, "--json", "status,conclusion"]);
 		if (view.status === "completed") {
 			console.log(`  completed: ${view.conclusion || "unknown"}`);
 			return view.conclusion || "unknown";
 		}
 		if (view.status !== last) console.log(`  ${view.status}`);
 		last = view.status;
-		sleep(WATCH_MS);
+		if (last === "waiting") {
+			throw new SupervisorError(`run ${run.url} is waiting: the release environment still has required reviewers; remove them, then run the command again: ${command}`, 1);
+		}
+		if (Date.now() >= deadline) {
+			throw new SupervisorError(`run ${run.url} did not complete within ${limitMs / 60000} minutes, its last status was ${last}; nothing was dispatched again, follow it with: ${command}`, 1);
+		}
+		sleep(watchMs);
 	}
 }
 
@@ -87,23 +103,17 @@ function refreshRuns(file, topology, repo, record) {
 	});
 }
 
-function approvedSha(train, repo) {
-	const entry = train.approval.repos.find((candidate) => candidate.repo === repo.id);
-	if (!entry) throw new SupervisorError(`publish: ${repo.id} is not bound by the approval of train "${train.id}"`, 1);
-	return entry.sha;
-}
-
 /** Observe one provider, record what it showed, and return its next step. */
 function stepOf(context, train, file, repo) {
 	const adapter = ADAPTERS[repo.adapter];
 	if (!adapter) throw new SupervisorError(`publish: ${repo.id} has no known adapter (${repo.adapter ?? "none"})`);
 	const dir = repoDir(context.root, repo);
-	const sha = approvedSha(train, repo);
+	const sha = boundSha(train, repo);
 	let manifest;
 	try {
 		manifest = JSON.parse(showFile(dir, sha, "package.json") ?? "");
 	} catch {
-		throw new SupervisorError(`publish: ${repo.id} has no readable package.json at the approved commit ${sha.slice(0, 10)}`, 1);
+		throw new SupervisorError(`publish: ${repo.id} has no readable package.json at the presented commit ${sha.slice(0, 10)}`, 1);
 	}
 	const record = refreshRuns(file, context.topology, repo, train.publication[repo.id] ?? {});
 	const version = manifest.version;
@@ -197,7 +207,7 @@ function dispatch(file, topology, repo, step) {
 		next.runs = [...(next.runs ?? []), entry];
 	});
 	console.log(`Watching ${run.url}`);
-	const conclusion = followRun(repo, run.databaseId);
+	const conclusion = followRun(repo, { id: run.databaseId, url: run.url }, FOLLOW_COMMAND);
 	updateRecord(file, topology, repo.id, (next) => {
 		next.runs = next.runs.map((recorded) => (recorded.id === run.databaseId ? { ...recorded, conclusion } : recorded));
 	});
@@ -208,7 +218,7 @@ function dispatch(file, topology, repo, step) {
 function watch(repo, step) {
 	if (!step.id) throw new SupervisorError(`publish: ${step.instruction}; its run id is unknown, so it cannot be watched`, 1);
 	console.log(`Watching ${step.run}`);
-	const conclusion = followRun(repo, step.id);
+	const conclusion = followRun(repo, { id: step.id, url: step.run }, FOLLOW_COMMAND);
 	if (conclusion !== "success") {
 		throw new SupervisorError(`publish: run ${step.run} concluded ${conclusion}; run supervise publish again once it is understood`, 1);
 	}
@@ -267,7 +277,7 @@ export function publishTrain(context, file, { run = false } = {}) {
 	for (;;) {
 		const train = readTrain(file, context.topology);
 		if (train.status !== "open") throw new SupervisorError(`publish: train "${train.id}" is closed`);
-		assertApproval(context.root, context.topology, train);
+		assertBinding(context.root, context.topology, train);
 		let next = null;
 		for (const repo of providerOrder(context.topology, train)) {
 			const current = readTrain(file, context.topology);
@@ -300,7 +310,7 @@ export function publishTrain(context, file, { run = false } = {}) {
 		if (ran.has(key)) throw new SupervisorError(`publish: ${repo.id}: "${step.description}" succeeded, yet it is still the next step; look at ${repo.id} before running publish again`, 1);
 		ran.add(key);
 		preflight(repo, step, workflowText);
-		assertApproval(context.root, context.topology, readTrain(file, context.topology));
+		assertBinding(context.root, context.topology, readTrain(file, context.topology));
 		execute(context, file, next);
 	}
 }

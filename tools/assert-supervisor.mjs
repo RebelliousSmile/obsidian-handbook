@@ -10,7 +10,7 @@ import { buildSync } from "esbuild";
 import { mkdtempSync, rmSync } from "fs";
 import { join, resolve } from "path";
 import { spawnSync } from "child_process";
-import { unguardedEnv } from "./supervisor/present.mjs";
+import { unguardedEnv } from "./supervisor/guarded.mjs";
 
 const work = mkdtempSync(resolve("tools", ".supervisor-harness-"));
 const harnesses = ["tools/supervisorGuard.harness.mts", "tools/supervisor.harness.mts"];

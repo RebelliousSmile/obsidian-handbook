@@ -226,7 +226,7 @@ export function tagStep(repo, tag, workflow, description) {
 
 /**
  * What is wrong with a committed release-train manifest, or null. The three
- * providers share its core: a candidate naming the approved commit, the final
+ * providers share its core: a candidate naming the presented commit, the final
  * tag and the train's archive, and one consumer entry per consumer whose ref
  * pins that archive.
  */

@@ -7,6 +7,11 @@
  * change the state the next read sees; a workflow run applies the next queued
  * effect of `workflowEffects["<repo> <workflow>"]`, which is how a fake
  * release comes to exist.
+ *
+ * An effect with a `status` (`in_progress`, `waiting`) leaves its run open.
+ * Each `run view` of an open run then takes the next effect of the queue the
+ * run came from: another `status` keeps it open, anything else completes it.
+ * With nothing queued, the run stays as it is.
  */
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -80,6 +85,23 @@ function issueView(issue) {
 		url: `https://github.com/${repo}/issues/${issue.number}`,
 		closedByPullRequestsReferences: (issue.closedByPullRequests ?? []).map((number) => ({ number })),
 	};
+}
+
+/** Give `run` the outcome of `effect`: left open on a `status`, else completed, a success publishing its release. */
+function applyEffect(run, effect) {
+	if (effect.status) {
+		run.status = effect.status;
+		run.conclusion = null;
+		return;
+	}
+	run.status = "completed";
+	run.conclusion = effect.conclusion ?? "success";
+	run.artifacts = effect.artifacts ?? run.artifacts ?? [];
+	if (run.conclusion === "success" && effect.createRelease) {
+		const name = run.url.replace(/^https:\/\/github\.com\/|\/actions\/runs\/\d+$/g, "");
+		state.releases = state.releases ?? {};
+		state.releases[name] = [effect.createRelease, ...(state.releases[name] ?? [])];
+	}
 }
 
 switch (command) {
@@ -168,18 +190,13 @@ switch (command) {
 			databaseId: id,
 			workflowName: workflow,
 			headBranch: option("--ref", "-r") ?? "main",
-			status: "completed",
-			conclusion: effect.conclusion ?? "success",
 			inputs,
 			createdAt: new Date(Date.UTC(2026, 8, 29, 12, 0, id - 1000)).toISOString(),
 			url: `https://github.com/${repo}/actions/runs/${id}`,
-			artifacts: effect.artifacts ?? [],
+			effects: ["workflowEffects", `${repo} ${workflow}`],
 		};
+		applyEffect(run, effect);
 		state.runs[repo].unshift(run);
-		if (run.conclusion === "success" && effect.createRelease) {
-			state.releases = state.releases ?? {};
-			state.releases[repo] = [effect.createRelease, ...(state.releases[repo] ?? [])];
-		}
 		done(0, "", `✓ Created workflow_dispatch event for ${workflow}`);
 		break;
 	}
@@ -192,6 +209,10 @@ switch (command) {
 	case "run view": {
 		const run = ((state.runs ?? {})[repo] ?? []).find((entry) => String(entry.databaseId) === args[2]);
 		if (!run) done(1, "", "run not found");
+		if (run.status !== "completed" && run.effects) {
+			const effect = ((state[run.effects[0]] ?? {})[run.effects[1]] ?? []).shift();
+			if (effect) applyEffect(run, effect);
+		}
 		done(0, JSON.stringify(run));
 		break;
 	}

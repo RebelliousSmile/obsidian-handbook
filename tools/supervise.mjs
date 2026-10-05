@@ -2,9 +2,13 @@
  * `pnpm supervise <command>`: coordinate a correction across Handbook,
  * Lantern and the three schema repositories.
  *
- * The supervisor observes, records and tells who does what next. It never
- * writes code in a repository, never pulls or checks out, and never
- * publishes anything without an approval bound to the commits it presented.
+ * The supervisor observes, records and tells who does what next. It authors
+ * no change: `commit` lands what a person prepared, as it stands; after a
+ * presentation whose validations passed, it writes, commits and pushes the
+ * train files only. It moves a checkout by fast-forward to origin/main. It
+ * publishes what a green `present` bound, and nothing else. `ship` is the
+ * validation of a change: one command runs the whole chain, from the commit
+ * to the closed train, and stops only on a named failure.
  * See doc/supervisor.en.md.
  */
 import { resolve } from "node:path";
@@ -12,7 +16,7 @@ import { parseArgs } from "node:util";
 import { collectStatus, assertStatusShape, renderStatus } from "./supervisor/status.mjs";
 import { activeTrain } from "./supervisor/train.mjs";
 import { TRAIN_COMMANDS } from "./supervisor/trainCommands.mjs";
-import { APPROVAL_COMMANDS } from "./supervisor/approvalCommands.mjs";
+import { PRESENT_COMMANDS } from "./supervisor/presentCommands.mjs";
 import { PUBLISH_COMMANDS } from "./supervisor/publishCommands.mjs";
 import { COMMIT_COMMANDS } from "./supervisor/commit.mjs";
 import { assertSelfPublished } from "./supervisor/self.mjs";
@@ -39,7 +43,7 @@ const COMMANDS = {
 	},
 	...TRAIN_COMMANDS,
 	...COMMIT_COMMANDS,
-	...APPROVAL_COMMANDS,
+	...PRESENT_COMMANDS,
 	...PUBLISH_COMMANDS,
 };
 

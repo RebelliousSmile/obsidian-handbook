@@ -12,7 +12,7 @@
 "use strict";
 
 function refusal(tool, args) {
-	return `supervisor guard: "${[tool, ...args].join(" ")}" publishes and is refused before approval (supervise present)`;
+	return `supervisor guard: "${[tool, ...args].join(" ")}" publishes and is refused inside a validation (supervise present)`;
 }
 
 function ghRefused(args) {

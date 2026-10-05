@@ -47,11 +47,21 @@
 					"items": { "type": "string", "pattern": "^[^/.][^\\s]*$" }
 				},
 				"matrix": { "type": "string", "pattern": "^[^/.][^\\s]*$" },
+				"release": {
+					"description": "How a consumer publishes its release: its workflow starts on the push of the tag v<version> (tag), or is dispatched on that tag (dispatch).",
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["trigger", "workflow"],
+					"properties": {
+						"trigger": { "enum": ["tag", "dispatch"] },
+						"workflow": { "type": "string", "pattern": "^[^/\\s]+\\.ya?ml$" }
+					}
+				},
 				"validations": { "$ref": "#/definitions/commands" },
 				"convergence": { "$ref": "#/definitions/commands" }
 			},
 			"if": { "properties": { "role": { "const": "provider" } } },
-			"then": { "required": ["package", "adapter", "consumers"] },
+			"then": { "required": ["package", "adapter", "consumers"], "not": { "required": ["release"] } },
 			"else": {
 				"not": {
 					"anyOf": [

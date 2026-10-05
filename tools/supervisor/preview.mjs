@@ -1,5 +1,5 @@
 /**
- * `supervise preview`: the train's own code, running, before anyone approves it.
+ * `supervise preview`: the train's own code, running, before anyone validates it.
  *
  * Nothing here knows a game. What the preview mounts is read from the train
  * and from the checkouts it names:
@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 import { concernedRepos } from "./digest.mjs";
 import { revParse } from "./git.mjs";
 import { coordinatorOf, repoDir, SupervisorError } from "./topology.mjs";
-import { GUARD_DIR, guardedEnv } from "./present.mjs";
+import { GUARD_DIR, guardedEnv } from "./guarded.mjs";
 import { spawnCommand } from "./spawn.mjs";
 
 export const PREVIEW_SERVER = fileURLToPath(new URL("./previewServer.mjs", import.meta.url));
@@ -316,7 +316,7 @@ export async function runPreview(plan, { serve = true, open = true, port } = {})
 /** Say whether the preview shows what the last presentation showed. */
 export function comparePresentation(train, heads) {
 	const shown = train.presentation?.repos ?? [];
-	if (shown.length === 0) return ["the train was never presented; present it before approving"];
+	if (shown.length === 0) return ["the train was never presented; run supervise present"];
 	return shown.filter((entry) => heads[entry.repo] && heads[entry.repo] !== entry.sha)
-		.map((entry) => `${entry.repo} is at ${heads[entry.repo].slice(0, 10)}, the presentation showed ${entry.sha.slice(0, 10)}; present again before approving`);
+		.map((entry) => `${entry.repo} is at ${heads[entry.repo].slice(0, 10)}, the presentation showed ${entry.sha.slice(0, 10)}; run supervise present again`);
 }

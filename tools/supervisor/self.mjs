@@ -13,8 +13,20 @@ import { git, isRepository, revParse, showFile } from "./git.mjs";
 import { TRAINS_PATH } from "./train.mjs";
 import { coordinatorOf, HANDBOOK_ROOT, repoDir, SupervisorError } from "./topology.mjs";
 
-/** What decides the supervisor's behaviour; the train records are data, not code. */
-export const SELF_PATHS = ["tools/supervise.mjs", "tools/supervisor", "supervisor"];
+/**
+ * What decides the supervisor's behaviour, and what proves it: a harness
+ * edited in place would vouch for a change nobody read. The train records
+ * are data, not code.
+ */
+export const SELF_PATHS = [
+	"tools/supervise.mjs",
+	"tools/supervisor",
+	"tools/assert-supervisor.mjs",
+	"tools/supervisor.harness.mts",
+	"tools/supervisorGuard.harness.mts",
+	"tools/fixtures/supervisor",
+	"supervisor",
+];
 const SELF_SCRIPT = "supervise";
 
 function pathspec() {

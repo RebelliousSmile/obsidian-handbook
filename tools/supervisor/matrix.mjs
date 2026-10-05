@@ -7,7 +7,7 @@
  * the train at its origin/main, with its train manifest listed at that commit,
  * and the Handbook at origin/main, which pins every final. Not at the final
  * tag: schema-pbta tags the provider commit, which precedes its manifest. The
- * registry is a train file of the consumer, so landing it keeps the approval.
+ * registry is a train file of the consumer, so landing it keeps the presentation.
  */
 import { revParse, showFile } from "./git.mjs";
 import * as pbta from "./adapters/pbta.mjs";

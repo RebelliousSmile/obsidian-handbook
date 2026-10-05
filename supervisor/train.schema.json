@@ -12,7 +12,6 @@
 		"status",
 		"coordinationIssue",
 		"items",
-		"approval",
 		"publication"
 	],
 	"properties": {
@@ -42,7 +41,7 @@
 			}
 		},
 		"approval": {
-			"description": "Written by supervise approve, only after the train id was typed on a terminal.",
+			"description": "Obsolete: written by the former supervise approve, no longer read. Kept so that older train records still validate.",
 			"oneOf": [
 				{
 					"type": "null"
@@ -75,7 +74,7 @@
 			}
 		},
 		"presentation": {
-			"description": "Written by supervise present: what approve binds to.",
+			"description": "Written by supervise present: the commits, train files and publications that publish, converge and close are bound to.",
 			"$ref": "#/definitions/presentation"
 		},
 		"convergence": {
@@ -83,7 +82,7 @@
 			"$ref": "#/definitions/convergence"
 		},
 		"consumerReleases": {
-			"description": "Written by supervise close: the consumer releases observed on GitHub, Lantern then Handbook.",
+			"description": "Written by supervise release, one entry per consumer release it observed on GitHub, the coordinator last; supervise close checks them again.",
 			"type": "array",
 			"items": {
 				"$ref": "#/definitions/consumerRelease"

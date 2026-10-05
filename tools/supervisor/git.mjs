@@ -2,7 +2,7 @@
  * Read-only git observations.
  *
  * The writes live elsewhere: `commit` (commit.mjs) lands what a person
- * prepared, land.mjs the writes of an approved train. The only command here
+ * prepared, land.mjs the writes of a presented train. The only command here
  * that writes is `git fetch`, and it writes remote-tracking refs, never the
  * working tree or HEAD.
  *

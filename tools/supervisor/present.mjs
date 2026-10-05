@@ -1,25 +1,24 @@
 /**
- * `supervise present`: the evidence a person needs before saying yes.
+ * `supervise present`: the evidence a publication is bound to.
  *
  * Every concerned repository must be clean and at origin/main: the SHAs the
- * approval binds are those HEADs. Each repository's local validations run
- * behind `guard/`, a PATH prefix whose gh and git refuse to publish, so a
- * validation cannot release, push, tag or dispatch a workflow, even by
- * mistake. The report is Markdown; its content is also written to the train
- * record, where `approve` finds it.
+ * presentation binds are those HEADs. Each repository's local validations run
+ * behind the publication guard (`guarded.mjs`), so a validation cannot
+ * release, push, tag or dispatch a workflow, even by mistake. The report is
+ * Markdown; its content is also written to the train record, where `publish`,
+ * `converge`, `release` and `close` check it still holds (`binding.mjs`).
+ *
+ * A consumer the train changes must carry a version that has no release yet:
+ * `release` tags what `package.json` says, it writes no version.
  */
-import { delimiter, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { announcedPublications, computeDigest, concernedRepos, trainFilesOf } from "./digest.mjs";
 import { evaluateTrain } from "./next.mjs";
+import { runGuarded } from "./guarded.mjs";
+import { releaseExists } from "./gh.mjs";
+import { tagCommit, versionAt } from "./consumerRelease.mjs";
 import { TRAINS_PATH } from "./train.mjs";
-import { repoDir, SupervisorError } from "./topology.mjs";
-import { pathKey, spawnCommand, withRequire } from "./spawn.mjs";
-
-export const GUARD_DIR = fileURLToPath(new URL("./guard", import.meta.url));
-
-const TAIL = 30;
+import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 
 function checkPreconditions(root, topology, train, repos) {
 	const evaluation = evaluateTrain(root, topology, train);
@@ -61,63 +60,32 @@ export function checkCheckouts(root, repos, label) {
 }
 
 /**
- * The environment of a guarded validation. The guard leads the PATH, under
- * the key the environment already uses (`Path` on Windows), so a shell call
- * meets its shims; its hook is preloaded in every Node child, so a Node tool
- * spawning gh or git without a shell is refused too.
+ * A consumer the train changes needs a version that was never released: the
+ * train tags it. It is changed when the train brings it the archive of a
+ * provider, or when its presented commit is not the one its release was cut
+ * from. A release the train recorded itself is its own, not a refusal; a
+ * consumer left as its release found it is neither released nor refused.
  */
-export function guardedEnv(env = process.env) {
-	const key = pathKey(env);
-	const next = {};
-	for (const [name, value] of Object.entries(env)) {
-		if (name.toUpperCase() !== "PATH" || name === key) next[name] = value;
+function releasedVersions(root, topology, train, entries) {
+	const adopting = new Set();
+	for (const item of train.items) {
+		for (const consumer of repoById(topology, item.repo).consumers ?? []) adopting.add(consumer);
 	}
-	const rest = (env[key] ?? "").split(delimiter).filter((dir) => dir && resolve(dir) !== resolve(GUARD_DIR));
-	next[key] = [GUARD_DIR, ...rest].join(delimiter);
-	next.NODE_OPTIONS = withRequire(env.NODE_OPTIONS, join(GUARD_DIR, "hook.cjs"));
-	next.SUPERVISOR_PRESENT = "1";
-	return next;
-}
-
-/**
- * The inverse of `guardedEnv`: the guard's PATH entry, its hook and the
- * present marker removed, everything else kept. Only for the supervisor
- * harnesses, run by `pnpm check` behind the guard of a real `present`: their
- * worlds push to bare remotes in a temporary directory and talk to a fake gh,
- * and they prove the guard from a baseline where it is absent.
- */
-export function unguardedEnv(env = process.env) {
-	const key = pathKey(env);
-	const next = {};
-	for (const [name, value] of Object.entries(env)) {
-		if (name.toUpperCase() !== "PATH" || name === key) next[name] = value;
+	const reasons = [];
+	for (const entry of entries.filter((candidate) => candidate.role !== "provider")) {
+		const repo = repoById(topology, entry.repo);
+		const dir = repoDir(root, repo);
+		const version = versionAt(dir, entry.sha);
+		if (!version) continue;
+		const tag = `v${version}`;
+		if ((train.consumerReleases ?? []).some((release) => release.repo === repo.id && release.tag === tag)) continue;
+		if (!releaseExists(repo.repository, tag)) continue;
+		const released = tagCommit(dir, tag);
+		const pathspec = repo.role === "coordinator" ? ["--", ".", `:(exclude)${TRAINS_PATH}`] : [];
+		const unchanged = !adopting.has(repo.id) && released !== null && git(dir, ["diff", "--quiet", released, entry.sha, ...pathspec]).status === 0;
+		if (!unchanged) reasons.push(`${repo.id}: package.json is at ${version} and the release ${tag} of ${repo.repository} already exists; prepare a new version with the change`);
 	}
-	next[key] = (env[key] ?? "").split(delimiter).filter((dir) => dir && resolve(dir) !== resolve(GUARD_DIR)).join(delimiter);
-	const hook = withRequire(undefined, join(GUARD_DIR, "hook.cjs"));
-	const options = (env.NODE_OPTIONS ?? "").split(hook).join("").trim().replace(/\s+/g, " ");
-	if (options) next.NODE_OPTIONS = options;
-	else delete next.NODE_OPTIONS;
-	delete next.SUPERVISOR_PRESENT;
-	return next;
-}
-
-/** Run `command` in `dir` behind the publication guard; its output is kept to its last lines. */
-export function runGuarded(dir, command, label) {
-	process.stderr.write(`${label}: ${command.join(" ")} in ${dir}\n`);
-	// The command itself is resolved past the guard's own shims.
-	const result = spawnCommand(command[0], command.slice(1), {
-		cwd: dir,
-		encoding: "utf8",
-		env: guardedEnv(),
-		exclude: [GUARD_DIR],
-		maxBuffer: 256 * 1024 * 1024,
-	});
-	const output = `${result.stdout ?? ""}${result.stderr ?? ""}${result.error ? `\n${result.error.message}` : ""}`;
-	return {
-		command,
-		status: result.error ? 127 : (result.status ?? 1),
-		tail: output.trimEnd().split("\n").slice(-TAIL).join("\n"),
-	};
+	return reasons;
 }
 
 export function presentTrain(root, topology, train) {
@@ -145,6 +113,7 @@ export function presentTrain(root, topology, train) {
 			reasons.push(`${entry.repo}: ${validation.command.join(" ")} exited ${validation.status}`);
 		}
 	}
+	reasons.push(...releasedVersions(root, topology, train, entries));
 	const publications = announcedPublications(topology, train);
 	const trainFiles = trainFilesOf(repos);
 	return {
@@ -169,8 +138,8 @@ export function renderPresentation(train, presentation) {
 		`Presented at ${presentation.presentedAt}, fingerprint \`${presentation.digest}\`.`,
 		"",
 		presentation.presentable
-			? "**Presentable.** Nothing has been published. Approve with `pnpm supervise approve`, or say nothing: silence is not an approval."
-			: `**Not presentable**, approval refused:\n${presentation.reasons.map((reason) => `- ${reason}`).join("\n")}`,
+			? "**Presentable.** Nothing has been published. `pnpm supervise publish --run` publishes exactly these commits."
+			: `**Not presentable**, nothing can be published:\n${presentation.reasons.map((reason) => `- ${reason}`).join("\n")}`,
 	];
 	for (const entry of presentation.repos) {
 		const item = train.items.find((candidate) => candidate.repo === entry.repo);
@@ -188,7 +157,7 @@ export function renderPresentation(train, presentation) {
 			if (validation.status !== 0 && validation.tail) lines.push("", "```", validation.tail, "```");
 		}
 	}
-	lines.push("", "## Try it before approving", "", "`pnpm supervise preview --vault <vault>` builds these checkouts, installs the Handbook packs of each provider in the vault, deploys Handbook next to its `data.json`, and serves each consumer's dev server on the same checkouts.");
-	lines.push("", "## Publications covered by an approval", "", ...presentation.publications.map((publication) => `- ${publication}`));
+	lines.push("", "## Try it before publishing", "", "`pnpm supervise preview --vault <vault>` builds these checkouts, installs the Handbook packs of each provider in the vault, deploys Handbook next to its `data.json`, and serves each consumer's dev server on the same checkouts.");
+	lines.push("", "## Publications `publish` will make", "", ...presentation.publications.map((publication) => `- ${publication}`));
 	return lines.join("\n");
 }

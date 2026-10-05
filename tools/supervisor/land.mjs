@@ -1,10 +1,10 @@
 /**
- * The writes of an approved train: a consumer adopting an archive, a
+ * The writes of a presented train: a consumer adopting an archive, a
  * release-train file landed on a provider, a final tag pushed.
  *
  * Each write starts from a checkout on main, clean and at origin/main (fast
  * forwarded when it is only behind), and commits only the files it names: the
- * approval, which admits train files and known archives only, still holds
+ * presentation, which admits train files and known archives only, still holds
  * after it. A write that would change nothing is refused, so a step whose
  * observation does not move after it stops instead of looping.
  */
@@ -12,7 +12,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fetchOrigin, git, gitOut, revParse } from "./git.mjs";
 import { npmLockPin, parsePinUrl, pnpmLockPins, readPin, trackedLockfiles } from "./pins.mjs";
-import { runGuarded } from "./present.mjs";
+import { runGuarded } from "./guarded.mjs";
 import { TRAINS_PATH } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 

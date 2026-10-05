@@ -4,18 +4,20 @@
 
 `pnpm supervise` coordonne une correction qui traverse les cinq dépôts : Handbook, Lantern et les trois dépôts de schémas (`schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`). Un ensemble de changements publiés ensemble s'appelle un **train**.
 
-Le superviseur observe, consigne et dit qui fait quoi ensuite. Il n'écrit jamais de code dans un dépôt et ne publie rien sans un accord lié aux commits qu'il a présentés. Une fois l'accord donné, il fait seul tout le traitement du train : il écrit les fichiers du train (pins, lockfiles, manifestes, records), les commite et les pousse. Il n'avance un checkout qu'en fast-forward sur `origin/main`, et s'arrête sur un checkout sale ou divergent.
+Le superviseur observe, consigne et dit qui fait quoi ensuite. Il ne rédige aucun changement : `commit` pose tel quel ce qu'une personne a préparé, et rien n'est publié sans une présentation verte, liée aux commits qu'elle a validés. Lancer `ship`, c'est valider le changement : le superviseur fait alors seul tout le traitement du train, sans attendre personne. Il pose le changement préparé, le présente, écrit les fichiers du train (pins, lockfiles, manifestes, records), les commite et les pousse, publie les fournisseurs puis les consommateurs, et ferme le train. Il n'avance un checkout qu'en fast-forward sur `origin/main`, et s'arrête sur un checkout sale ou divergent.
 
 ## Prérequis
 
 - Les cinq dépôts clonés côte à côte, sous les noms de la topologie (`supervisor/topology.json`, champ `path`) : `obsidian-handbook`, `lantern`, `schema-pbta`, `schema-adrenaline`, `schema-in-the-mist`. `--root <dir>` désigne leur dossier parent (par défaut, le parent de Handbook).
 - `git` et `gh` authentifié sur `RebelliousSmile`.
 - Node 20 ou plus récent, sous Linux, macOS ou Windows natif. Aucun shell POSIX ni WSL n'est exigé.
-- `approve` et `link --create` sans `--yes` demandent un vrai terminal (le préfixe `!` de Claude Code n'en est pas un).
+- Seul `link --create` sans `--yes` demande un vrai terminal (le préfixe `!` de Claude Code n'en est pas un). Aucune autre commande ne lit de saisie.
+- La version et le `CHANGELOG` d'un consommateur (Lantern, Handbook) se préparent avec le changement. Le superviseur n'écrit ni l'une ni l'autre : il publie la version que `package.json` porte sur `origin/main`.
+- Sur GitHub, l'environnement `release` de `schema-adrenaline` n'a aucun relecteur requis. Un run retenu par des relecteurs arrête le train.
 
 ## Le dossier de train
 
-Chaque train vit dans `supervisor/trains/<id>.json`, dans Handbook. Il porte les issues liées et leurs dépendances, la présentation, l'accord, les publications, les runs, la convergence, les releases des consommateurs et la date de clôture. Sa forme est décrite par `supervisor/train.schema.json`.
+Chaque train vit dans `supervisor/trains/<id>.json`, dans Handbook. Il porte les issues liées et leurs dépendances, la présentation, les publications, les runs, la convergence, les releases des consommateurs et la date de clôture. Sa forme est décrite par `supervisor/train.schema.json`.
 
 L'**issue de coordination**, ouverte dans Handbook, en est une projection : seul le bloc entre `<!-- supervisor:begin -->` et `<!-- supervisor:end -->` appartient au superviseur. Ce qui est écrit autour survit à chaque `sync`.
 
@@ -23,7 +25,9 @@ L'**issue de coordination**, ouverte dans Handbook, en est une projection : seul
 
 Les commandes s'enchaînent dans cet ordre :
 
-`status` → `open` / `link` → `next` → `present` → `approve` → `publish` → `converge` → releases consommateurs → `close`
+`status` → `open` / `link` → `next` → `ship`
+
+`ship` enchaîne à lui seul `commit` → `present` → `publish` → `converge` → `release` → `close`. Chacun de ces maillons reste une commande, utile pour regarder un pas ou reprendre à la main.
 
 Options communes : `--root <dir>`, `--topology <fichier>`, `--train <id>` (par défaut, le seul train ouvert).
 
@@ -72,13 +76,38 @@ pnpm supervise commit lantern --only --message "feat(adrenaline-pj): print the M
 
 `--only` applique les mêmes vérifications à ce seul dépôt et laisse les autres tels qu'ils sont, modifiés ou non. `--message` remplace le fichier préparé ; les deux à la fois sont refusés.
 
-### 4. `present` : les preuves, sans rien publier
+**Le superviseur ne se modifie pas lui-même.** Toute commande sauf `status` refuse de tourner si son propre code diffère de `origin/main` : `tools/supervise.mjs`, `tools/supervisor/`, ses harnais (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` hors dossiers de train, et le script `supervise` de `package.json`. Un changement du superviseur est commité et poussé à la main, par une personne, avant que le superviseur n'agisse de nouveau.
+
+### 4. `ship` : valider, et tout publier
+
+```bash
+pnpm supervise ship --message "<message de commit>"         # montre tout le cycle, sans rien écrire
+pnpm supervise ship --message "<message de commit>" --run   # du commit à la clôture du train
+```
+
+Lancer `ship --run`, c'est la validation : il n'y en a pas d'autre. La commande enchaîne les maillons décrits plus bas, dans l'ordre, et ne lit aucune saisie :
+
+1. `commit` de chaque dépôt concerné par le train (ses éléments et leurs consommateurs). Un dépôt modifié reçoit le message préparé dans son `.git/SUPERVISOR_COMMIT_MSG`, ou à défaut celui de `--message` ; un dépôt sans changement est laissé tel quel ;
+2. `present` ;
+3. `publish --run`, puis `converge --run`, `release --run` et `close --run`.
+
+Chaque maillon garde ses propres refus. Le premier qui échoue arrête la chaîne, avec son message et un code de sortie non nul : un arrêt est toujours un échec nommé, jamais une attente. Une présentation rouge laisse donc les commits posés et ne publie rien.
+
+Avant le premier commit, `ship` refuse un train clos, un dépôt engagé par un autre train ouvert, un dépôt modifié sans message, un dépôt en retard sur `origin/main`, et un code de superviseur qui diffère de `origin/main`.
+
+`ship --run` se relance après un arrêt : il reprend là où le dossier de train en est. Rien à commiter saute le commit, une présentation qui tient toujours n'est pas rejouée, et les maillons suivants ne refont pas ce qui est déjà publié. `--message` devient alors inutile.
+
+Sans `--run`, `ship` affiche le plan de commit et la suite des étapes, et n'écrit rien : ni commit, ni dossier de train, ni dispatch.
+
+### 5. `present` : les preuves, sans rien publier
 
 ```bash
 pnpm supervise present
 ```
 
-Exige des checkouts propres sur `origin/main`, un train dont tous les éléments sont `done`, et aucun dépôt engagé ailleurs. Pour chaque dépôt concerné, il rapporte le SHA, les commits depuis la base, le diff résumé, puis lance ses validations (`validations` de la topologie) **derrière le garde de publication** : une validation qui tenterait `gh release create`, un dispatch de workflow, un `git push` ou un `git tag` échoue. La présentation se termine par la liste des publications qu'un accord couvrira.
+Exige des checkouts propres sur `origin/main`, un train dont tous les éléments sont `done`, et aucun dépôt engagé ailleurs. Pour chaque dépôt concerné, il rapporte le SHA, les commits depuis la base, le diff résumé, puis lance ses validations (`validations` de la topologie) **derrière le garde de publication** : une validation qui tenterait `gh release create`, un dispatch de workflow, un `git push` ou un `git tag` échoue. La présentation se termine par la liste des publications qu'elle lie.
+
+Une présentation verte lie chaque dépôt au commit sur lequel ses validations ont tourné. Après elle, un dépôt ne peut recevoir que les commits dont le train a besoin : ils ne touchent que ses `trainFiles`, et chaque URL de release ou SRI qu'ils introduisent appartient à une archive observée par le train. Les commits que le superviseur pose lui-même (adoption, manifestes, records) gardent donc la présentation valide ; tout autre changement la dépasse et renvoie à `present`. Ce lien est revérifié avant chaque pas de `publish`, `converge`, `release` et `close`. L'empreinte de la présentation protège d'une modification accidentelle du dossier de train, pas d'une modification délibérée.
 
 Le garde a une seule table de règles (`tools/supervisor/guard/rules.cjs`) et deux voies d'interception, parce qu'aucune ne suffit seule :
 
@@ -87,7 +116,7 @@ Le garde a une seule table de règles (`tools/supervisor/guard/rules.cjs`) et de
 
 Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuvable en 127, et aucun des deux n'atteint le binaire.
 
-**Essayer avant d'approuver** : `pnpm supervise preview --vault <coffre>` fait tourner le code du train dans Obsidian et dans chaque consommateur. La commande exige d'abord ce que `present` exige : chaque dépôt concerné doit être sur `origin/main` et propre. Elle signale aussi un SHA qui a bougé depuis la présentation. Ensuite :
+**Essayer avant de valider** : `pnpm supervise preview --vault <coffre>` fait tourner le code du train dans Obsidian et dans chaque consommateur. La commande exige d'abord ce que `present` exige : chaque dépôt concerné doit être sur `origin/main` et propre. Le changement est donc posé par `commit` avant `preview` ; `ship` n'a alors plus rien à commiter. Elle signale aussi un SHA qui a bougé depuis la présentation. Ensuite :
 
 - elle construit les fournisseurs du train qui ont un script `build` ;
 - elle construit Handbook contre leurs checkouts : chaque paquet déclaré est redirigé vers son dossier, en suivant sa carte `exports` ;
@@ -97,17 +126,6 @@ Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuva
 
 Rien n'y est propre à un jeu ou à un schéma : ce qui est monté, c'est ce que chaque fournisseur du train publie et ce que chaque consommateur déclare. `--no-serve` s'en tient au coffre, `--no-open` n'ouvre rien, `--port` fixe le port du serveur de dev, et `Ctrl+C` arrête les serveurs. Pour suivre `schema-pbta` en continu, `pnpm dev:schema-pbta -- <coffre>` (#65) recopie ses packs à chaque modification.
 
-### 5. `approve` : l'accord
-
-```bash
-pnpm supervise approve
-pnpm supervise approve --verify
-```
-
-L'accord se donne en tapant l'identifiant du train au terminal. Aucune option ne le remplace, et sans terminal rien n'est consigné. `approve` refuse une présentation non présentable, une présentation modifiée à la main (son empreinte ne correspond plus) et des dépôts qui ont bougé depuis `present`.
-
-Après l'accord, un dépôt ne peut recevoir que les commits dont le train a besoin : ils ne touchent que ses `trainFiles`, et chaque URL de release ou SRI qu'ils introduisent appartient à une archive observée par le train. Les commits que le superviseur pose lui-même (adoption, manifestes, records) gardent donc l'accord valide ; tout autre changement l'annule et renvoie à `present`. `--verify` vérifie que l'accord tient toujours.
-
 ### 6. `publish` : du premier dispatch à la convergence
 
 ```bash
@@ -115,7 +133,7 @@ pnpm supervise publish         # montre le prochain pas et sa commande exacte
 pnpm supervise publish --run   # enchaîne tous les pas, jusqu'à la convergence
 ```
 
-Sans `--run`, rien ne s'exécute, et deux appels successifs disent la même chose. Avec `--run`, `publish` exécute un pas, observe à nouveau, puis exécute le suivant. Il suit chaque run jusqu'à sa fin, en interrogeant son statut toutes les 15 secondes et en n'écrivant qu'une ligne par changement, et ne s'arrête que sur un échec ou sur une étape humaine. L'accord est revérifié **avant chaque pas**. Les fournisseurs passent l'un après l'autre, dans l'ordre des dépendances du train : le second démarre quand la finale du premier est publiée. Une fois toutes les finales publiées, `publish --run` enchaîne `converge --run`. Chaque pas se recalcule depuis ce que montrent GitHub et les dépôts : un run échoué est relancé, une candidate déjà publiée ne l'est jamais une seconde fois. Avant tout dispatch, `publish` s'arrête et nomme ce qui manque : un secret (par exemple `RELEASE_TOKEN` sur `schema-pbta`) ou une entrée que le workflow ne déclare pas. Une finale dont les octets diffèrent de la candidate l'arrête aussi, avec les deux empreintes.
+Sans `--run`, rien ne s'exécute, et deux appels successifs disent la même chose. Avec `--run`, `publish` exécute un pas, observe à nouveau, puis exécute le suivant. Il suit chaque run jusqu'à sa fin, en interrogeant son statut toutes les 15 secondes et en n'écrivant qu'une ligne par changement, et ne s'arrête que sur un échec ou sur une étape humaine. La présentation est revérifiée **avant chaque pas**. Les fournisseurs passent l'un après l'autre, dans l'ordre des dépendances du train : le second démarre quand la finale du premier est publiée. Une fois toutes les finales publiées, `publish --run` enchaîne `converge --run`. Chaque pas se recalcule depuis ce que montrent GitHub et les dépôts : un run échoué est relancé, une candidate déjà publiée ne l'est jamais une seconde fois. Avant tout dispatch, `publish` s'arrête et nomme ce qui manque : un secret (par exemple `RELEASE_TOKEN` sur `schema-pbta`) ou une entrée que le workflow ne déclare pas. Une finale dont les octets diffèrent de la candidate l'arrête aussi, avec les deux empreintes.
 
 Un pas est de l'un de ces types :
 
@@ -132,16 +150,23 @@ pnpm supervise converge         # vérifie, sans rien écrire
 pnpm supervise converge --run   # adopte les finales et pose les fichiers de convergence
 ```
 
-Exige que chaque fournisseur du train ait sa finale publiée, un accord qui tient et des checkouts propres sur `origin/main`. Sans `--run`, chaque consommateur encore sur une candidate est nommé, avec l'URL qu'il pinne et celle de la finale. Avec `--run`, il adopte la finale : ce sont les mêmes octets que la candidate déjà validée, donc seule l'installation gelée tourne avant le commit. Puis il met à jour le registre de fournisseurs d'un consommateur qui en tient un (champ `matrix` de la topologie, `release-train.matrix.json` de Lantern) : `handbook.ref` passe à l'`origin/main` de Handbook, qui pinne les finales, et chaque fournisseur du train à son `origin/main`, avec son manifeste de train ajouté (même commit en `validatorRef`). Pas au commit du tag final : celui de `schema-pbta` désigne le commit fournisseur, antérieur au manifeste. Le registre est un fichier de train, donc ce commit garde l'accord. Sans `--run`, un registre périmé est nommé et fait échouer la convergence. Ensuite, derrière le garde :
+Exige que chaque fournisseur du train ait sa finale publiée, une présentation qui tient et des checkouts propres sur `origin/main`. Sans `--run`, chaque consommateur encore sur une candidate est nommé, avec l'URL qu'il pinne et celle de la finale. Avec `--run`, il adopte la finale : ce sont les mêmes octets que la candidate déjà validée, donc seule l'installation gelée tourne avant le commit. Puis il met à jour le registre de fournisseurs d'un consommateur qui en tient un (champ `matrix` de la topologie, `release-train.matrix.json` de Lantern) : `handbook.ref` passe à l'`origin/main` de Handbook, qui pinne les finales, et chaque fournisseur du train à son `origin/main`, avec son manifeste de train ajouté (même commit en `validatorRef`). Pas au commit du tag final : celui de `schema-pbta` désigne le commit fournisseur, antérieur au manifeste. Le registre est un fichier de train, donc ce commit garde la présentation valide. Sans `--run`, un registre périmé est nommé et fait échouer la convergence. Ensuite, derrière le garde :
 
 - les commandes `convergence` des consommateurs (topologie) : Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs` et `assert:release-train-matrix` ;
 - l'étape de convergence de chaque fournisseur (voir plus bas).
 
 Le résultat est consigné dans le bloc `convergence` du dossier (statut, date, SHA de chaque dépôt, vérifications, notes). Une vérification qui échoue, ou un consommateur sans commande de convergence, fait échouer la convergence en le nommant.
 
-### 8. Releases des consommateurs (humain)
+### 8. `release` : les releases des consommateurs
 
-Lantern puis Handbook publient chacun une release : une version différente de celle de l'accord, une release GitHub `v<version>` et un tag sur `main` qui pinne chaque finale. Ce sont des gestes humains ; le superviseur ne fait que les observer.
+```bash
+pnpm supervise release         # montre le prochain pas et sa commande exacte
+pnpm supervise release --run   # tague et publie chaque consommateur, Handbook en dernier
+```
+
+Exige une convergence `passed`, une présentation qui tient et des consommateurs toujours sur chaque finale, revérifiés avant chaque pas. Pour Lantern puis Handbook, le superviseur lit la version de `package.json` sur `origin/main`, pousse le tag `v<version>` (`git push origin origin/main:refs/tags/v<version>`), puis fait partir la release comme la topologie le déclare (`release.trigger`) : le workflow de Lantern démarre à la poussée du tag, celui de Handbook est lancé sur le tag (`gh workflow run release.yml --ref v<version>`). Il suit le run jusqu'à sa fin et consigne la release dans `consumerReleases`.
+
+Une release qui existe n'est jamais republiée, et un tag n'est jamais poussé deux fois ni supprimé : la commande se relance à tout moment. Un run rouge arrête avant le consommateur suivant. Un tag sans release ni run, ou un tag hors de `main`, est nommé et laissé à une personne.
 
 ### 9. `close` : fermer sur preuves
 
@@ -150,23 +175,25 @@ pnpm supervise close           # montre ce qui serait fermé
 pnpm supervise close --run     # ferme
 ```
 
-Exige une convergence `passed`, un accord qui tient, des `origin/main` qui **descendent** des SHA de la convergence (les commits de release des consommateurs arrivent après elle), aucun écart de pins, et les releases de Lantern et de Handbook décrites ci-dessus. Tout manque est nommé, et rien n'est fermé. Avec `--run`, `close` consigne `consumerReleases`, commente ou ferme chaque issue, ferme l'issue de coordination **en dernier**, puis passe le train à `closed`.
+Exige une convergence `passed`, une présentation qui tient, des `origin/main` qui **descendent** des SHA de la convergence (les commits de release des consommateurs arrivent après elle), aucun écart de pins, et les releases de Lantern et de Handbook décrites ci-dessus. Tout manque est nommé, et rien n'est fermé. Avec `--run`, `close` consigne `consumerReleases`, commente ou ferme chaque issue, ferme l'issue de coordination **en dernier**, puis passe le train à `closed`.
 
-## Automatique, humain, jamais avant accord
+## Automatique, humain, jamais dans une validation
 
 | | Ce qui est concerné |
 | --- | --- |
-| **Automatique** | observation des dépôts et des pins (`status`, `next`) ; validations et vérifications derrière le garde (`present`, `converge`) ; après l'accord, tout le traitement du train par `publish --run` : dispatchs, promotions locales, adoption de la candidate puis de la finale par Handbook et Lantern, manifestes et records de train, tag final de `schema-adrenaline`, registre de fournisseurs de Lantern, fichier de convergence de `schema-in-the-mist`, convergence ; commentaires et fermeture des issues (`close --run`) |
-| **Humain** | les corrections ; l'accord tapé au terminal ; les releases des consommateurs ; un checkout sale ou divergent à ramener sur `origin/main` ; un run réussi sans résultat, à inspecter |
-| **Jamais avant accord** | toute release, tout dispatch de workflow, tout `git push` et tout `git tag`, toute écriture via `gh api`. `present` et `converge` passent sous le garde, et `publish --run` revérifie l'accord avant chaque pas |
+| **Automatique** | observation des dépôts et des pins (`status`, `next`) ; validations et vérifications derrière le garde (`present`, `converge`) ; une fois `ship --run` lancé, tout le traitement du train : commit et push du changement préparé, présentation, dispatchs, promotions locales, adoption de la candidate puis de la finale par Handbook et Lantern, manifestes et records de train, tag final de `schema-adrenaline`, registre de fournisseurs de Lantern, fichier de convergence de `schema-in-the-mist`, convergence ; tag et release de Lantern puis de Handbook ; commentaires et fermeture des issues |
+| **Humain** | les corrections, avec la version et le `CHANGELOG` des consommateurs ; la validation, qui consiste à lancer `ship` ; le code du superviseur, commité et poussé à la main ; toute suppression (branches, tags, fichiers) |
+| **Jamais dans une validation** | toute release, tout dispatch de workflow, tout `git push` et tout `git tag`, toute écriture via `gh api`. Les validations de `present` et les vérifications de `converge` passent sous le garde, et chaque maillon revérifie la présentation avant chaque pas |
 
-## Ce que l'accord juge : le design et le fonctionnel
+Un arrêt de la chaîne n'est pas un geste prévu : c'est un échec nommé (checkout sale ou divergent, run rouge, run réussi sans résultat), à corriger avant de relancer `ship --run`.
 
-L'accord tapé à `approve` porte sur **le rendu et le comportement** : la fiche ou la fonctionnalité présentée est-elle celle qui était voulue ? Il ne porte pas sur la mécanique de contrôle.
+## Ce que juge la validation : le design et le fonctionnel
 
-Tout ce qui est technique avance sans demander : cohérence des packs et des versions, épingles et SRI, protocoles de release-train, validations de `pnpm check` / `npm run check`, CI des fournisseurs. Une validation rouge se corrige, dans le code ou dans la validation elle-même quand c'est elle qui est fausse, puis se commite et se pousse sur `main` avant `present`, sans passer par l'accord. Elle ne se contourne jamais : pas de validation désactivée, pas de garde écarté. Le compte rendu vient après coup, dans le rapport de `present`.
+La validation porte sur **le rendu et le comportement** : la fiche ou la fonctionnalité est-elle celle qui était voulue ? Elle se juge avant `ship`, dans le coffre et dans chaque consommateur (`preview`). Elle ne porte pas sur la mécanique de contrôle.
 
-Deux choses restent à l'humain : l'accord lui-même, et toute suppression (branches, traces, fichiers).
+Tout ce qui est technique avance sans demander : cohérence des packs et des versions, épingles et SRI, protocoles de release-train, validations de `pnpm check` / `npm run check`, CI des fournisseurs. Une validation rouge se corrige, dans le code ou dans la validation elle-même quand c'est elle qui est fausse, puis `ship --run` se relance. Elle ne se contourne jamais : pas de validation désactivée, pas de garde écarté. Le compte rendu vient après coup, dans le rapport de `present`.
+
+Restent à l'humain : les corrections, la validation elle-même, le code du superviseur, et toute suppression (branches, traces, fichiers).
 
 ## Les trois fournisseurs
 
@@ -182,5 +209,6 @@ Deux choses restent à l'humain : l'accord lui-même, et toute suppression (bran
 
 - **« the repositories are not ready »** : un checkout n'est pas propre ou pas sur `origin/main`. La commande à lancer est affichée.
 - **« supervisor guard: … is refused »** : une validation tente de publier. C'est la validation qu'il faut corriger, pas le garde.
-- **Accord annulé** : un commit hors `trainFiles`, ou une URL de release inconnue du train, est arrivé sur un dépôt. Relancer `present` puis `approve`.
+- **Présentation dépassée** (« presentation of train … does not hold ») : un commit hors `trainFiles`, ou une URL de release inconnue du train, est arrivé sur un dépôt. Relancer `ship --run`, qui présente à nouveau.
+- **Run retenu par des relecteurs** (« run … is waiting ») : l'environnement `release` du dépôt a encore des relecteurs requis. Les retirer dans les réglages GitHub du dépôt, puis relancer `ship --run`.
 - **Checkout Windows** : `.gitattributes` force LF sur les shims `sh` de `tools/supervisor/guard/` et CRLF sur leurs jumeaux `.cmd`. Un shim `sh` en CRLF casse son shebang, un `.cmd` en LF est mal lu par `cmd.exe` : ne pas retirer ces deux règles.

@@ -1,59 +1,37 @@
 /**
  * `supervise close`: end a train on its proofs, the coordination issue last.
  *
- * Closing needs a convergence that passed, an approval that still holds, and
+ * Closing needs a convergence that passed, a presentation that still holds, and
  * every repository still descending from the SHA the convergence was proved
- * on: after it, the approval admits only train files, which is what a
- * consumer release commit is. Then the consumer releases, Lantern then
- * Handbook: each has a version the train did not start with, a GitHub
+ * on: after it, the presentation admits only train files, which is what a
+ * train record is. Then the consumer releases, the coordinator last, which
+ * `supervise release` published and close only observes: each has a GitHub
  * release of `v<version>`, and a tag on main that pins every final. Anything
  * missing is named, and nothing is closed. Without `--run`, only what would
  * be closed is shown.
  */
 import { gh, ghJson, releaseExists } from "./gh.mjs";
-import { assertApproval } from "./approval.mjs";
-import { concernedRepos } from "./digest.mjs";
-import { gitOut, isAncestor, revParse, showFile } from "./git.mjs";
+import { assertBinding } from "./binding.mjs";
+import { isAncestor, revParse } from "./git.mjs";
 import { pinGaps, publishedProviders } from "./converge.mjs";
+import { releaseTargets, releaseUrl, tagCommit, versionAt } from "./consumerRelease.mjs";
 import { readTrain, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 
-function versionAt(dir, ref) {
-	try {
-		return JSON.parse(showFile(dir, ref, "package.json") ?? "").version ?? null;
-	} catch {
-		return null;
-	}
-}
-
-/** The commit a remote tag points to, peeled; null when origin has no such tag. */
-function tagCommit(dir, tag) {
-	const lines = gitOut(dir, ["ls-remote", "origin", `refs/tags/${tag}`, `refs/tags/${tag}^{}`]).split("\n").filter(Boolean);
-	const peeled = lines.find((line) => line.endsWith("^{}")) ?? lines[0];
-	return peeled ? peeled.split(/\s+/)[0] : null;
-}
-
-/** The release of each consumer, Lantern before Handbook, or the reasons it is not there yet. */
+/** The release of each consumer, the coordinator last, or the reasons it is not there yet. */
 function consumerReleases(root, topology, train, published) {
-	const rank = { consumer: 0, coordinator: 1 };
-	const consumers = concernedRepos(topology, train).filter((repo) => repo.role !== "provider").sort((left, right) => rank[left.role] - rank[right.role]);
 	const releases = [];
 	const problems = [];
-	for (const repo of consumers) {
+	for (const repo of releaseTargets(topology, train)) {
 		const dir = repoDir(root, repo);
-		const approved = train.approval.repos.find((entry) => entry.repo === repo.id)?.sha;
 		const version = versionAt(dir, "origin/main");
 		if (!version) {
 			problems.push(`${repo.id}: no readable version in package.json on origin/main`);
 			continue;
 		}
 		const tag = `v${version}`;
-		if (approved && versionAt(dir, approved) === version) {
-			problems.push(`${repo.id}: package.json is still at ${version}, the version it had when the train was approved; release ${repo.repository} with a new version first`);
-			continue;
-		}
 		if (!releaseExists(repo.repository, tag)) {
-			problems.push(`${repo.id}: the release ${tag} of ${repo.repository} does not exist on GitHub; publish it first`);
+			problems.push(`${repo.id}: the release ${tag} of ${repo.repository} does not exist on GitHub; run supervise release --run first`);
 			continue;
 		}
 		const sha = tagCommit(dir, tag);
@@ -67,7 +45,7 @@ function consumerReleases(root, topology, train, published) {
 			problems.push(`${repo.id}: the release ${tag} does not pin every final: ${gaps.map((gap) => gap.message.replace(`${repo.id}: `, "")).join("; ")}`);
 			continue;
 		}
-		releases.push({ repo: repo.id, version, tag, sha, url: `https://github.com/${repo.repository}/releases/tag/${tag}` });
+		releases.push({ repo: repo.id, version, tag, sha, url: releaseUrl(repo, tag) });
 	}
 	return { releases, problems };
 }
@@ -90,7 +68,7 @@ export function closeTrain(context, file, { run = false } = {}) {
 	if (train.convergence?.status !== "passed") {
 		throw new SupervisorError(`close: the convergence of train "${train.id}" ${train.convergence ? "failed" : "was never proved"}; run supervise converge first; nothing was closed`, 1);
 	}
-	assertApproval(root, topology, train);
+	assertBinding(root, topology, train);
 	const problems = [];
 	for (const { repo: id, sha } of train.convergence.repos) {
 		const dir = repoDir(root, repoById(topology, id));

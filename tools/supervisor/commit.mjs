@@ -11,8 +11,8 @@
  * `commit <repo> --only` lands one repository alone, whatever its role, under
  * the same checks; `--message` then stands for the prepared file.
  *
- * It commits what a person prepared, before any approval; the writes of an
- * approved train are land.mjs. It publishes no release.
+ * It commits what a person prepared, before any presentation; the writes of a
+ * presented train are land.mjs. It publishes no release.
  */
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
@@ -46,8 +46,10 @@ export function commitRepo(topology, repoId) {
 /**
  * What each repository will do, or every reason none of them may.
  * `inline` is a message given on the command line, for a single repository.
+ * `shared` is `ship`: the one message serves every repository that has changes
+ * and no prepared message, and having nothing to do is not a refusal.
  */
-export function planCommit(root, repos, inline = "") {
+export function planCommit(root, repos, inline = "", { shared = false } = {}) {
 	const problems = [];
 	const plan = [];
 	for (const repo of repos) {
@@ -69,14 +71,14 @@ export function planCommit(root, repos, inline = "") {
 		const changes = git(dir, ["status", "--porcelain", "--untracked-files=all", ...pathspec(repo)]).stdout.replace(/\s+$/, "");
 		const file = messagePath(dir);
 		const prepared = existsSync(file) ? readFileSync(file, "utf8").trim() : "";
-		if (prepared && inline) problems.push(`${repo.id}: --message was given but a message already waits in ${file}`);
-		const message = prepared || inline;
+		if (prepared && inline && !shared) problems.push(`${repo.id}: --message was given but a message already waits in ${file}`);
+		const message = prepared || (shared && !changes ? "" : inline);
 		if (changes && !message) problems.push(`${repo.id}: uncommitted changes but no message in ${file}`);
 		if (!changes && message) problems.push(`${repo.id}: a message ${prepared ? `waits in ${file}` : "was given"} but there is nothing to commit`);
 		plan.push({ repo, dir, file, message, changes, ahead, inline: !prepared });
 	}
 	if (problems.length > 0) throw new SupervisorError(`commit: nothing was committed\n  ${problems.join("\n  ")}`, 1);
-	if (plan.every((entry) => !entry.changes && entry.ahead === 0)) {
+	if (!shared && plan.every((entry) => !entry.changes && entry.ahead === 0)) {
 		throw new SupervisorError("commit: nothing to commit or push in any repository", 1);
 	}
 	return plan;

@@ -83,7 +83,7 @@ function rules(): void {
 	for (const [tool, ...args] of refused) {
 		assert.equal(
 			guardRefusal(tool, args),
-			`supervisor guard: "${[tool, ...args].join(" ")}" publishes and is refused before approval (supervise present)`,
+			`supervisor guard: "${[tool, ...args].join(" ")}" publishes and is refused inside a validation (supervise present)`,
 			`guardRefusal must refuse: ${[tool, ...args].join(" ")}`,
 		);
 	}

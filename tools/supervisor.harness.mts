@@ -7,13 +7,13 @@
  * what it printed, what it wrote, and which git and gh calls it made.
  */
 import assert from "assert/strict";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { basename, delimiter, join, resolve } from "path";
 import Ajv from "ajv";
-import { createWorld, FAKE_TTY, git, HANDBOOK, sh, SUPERVISE, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
+import { createWorld, git, HANDBOOK, sh, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
 import { pathKey, spawnCommand, withRequire } from "./supervisor/spawn.mjs";
 
-// present.mjs locates its guard through import.meta, which this CJS bundle empties.
+// guarded.mjs locates its guard through import.meta, which this CJS bundle empties.
 const GUARD_DIR = resolve(HANDBOOK, "tools/supervisor/guard");
 
 const statusSchema = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/status.schema.json"), "utf8"));
@@ -147,7 +147,7 @@ scenario("open writes a stable record and a coordination issue with the supervis
 	const record = JSON.parse(text);
 	assert.equal(`${JSON.stringify(record, null, "\t")}\n`, text, "the record is not byte-stable");
 	assert.deepEqual(record.coordinationIssue, { repo: "obsidian-handbook", number: 1, url: `https://github.com/${REPOSITORY["obsidian-handbook"]}/issues/1` });
-	assert.equal(record.approval, null);
+	assert.ok(!("approval" in record), "open wrote an approval");
 	const created = creates(world);
 	assert.equal(created.length, 1);
 	assert.ok(created[0].args.includes(REPOSITORY["obsidian-handbook"]));
@@ -294,7 +294,7 @@ scenario("link --create asks first: nothing is created without a terminal or --y
 	assert.ok(existsSync(trainPath(world)));
 });
 
-// Phase 3: presentation and approval.
+// Phase 3: the presentation, and what it binds.
 
 /** A validation that runs `code` in the current node: no shell, the same on every OS. */
 function nodeCommand(code: string): string[] {
@@ -334,19 +334,22 @@ function doneTrain(world: World): void {
 	}
 }
 
-/**
- * `supervise` as if on a terminal: `fake-tty.cjs` marks stdin as a TTY, `input`
- * is typed on it. A terminal shows both streams as one, so does `stdout` here.
- */
-function superviseTty(world: World, args: string[], input: string, topology: string) {
-	const [command, ...rest] = args;
-	const result = sh(HANDBOOK, process.execPath, ["--require", FAKE_TTY, SUPERVISE, command, "--root", world.root, "--topology", topology, ...rest], world.env(), input);
-	return { ...result, stdout: `${result.stdout}${result.stderr}` };
+function presentTrain(world: World, topology: string): void {
+	ok(world.supervise(["present"], { topology }), "present");
 }
 
-function presentAndApprove(world: World, topology: string): void {
-	ok(world.supervise(["present"], { topology }), "present");
-	ok(superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology), "approve");
+/** Every reason the presentation no longer binds the train, as the supervisor's own module gives them. */
+function bindingMessages(world: World, topology: string): string[] {
+	// binding.mjs is an ES module that locates the repository by import.meta: it is loaded by node itself, not bundled.
+	const probe = [
+		"const [root, topologyFile, trainFile] = process.argv.slice(1);",
+		"const { loadTopology } = await import('./tools/supervisor/topology.mjs');",
+		"const { readTrain } = await import('./tools/supervisor/train.mjs');",
+		"const { bindingProblems } = await import('./tools/supervisor/binding.mjs');",
+		"const topology = loadTopology(topologyFile);",
+		"console.log(JSON.stringify(bindingProblems(root, topology, readTrain(trainFile, topology)).map((problem) => problem.message)));",
+	].join("\n");
+	return JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, trainPath(world)]), "binding probe"));
 }
 
 scenario("present reports each concerned repository with its SHA, commits and validations", (world) => {
@@ -363,10 +366,11 @@ scenario("present reports each concerned repository with its SHA, commits and va
 	assert.match(report, /schema-in-the-mist: release candidate of schema-in-the-mist/);
 	assert.match(report, /schema-in-the-mist: final release of schema-in-the-mist, same bytes as the candidate/);
 	assert.match(report, /lantern: release/);
-	assert.ok(report.includes("## Try it before approving\n\n`pnpm supervise preview --vault <vault>`"), report);
+	assert.ok(report.includes("## Try it before publishing\n\n`pnpm supervise preview --vault <vault>`"), report);
+	assert.ok(report.includes("`pnpm supervise publish --run` publishes exactly these commits"), report);
 	const record = readRecord(world);
 	assert.equal(record.presentation.presentable, true);
-	assert.equal(record.approval, null, "present approved");
+	assert.ok(!("approval" in record), "present wrote an approval");
 	assert.ok(!report.includes("schema-pbta ("), "an unconcerned provider was presented");
 });
 
@@ -391,45 +395,77 @@ scenario("present refuses an unfinished train and a checkout that is not origin/
 	assert.match(result.stderr, /obsidian-handbook: HEAD [0-9a-f]{10} is not origin\/main .*switch main && git -C .* pull --ff-only/);
 });
 
-scenario("approve records nothing without a terminal, and records the typed id bound to the SHAs", (world) => {
+scenario("present binds the SHAs without a terminal", (world) => {
 	const topology = testTopology(world);
 	doneTrain(world);
-	ok(world.supervise(["present"], { topology }), "present");
-	const refused = world.supervise(["approve"], { topology, input: `${TRAIN_ID}\n` });
-	assert.equal(refused.status, 1, refused.stderr);
-	assert.match(refused.stderr, /interactive terminal/);
-	assert.equal(readRecord(world).approval, null, "an approval was written without a terminal");
-
-	const wrong = superviseTty(world, ["approve"], "yes\n", topology);
-	assert.equal(wrong.status, 1, wrong.stdout);
-	assert.equal(readRecord(world).approval, null, "a wrong id approved the train");
-
-	const approved = ok(superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology), "approve");
+	const report = ok(world.supervise(["present"], { topology }), "present");
 	const record = readRecord(world);
-	assert.ok(approved.includes(record.presentation.digest), approved);
-	assert.equal(record.approval.digest, record.presentation.digest);
-	assert.deepEqual(record.approval.repos.map((entry: any) => entry.repo).sort(), ["lantern", "obsidian-handbook", "schema-in-the-mist"]);
-	assert.equal(record.approval.repos.find((entry: any) => entry.repo === "lantern").sha, git(world.dir("lantern"), "rev-parse", "origin/main"));
-	assert.ok(record.approval.publications.includes("schema-in-the-mist: release candidate of schema-in-the-mist"));
-	assert.ok(record.approval.approvedAt);
-	ok(world.supervise(["approve", "--verify"], { topology }), "approve --verify");
+	assert.ok(!("approval" in record), "present wrote an approval");
+	assert.match(record.presentation.digest, /^sha256:[0-9a-f]{64}$/);
+	assert.ok(report.includes(record.presentation.digest), report);
+	assert.deepEqual(record.presentation.repos.map((entry: any) => entry.repo).sort(), ["lantern", "obsidian-handbook", "schema-in-the-mist"]);
+	assert.equal(record.presentation.repos.find((entry: any) => entry.repo === "lantern").sha, git(world.dir("lantern"), "rev-parse", "origin/main"));
+	assert.ok(record.presentation.publications.includes("schema-in-the-mist: release candidate of schema-in-the-mist"));
+	assert.ok(record.presentation.presentedAt);
+	assert.deepEqual(bindingMessages(world, topology), []);
 });
 
-scenario("approve refuses a presentation the repositories moved away from", (world) => {
+scenario("approve is no longer a command, and the help does not name it", (world) => {
+	const result = world.supervise(["approve"]);
+	assert.equal(result.status, 2, result.stderr);
+	assert.match(result.stderr, /unknown command "approve"/);
+	assert.match(result.stderr, /usage: pnpm supervise <command>/);
+	assert.ok(!/\bapprove\b/.test(result.stderr.replace("unknown command \"approve\"", "")), result.stderr);
+	assert.ok(!/\bapprove\b/.test(ok(world.supervise(["--help"]), "help")));
+});
+
+scenario("a record written by the former approve still reads, and its approval binds nothing", (world) => {
 	const topology = testTopology(world);
 	doneTrain(world);
-	ok(world.supervise(["present"], { topology }), "present");
-	world.land("lantern", { "src/late.ts": "export {};\n" }, "late change");
-	const result = superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology);
+	presentTrain(world, topology);
+	const record = readRecord(world);
+	const { digest, repos, trainFiles, publications } = record.presentation;
+	record.approval = { approvedAt: "2026-10-02T14:43:41.944Z", digest, repos: repos.map(({ repo, sha }: any) => ({ repo, sha: "0".repeat(sha.length) })), trainFiles, publications };
+	writeFileSync(trainPath(world), `${JSON.stringify(record, null, "\t")}\n`);
+	ok(world.supervise(["next", "--json"]), "next");
+	assert.equal(JSON.parse(ok(world.supervise(["status", "--json"]), "status --json")).train.id, TRAIN_ID);
+	assert.deepEqual(bindingMessages(world, topology), [], "the obsolete approval was read");
+
+	const validate = new Ajv({ allErrors: true }).compile(JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/train.schema.json"), "utf8")));
+	const shipped = resolve(HANDBOOK, "supervisor/trains");
+	for (const name of readdirSync(shipped).filter((entry) => entry.endsWith(".json"))) {
+		assert.ok(validate(JSON.parse(readFileSync(resolve(shipped, name), "utf8"))), `${name}: ${JSON.stringify(validate.errors)}`);
+	}
+});
+
+scenario("publish refuses a commit outside the train pushed after present", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	presentTrain(world, topology);
+	const late = world.land("lantern", { "src/late.ts": "export {};\n" }, "late change");
+	const result = world.supervise(["publish"], { topology });
 	assert.equal(result.status, 1, result.stdout);
-	assert.match(result.stdout, /lantern: origin\/main is [0-9a-f]{10}, the presentation showed/);
-	assert.equal(readRecord(world).approval, null);
+	assert.ok(result.stderr.includes(`lantern: commit ${late.slice(0, 10)} changes src/late.ts, outside the train files`), result.stderr);
+	assert.match(result.stderr, /Present the train again: supervise present/);
 });
 
-scenario("an adoption commit of the observed candidate keeps the approval; any other change voids it", (world) => {
+scenario("publish refuses a presentation edited by hand", (world) => {
 	const topology = testTopology(world);
 	doneTrain(world);
-	presentAndApprove(world, topology);
+	presentTrain(world, topology);
+	const record = readRecord(world);
+	record.presentation.repos.find((entry: any) => entry.repo === "lantern").sha = "f".repeat(40);
+	writeFileSync(trainPath(world), `${JSON.stringify(record, null, "\t")}\n`);
+	const result = world.supervise(["publish", "--run"], { topology });
+	assert.equal(result.status, 1, result.stdout);
+	assert.match(result.stderr, /the presentation was edited after present/);
+	assert.deepEqual(dispatches(world), []);
+});
+
+scenario("an adoption commit of the observed candidate keeps the presentation; any other change voids it", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	presentTrain(world, topology);
 	const candidate = world.archive("schema-in-the-mist", "v1.0.1-rc.1");
 	const final = world.archive("schema-in-the-mist", "v1.0.0");
 	const record = readRecord(world);
@@ -442,22 +478,22 @@ scenario("an adoption commit of the observed candidate keeps the approval; any o
 		adopt[file] = readFileSync(resolve(lantern, file), "utf8").split(final.url).join(candidate.url).split(final.integrity).join(candidate.integrity);
 	}
 	world.land("lantern", adopt, "Adopt schema-in-the-mist v1.0.1-rc.1");
-	ok(world.supervise(["approve", "--verify"], { topology }), "verify after adoption");
+	assert.deepEqual(bindingMessages(world, topology), [], "the adoption voided the presentation");
 
 	const unknown = world.archive("schema-in-the-mist", "v9.9.9");
 	world.land("lantern", { "pnpm-lock.yaml": `${adopt["pnpm-lock.yaml"]}# ${unknown.url}\n` }, "Pin an archive nobody observed");
-	let result = world.supervise(["approve", "--verify"], { topology });
+	let result = world.supervise(["publish"], { topology });
 	assert.equal(result.status, 1, result.stderr);
 	assert.ok(result.stderr.includes(`introduces ${unknown.url} in pnpm-lock.yaml`), result.stderr);
 
 	const outside = world.land("obsidian-handbook", { "src/main.ts": "export const late = 1;\n" }, "late fix");
-	result = world.supervise(["approve", "--verify"], { topology });
+	result = world.supervise(["publish"], { topology });
 	assert.equal(result.status, 1);
 	assert.ok(result.stderr.includes(`obsidian-handbook: commit ${outside.slice(0, 10)} changes src/main.ts, outside the train files`), result.stderr);
 	assert.match(result.stderr, /supervise present/);
 });
 
-scenario("a failing validation makes the train not presentable and approve refuses it", (world) => {
+scenario("a failing validation makes the train not presentable and publish --run refuses it, running nothing", (world) => {
 	const broken = nodeCommand("console.error('contract broken'); process.exit(3)");
 	const topology = testTopology(world, { "schema-in-the-mist": [broken] });
 	doneTrain(world);
@@ -466,10 +502,12 @@ scenario("a failing validation makes the train not presentable and approve refus
 	assert.match(result.stdout, /\*\*Not presentable\*\*/);
 	assert.ok(result.stdout.includes(`schema-in-the-mist: ${broken.join(" ")} exited 3`), result.stdout);
 	assert.match(result.stdout, /contract broken/);
-	const approve = superviseTty(world, ["approve"], `${TRAIN_ID}\n`, topology);
-	assert.equal(approve.status, 1, approve.stdout);
-	assert.match(approve.stdout, /not presentable/);
-	assert.equal(readRecord(world).approval, null);
+	const refused = world.supervise(["publish", "--run"], { topology });
+	assert.equal(refused.status, 1, refused.stdout);
+	assert.match(refused.stderr, /the last presentation of train "couleur-otherscape" is not presentable/);
+	assert.ok(refused.stderr.includes(`schema-in-the-mist: ${broken.join(" ")} exited 3`), refused.stderr);
+	assert.deepEqual(dispatches(world), []);
+	assert.equal(world.readState().localCalls, undefined);
 });
 
 /** A shell validation: `cmd /d /s /c` on Windows, `sh -c` elsewhere. Lines joined by the shell's own separator. */
@@ -549,7 +587,7 @@ scenario("a validation cannot release, push or tag: the guard refuses on both pa
 	assert.match(readFileSync(ghLog, "utf8"), /^workflow run release\.yml/m, "without its hook the Node path did not leak: the scenario proves nothing");
 });
 
-// Phase 4: publication, one provider at a time, under the approval.
+// Phase 4: publication, one provider at a time, bound by the presentation.
 
 const NEXT = "1.1.0";
 
@@ -559,9 +597,9 @@ function bytesOf(provider: string, variant = ""): string {
 
 /**
  * A train of `providers` then both consumers, every item closed by a commit
- * (each provider's bumps it to 1.1.0), presented and approved unless told not.
+ * (each provider's bumps it to 1.1.0), presented unless told not.
  */
-function approvedTrain(world: World, providers: string[], options: { approve?: boolean; secrets?: boolean; before?: () => void } = {}): string {
+function presentedTrain(world: World, providers: string[], options: { present?: boolean; secrets?: boolean; before?: () => void } = {}): string {
 	const topology = testTopology(world);
 	const items: Array<[string, number]> = [...providers.map((id, index): [string, number] => [id, 50 + index]), ["obsidian-handbook", 12], ["lantern", 40]];
 	world.updateState((state) => {
@@ -580,7 +618,7 @@ function approvedTrain(world: World, providers: string[], options: { approve?: b
 		});
 	}
 	options.before?.();
-	if (options.approve !== false) presentAndApprove(world, topology);
+	if (options.present !== false) presentTrain(world, topology);
 	return topology;
 }
 
@@ -628,7 +666,7 @@ function installs(world: World): string[] {
 		.map((call: any) => `${basename(call.cwd)} ${call.args.join(" ")}`);
 }
 
-/** schema-in-the-mist from its approval through its local promotion, whose final carries `finalBytes`, then its convergence. */
+/** schema-in-the-mist from its presentation through its local promotion, whose final carries `finalBytes`, then its convergence. */
 function driveMist(world: World, finalBytes: string, topology: string) {
 	const mist = REPOSITORY["schema-in-the-mist"];
 	world.updateState((state) => {
@@ -644,8 +682,8 @@ function driveMist(world: World, finalBytes: string, topology: string) {
 }
 
 scenario("publish shows the next step and its exact command, runs nothing, and says the same twice", (world) => {
-	approvedTrain(world, ["schema-pbta", "schema-in-the-mist"], { secrets: false });
-	const sha = readRecord(world).approval.repos.find((entry: any) => entry.repo === "schema-pbta").sha;
+	presentedTrain(world, ["schema-pbta", "schema-in-the-mist"], { secrets: false });
+	const sha = readRecord(world).presentation.repos.find((entry: any) => entry.repo === "schema-pbta").sha;
 	const first = ok(publish(world, false), "publish");
 	assert.ok(first.includes(`$ gh workflow run release.yml -R RebelliousSmile/schema-pbta --ref main -f mode=digest -f provider_commit=${sha}`), first);
 	assert.match(first, /Nothing was run/);
@@ -696,10 +734,10 @@ scenario("a same observation always gives the same step, for each adapter", () =
 	assert.deepEqual(steps[5].first.command, ["git", "push", "origin", `origin/main:refs/tags/v${NEXT}`]);
 });
 
-/** schema-pbta from its approval to its final, through the four dispatches of its release workflows, then its convergence. */
+/** schema-pbta from its presentation to its final, through the four dispatches of its release workflows, then its convergence. */
 function drivePbta(world: World, topology: string) {
 	const pbta = REPOSITORY["schema-pbta"];
-	const sha = readRecord(world).approval.repos.find((entry: any) => entry.repo === "schema-pbta").sha;
+	const sha = readRecord(world).presentation.repos.find((entry: any) => entry.repo === "schema-pbta").sha;
 	const candidate = world.archive("schema-pbta", `v${NEXT}-rc.1`, bytesOf("schema-pbta"));
 	const receipt = resolve(world.tmp, "receipt", "candidate-digest.json");
 	mkdirSync(resolve(world.tmp, "receipt"));
@@ -716,7 +754,7 @@ function drivePbta(world: World, topology: string) {
 }
 
 scenario("publish --run takes schema-pbta through digest, stage, release-train and promote, landing its manifests and the adoption itself", (world) => {
-	const topology = approvedTrain(world, ["schema-pbta"]);
+	const topology = presentedTrain(world, ["schema-pbta"]);
 	const { pbta, sha, candidate, candidatePath, trainPath, result } = drivePbta(world, topology);
 	const output = ok(result, "publish --run");
 	assert.match(output, /adopt the candidate v1\.1\.0-rc\.1 of schema-pbta in obsidian-handbook and lantern/);
@@ -745,11 +783,11 @@ scenario("publish --run takes schema-pbta through digest, stage, release-train a
 	assert.equal(record.final.tag, `v${NEXT}`);
 	assert.equal(record.final.sha256, record.candidate.sha256);
 	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "release-train success", "promote success"]);
-	ok(world.supervise(["approve", "--verify"]), "the approval still holds after the publication");
+	assert.match(ok(publish(world, false), "the presentation still holds after the publication"), /Every provider of train couleur-otherscape is published/);
 });
 
 scenario("publish --run promotes schema-in-the-mist locally in its checkout, with the candidate's bytes", (world) => {
-	const topology = approvedTrain(world, ["schema-in-the-mist"]);
+	const topology = presentedTrain(world, ["schema-in-the-mist"]);
 	const { candidate, result } = driveMist(world, bytesOf("schema-in-the-mist"), topology);
 	const output = ok(result, "publish --run");
 	assert.match(output, /adopt the candidate v1\.1\.0-rc\.1 of schema-in-the-mist in obsidian-handbook and lantern/);
@@ -777,12 +815,12 @@ scenario("publish --run promotes schema-in-the-mist locally in its checkout, wit
 	for (const consumer of manifest.consumers) assert.deepEqual(consumer.proof, { interface: "npm-run-release-train-assert", manifest: "release-train/schema-in-the-mist.json" });
 });
 
-scenario("without a valid approval, publish --run dispatches nothing and runs nothing", (world) => {
-	approvedTrain(world, ["schema-in-the-mist"], { approve: false });
+scenario("without a presentation that holds, publish --run dispatches nothing and runs nothing", (world) => {
+	presentedTrain(world, ["schema-in-the-mist"], { present: false });
 	let result = publish(world, true);
 	assert.equal(result.status, 1, result.stdout);
-	assert.match(result.stderr, /has no approval/);
-	presentAndApprove(world, testTopology(world));
+	assert.match(result.stderr, /train "couleur-otherscape" was never presented/);
+	presentTrain(world, testTopology(world));
 	const outside = world.land("schema-in-the-mist", { "src/late.ts": "export {};\n" }, "late change");
 	result = publish(world, true);
 	assert.equal(result.status, 1, result.stdout);
@@ -792,7 +830,7 @@ scenario("without a valid approval, publish --run dispatches nothing and runs no
 });
 
 scenario("a consumer that fails with the candidate stops publish --run by name, its pins restored and nothing of it committed", (world) => {
-	const topology = approvedTrain(world, ["schema-in-the-mist"]);
+	const topology = presentedTrain(world, ["schema-in-the-mist"]);
 	const before = originMain(world, "lantern");
 	world.updateState((state) => {
 		state.localEffects = { "lantern install": [{ status: 4 }] };
@@ -808,7 +846,7 @@ scenario("a consumer that fails with the candidate stops publish --run by name, 
 });
 
 scenario("after a failed release-train, publish resumes at the proof, pushes the final tag and follows the release it starts", (world) => {
-	const topology = approvedTrain(world, ["schema-adrenaline"]);
+	const topology = presentedTrain(world, ["schema-adrenaline"]);
 	const adrenaline = REPOSITORY["schema-adrenaline"];
 	world.updateState((state) => {
 		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
@@ -845,8 +883,77 @@ scenario("after a failed release-train, publish resumes at the proof, pushes the
 	assert.equal(readRecord(world).convergence.status, "passed");
 });
 
+scenario("a dispatched run held by reviewers stops publish at once; run again, the same run is taken up and nothing is dispatched twice", (world) => {
+	const topology = presentedTrain(world, ["schema-adrenaline"]);
+	const adrenaline = REPOSITORY["schema-adrenaline"];
+	world.updateState((state) => {
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ status: "waiting" }];
+	});
+	const held = publish(world, true, topology);
+	assert.equal(held.status, 1, held.stdout);
+	assert.match(held.stderr, /run https:\/\/github\.com\/RebelliousSmile\/schema-adrenaline\/actions\/runs\/\d+ is waiting: the release environment still has required reviewers; remove them, then run the command again: pnpm supervise publish --run/);
+	assert.deepEqual(readRecord(world).publication["schema-adrenaline"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate null"]);
+
+	// The reviewers are gone: the held run completes, and the run after it stays open for one look before it fails.
+	world.updateState((state) => {
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
+		state.workflowEffects[`${adrenaline} release-train.yml`] = [{ status: "in_progress" }, { conclusion: "failure" }];
+	});
+	const failed = publish(world, true, topology);
+	assert.equal(failed.status, 1, failed.stdout);
+	assert.match(failed.stderr, /release-train\.yml run \S+ concluded failure/);
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml"], "a run was dispatched a second time");
+	assert.deepEqual(readRecord(world).publication["schema-adrenaline"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate success", "release-train failure"]);
+});
+
+scenario("the release run of the final tag held by reviewers stops publish at once; once it completes, publish observes the final without dispatching release.yml", (world) => {
+	const topology = presentedTrain(world, ["schema-adrenaline"]);
+	const adrenaline = REPOSITORY["schema-adrenaline"];
+	world.updateState((state) => {
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
+		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ repository: adrenaline, workflow: "release.yml", status: "waiting" }];
+	});
+	const held = publish(world, true, topology);
+	assert.equal(held.status, 1, held.stdout);
+	assert.ok(held.stdout.includes(`$ git push origin origin/main:refs/tags/v${NEXT}`), held.stdout);
+	assert.match(held.stderr, /run \S+ is waiting: the release environment still has required reviewers; remove them/);
+	assert.equal(readRecord(world).publication["schema-adrenaline"].final, undefined);
+
+	world.updateState((state) => {
+		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-adrenaline")) }];
+	});
+	const output = ok(publish(world, true, topology), "publish --run once the run is released");
+	assert.match(output, /Every provider of train couleur-otherscape is published/);
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml"], "release.yml was dispatched on top of the run of the tag");
+	assert.equal(git(world.dir("schema-adrenaline"), "ls-remote", "--tags", "origin", `refs/tags/v${NEXT}`).split("\n").length, 1);
+	const record = readRecord(world).publication["schema-adrenaline"];
+	assert.equal(record.final.sha256, record.candidate.sha256);
+});
+
+scenario("a run that never completes stops its watch at the limit, naming its last status, its URL and the command that follows it again", (world) => {
+	const adrenaline = REPOSITORY["schema-adrenaline"];
+	const url = `https://github.com/${adrenaline}/actions/runs/1000`;
+	world.updateState((state) => {
+		state.runs = { ...state.runs, [adrenaline]: [{ databaseId: 1000, workflowName: "release.yml", headBranch: `v${NEXT}`, status: "in_progress", conclusion: null, url }] };
+	});
+	// publish.mjs locates the repository by import.meta: it is loaded by node itself, not bundled. The delays are the probe's, no command sets them.
+	const probe = [
+		"const [repository, url] = process.argv.slice(1);",
+		"const { followRun } = await import('./tools/supervisor/publish.mjs');",
+		"try {",
+		"	console.log(`completed ${followRun({ repository }, { id: 1000, url }, 'pnpm supervise publish --run', { watchMs: 10, limitMs: 60 })}`);",
+		"} catch (error) {",
+		"	console.log(error.message);",
+		"}",
+	].join("\n");
+	const message = ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, adrenaline, url], world.env()), "watch probe");
+	assert.ok(message.includes(`run ${url} did not complete within`), message);
+	assert.ok(message.includes("its last status was in_progress; nothing was dispatched again, follow it with: pnpm supervise publish --run"), message);
+	assert.deepEqual(dispatches(world), []);
+});
+
 scenario("a missing RELEASE_TOKEN on schema-pbta stops publish --run before any dispatch, by name", (world) => {
-	approvedTrain(world, ["schema-pbta"], { secrets: false });
+	presentedTrain(world, ["schema-pbta"], { secrets: false });
 	const result = publish(world, true);
 	assert.equal(result.status, 1, result.stdout);
 	assert.match(result.stderr, /RebelliousSmile\/schema-pbta lacks the secret RELEASE_TOKEN that release\.yml reads; nothing was run/);
@@ -854,7 +961,7 @@ scenario("a missing RELEASE_TOKEN on schema-pbta stops publish --run before any 
 });
 
 scenario("inputs a workflow does not declare stop publish before anything is dispatched", (world) => {
-	approvedTrain(world, ["schema-adrenaline"], {
+	presentedTrain(world, ["schema-adrenaline"], {
 		before: () => {
 			world.land("schema-adrenaline", { ".github/workflows/publish-candidate.yml": "on:\n  workflow_dispatch:\n    inputs:\n      version:\n        required: true\n" }, "Rename the input");
 		},
@@ -866,7 +973,7 @@ scenario("inputs a workflow does not declare stop publish before anything is dis
 });
 
 scenario("a final whose bytes differ from the candidate stops publish, naming both digests", (world) => {
-	const topology = approvedTrain(world, ["schema-in-the-mist"]);
+	const topology = presentedTrain(world, ["schema-in-the-mist"]);
 	const { candidate, result } = driveMist(world, bytesOf("schema-in-the-mist", " rebuilt"), topology);
 	const final = world.archive("schema-in-the-mist", `v${NEXT}`);
 	assert.equal(result.status, 1, result.stdout);
@@ -878,7 +985,7 @@ scenario("a final whose bytes differ from the candidate stops publish, naming bo
 });
 
 scenario("with two providers, publish --run finishes the first one of the train before it starts the second", (world) => {
-	const topology = approvedTrain(world, ["schema-in-the-mist", "schema-adrenaline"]);
+	const topology = presentedTrain(world, ["schema-in-the-mist", "schema-adrenaline"]);
 	world.updateState((state) => {
 		state.workflowEffects[`${REPOSITORY["schema-adrenaline"]} publish-candidate.yml`] = [{ conclusion: "failure" }];
 	});
@@ -928,8 +1035,8 @@ function releaseConsumer(world: World, id: string, version: string): string {
 
 /** schema-pbta published by publish --run, which then converges both consumers on its final. */
 function pbtaOnFinal(world: World, options: { convergence?: Record<string, string[][] | null> } = {}) {
-	const approved = approvedTrain(world, ["schema-pbta"]);
-	const topology = options.convergence ? testTopology(world, {}, options.convergence, "converge-topology.json") : approved;
+	const presented = presentedTrain(world, ["schema-pbta"]);
+	const topology = options.convergence ? testTopology(world, {}, options.convergence, "converge-topology.json") : presented;
 	const { candidate, result } = drivePbta(world, topology);
 	const final = world.archive("schema-pbta", `v${NEXT}`);
 	return { topology, candidate, final, result };
@@ -960,7 +1067,7 @@ scenario("publish --run converges by itself: each consumer adopts the final, eve
 	const { final, result } = pbtaOnFinal(world);
 	const output = ok(result, "publish --run");
 	assert.match(output, /Every consumer pins every final on origin\/main: schema-pbta v1\.1\.0/);
-	assert.match(output, /Next: release Lantern, then Handbook, then run supervise close/);
+	assert.match(output, /Next: pnpm supervise release --run, then pnpm supervise close --run\./);
 	for (const id of ["obsidian-handbook", "lantern"]) {
 		assert.ok(originFile(world, id, "package.json").includes(final.url), `${id} does not pin the final`);
 	}
@@ -983,7 +1090,7 @@ scenario("publish --run converges by itself: each consumer adopts the final, eve
 	for (const entry of convergence.repos) assert.equal(entry.sha, git(world.dir(entry.repo), "rev-parse", "origin/main"));
 	assert.ok(convergence.notes.some((note: string) => note.startsWith("schema-pbta: no convergence tool of its own")), convergence.notes.join("\n"));
 	assert.equal(dispatches(world).length, 4, "converge dispatched a workflow");
-	ok(world.supervise(["approve", "--verify"]), "adopting the final keeps the approval");
+	assert.match(ok(publish(world, false), "adopting the final keeps the presentation"), /Every provider of train couleur-otherscape is published/);
 });
 
 scenario("a failing consumer check or a consumer without convergence command fails the convergence, by name", (world) => {
@@ -1000,7 +1107,7 @@ scenario("close refuses a consumer that was not released, naming it, and closes 
 	ok(result, "publish --run");
 	let refused = close(world, topology, true);
 	assert.equal(refused.status, 1, refused.stdout);
-	assert.match(refused.stderr, /lantern: package\.json is still at 1\.0\.0, the version it had when the train was approved; release RebelliousSmile\/lantern/);
+	assert.match(refused.stderr, /lantern: the release v1\.0\.0 of RebelliousSmile\/lantern does not exist on GitHub; run supervise release --run first/);
 	releaseConsumer(world, "lantern", "1.1.0");
 	world.updateState((state) => {
 		state.releases[REPOSITORY.lantern] = state.releases[REPOSITORY.lantern].filter((release: any) => release.tagName !== "v1.1.0");
@@ -1008,7 +1115,7 @@ scenario("close refuses a consumer that was not released, naming it, and closes 
 	refused = close(world, topology, true);
 	assert.equal(refused.status, 1, refused.stdout);
 	assert.match(refused.stderr, /lantern: the release v1\.1\.0 of RebelliousSmile\/lantern does not exist on GitHub/);
-	assert.match(refused.stderr, /obsidian-handbook: package\.json is still at 1\.0\.0/);
+	assert.match(refused.stderr, /obsidian-handbook: the release v1\.0\.0 of RebelliousSmile\/obsidian-handbook does not exist on GitHub/);
 	assert.deepEqual(issueCalls(world), []);
 	assert.equal(coordinationIssue(world).state, "OPEN");
 	assert.equal(readRecord(world).status, "open");
@@ -1042,8 +1149,154 @@ scenario("close --run records the consumer releases, comments every item and clo
 	assert.match(again.stderr, /no open train/);
 });
 
+// The releases of the consumers: Lantern's workflow starts on the push of its tag, Handbook's is dispatched on it.
+
+function release(world: World, topology: string, run: boolean) {
+	return world.supervise(run ? ["release", "--run"] : ["release"], { topology });
+}
+
+function published(tag: string) {
+	return { tagName: tag, isPrerelease: false, isDraft: false, publishedAt: "2026-09-29T12:00:00Z", assets: [] };
+}
+
+/** What GitHub will do on the release of each consumer at v1.0.0: publish it, unless `outcome` says otherwise. */
+function consumerEffects(world: World, outcome: { lantern?: Record<string, unknown>; handbook?: Array<Record<string, unknown>> } = {}): void {
+	world.updateState((state) => {
+		state.tagEffects = { ...(state.tagEffects ?? {}), [`${basename(world.dir("lantern"))} v1.0.0`]: [{ repository: REPOSITORY.lantern, workflow: "release.yml", createRelease: published("v1.0.0"), ...outcome.lantern }] };
+		state.workflowEffects[`${REPOSITORY["obsidian-handbook"]} release.yml`] = (outcome.handbook ?? [{}]).map((effect) => ({ createRelease: published("v1.0.0"), ...effect }));
+	});
+}
+
+function remoteTag(world: World, id: string, tag: string): string {
+	return git(world.dir(id), "ls-remote", "origin", `refs/tags/${tag}`).split(/\s+/)[0];
+}
+
+/** The tag pushes the supervisor made, as git received them. */
+function tagPushes(world: World): string[] {
+	return readFileSync(world.gitLog, "utf8").split("\n").filter((line) => line.startsWith("push") && line.includes("origin/main:refs/tags/v1.0.0"));
+}
+
+function handbookDispatches(world: World): string[][] {
+	return dispatches(world, "release.yml").filter((args) => args.includes(REPOSITORY["obsidian-handbook"]));
+}
+
+scenario("release shows the next step and runs nothing; release --run publishes Lantern then Handbook, records both, and releases nothing twice", (world) => {
+	const { topology, result } = pbtaOnFinal(world);
+	ok(result, "publish --run");
+	consumerEffects(world);
+	const dry = ok(release(world, topology, false), "release");
+	assert.ok(dry.includes("Next step for lantern: tag origin/main as v1.0.0"), dry);
+	assert.ok(dry.includes("$ git push origin origin/main:refs/tags/v1.0.0"), dry);
+	assert.match(dry, /Nothing was run\. Run it with: pnpm supervise release --run/);
+	assert.deepEqual(tagPushes(world), []);
+	assert.equal(remoteTag(world, "lantern", "v1.0.0"), "");
+	assert.equal(readRecord(world).consumerReleases, undefined);
+
+	const output = ok(release(world, topology, true), "release --run");
+	assert.ok(output.indexOf("lantern: v1.0.0 already released") < output.indexOf("Next step for obsidian-handbook: tag origin/main as v1.0.0"), output);
+	assert.ok(output.indexOf("lantern: v1.0.0 already released") > 0, output);
+	assert.match(output, /Every consumer of train couleur-otherscape is released\. Next: pnpm supervise close --run/);
+	const repository = REPOSITORY["obsidian-handbook"];
+	assert.deepEqual(handbookDispatches(world), [["workflow", "run", "release.yml", "-R", repository, "--ref", "v1.0.0"]]);
+	assert.equal(tagPushes(world).length, 2);
+	assert.deepEqual(readRecord(world).consumerReleases, [
+		{ repo: "lantern", version: "1.0.0", tag: "v1.0.0", sha: originMain(world, "lantern"), url: `https://github.com/${REPOSITORY.lantern}/releases/tag/v1.0.0` },
+		{ repo: "obsidian-handbook", version: "1.0.0", tag: "v1.0.0", sha: originMain(world, "obsidian-handbook"), url: `https://github.com/${repository}/releases/tag/v1.0.0` },
+	]);
+	assert.equal(remoteTag(world, "lantern", "v1.0.0"), originMain(world, "lantern"));
+
+	const again = ok(release(world, topology, true), "release --run again");
+	assert.match(again, /lantern: v1\.0\.0 already released/);
+	assert.match(again, /obsidian-handbook: v1\.0\.0 already released/);
+	assert.equal(tagPushes(world).length, 2, "a tag was pushed again");
+	assert.equal(handbookDispatches(world).length, 1, "a release was dispatched again");
+	ok(close(world, topology, true), "close --run");
+	assert.equal(readRecord(world).status, "closed");
+});
+
+scenario("a consumer whose version is already released makes the train not presentable, by repository and version", (world) => {
+	const topology = presentedTrain(world, ["schema-pbta"], {
+		present: false,
+		before: () => world.updateState((state) => {
+			state.releases[REPOSITORY.lantern] = [published("v1.0.0")];
+		}),
+	});
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stdout, /\*\*Not presentable\*\*/);
+	assert.match(result.stdout, /lantern: package\.json is at 1\.0\.0 and the release v1\.0\.0 of RebelliousSmile\/lantern already exists; prepare a new version with the change/);
+	assert.doesNotMatch(result.stdout, /obsidian-handbook: package\.json is at/);
+});
+
+scenario("release refuses a train that did not converge and sends back to converge", (world) => {
+	const { topology, result } = pbtaOnFinal(world, { convergence: { lantern: [FAIL] } });
+	assert.equal(result.status, 1, result.stdout);
+	consumerEffects(world);
+	const refused = release(world, topology, true);
+	assert.equal(refused.status, 1, refused.stdout);
+	assert.match(refused.stderr, /release: the convergence of train "couleur-otherscape" failed; run supervise converge first; nothing was released/);
+	assert.deepEqual(tagPushes(world), []);
+});
+
+scenario("a red release stops release --run with the URL of its run, before the next consumer, and its tag is never pushed twice", (world) => {
+	const { topology, result } = pbtaOnFinal(world);
+	ok(result, "publish --run");
+	consumerEffects(world, { lantern: { conclusion: "failure" } });
+	const red = release(world, topology, true);
+	assert.equal(red.status, 1, red.stdout);
+	assert.match(red.stderr, /release: lantern: run https:\/\/github\.com\/RebelliousSmile\/lantern\/actions\/runs\/\d+ concluded failure/);
+	assert.equal(remoteTag(world, "obsidian-handbook", "v1.0.0"), "", "Handbook was tagged after a red Lantern release");
+	assert.deepEqual(handbookDispatches(world), []);
+	assert.equal(readRecord(world).consumerReleases, undefined);
+	const again = release(world, topology, true);
+	assert.equal(again.status, 1, again.stdout);
+	assert.match(again.stderr, /release: lantern: run https:\/\/github\.com\/RebelliousSmile\/lantern\/actions\/runs\/\d+ concluded failure; release\.yml starts on the push of v1\.0\.0 and a tag is not pushed twice/);
+	assert.equal(tagPushes(world).length, 1, "the tag of Lantern was pushed again");
+});
+
+scenario("a tag left without release nor run: Lantern is named and not tagged again, Handbook is dispatched on its tag", (world) => {
+	const { topology, result } = pbtaOnFinal(world);
+	ok(result, "publish --run");
+	for (const id of ["lantern", "obsidian-handbook"]) {
+		git(world.dir(id), "tag", "v1.0.0", originMain(world, id));
+		git(world.dir(id), "push", "--quiet", "origin", "v1.0.0");
+	}
+	consumerEffects(world);
+	const named = release(world, topology, true);
+	assert.equal(named.status, 1, named.stdout);
+	assert.match(named.stderr, /release: lantern: the tag v1\.0\.0 is on origin with no release and no release\.yml run; release\.yml starts on the push of the tag and a tag is not pushed twice: delete the tag by hand/);
+	assert.deepEqual(handbookDispatches(world), []);
+
+	world.updateState((state) => {
+		state.releases[REPOSITORY.lantern] = [published("v1.0.0")];
+	});
+	const output = ok(release(world, topology, true), "release --run");
+	assert.match(output, /lantern: v1\.0\.0 already released/);
+	assert.ok(output.includes(`$ gh workflow run release.yml -R ${REPOSITORY["obsidian-handbook"]} --ref v1.0.0`), output);
+	assert.equal(handbookDispatches(world).length, 1);
+	assert.deepEqual(tagPushes(world), [], "the supervisor pushed a tag that was already on origin");
+	assert.deepEqual(readRecord(world).consumerReleases.map((entry: any) => entry.repo), ["lantern", "obsidian-handbook"]);
+});
+
+scenario("after a partial release the train is presented again: the release it recorded is not a refusal, and the red one is dispatched again", (world) => {
+	const { topology, result } = pbtaOnFinal(world);
+	ok(result, "publish --run");
+	consumerEffects(world, { handbook: [{ conclusion: "failure" }, {}] });
+	const red = release(world, topology, true);
+	assert.equal(red.status, 1, red.stdout);
+	assert.match(red.stderr, /release: obsidian-handbook: run https:\/\/github\.com\/RebelliousSmile\/obsidian-handbook\/actions\/runs\/\d+ concluded failure/);
+	assert.deepEqual(readRecord(world).consumerReleases.map((entry: any) => entry.repo), ["lantern"]);
+
+	const presented = ok(world.supervise(["present"], { topology }), "present after a partial release");
+	assert.match(presented, /\*\*Presentable\.\*\*/);
+	ok(release(world, topology, true), "release --run after the red run");
+	assert.equal(handbookDispatches(world).length, 2);
+	assert.equal(tagPushes(world).length, 2, "a tag was pushed again");
+	assert.deepEqual(readRecord(world).consumerReleases.map((entry: any) => entry.repo), ["lantern", "obsidian-handbook"]);
+});
+
 scenario("publish --run completes the schema-in-the-mist manifest, lands its convergence file and validates it", (world) => {
-	const topology = approvedTrain(world, ["schema-in-the-mist"]);
+	const topology = presentedTrain(world, ["schema-in-the-mist"]);
 	const { result } = driveMist(world, bytesOf("schema-in-the-mist"), topology);
 	ok(result, "publish --run");
 	const mist = world.dir("schema-in-the-mist");
@@ -1061,7 +1314,7 @@ scenario("publish --run completes the schema-in-the-mist manifest, lands its con
 		["run", "release-train:validate", "--", "--require-complete", `v${NEXT}`],
 	]);
 	assert.equal(readRecord(world).convergence.status, "passed");
-	ok(world.supervise(["approve", "--verify"]), "the provider's train files keep the approval");
+	assert.match(ok(publish(world, false), "the provider's train files keep the presentation"), /Every provider of train couleur-otherscape is published/);
 });
 
 scenario("the convergence step of each provider is pure: it lands what is missing and leaves a person only what it cannot know", () => {
@@ -1286,9 +1539,159 @@ scenario("the supervisor neither runs nor lands a change to its own code", (worl
 	world.write("obsidian-handbook", { "supervisor/trains/draft.json": "{}\n", "src/pj.ts": "export {};\n" });
 	ok(world.supervise(["commit", "obsidian-handbook", "--only", "--message", "feat(adrenaline-pj): print the Malus column"], { topology }), "commit --only");
 
+	// What proves it is part of it: a harness edited in place cannot vouch for itself.
+	world.write("obsidian-handbook", { "tools/supervisor.harness.mts": "export {};\n" });
+	assert.match(refused(["commit", "obsidian-handbook", "--only", "--message", "test: relax the scenarios"], "commit --only, harness"), /tools\/supervisor\.harness\.mts \(not committed\)/);
+
 	// The script that starts it is part of it.
 	world.write("obsidian-handbook", { "package.json": `${JSON.stringify({ scripts: { supervise: "node elsewhere.mjs" } })}\n` });
 	assert.match(refused(["commit", "obsidian-handbook", "--only", "--message", "chore: move the entry point"], "commit --only, script"), /package\.json: the "supervise" script/);
+});
+
+// The whole cycle in one command.
+
+const SHIP_REPOS = ["schema-adrenaline", "obsidian-handbook", "lantern"];
+const SHIP_MESSAGE = "feat(colours): follow the paper sheet";
+const SHIP = ["--message", SHIP_MESSAGE, "--run"];
+
+/** A train of schema-adrenaline and both consumers, every item closed, with one more change nobody committed in each. */
+function shippable(world: World, validations: Record<string, string[][]> = {}): string {
+	presentedTrain(world, ["schema-adrenaline"], { present: false });
+	for (const id of SHIP_REPOS) world.write(id, { "src/late.ts": "export const late = true;\n" });
+	return testTopology(world, validations, {}, "ship-topology.json");
+}
+
+/** What GitHub will do from the candidate of schema-adrenaline to the releases of both consumers. */
+function shipEffects(world: World, trainRuns: Array<Record<string, unknown>> = [{}]): void {
+	const adrenaline = REPOSITORY["schema-adrenaline"];
+	world.updateState((state) => {
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
+		state.workflowEffects[`${adrenaline} release-train.yml`] = trainRuns;
+		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ repository: adrenaline, workflow: "release.yml", createRelease: world.release("schema-adrenaline", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-adrenaline")) }];
+	});
+	consumerEffects(world);
+}
+
+function ship(world: World, topology: string, args: string[]) {
+	const result = world.supervise(["ship", ...args], { topology });
+	return { ...result, text: `${result.stdout}${result.stderr}` };
+}
+
+function shipHeads(world: World): Record<string, string> {
+	return Object.fromEntries(SHIP_REPOS.map((id) => [id, originMain(world, id)]));
+}
+
+/** How many commits of origin/main carry the shipped message. */
+function shipped(world: World, id: string): number {
+	return git(world.dir(id), "log", "--format=%s", "origin/main").split("\n").filter((subject) => subject === SHIP_MESSAGE).length;
+}
+
+scenario("ship --run takes an uncommitted change to a closed train in one command, without reading a line", (world) => {
+	const topology = shippable(world);
+	shipEffects(world);
+	const result = ship(world, topology, SHIP);
+	ok(result, "ship --run");
+	for (const id of SHIP_REPOS) assert.equal(shipped(world, id), 1, `${id} was not committed and pushed:\n${result.text}`);
+	for (const id of ["schema-adrenaline", "lantern"]) assert.equal(git(world.dir(id), "status", "--porcelain"), "", `${id} is left dirty`);
+	const record = readRecord(world);
+	assert.equal(record.status, "closed");
+	assert.equal(record.presentation.presentable, true);
+	assert.equal(record.approval, undefined);
+	assert.equal(record.publication["schema-adrenaline"].final.tag, `v${NEXT}`);
+	assert.equal(record.convergence.status, "passed");
+	assert.deepEqual(record.consumerReleases.map((entry: any) => entry.repo), ["lantern", "obsidian-handbook"]);
+	assert.equal(coordinationIssue(world).state, "CLOSED");
+	const order = ["Commit and push for train couleur-otherscape", "**Presentable.**", "Every provider of train couleur-otherscape is published", "Every consumer of train couleur-otherscape is released"];
+	const positions = order.map((mark) => result.text.indexOf(mark));
+	assert.ok(positions.every((position) => position >= 0), result.text);
+	assert.doesNotMatch(readFileSync(resolve(HANDBOOK, "tools/supervisor/ship.mjs"), "utf8"), /stdin|readline/);
+});
+
+scenario("ship without --run shows every step of the cycle and commits, presents and dispatches nothing", (world) => {
+	const topology = shippable(world);
+	shipEffects(world);
+	const before = shipHeads(world);
+	const dry = ok(ship(world, topology, ["--message", SHIP_MESSAGE]), "ship");
+	for (const id of SHIP_REPOS) assert.ok(dry.includes(`${id}:\n  commit "${SHIP_MESSAGE}"`), dry);
+	assert.match(dry, /present: validate every concerned repository on the commits above/);
+	assert.ok(dry.includes("then: publish --run\nthen: converge --run\nthen: release --run\nthen: close --run"), dry);
+	assert.ok(dry.includes(`Nothing was run. Run it with: pnpm supervise ship --message ${JSON.stringify(SHIP_MESSAGE)} --run`), dry);
+	assert.deepEqual(shipHeads(world), before, "ship without --run pushed");
+	for (const id of ["schema-adrenaline", "lantern"]) assert.equal(git(world.dir(id), "status", "--porcelain"), "?? src/late.ts", `${id} was committed`);
+	assert.equal(readRecord(world).presentation, undefined);
+	assert.deepEqual(dispatches(world), []);
+
+	const refused = ship(world, topology, ["--message", " ", "--run"]);
+	assert.equal(refused.status, 2, refused.text);
+	assert.match(refused.stderr, /ship: --message is empty/);
+	const silent = ship(world, topology, ["--run"]);
+	assert.equal(silent.status, 1, silent.text);
+	assert.match(silent.stderr, /schema-adrenaline: uncommitted changes but no message/);
+	assert.deepEqual(shipHeads(world), before, "a refused ship pushed");
+});
+
+scenario("a red validation stops ship --run after present: the commits are landed, nothing is published", (world) => {
+	const broken = nodeCommand("console.error('contract broken'); process.exit(3)");
+	const topology = shippable(world, { lantern: [broken] });
+	shipEffects(world);
+	const result = ship(world, topology, SHIP);
+	assert.equal(result.status, 1, result.text);
+	assert.ok(result.stdout.includes(`lantern: ${broken.join(" ")} exited 3`), result.stdout);
+	assert.match(result.stderr, /ship: train "couleur-otherscape" is not presentable; nothing was published/);
+	for (const id of SHIP_REPOS) assert.equal(shipped(world, id), 1, `${id} was not committed before the presentation`);
+	assert.equal(readRecord(world).presentation.presentable, false);
+	assert.equal(readRecord(world).publication["schema-adrenaline"], undefined);
+	assert.deepEqual(dispatches(world), []);
+	assert.deepEqual(tagPushes(world), []);
+});
+
+scenario("ship --run again after an interrupted publication resumes at the missing step, without a second commit or presentation", (world) => {
+	const topology = shippable(world);
+	shipEffects(world, [{ conclusion: "failure" }, {}]);
+	const red = ship(world, topology, SHIP);
+	assert.equal(red.status, 1, red.text);
+	assert.match(red.stderr, /release-train\.yml run \S+ concluded failure/);
+	const presentedAt = readRecord(world).presentation.presentedAt;
+	assert.equal(readRecord(world).status, "open");
+
+	const again = ship(world, topology, SHIP);
+	ok(again, "ship --run again");
+	assert.doesNotMatch(again.text, /Commit and push/);
+	assert.doesNotMatch(again.text, /Presented at/);
+	for (const id of SHIP_REPOS) assert.equal(shipped(world, id), 1, `${id} was committed again`);
+	const record = readRecord(world);
+	assert.equal(record.presentation.presentedAt, presentedAt, "the train was presented again");
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml", "release-train.yml", "release.yml"]);
+	assert.equal(record.status, "closed");
+});
+
+scenario("ship refuses to run on supervisor code nobody published, before any step", (world) => {
+	const topology = shippable(world);
+	shipEffects(world);
+	world.write("obsidian-handbook", { "tools/supervisor/ship.mjs": "export {};\n" });
+	const before = shipHeads(world);
+	const result = ship(world, topology, SHIP);
+	assert.equal(result.status, 1, result.text);
+	assert.match(result.stderr, /the supervisor's own code differs from origin\/main/);
+	assert.match(result.stderr, /tools\/supervisor\/ship\.mjs \(not committed\)/);
+	assert.deepEqual(shipHeads(world), before, "ship pushed beside unpublished supervisor code");
+	assert.equal(readRecord(world).presentation, undefined);
+	assert.deepEqual(dispatches(world), []);
+});
+
+scenario("ship refuses a repository engaged by another open train, by name, and commits nothing", (world) => {
+	const topology = shippable(world);
+	shipEffects(world);
+	const record = readRecord(world);
+	const lantern = record.items.find((item: any) => item.repo === "lantern");
+	writeFileSync(trainPath(world, "autre-train"), `${JSON.stringify({ ...record, id: "autre-train", title: "Another change", items: [{ ...lantern, dependsOn: [] }] }, null, "\t")}\n`);
+	const before = shipHeads(world);
+	const result = ship(world, topology, ["--train", TRAIN_ID, ...SHIP]);
+	assert.equal(result.status, 1, result.text);
+	assert.match(result.stderr, /ship: lantern is already engaged by the open train "autre-train" \(Another change\); finish or close it first; nothing was committed/);
+	assert.deepEqual(shipHeads(world), before, "ship pushed a repository of another train");
+	assert.equal(shipped(world, "schema-adrenaline"), 0);
+	assert.deepEqual(dispatches(world), []);
 });
 
 function main(): void {

@@ -1,11 +1,11 @@
 /**
- * What an approval is bound to, and its fingerprint.
+ * What a presentation binds, and its fingerprint.
  *
  * The concerned repositories are the train's items plus every consumer of a
  * provider in the train: those are the ones that will receive the adoption
  * commits. The fingerprint is a sha256 over a canonical form of the train id,
- * each repository's SHA, the train files it admits after the approval and the
- * publications the approval covers. Same inputs, same fingerprint.
+ * each repository's SHA, the train files it admits after the presentation and
+ * the publications the presentation covers. Same inputs, same fingerprint.
  */
 import { createHash } from "node:crypto";
 import { repoById } from "./topology.mjs";
@@ -22,7 +22,7 @@ export function concernedRepos(topology, train) {
 		.sort((left, right) => rank[left.role] - rank[right.role]);
 }
 
-/** The publications an approval covers, in the order they will happen. */
+/** The publications a presentation covers, in the order they will happen. */
 export function announcedPublications(topology, train) {
 	const repos = concernedRepos(topology, train);
 	const providers = repos.filter((repo) => repo.role === "provider" && train.items.some((item) => item.repo === repo.id));

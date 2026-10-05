@@ -30,7 +30,7 @@ export function renderBlock(train, evaluation) {
 		lines.push(`| [${item.label}](${item.url}) ${item.title.replace(/\|/g, "\\|")} | ${state} | ${blockedBy} | ${item.expectedEvidence.join("<br>") || "-"} |`);
 	}
 	if (evaluation.items.length === 0) lines.push("| - | no item linked yet | - | - |");
-	lines.push("", `Status: **${train.status}**${train.approval ? `, approved at ${train.approval.approvedAt}` : ", not approved"}.`, END);
+	lines.push("", `Status: **${train.status}**${train.presentation ? `, presented at ${train.presentation.presentedAt}` : ", not presented"}.`, END);
 	return lines.join("\n");
 }
 

@@ -1,16 +1,16 @@
 /**
  * schema-pbta: the manifest path of `release.yml`, and nothing else.
  *
- * `mode=digest` packs the approved commit and hands back a receipt (an
+ * `mode=digest` packs the presented commit and hands back a receipt (an
  * artifact, no release); the candidate manifest is landed; `mode=stage`
  * publishes the candidate from that manifest; the consumers adopt it; the
  * train manifest is landed; `release-train.yml` proves it; `mode=promote`
  * publishes the final with the same bytes. `publish-candidate.yml` is not
  * used: its candidate is named by no manifest, so the train could not tie it
- * to the approval.
+ * to the presentation.
  *
  * The candidate is recorded in the train as soon as the receipt is read,
- * before its manifest is committed: the approval admits a commit only when
+ * before its manifest is committed: the presentation admits a commit only when
  * every release URL and SRI it introduces is already known to the train.
  */
 import {
@@ -35,7 +35,7 @@ function readReceipt(ctx, run) {
 	const receipt = runArtifactJson(repo, run.id, `${repo.package}-digest-${sha}`, "candidate-digest.json");
 	if (!receipt) throw new SupervisorError(`${repo.id}: digest run ${run.url} has no candidate-digest.json in artifact ${repo.package}-digest-${sha}`, 1);
 	if (receipt.providerCommit !== sha || receipt.version !== version) {
-		throw new SupervisorError(`${repo.id}: digest run ${run.url} describes ${receipt.providerCommit} at ${receipt.version}, the train approved ${sha} at ${version}`, 1);
+		throw new SupervisorError(`${repo.id}: digest run ${run.url} describes ${receipt.providerCommit} at ${receipt.version}, the train presented ${sha} at ${version}`, 1);
 	}
 	return receipt;
 }

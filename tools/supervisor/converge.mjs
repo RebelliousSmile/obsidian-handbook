@@ -15,7 +15,7 @@
  * the SHAs it was proved on; `close` accepts nothing less.
  */
 import { resolve } from "node:path";
-import { assertApproval } from "./approval.mjs";
+import { assertBinding } from "./binding.mjs";
 import { concernedRepos } from "./digest.mjs";
 import { consumerPin } from "./adapters/common.mjs";
 import * as pbta from "./adapters/pbta.mjs";
@@ -23,7 +23,8 @@ import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
 import { adoptArchive, landFiles, readyCheckout } from "./land.mjs";
 import { matrixUpdate } from "./matrix.mjs";
-import { checkCheckouts, runGuarded } from "./present.mjs";
+import { checkCheckouts } from "./present.mjs";
+import { runGuarded } from "./guarded.mjs";
 import { providerOrder, quote } from "./publish.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
@@ -92,20 +93,20 @@ export function convergeTrain(context, file, { run = false } = {}) {
 	const train = readTrain(file, topology);
 	if (train.status !== "open") throw new SupervisorError(`converge: train "${train.id}" is closed`);
 	const published = publishedProviders(topology, train, "converge");
-	assertApproval(root, topology, train);
+	assertBinding(root, topology, train);
 	const repos = concernedRepos(topology, train);
 	if (run) {
 		const gaps = pinGaps(root, topology, published);
 		if (gaps.length > 0) {
 			adoptFinals(root, topology, gaps);
-			assertApproval(root, topology, readTrain(file, topology));
+			assertBinding(root, topology, readTrain(file, topology));
 		}
 		for (const repo of repos) readyCheckout(repo, repoDir(root, repo), "converge");
 		const finals = published.map(({ repo, final }) => `${repo.package} ${final.tag}`).join(", ");
 		for (const repo of repos.filter((entry) => entry.matrix)) {
 			const content = matrixUpdate(root, topology, published, repo, "converge");
 			if (content === null) continue;
-			assertApproval(root, topology, readTrain(file, topology));
+			assertBinding(root, topology, readTrain(file, topology));
 			landFiles(root, topology, { repo: repo.id, files: { [repo.matrix]: content }, message: `chore(release-train): register ${finals}` }, "converge");
 		}
 	}
@@ -172,7 +173,7 @@ export function convergeTrain(context, file, { run = false } = {}) {
 						console.log("Nothing was run. Run it with: pnpm supervise converge --run");
 						return fail(`${repo.id}: ${step.description}: not run without --run`);
 					}
-					assertApproval(root, topology, readTrain(file, topology));
+					assertBinding(root, topology, readTrain(file, topology));
 					landFiles(root, topology, step, "converge");
 					continue;
 				}
@@ -201,6 +202,6 @@ export function convergeTrain(context, file, { run = false } = {}) {
 	console.log(`\nConvergence of train ${train.id}: ${passed ? "passed" : "failed"}`);
 	for (const check of checks) console.log(`- ${check.status === 0 ? "passed" : `failed (exit ${check.status})`}: ${check.repo}: ${check.command.join(" ")}`);
 	for (const note of notes) console.log(`- note: ${note}`);
-	console.log(passed ? "Next: release Lantern, then Handbook, then run supervise close." : "Fix what failed, then run supervise converge again.");
+	console.log(passed ? "Next: pnpm supervise release --run, then pnpm supervise close --run." : "Fix what failed, then run supervise converge again.");
 	return passed ? 0 : 1;
 }

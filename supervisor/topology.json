@@ -16,6 +16,10 @@
 				"release-train/",
 				"supervisor/trains/"
 			],
+			"release": {
+				"trigger": "dispatch",
+				"workflow": "release.yml"
+			},
 			"validations": [
 				[
 					"pnpm",
@@ -47,6 +51,10 @@
 				"release-train/"
 			],
 			"matrix": "release-train.matrix.json",
+			"release": {
+				"trigger": "tag",
+				"workflow": "release.yml"
+			},
 			"validations": [
 				[
 					"npm",

@@ -19,7 +19,6 @@ export const SUPERVISE = resolve(HANDBOOK, "tools/supervise.mjs");
 export const FAKE_GH = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-gh.mjs");
 export const FAKE_GIT = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-git.mjs");
 export const FAKE_NPM = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-npm.mjs");
-export const FAKE_TTY = resolve(HANDBOOK, "tools/fixtures/supervisor/fake-tty.cjs");
 export const TOPOLOGY = JSON.parse(readFileSync(resolve(HANDBOOK, "supervisor/topology.json"), "utf8"));
 export const PROVIDERS = TOPOLOGY.repos.filter((repo: any) => repo.role === "provider");
 

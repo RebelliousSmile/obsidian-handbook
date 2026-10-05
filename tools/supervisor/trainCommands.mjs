@@ -50,7 +50,6 @@ function openTrain(root, topology, { id, title }) {
 		status: "open",
 		coordinationIssue: { repo: coordinator.id, number: 1, url: issueUrl(coordinator, 1) },
 		items: [],
-		approval: null,
 		publication: {},
 	};
 	const body = replaceBlock(
@@ -66,7 +65,7 @@ function openTrain(root, topology, { id, title }) {
 }
 
 /** The open train, other than `train`, that already engages `repoId`, from the checkout or origin/main. */
-function concurrentTrain(root, topology, train, repoId) {
+export function concurrentTrain(root, topology, train, repoId) {
 	const candidates = [...localTrains(root, topology), ...originTrains(root, topology)];
 	return candidates.find((other) => other.id !== train.id
 		&& other.status === "open"

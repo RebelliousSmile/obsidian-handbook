@@ -29,7 +29,7 @@ Le [wiki complet](https://github.com/RebelliousSmile/obsidian-handbook/wiki) con
 
 ## Superviseur
 
-`pnpm supervise` coordonne une correction qui traverse Handbook, Lantern et les trois dépôts de schémas : il suit les issues liées, présente les preuves, enregistre l'accord, publie les fournisseurs pas à pas, vérifie la convergence des consommateurs et ferme les issues sur preuves. Il ne publie rien sans accord. Voir le [guide du superviseur](doc/supervisor.fr.md).
+`pnpm supervise` coordonne une correction qui traverse Handbook, Lantern et les trois dépôts de schémas : il suit les issues liées, présente les preuves, publie les fournisseurs pas à pas, vérifie la convergence des consommateurs, publie leurs releases et ferme les issues sur preuves. Une seule commande, `ship`, enchaîne le tout ; rien n'est publié sans une présentation verte. Voir le [guide du superviseur](doc/supervisor.fr.md).
 
 ## English
 
@@ -47,7 +47,7 @@ The [getting started guide](https://github.com/RebelliousSmile/obsidian-handbook
 
 ### Supervisor
 
-`pnpm supervise` coordinates a correction that spans Handbook, Lantern, and the three schema repositories: it tracks the linked issues, presents the evidence, records the approval, publishes the providers step by step, checks that the consumers converged, and closes the issues on evidence. It publishes nothing without an approval. See the [supervisor guide](doc/supervisor.en.md).
+`pnpm supervise` coordinates a correction that spans Handbook, Lantern, and the three schema repositories: it tracks the linked issues, presents the evidence, publishes the providers step by step, checks that the consumers converged, publishes their releases, and closes the issues on evidence. A single command, `ship`, chains it all; nothing is published without a green presentation. See the [supervisor guide](doc/supervisor.en.md).
 
 ## Migration des anciens packs / Legacy pack migration
 
