@@ -169,6 +169,27 @@ assert.match(printBlocks(workspaceDarkCss), /body\.brumes--legend-in-the-mist\.b
 const printScss = readFileSync("src/styles/_print.scss", "utf8");
 assert.match(printScss, /@media print[\s\S]*\.print \.markdown-preview-view \{[^}]*background-color: #fff !important;[^}]*background-image: none !important;/);
 assert.match(printScss, /--background-primary: #fff !important;/);
+// The white paper is keyed on the printer-friendly class, so turning the
+// setting off lifts it; the colour fidelity of the print pipeline stays.
+assert.match(printScss, /body\.brumes--printer-friendly \.print \.markdown-preview-view \{/);
+assert.match(printScss, /body\.brumes--printer-friendly \{[^}]*background: #fff !important;/);
+assert.doesNotMatch(printScss, /\n\t(html,\s*)?body \{[^}]*#fff/);
+
+// Printer-friendly off: the dark layer stays whole and print adds no light layer.
+const keptDarkCss = buildGameStyle(
+	"legend-in-the-mist",
+	{
+		base: { note: {}, workspace: {} },
+		light: { note: { "--kept-light": "light" }, workspace: {} },
+		dark: { note: { "--kept-dark": "dark" }, workspace: {} },
+	},
+	false,
+	["light", "dark"],
+	"obsidian",
+	false,
+);
+assert.match(outsideScreen(keptDarkCss), /--kept-dark: dark/, "the dark layer is kept for print");
+assert.equal(printBlocks(keptDarkCss), "", "no print-only light layer");
 
 // The colour-scheme class Handbook forces is not one Obsidian knows to swap
 // before printing: it gives way while a `.print` container sits in the body.
@@ -222,6 +243,12 @@ paperBody.children.length = 0;
 paperObservers[0].notify();
 assert.equal(paperBody.classList.contains("brumes--colour-dark"), true, "the screen does not get its dark scheme back");
 assert.equal(paperBody.classList.contains("brumes--colour-light"), false);
+// Printer-friendly off: a forced dark scheme stays dark under a `.print`.
+setBrumesColourSchemeClass("dark", paperDocument, false);
+paperBody.children.push(printContainer);
+paperObservers[paperObservers.length - 1].notify();
+assert.equal(paperBody.classList.contains("brumes--colour-dark"), true, "dark is kept when the export is not printer-friendly");
+paperBody.children.length = 0;
 clearBrumesModeClasses(paperDocument);
 assert.equal(paperObservers[0].connected, false);
 assert.equal(paperBody.classList.length, 0);

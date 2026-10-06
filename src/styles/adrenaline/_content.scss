@@ -120,12 +120,29 @@ $views: ":is(.markdown-source-view, .markdown-reading-view, .print .markdown-pre
 		background: var(--adrenaline-result-failure-bg, none);
 	}
 
+	// A rounded table with a dotted outer frame, as the booklet draws its
+	// encarts. Separate borders let the radius clip; the inner grid is drawn by
+	// the cells alone, on their trailing edges.
 	#{$views} table {
-		border: 1px solid var(--adrenaline-table-border, var(--background-modifier-border));
+		border: 2px dotted var(--adrenaline-table-frame, var(--adrenaline-table-border, var(--background-modifier-border)));
+		border-collapse: separate;
+		border-spacing: 0;
+		border-radius: var(--adrenaline-table-radius, 0.6rem);
+		overflow: hidden;
 	}
 
 	#{$views} :is(th, td) {
-		border-color: var(--adrenaline-table-border, var(--background-modifier-border));
+		border: 0 solid var(--adrenaline-table-border, var(--background-modifier-border));
+		border-inline-end-width: 1px;
+		border-block-end-width: 1px;
+	}
+
+	#{$views} :is(th, td):last-child {
+		border-inline-end-width: 0;
+	}
+
+	#{$views} tr:last-child > :is(th, td) {
+		border-block-end-width: 0;
 	}
 
 	// Live Preview draws tables in a CM6 widget whose own header rule outranks

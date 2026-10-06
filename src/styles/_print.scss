@@ -6,16 +6,29 @@
 	body {
 		print-color-adjust: exact;
 		-webkit-print-color-adjust: exact;
-		background: #fff !important;
 	}
 
 	// Paper is white, whichever pack, polarity or note background is active: a
 	// printed page never carries a full-bleed colour. Blocks keep their own
 	// surfaces; the dark layer of a pack is kept off paper by `buildGameStyle`.
-	.print .markdown-preview-view {
+	// The "Printer-friendly export" setting turns all of it off together.
+	html:has(body.brumes--printer-friendly),
+	body.brumes--printer-friendly {
+		background: #fff !important;
+	}
+
+	body.brumes--printer-friendly .print .markdown-preview-view {
 		--background-primary: #fff !important;
 		background-color: #fff !important;
 		background-image: none !important;
+	}
+
+	// Printer-friendly off: Obsidian prints under `theme-light`, so the ink it
+	// inherited is the light theme's. Re-read it from the game's own layer, which
+	// is defined on the export container itself.
+	body:not(.brumes--printer-friendly) .print .markdown-preview-view {
+		background-color: var(--background-primary);
+		color: var(--text-normal);
 	}
 }
 

@@ -8,6 +8,7 @@ import {
 	setBrumesColourSchemeClass,
 	setBrumesMissingAssetClasses,
 	setBrumesModeClass,
+	setBrumesPrinterFriendlyClass,
 	setBrumesVariantClass,
 	setBrumesWorkspaceThemeClass,
 } from "./features/modes/domModeClass";
@@ -359,6 +360,7 @@ export default class BrumesPlugin extends Plugin {
 			this.settings.features.workspaceTheme,
 			polarities,
 			this.settings.colourScheme,
+			this.settings.printerFriendly,
 		);
 
 		const calloutCss = buildCalloutStyleCss(this.settings.callouts);
@@ -457,7 +459,9 @@ export default class BrumesPlugin extends Plugin {
 				this.settings.colourScheme,
 			),
 			doc,
+			this.settings.printerFriendly,
 		);
+		setBrumesPrinterFriendlyClass(this.settings.printerFriendly, doc);
 		setBrumesMissingAssetClasses(
 			missingAssetRoles(this.assets, GAME_PACKS),
 			doc,

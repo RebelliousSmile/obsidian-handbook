@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.34.0] - 2026-10-06
+
+### Added
+
+- **Printer-friendly export** setting (on by default). Turn it off to export a note to PDF with its own background and colour scheme instead of white paper in light mode.
+
+### Changed
+
+- Adrenaline System: tables are drawn as a rounded encart with a dotted outer frame, and the action callout can take its own surface.
+
 ## [2.33.1] - 2026-10-05
 
 ### Fixed

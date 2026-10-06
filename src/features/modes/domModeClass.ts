@@ -60,6 +60,7 @@ export function setBrumesWorkspaceThemeClass(enabled: boolean, doc: Document) {
 interface PaperWatch {
 	observer: MutationObserver;
 	colourScheme: ColourScheme;
+	printerFriendly: boolean;
 }
 
 const paperWatches = new WeakMap<Document, PaperWatch>();
@@ -75,12 +76,19 @@ function isPrinting(body: HTMLElement): boolean {
 	return false;
 }
 
-function writeColourSchemeClass(colourScheme: ColourScheme, doc: Document) {
+function writeColourSchemeClass(
+	colourScheme: ColourScheme,
+	printerFriendly: boolean,
+	doc: Document,
+) {
 	const body = doc.body;
 	// Paper is light: Obsidian swaps `theme-dark` for `theme-light` before it
-	// prints, and a dark scheme forced by Handbook gives way the same way.
+	// prints, and a dark scheme forced by Handbook gives way the same way —
+	// unless the vault turned the printer-friendly export off.
 	const shown =
-		colourScheme === "dark" && isPrinting(body) ? "light" : colourScheme;
+		printerFriendly && colourScheme === "dark" && isPrinting(body)
+			? "light"
+			: colourScheme;
 	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);
 
 	if (shown === "light") {
@@ -94,23 +102,40 @@ function writeColourSchemeClass(colourScheme: ColourScheme, doc: Document) {
 export function setBrumesColourSchemeClass(
 	colourScheme: ColourScheme,
 	doc: Document,
+	printerFriendly = true,
 ) {
 	const watch = paperWatches.get(doc);
 
 	if (watch) {
 		watch.colourScheme = colourScheme;
+		watch.printerFriendly = printerFriendly;
 	} else if (typeof MutationObserver !== "undefined") {
 		const created: PaperWatch = {
 			colourScheme,
+			printerFriendly,
 			observer: new MutationObserver(() => {
-				writeColourSchemeClass(created.colourScheme, doc);
+				writeColourSchemeClass(
+					created.colourScheme,
+					created.printerFriendly,
+					doc,
+				);
 			}),
 		};
 		created.observer.observe(doc.body, { childList: true });
 		paperWatches.set(doc, created);
 	}
 
-	writeColourSchemeClass(colourScheme, doc);
+	writeColourSchemeClass(colourScheme, printerFriendly, doc);
+}
+
+export const PRINTER_FRIENDLY_CLASS = "brumes--printer-friendly";
+
+/** Flag the export as printer-friendly: `_print.scss` keys its white paper on it. */
+export function setBrumesPrinterFriendlyClass(
+	printerFriendly: boolean,
+	doc: Document,
+) {
+	doc.body.classList.toggle(PRINTER_FRIENDLY_CLASS, printerFriendly);
 }
 
 /**
@@ -150,7 +175,7 @@ export function clearBrumesModeClasses(doc: Document) {
 		body.classList.remove(cls);
 	}
 
-	body.classList.remove(WORKSPACE_THEME_CLASS);
+	body.classList.remove(WORKSPACE_THEME_CLASS, PRINTER_FRIENDLY_CLASS);
 	paperWatches.get(doc)?.observer.disconnect();
 	paperWatches.delete(doc);
 	body.classList.remove(COLOUR_SCHEME_LIGHT_CLASS, COLOUR_SCHEME_DARK_CLASS);

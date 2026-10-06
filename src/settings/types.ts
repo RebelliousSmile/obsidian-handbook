@@ -76,6 +76,8 @@ export interface BrumesSettings {
 	mode: BrumesMode;
 	gameVariants: Record<string, string>;
 	colourScheme: ColourScheme;
+	/** Paper is white and light: the PDF export drops the note's background and dark layer. */
+	printerFriendly: boolean;
 	logLevel: LogLevel;
 	lanternUrl: string;
 	features: BrumesFeatureSettings;
@@ -87,6 +89,7 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 	mode: DEFAULT_GAME_PACK_ID,
 	gameVariants: {},
 	colourScheme: "obsidian",
+	printerFriendly: true,
 	logLevel: "error",
 	lanternUrl: "https://lantern.ravenloft.fr",
 	features: {
@@ -238,6 +241,10 @@ export function normalizeSettings(
 		mode: normalizeMode(source.mode),
 		gameVariants: normalizeGameVariants(source.gameVariants),
 		colourScheme: normalizeColourScheme(source.colourScheme),
+		printerFriendly:
+			typeof source.printerFriendly === "boolean"
+				? source.printerFriendly
+				: DEFAULT_SETTINGS.printerFriendly,
 		logLevel: normalizeLogLevel(source.logLevel),
 		lanternUrl:
 			typeof source.lanternUrl === "string"

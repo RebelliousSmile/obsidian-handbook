@@ -91,6 +91,9 @@ export const fr: Translations = {
 	"The active game has both a light and a dark scheme. Follow Obsidian to keep them aligned, or choose one scheme for the plugin.":
 		"Le jeu actif propose un jeu de couleurs clair et un sombre. Suivez Obsidian pour les garder alignés, ou choisissez-en un pour le plugin.",
 	"Follow Obsidian": "Suivre Obsidian",
+	"Printer-friendly export": "Export adapté à l'impression",
+	"Export to PDF on white paper in light mode, without the note background. Turn off to keep the note as it looks on screen.":
+		"Exporte le PDF sur papier blanc, en mode clair, sans le fond de la note. Désactiver pour garder la note telle qu'elle apparaît à l'écran.",
 	"Light": "Clair",
 	"Dark": "Sombre",
 	"Theme features": "Fonctionnalités du thème",

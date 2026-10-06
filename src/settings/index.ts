@@ -277,6 +277,28 @@ export class BrumesSettingTab extends PluginSettingTab {
 		});
 	}
 
+	renderPrinterFriendly(section: SettingGroup) {
+		section.addSetting((setting) => {
+			setting
+				.setName(t("Printer-friendly export"))
+				.setDesc(t("Export to PDF on white paper in light mode, without the note background. Turn off to keep the note as it looks on screen."))
+				.addToggle((toggle) =>
+					toggle
+						.setValue(this.plugin.settings.printerFriendly)
+						.onChange((value) => {
+							this.runTask(
+								async () => {
+									this.plugin.settings.printerFriendly = value;
+									await this.plugin.saveSettings();
+								},
+								SETTINGS_SAVE_LOG_MESSAGE,
+								SETTINGS_SAVE_NOTICE,
+							);
+						}),
+				);
+		});
+	}
+
 	renderThemeContents(section: SettingGroup) {
 		const registration = resolveGameRegistration(this.plugin.settings.mode);
 		if (!findGamePack(registration.pack.id)) {

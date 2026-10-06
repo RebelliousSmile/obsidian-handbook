@@ -294,7 +294,7 @@
 	.callout:is([data-brumes-callout-style="adrenaline-action"], [data-callout="info"]) {
 		border: 1px solid var(--adrenaline-action-border, var(--adrenaline-callout-border));
 		border-radius: 0.6rem;
-		background: var(--adrenaline-card-surface);
+		background: var(--adrenaline-action-surface, var(--adrenaline-card-surface));
 		--booklet-bar-pad: 0.2em 0;
 		--booklet-bar: var(--adrenaline-action-title-bg);
 		--booklet-ink: var(--adrenaline-action-title-ink);

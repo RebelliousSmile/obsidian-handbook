@@ -149,7 +149,9 @@ export function buildGameStyle(
 	workspaceTheme: boolean,
 	polarities: GamePolarity[] = [],
 	colourScheme: ColourScheme = "obsidian",
+	printerFriendly = true,
 ): string {
+	const offPaper = printerFriendly ? offPaperDark : keepOnPaper;
 	const blocks = [
 		renderLayer(
 			noteSelector(mode),
@@ -199,9 +201,18 @@ export function buildGameStyle(
 				),
 			),
 		);
+		blocks.push(
+			offPaper(
+				colourScheme,
+				renderTokenBlock(
+					noteSelector(mode, colourScheme, colourScheme),
+					forcedInkTokens(colourScheme),
+				),
+			),
+		);
 	}
 
-	if (polarities.length > 1 && polarities.includes("light")) {
+	if (printerFriendly && polarities.length > 1 && polarities.includes("light")) {
 		// Paper is light whatever the screen shows: the light layer is written
 		// once more for print on the bare mode selector, after `base`, so it
 		// holds without counting on a theme or colour-scheme class.
@@ -221,6 +232,24 @@ export function buildGameStyle(
 	return blocks.filter((block) => block.length > 0).join("\n\n");
 }
 
+/**
+ * A forced polarity leaves `body` on the opposite Obsidian theme, and Obsidian
+ * resolves tokens derived from `--text-normal` there, on `body`, once: they
+ * keep the other theme's ink however the note redefines `--text-normal`. Derive
+ * them again where the note's ink is known, and give the editor the same ink.
+ */
+function forcedInkTokens(polarity: GamePolarity): GameStyleTokens {
+	return {
+		"color-scheme": polarity,
+		color: "var(--text-normal)",
+		"--text-color": "var(--text-normal)",
+		"--table-header-color": "var(--text-normal)",
+		"--caret-color": "var(--text-normal)",
+		"--checklist-done-color": "var(--text-muted)",
+		"--code-punctuation": "var(--text-muted)",
+	};
+}
+
 function mediaBlock(query: string, css: string): string {
 	return css ? `@media ${query} {\n${css}\n}` : "";
 }
@@ -229,8 +258,13 @@ function mediaBlock(query: string, css: string): string {
  * A dark layer never reaches paper: it is written for the screen only. A pack
  * with no light layer then prints its `base` on the white page of `_print.scss`.
  */
-function offPaper(polarity: GamePolarity, css: string): string {
+function offPaperDark(polarity: GamePolarity, css: string): string {
 	return polarity === "dark" ? mediaBlock("screen", css) : css;
+}
+
+/** Printer-friendly export off: every layer is written as is, paper included. */
+function keepOnPaper(_polarity: GamePolarity, css: string): string {
+	return css;
 }
 
 /**
