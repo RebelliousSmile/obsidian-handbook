@@ -27,15 +27,22 @@
 	display: none;
 }
 
-// A flowing note never draws a band block by block: in columns, the shadow of a
-// block in one column paints over the text of its neighbour in the next. The
-// host wears the band instead, and the blocks add none of their own.
+// The host wears the band only when every block of it lies in the section: the
+// blocks then add none of their own.
 @each $mode in dark, light, alternate {
-	.markdown-preview-section.handbook-mode-#{$mode} > .handbook-mode-#{$mode},
-.handbook-layout-flowing > .handbook-mode-#{$mode} {
+	.markdown-preview-section.handbook-mode-#{$mode} > .handbook-mode-#{$mode} {
 		// The section's own paper rule weighs more than this selector.
 		background-color: transparent !important;
 		background-image: none !important;
+		box-shadow: none;
+		clip-path: none;
+	}
+
+	// A block flowing in a column cannot spread its band sideways: the shadow
+	// of a block in one column paints over the text of its neighbour in the
+	// next. It keeps its own paper only, and what spans the columns around it
+	// keeps the full-bleed band, so the section ends where its source does.
+	.handbook-layout-flowing > .handbook-layout-flow.handbook-mode-#{$mode} {
 		box-shadow: none;
 		clip-path: none;
 	}

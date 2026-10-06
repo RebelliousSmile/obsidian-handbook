@@ -54,8 +54,6 @@ function markBlocks(
 	const blocks = Array.from(parent.children) as HTMLElement[];
 	// The mode shared by every block of the host, when there is one.
 	let shared: ModeSectionMode | null | undefined;
-	// The one mode the sectioned blocks agree on, whatever lies around them.
-	let sectioned: ModeSectionMode | null | undefined;
 	for (const block of blocks) {
 		const info = context.getSectionInfo(block);
 		if (info && !parsed) parsed = sourceSections(context, parent, info.text, offered);
@@ -70,15 +68,11 @@ function markBlocks(
 		const applied = section && isModeOffered(section.mode, offered) ? section.mode : null;
 		// A block without source lines says nothing about the host.
 		if (info) shared = shared === undefined || shared === applied ? applied : null;
-		if (applied) sectioned = sectioned === undefined || sectioned === applied ? applied : null;
 	}
-	// A note flowing in columns keeps all its sections in one host, and a band
-	// drawn block by block is cut by the columns: the host wears it instead.
-	// In columns the host is painted whole: what lies around the section in it
-	// cannot keep its own paper, the columns share one.
-	const flowing = parent.classList.contains("handbook-layout-flowing")
-		|| blocks.some((block) => block.classList.contains("handbook-layout-flow"));
-	const hosted = flowing ? sectioned ?? null : shared ?? null;
+	// The host wears the band only when all its blocks lie in the section. A
+	// note flowing in columns paints its sectioned blocks one by one: painting
+	// the host would carry the section past its closing marker.
+	const hosted = shared ?? null;
 	for (const mode of MODES) {
 		parent.classList.toggle(modeSectionClass(mode), hosted === mode);
 	}
