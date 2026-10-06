@@ -33,6 +33,9 @@ const npmCli = process.env.npm_execpath;
 //     many minutes, so a change elsewhere does not replay it.
 // A stamp is written only after a green run. CI and HANDBOOK_CHECK_FORCE=1 replay everything.
 const forced = process.env.CI === "true" || process.env.HANDBOOK_CHECK_FORCE === "1";
+// HANDBOOK_CHECK_SKIP="assert:a,assert:b" leaves named gates out, and says so. A workflow uses it
+// for a gate another job of the same pipeline already proves (the supervisor harness: its Windows job).
+const skipped = new Set((process.env.HANDBOOK_CHECK_SKIP ?? "").split(",").map((name) => name.trim()).filter(Boolean));
 const SUPERVISOR_SCRIPT = "assert:supervisor";
 const SUPERVISOR_INPUTS = [
 	/^tools\/supervisor\//,
@@ -142,6 +145,10 @@ if (quickStatus !== 0) process.exit(quickStatus);
 
 for (const command of commands) {
 	if (QUICK_GATES.includes(command)) continue;
+	if (skipped.has(command)) {
+		console.log(`\n> check: ${command} skipped by HANDBOOK_CHECK_SKIP`);
+		continue;
+	}
 	if (command === SUPERVISOR_SCRIPT && supervisorHash && stamps.supervisor === supervisorHash) {
 		console.log(`\n> check: ${command} skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)`);
 		continue;
@@ -158,7 +165,8 @@ for (const command of commands) {
 	}
 }
 
-if (fullHash) {
+// A run that left a gate out proves less than the content: it must not stand for a full green.
+if (fullHash && skipped.size === 0) {
 	stamps.full = fullHash;
 	writeStamps(stamps);
 }

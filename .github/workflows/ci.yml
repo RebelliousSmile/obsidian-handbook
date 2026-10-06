@@ -64,8 +64,12 @@ jobs:
               working-directory: handbook
               run: pnpm install --frozen-lockfile
 
+            # The supervisor harness alone takes about eight minutes. It is proven by the
+            # `supervisor-windows` job below, on the host the supervisor really runs on.
             - name: Check Handbook
               working-directory: handbook
+              env:
+                  HANDBOOK_CHECK_SKIP: assert:supervisor
               run: pnpm check
 
             - name: Check Adrenaline source witnesses

@@ -10,6 +10,7 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+            actions: read
         steps:
             - uses: actions/checkout@v4
               with:
@@ -57,8 +58,23 @@ jobs:
               working-directory: handbook
               run: pnpm install --frozen-lockfile
 
+            # CI already ran the whole check on this exact commit (the supervisor harness on its
+            # Windows job, plugin load included): when that run succeeded, replaying it proves nothing
+            # new. No green CI run for the commit: the check runs here, so a release never skips it.
+            - name: Find a green CI run on this commit
+              id: ci
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  green=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=${{ github.sha }}&status=success&per_page=1" --jq '.total_count')
+                  echo "green=${green:-0}" >> "$GITHUB_OUTPUT"
+
             - name: Check plugin
+              if: steps.ci.outputs.green == '0'
               working-directory: handbook
+              env:
+                  # The supervisor is not shipped, and its own CI job proves it.
+                  HANDBOOK_CHECK_SKIP: assert:supervisor
               run: pnpm check
 
             - name: Require final schema archives for release
