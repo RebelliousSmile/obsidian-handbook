@@ -1,0 +1,31 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "printer-friendly-export",
+	"title": "Printer-friendly export setting and Adrenaline print styles",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 78,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/78"
+	},
+	"items": [],
+	"publication": {},
+	"presentation": {
+		"presentedAt": "2026-10-06T11:50:56.681Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:bea0888f8cf7185501c9c0f01accc5f720b1109eb84b2d92ed7da9bbe3dbb0da",
+		"repos": [],
+		"trainFiles": {},
+		"publications": []
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-06T11:50:56.688Z",
+		"repos": [],
+		"checks": [],
+		"notes": []
+	},
+	"consumerReleases": [],
+	"closedAt": "2026-10-06T11:50:59.265Z"
+}
