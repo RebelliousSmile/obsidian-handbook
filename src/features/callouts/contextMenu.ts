@@ -2,10 +2,9 @@ import { Editor, EditorChange, Menu, Notice } from "obsidian";
 import { t } from "../../utils/i18n";
 import { addSubmenu } from "../../utils/contextSubMenu";
 import { findCalloutOpening, retargetCallouts, setCalloutType } from "./retarget";
-import { BrumesSettings } from "../../settings/types";
+import { CalloutSettingsView } from "./settingsContract";
 import { CalloutDefinition } from "./types";
-import { isCalloutAvailable } from "./types";
-import { findGameRegistration } from "../../games/registry";
+import { visibleCallouts } from "./visibility";
 
 export interface CalloutInsertion {
 	title: string;
@@ -16,20 +15,19 @@ export interface CalloutInsertion {
 
 /** Callouts visible from `activePackId`: scope "all", or that same pack — same filter as `buildAliasMap`. */
 function availableCallouts(
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ): Array<{ entry: CalloutDefinition; alias: string }> {
-	const required = findGameRegistration(activePackId)?.installation?.requires ?? [];
 	const available: Array<{ entry: CalloutDefinition; alias: string }> = [];
-	for (const entry of settings.callouts) {
+	for (const entry of visibleCallouts(settings.callouts, activePackId)) {
 		const alias = entry.aliases[0];
-		if (alias && isCalloutAvailable(entry, activePackId, required)) available.push({ entry, alias });
+		if (alias) available.push({ entry, alias });
 	}
 	return available;
 }
 
 export function getAvailableCalloutInsertions(
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ): CalloutInsertion[] {
 	return availableCallouts(settings, activePackId).map(({ entry, alias }) => ({
@@ -68,33 +66,23 @@ export function insertCallout(
 ) {
 	const cursor = editor.getCursor();
 
-	if (template === "title-body") {
-		const title = t("Title of the note");
-		const line1 = `> [!${alias.toUpperCase()}] ${title}`;
-		const line2 = `> ${t("Content of the note")}`;
-		editor.replaceRange(`${line1}\n${line2}`, cursor);
-
-		const line = cursor.line;
-		const startCh = line1.indexOf(title);
-		const endCh = startCh + title.length;
-		editor.setSelection({ line, ch: startCh }, { line, ch: endCh });
-		return;
-	}
-
-	const body = t("Text to read aloud");
-	const line1 = `> [!${alias.toUpperCase()}]`;
-	const line2 = `> ${body}`;
+	const hasTitle = template === "title-body";
+	const placeholder = hasTitle ? t("Title of the note") : t("Text to read aloud");
+	const head = `> [!${alias.toUpperCase()}]`;
+	const line1 = hasTitle ? `${head} ${placeholder}` : head;
+	const line2 = `> ${hasTitle ? t("Content of the note") : placeholder}`;
 	editor.replaceRange(`${line1}\n${line2}`, cursor);
 
-	const line = cursor.line + 1;
-	const startCh = line2.indexOf(body);
-	const endCh = startCh + body.length;
-	editor.setSelection({ line, ch: startCh }, { line, ch: endCh });
+	// The title sits on the first line, the read-aloud text on the second.
+	const line = hasTitle ? cursor.line : cursor.line + 1;
+	const source = hasTitle ? line1 : line2;
+	const startCh = source.indexOf(placeholder);
+	editor.setSelection({ line, ch: startCh }, { line, ch: startCh + placeholder.length });
 }
 
 /** Every alias the game declares, and the one of its first callout. */
 export function getDeclaredCalloutAliases(
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ): { declared: Set<string>; first: string | null } {
 	const declared = new Set<string>();
@@ -134,7 +122,7 @@ export function contributeCalloutTypeChange(
 /** Callouts the game does not declare fall back to its first one. Returns how many changed. */
 export function cleanUndeclaredCallouts(
 	editor: Editor,
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ): number {
 	const { declared, first } = getDeclaredCalloutAliases(settings, activePackId);
@@ -156,7 +144,7 @@ export function cleanUndeclaredCallouts(
 /** The cleanup, then a notice that says what it did. Shared by the command and the menu. */
 export function cleanUndeclaredCalloutsWithNotice(
 	editor: Editor,
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ): void {
 	const changed = cleanUndeclaredCallouts(editor, settings, activePackId);
@@ -169,7 +157,7 @@ export function cleanUndeclaredCalloutsWithNotice(
 export function contributeCalloutCleanup(
 	menu: Menu,
 	editor: Editor,
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ): number {
 	if (getDeclaredCalloutAliases(settings, activePackId).first === null) return 0;

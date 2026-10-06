@@ -1,6 +1,7 @@
 import { App, Modal, Notice, Setting, getIconIds } from "obsidian";
 import BrumesPlugin from "../BrumesPlugin";
 import { generateCalloutId } from "../features/callouts/migrateAliases";
+import { findAliasCollision } from "../features/callouts/collisions";
 import { sanitizeAliases } from "../features/callouts/sanitizeAlias";
 import {
 	CalloutColorRegime,
@@ -12,19 +13,9 @@ import {
 import { GAME_PACKS } from "../games/registry";
 import { log } from "../utils/logger";
 import { t } from "../utils/i18n";
+import { SETTINGS_SAVE_LOG_MESSAGE, settingsSaveNotice } from "./saveMessages";
 
-const SETTINGS_SAVE_LOG_MESSAGE = "Failed to save Handbook settings";
-const SETTINGS_SAVE_NOTICE = "Failed to save Handbook settings.";
-
-/**
- * Two scopes cover the same callout invocation when either is "all", or
- * they name the same game — narrower conflicts (different single games)
- * are allowed on purpose, so the same alias can mean different things in
- * two different game lines.
- */
-function scopesOverlap(a: CalloutScope, b: CalloutScope): boolean {
-	return a === "all" || b === "all" || a === b;
-}
+const DEFAULT_CALLOUT_COLOR = "#e2c6c5";
 
 /**
  * Screen B: the limited constructor for a user callout. Creates a new entry
@@ -66,7 +57,7 @@ export class CalloutsModal extends Modal {
 		this.icon = existing?.icon ?? "";
 		this.font = existing?.font ?? "text";
 		this.colorKind = existing?.color.kind ?? "theme";
-		this.colorHex = existing?.color.kind === "fixed" ? existing.color.hex : "#e2c6c5";
+		this.colorHex = existing?.color.kind === "fixed" ? existing.color.hex : DEFAULT_CALLOUT_COLOR;
 	}
 
 	onOpen(): void {
@@ -202,9 +193,7 @@ export class CalloutsModal extends Modal {
 		);
 
 		for (const alias of this.aliases) {
-			const conflict = others.find(
-				(c) => c.aliases.includes(alias) && scopesOverlap(c.scope, this.calloutScope),
-			);
+			const conflict = findAliasCollision(others, alias, this.calloutScope);
 			if (conflict) {
 				this.showError(
 						t("The alias \"{alias}\" is already used by \"{name}\" in a scope that overlaps this one.", { alias, name: conflict.name }),
@@ -243,23 +232,30 @@ export class CalloutsModal extends Modal {
 	private runSave(entry: CalloutDefinition): void {
 		void this.persist(entry).catch((error: unknown) => {
 			log.error(SETTINGS_SAVE_LOG_MESSAGE, error);
-			new Notice(t(SETTINGS_SAVE_NOTICE));
+			new Notice(settingsSaveNotice());
 		});
 	}
 
 	private async persist(entry: CalloutDefinition): Promise<void> {
-		const callouts = this.plugin.settings.callouts;
+		const previous = this.plugin.settings.callouts;
 		const index = this.existing
-			? callouts.findIndex((c) => c.id === this.existing?.id)
+			? previous.findIndex((c) => c.id === this.existing?.id)
 			: -1;
+		const next = [...previous];
 
 		if (index >= 0) {
-			callouts[index] = entry;
+			next[index] = entry;
 		} else {
-			callouts.push(entry);
+			next.push(entry);
 		}
 
-		await this.plugin.saveSettings();
+		this.plugin.settings.callouts = next;
+		try {
+			await this.plugin.saveSettings();
+		} catch (error) {
+			this.plugin.settings.callouts = previous;
+			throw error;
+		}
 		this.onSaved();
 		this.close();
 	}

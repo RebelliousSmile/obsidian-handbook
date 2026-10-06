@@ -6,7 +6,7 @@ const unwrapTranslations = (text) =>
 const readFileSync = (path, encoding) => unwrapTranslations(readSource(path, encoding));
 const frenchDictionary = readSource("src/locales/fr.ts", "utf8");
 
-const source = readFileSync("src/settings/index.ts", "utf8");
+const tab = readFileSync("src/settings/index.ts", "utf8");
 const generalSettingsModule = readFileSync("src/settings/generalSettings.ts", "utf8");
 const schemaSourceSettingsModule = readFileSync("src/settings/schemaSourceSettings.ts", "utf8");
 const gameSettingsModule = readFileSync("src/settings/gameSettings.ts", "utf8");
@@ -14,31 +14,32 @@ const calloutSettingsModule = readFileSync("src/settings/calloutSettings.ts", "u
 const sourceModal = readFileSync("src/settings/sourceModal.ts", "utf8");
 const themeContentsModal = readFileSync("src/settings/themeContentsModal.ts", "utf8");
 const plugin = readFileSync("src/BrumesPlugin.ts", "utf8");
+// The tab only composes; each control lives in its domain module, so the content checks read them all.
+const source = [tab, generalSettingsModule, schemaSourceSettingsModule, gameSettingsModule, calloutSettingsModule].join("\n");
 const richDescriptions = [
 	"createOverrideDescription",
-	"createIcebergDescription",
-	"createMountainDescription",
+	"createCanvasSnippetDescription",
 ];
 
 const failures = [];
 
-if (!source.includes("renderGeneralSettingsDomain(this, generalSection)") || !generalSettingsModule.includes("renderer.renderGameVariant(section)")) {
+if (!tab.includes("renderGeneralSettings(this, generalSection)") || !generalSettingsModule.includes("renderGameVariant(host, section)")) {
 	failures.push("The general settings composition does not render the conditional game variant selector.");
 }
 
-if (!source.includes("renderSchemaSourceSettingsDomain(this, sourcesSection)") || !schemaSourceSettingsModule.includes("renderer.renderSchemaSources(section)")) {
+if (!tab.includes("renderSchemaSources(this, sourcesSection)") || !schemaSourceSettingsModule.includes("export function renderSchemaSources(")) {
 	failures.push("Schema-source controls are not composed from their own settings domain.");
 }
 
-if (source.indexOf("this.renderActiveSchemaStatus(versionsSection)") < 0 || source.indexOf("this.renderActiveSchemaStatus(versionsSection)") > source.indexOf('setName("Game mode")')) {
+if (tab.indexOf("renderActiveSchemaStatus(this, versionsSection)") < 0 || tab.indexOf("renderActiveSchemaStatus(this, versionsSection)") > tab.indexOf("renderGameMode(this, generalSection)")) {
 	failures.push("Installed versions must appear before game choices.");
 }
 
-if (!source.includes("renderGameSettingsDomain({") || !gameSettingsModule.includes("renderer.hasGamePack")) {
+if (!tab.includes("renderGameSettings(this, containerEl)") || !gameSettingsModule.includes("findGamePack(")) {
 	failures.push("Game-only settings are not composed through their visibility-gated domain.");
 }
 
-if (!source.includes("renderCalloutSettingsDomain(this, calloutsSection)") || !calloutSettingsModule.includes("renderer.renderCalloutsSection(section)")) {
+if (!tab.includes("renderCalloutsSection(this, calloutsSection)") || !calloutSettingsModule.includes("export function renderCalloutsSection(")) {
 	failures.push("Callout settings are not composed from their own domain.");
 }
 
@@ -62,16 +63,16 @@ if (!plugin.includes("removeSchemaSourceStorage(this, source.id)") || !plugin.in
 	failures.push("Removing a schema source does not delete its storage and rebuild the live game registry.");
 }
 
-const generalSettings = source.slice(source.indexOf("\trenderGeneralSettings("), source.indexOf("\trenderCityOfMistSettings("));
-const legendSettings = source.slice(source.indexOf("\trenderLegendInTheMistSettings("), source.indexOf("\trenderOtherscapeSettings("));
-if (!generalSettings.includes('setName("Roller tables")') || !generalSettings.includes("this.diceRollerEnabled()")) {
+const generalSettings = generalSettingsModule;
+const legendSettings = gameSettingsModule;
+if (!generalSettings.includes('setName("Roller tables")') || !generalSettings.includes("isDiceRollerEnabled(host)")) {
 	failures.push("Generic Roller tables are not rendered from general settings with the Dice Roller gate.");
 }
 if (legendSettings.includes('setName("Roller tables")')) {
 	failures.push("Generic Roller tables remain incorrectly scoped to Legend in the Mist settings.");
 }
 
-if (!source.includes('setButtonText("Check for update")') || !source.includes("this.plugin.saveSchemaSource(source, source.repository)")) {
+if (!source.includes('setButtonText("Check for update")') || !source.includes("host.plugin.saveSchemaSource(source, source.repository)")) {
 	failures.push("Each schema source needs one direct update action.");
 }
 
@@ -92,7 +93,7 @@ if (!source.includes('.setName("Universe")') || !frenchDictionary.includes('"Uni
 }
 
 for (const game of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
-	if (!gameSettingsModule.includes(`mode === "${game}" && renderer.hasGamePack("${game}")`)) {
+	if (!gameSettingsModule.includes(`mode === "${game}" && findGamePack("${game}")`)) {
 		failures.push(`The ${game} settings section remains visible while another game is active.`);
 	}
 }
@@ -117,11 +118,11 @@ if (source.includes('setName("Tags, statuses and limits")') || source.includes("
 	failures.push("The always-on tag syntax is still exposed as an optional setting.");
 }
 
-if (!generalSettingsModule.includes("renderer.renderPersonalOverrides(section)")) {
+if (!generalSettingsModule.includes("renderPersonalOverrides(host, section)")) {
 	failures.push("Removing the migration notice also hid the personal overrides control.");
 }
 
-if (!themeContentsModal.includes("isCalloutAvailable(callout, gameId, requiredCapabilities)")) {
+if (!themeContentsModal.includes("visibleCallouts(callouts, gameId, requiredCapabilities)")) {
 	failures.push("The theme inventory does not resolve callouts from the active manifest capabilities.");
 }
 
@@ -133,7 +134,7 @@ if (!themeContentsModal.includes("handouts: blocks.filter((block) => block.hando
 	failures.push("The theme inventory does not derive handouts from declared blocks.");
 }
 
-if (!source.includes("isCalloutAvailable(entry, this.plugin.settings.mode, required)")) {
+if (!source.includes("visibleCallouts(host.plugin.settings.callouts, host.plugin.settings.mode)")) {
 	failures.push("Callouts unavailable to the active manifest remain visible in settings.");
 }
 
@@ -143,11 +144,11 @@ if (source.includes("renderAdrenalineSettings") || source.includes("addAdrenalin
 
 for (const factory of richDescriptions) {
 	const unsafe = new RegExp(
-		`\\.setDesc\\(\\s*this\\.${factory}\\(\\)\\s*\\)`,
+		`\\.setDesc\\(\\s*${factory}\\([^)]*\\)\\s*\\)`,
 		"m",
 	);
 	const directAppend = new RegExp(
-		`setting\\.descEl\\.append\\(\\s*this\\.${factory}\\(\\)\\s*\\)`,
+		`setting\\.descEl\\.append\\(\\s*${factory}\\([^)]*\\)\\s*\\)`,
 		"m",
 	);
 

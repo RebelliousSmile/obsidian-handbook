@@ -3,7 +3,7 @@ import { t } from "../utils/i18n";
 import { BRUMES_BLOCKS } from "../features/blocks/registry";
 import type { BrumesBlock } from "../features/blocks/types";
 import type { CalloutDefinition } from "../features/callouts/types";
-import { isCalloutAvailable } from "../features/callouts/types";
+import { visibleCallouts } from "../features/callouts/visibility";
 import type { GameRegistration } from "../games/variants";
 
 export interface ThemeContents {
@@ -18,18 +18,17 @@ export function resolveThemeContents(
 	callouts: CalloutDefinition[],
 ): ThemeContents {
 	const gameId = registration.pack.id;
+	const requiredCapabilities = registration.installation?.requires ?? [];
 	const requiredBlocks = new Set(
-		(registration.installation?.requires ?? [])
+		requiredCapabilities
 			.filter((capability) => capability.startsWith("block:"))
 			.map((capability) => capability.slice("block:".length)),
 	);
-	const requiredCapabilities = registration.installation?.requires ?? [];
 
 	const blocks = BRUMES_BLOCKS.filter((block) => requiredBlocks.has(block.id));
 	return {
 		handouts: blocks.filter((block) => block.handout),
-		callouts: callouts.filter((callout) =>
-			isCalloutAvailable(callout, gameId, requiredCapabilities)),
+		callouts: visibleCallouts(callouts, gameId, requiredCapabilities),
 		blocks,
 	};
 }

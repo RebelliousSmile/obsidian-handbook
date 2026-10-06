@@ -1,3 +1,4 @@
+import { BRUMES_CALLOUT_STYLE_ATTR } from "./aliasSupport";
 import { CalloutDefinition, CalloutFontRole } from "./types";
 
 /**
@@ -35,7 +36,7 @@ export function buildCalloutStyleCss(callouts: CalloutDefinition[]): string {
 			declarations.push("\tbackground-color: var(--background-secondary);");
 		}
 
-		const selector = `.callout[data-brumes-callout-style="${entry.styleKey}"]`;
+		const selector = `.callout[${BRUMES_CALLOUT_STYLE_ATTR}="${entry.styleKey}"]`;
 		const block = [`${selector} {`, declarations.join("\n"), "}"].join("\n");
 
 		if (entry.template === "body-only") {

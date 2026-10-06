@@ -37,14 +37,20 @@ export function contributeLayoutRegionInsertion(
 }
 
 function insertLayoutRegion(editor: Editor): void {
+	insertDirectivePair(editor, wrapInLayoutRegion(editor.getSelection()));
+}
+
+/**
+ * Replaces the selection with a marker pair. The markers must start a line of
+ * their own, whatever surrounds the cursor; the cursor ends on the body.
+ */
+export function insertDirectivePair(editor: Editor, pair: string): void {
 	const from = editor.getCursor("from");
 	const to = editor.getCursor("to");
-	const region = wrapInLayoutRegion(editor.getSelection());
-	// The markers must start a line of their own, whatever surrounds the cursor.
 	const before = from.ch === 0 ? "" : "\n\n";
 	const after = to.ch === editor.getLine(to.line).length ? "" : "\n\n";
 
-	editor.replaceRange(`${before}${region}${after}`, from, to);
+	editor.replaceRange(`${before}${pair}${after}`, from, to);
 	// Leave the cursor on the body, between the two markers.
 	editor.setCursor({ line: from.line + (before === "" ? 2 : 4), ch: 0 });
 }

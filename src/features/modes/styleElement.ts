@@ -229,7 +229,95 @@ export function buildGameStyle(
 		);
 	}
 
+	if (polarities.length > 1) {
+		for (const polarity of polarities) {
+			blocks.push(
+				offPaper(
+					polarity,
+					modeSectionBlock(
+						mode,
+						values,
+						polarity,
+						`.handbook-mode-${polarity}`,
+						"",
+					),
+				),
+			);
+		}
+		// `alternate` is the opposite of the mode the note shows: the body
+		// polarity names the rule, the opposite one is what it paints.
+		for (const shown of polarities) {
+			if (colourScheme !== "obsidian" && colourScheme !== shown) continue;
+			const painted = shown === "dark" ? "light" : "dark";
+			blocks.push(
+				offPaper(
+					painted,
+					modeSectionBlock(
+						mode,
+						values,
+						painted,
+						".handbook-mode-alternate",
+						polarityClass(shown, colourScheme),
+					),
+				),
+			);
+		}
+	}
+
 	return blocks.filter((block) => block.length > 0).join("\n\n");
+}
+
+/**
+ * The rules of a note section painted in `polarity`, under `own` (the class of
+ * a forced section, or of an `alternate` one) and, for `alternate`, only where
+ * `body` carries `bodyClass`. Layers are bound to `body`'s theme
+ * class, so a section under the other theme receives none of them: the same
+ * layer is written again on the section itself.
+ *
+ * Declarations on the section element beat what it inherits whatever the
+ * selector weighs. The rendered Handbook blocks inside it do not inherit that
+ * way: `noteSelector` writes the body polarity on `.brumes-block-scope`, with
+ * the same weight as the second selector below, so this block is appended
+ * after the body layers and wins the tie by source order.
+ *
+ * A token the other layer declares and this one does not is put back to the
+ * base value, or dropped: it is what the body does on a theme switch, where
+ * the other layer's rule simply stops matching.
+ */
+function modeSectionBlock(
+	mode: BrumesMode,
+	values: GameStyleValues,
+	polarity: GamePolarity,
+	own: string,
+	bodyClass: string,
+): string {
+	const other = polarity === "dark" ? "light" : "dark";
+	const layer = values[polarity].note;
+	const tokens: GameStyleTokens = {};
+
+	for (const name of Object.keys(values[other].note)) {
+		if (name in layer) continue;
+		tokens[name] = name in values.base.note ? values.base.note[name] : "initial";
+	}
+
+	const selector = [
+		`body.brumes--${mode}${bodyClass} ${own}`,
+		`body.brumes--${mode}${bodyClass} ${own} .${BLOCK_SCOPE_CLASS}.brumes--${mode}`,
+	].join(",\n");
+	const paper: GameStyleTokens = {
+		"background-color": "var(--background-primary)",
+		// The pack may publish a texture for its sections; a flat paper otherwise.
+		"background-image": "var(--brumes-section-texture, none)",
+		"background-repeat": "repeat",
+		"background-size": "var(--brumes-section-texture-size, auto)",
+	};
+
+	return renderTokenBlock(selector, {
+		...tokens,
+		...layer,
+		...forcedInkTokens(polarity),
+		...paper,
+	});
 }
 
 /**
@@ -245,8 +333,21 @@ function forcedInkTokens(polarity: GamePolarity): GameStyleTokens {
 		"--text-color": "var(--text-normal)",
 		"--table-header-color": "var(--text-normal)",
 		"--caret-color": "var(--text-normal)",
+		"--metadata-input-text-color": "var(--text-normal)",
+		"--metadata-label-text-color": "var(--text-muted)",
 		"--checklist-done-color": "var(--text-muted)",
 		"--code-punctuation": "var(--text-muted)",
+		// Obsidian resolves these on `body`, from the accent of the theme it
+		// shows: an external link, or any rule that reads the accent, would
+		// keep the other polarity's colour inside a forced section.
+		"--text-accent": "var(--color-accent)",
+		"--text-accent-hover": "var(--link-color-hover, var(--color-accent))",
+		"--link-external-color": "var(--link-color)",
+		"--link-external-color-hover": "var(--link-color-hover, var(--link-color))",
+		// Obsidian blends a callout with the paper by the theme it shows
+		// (`darken` in light): a dark card on a dark paper of a light note
+		// would turn black. The pack's card colour is opaque, paint it as is.
+		"--callout-blend-mode": "normal",
 	};
 }
 

@@ -20,6 +20,7 @@ import {
 	getAvailableCalloutInsertions,
 } from "../features/callouts/contextMenu";
 import { contributeLayoutRegionInsertion } from "../features/layoutRegions/insertion";
+import { contributeModeSectionInsertion } from "../features/modeSections/insertion";
 import { getOrCreateBrumesSubmenu } from "../utils/contextSubMenu";
 
 export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
@@ -67,6 +68,7 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 
 			if (hasItems) submenu.addSeparator();
 			contributeLayoutRegionInsertion(submenu, editor);
+			contributeModeSectionInsertion(submenu, editor);
 			hasItems = true;
 
 			const hasTomlExport =hasTomlExportAtCursor(editor, plugin.settings);

@@ -1,10 +1,9 @@
 import { Editor } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
-import { GAME_PACKS } from "../../games/registry";
 import { insertCallout } from "./contextMenu";
 import { CalloutDefinition } from "./types";
-import { isCalloutAvailable } from "./types";
-import { findGameRegistration } from "../../games/registry";
+import { scopeLabel } from "./scopeLabel";
+import { visibleCallouts } from "./visibility";
 
 function commandId(entry: CalloutDefinition): string {
 	return `callout-insert-${entry.id}`;
@@ -21,8 +20,7 @@ export function calloutCommandName(entry: CalloutDefinition): string {
 		return entry.name;
 	}
 
-	const pack = GAME_PACKS.find((p) => p.id === entry.scope);
-	return `${entry.name} (${pack?.label ?? entry.scope})`;
+	return `${entry.name} (${scopeLabel(entry.scope)})`;
 }
 
 interface RegisteredCommand {
@@ -30,7 +28,17 @@ interface RegisteredCommand {
 	scope: string;
 }
 
-const registered = new Map<string, RegisteredCommand>();
+/** One registry per plugin instance: a reload starts clean instead of inheriting the last one's commands. */
+const registries = new WeakMap<BrumesPlugin, Map<string, RegisteredCommand>>();
+
+function registryOf(plugin: BrumesPlugin): Map<string, RegisteredCommand> {
+	let registry = registries.get(plugin);
+	if (!registry) {
+		registry = new Map();
+		registries.set(plugin, registry);
+	}
+	return registry;
+}
 
 /**
  * One command per callout with an alias to insert, diffed by id against what
@@ -43,6 +51,7 @@ export function syncCalloutCommands(
 	plugin: BrumesPlugin,
 	callouts: CalloutDefinition[],
 ): void {
+	const registered = registryOf(plugin);
 	const current = new Map<string, CalloutDefinition>();
 
 	for (const entry of callouts) {
@@ -95,9 +104,7 @@ function registerCalloutCommand(plugin: BrumesPlugin, id: string): void {
 				return false;
 			}
 
-			const required = findGameRegistration(plugin.settings.mode)?.installation?.requires ?? [];
-			const visible = isCalloutAvailable(current, plugin.settings.mode, required);
-			if (!visible) {
+			if (visibleCallouts([current], plugin.settings.mode).length === 0) {
 				return false;
 			}
 
@@ -117,6 +124,7 @@ function registerCalloutCommand(plugin: BrumesPlugin, id: string): void {
 
 /** Called from `onunload`, on the same pattern as the plugin's owned `<style>` element. */
 export function clearCalloutCommands(plugin: BrumesPlugin): void {
+	const registered = registryOf(plugin);
 	for (const id of Array.from(registered.keys())) {
 		plugin.removeCommand(id);
 	}

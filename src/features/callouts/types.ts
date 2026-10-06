@@ -28,6 +28,16 @@ export interface CalloutDefinition {
 	capability?: string;
 }
 
+/**
+ * Two scopes cover the same callout invocation when either is "all", or
+ * they name the same game — narrower conflicts (different single games)
+ * are allowed on purpose, so the same alias can mean different things in
+ * two different game lines.
+ */
+export function scopesOverlap(a: CalloutScope, b: CalloutScope): boolean {
+	return a === "all" || b === "all" || a === b;
+}
+
 export function isCalloutAvailable(
 	entry: CalloutDefinition,
 	activePackId: string,

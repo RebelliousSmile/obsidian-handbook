@@ -79,12 +79,17 @@ const ADRENALINE_CALLOUTS: CalloutDefinition[] = ADRENALINE_VISUAL_CALLOUTS.map(
 );
 
 /**
- * The 7 historical styles, verrouillées : styleKey/scope/aliases par défaut
- * repris tels quels de `aliasSupport.ts` et des anciennes constantes
- * `DEFAULT_CITY_OF_MIST_CALLOUT_ALIASES`/`DEFAULT_LEGEND_IN_THE_MIST_CALLOUT_ALIASES`.
- * `color`/`font`/`template` sont renseignés pour la cohérence du type mais
- * ignorés par le futur écrivain de style : le rendu reste dans `_callouts.scss`.
+ * Every native callout, locked: `styleKey`, scope and default aliases come from
+ * the old `aliasSupport.ts` constants and from the schema packages. `color`,
+ * `font` and `template` fill the type but `styleWriter.ts` ignores them for a
+ * native entry: its rendering lives in `_callouts.scss`.
  */
+/** Ids of the callouts the schema packages declare, the ones a saved list may predate. */
+export const SCHEMA_CALLOUT_IDS: readonly string[] = [
+	...PBTA_VISUAL_CALLOUTS.map((definition): string => definition.id),
+	...ADRENALINE_VISUAL_CALLOUTS.map((definition): string => definition.id),
+];
+
 export const NATIVE_CALLOUTS: CalloutDefinition[] = [
 	{
 		id: "city-of-mist-clue",

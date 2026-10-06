@@ -5,6 +5,7 @@ export const fr: Translations = {
 	// Menus
 	"Tag, status or limit": "Tag, statut ou limite",
 	"Multi-column region": "Région multicolonne",
+	"Alternate section": "Section alternative",
 	"Insert callout": "Insérer un callout",
 	"Change callout type": "Changer le type de callout",
 	"{name} callout": "Callout {name}",

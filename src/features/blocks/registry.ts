@@ -1,6 +1,6 @@
 import { Editor, Menu, MenuItem } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
-import { findGameRegistration, gamePackClass } from "../../games/registry";
+import { gameRequiredCapabilities, gamePackClass } from "../../games/registry";
 import { BrumesSettings } from "../../settings/types";
 import { logScope } from "../../utils/logger";
 import { renderRawBlock } from "./fallback";
@@ -51,15 +51,11 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	rollerBlock,
 ];
 
-function requiredCapabilities(settings: BrumesSettings): readonly string[] {
-	return findGameRegistration(settings.mode)?.installation?.requires ?? [];
-}
-
 export function isAvailableBlock(
 	block: BrumesBlock<unknown>,
 	settings: BrumesSettings,
 ): boolean {
-	return isBlockEnabled(block, settings, requiredCapabilities(settings));
+	return isBlockEnabled(block, settings, gameRequiredCapabilities(settings.mode));
 }
 
 /**

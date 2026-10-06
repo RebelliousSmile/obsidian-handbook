@@ -28,6 +28,7 @@ import {
 	resolveGamePack,
 	resolveGameRegistration,
 } from "./games/registry";
+import type { GamePolarity } from "./games/types";
 import { loadCustomGamePacks, loadSchemaSourceGamePacks } from "./games/customPacks";
 import {
 	prepareGameStorage,
@@ -72,6 +73,7 @@ import {
 	refreshNoteBackground,
 } from "./features/noteBackground";
 import { loadLayoutRegions } from "./features/layoutRegions";
+import { loadModeSections } from "./features/modeSections";
 import { t } from "./utils/i18n";
 
 interface ApplySettingsOptions {
@@ -110,6 +112,7 @@ export default class BrumesPlugin extends Plugin {
 
 		loadTagFeature(this);
 		loadLayoutRegions(this);
+		loadModeSections(this);
 		loadBrumesBlocks(this);
 		loadTomlExportCommands(this);
 		this.syncCalloutAliases = loadCalloutAliasFeature(this);
@@ -297,6 +300,26 @@ export default class BrumesPlugin extends Plugin {
 	}
 
 	/**
+	 * The game says which polarities it has, and the user's file may claim
+	 * others; nothing here supplies one neither of them named.
+	 */
+	private polaritiesOf(appearance: { polarities: GamePolarity[] }): GamePolarity[] {
+		return this.overrides.polarities ?? appearance.polarities;
+	}
+
+	/** The polarities offered by the active game and variant, overrides included. */
+	effectivePolarities(): GamePolarity[] {
+		const registration = resolveGameRegistration(this.settings.mode);
+		return this.polaritiesOf(
+			resolveGameAppearance(
+				registration,
+				this.settings.gameVariants[registration.pack.id],
+				this.overrides.style,
+			),
+		);
+	}
+
+	/**
 	 * The game is written as one block of custom properties into a style
 	 * element the plugin owns, in every open document. Switching games
 	 * replaces that block whole, so nothing of the previous one survives.
@@ -350,9 +373,7 @@ export default class BrumesPlugin extends Plugin {
 				workspace: style.base.workspace,
 			},
 		};
-		// The game says which polarities it has, and the user's file may claim
-		// others; nothing here supplies one neither of them named.
-		const polarities = this.overrides.polarities ?? appearance.polarities;
+		const polarities = this.polaritiesOf(appearance);
 
 		const block = buildGameStyle(
 			pack.id,

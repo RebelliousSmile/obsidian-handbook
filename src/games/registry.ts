@@ -149,6 +149,11 @@ export function gameVariantClasses(): string[] {
 	return classes;
 }
 
+/** The host capabilities the game's installation requires; none when it is unknown. */
+export function gameRequiredCapabilities(id: unknown): readonly string[] {
+	return findGameRegistration(id)?.installation?.requires ?? [];
+}
+
 export function findGameRegistration(id: unknown): GameRegistration | null {
 	for (const registration of GAME_REGISTRATIONS) {
 		if (registration.pack.id === id) {

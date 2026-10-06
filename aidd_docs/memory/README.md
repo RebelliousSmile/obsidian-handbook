@@ -22,6 +22,7 @@ Read on demand:
 
 - [aidd_docs/memory/internal/assertion-harnesses.md](aidd_docs/memory/internal/assertion-harnesses.md)
 - [aidd_docs/memory/internal/ci-and-release.md](aidd_docs/memory/internal/ci-and-release.md)
+- [aidd_docs/memory/internal/decisions/forced-mode-section-paints-a-flat-paper.md](aidd_docs/memory/internal/decisions/forced-mode-section-paints-a-flat-paper.md)
 - [aidd_docs/memory/internal/decisions/game-capabilities-are-scoped-by-pack-id.md](aidd_docs/memory/internal/decisions/game-capabilities-are-scoped-by-pack-id.md)
 - [aidd_docs/memory/internal/decisions/game-data-survives-plugin-replacement.md](aidd_docs/memory/internal/decisions/game-data-survives-plugin-replacement.md)
 - [aidd_docs/memory/internal/decisions/game-schema-ownership-and-release-order.md](aidd_docs/memory/internal/decisions/game-schema-ownership-and-release-order.md)

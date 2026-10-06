@@ -93,7 +93,7 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 	return { diagnostics, regions };
 }
 
-function firstContentLine(
+export function firstContentLine(
 	lines: readonly string[],
 	start: number,
 	end: number,
@@ -104,7 +104,7 @@ function firstContentLine(
 	return null;
 }
 
-function lastContentLine(
+export function lastContentLine(
 	lines: readonly string[],
 	start: number,
 	end: number,
@@ -115,7 +115,7 @@ function lastContentLine(
 	return null;
 }
 
-function isFenceBoundary(
+export function isFenceBoundary(
 	line: string,
 	fence: { character: "`" | "~"; length: number } | null,
 ): boolean {
@@ -128,7 +128,7 @@ function isFenceBoundary(
 	);
 }
 
-function toggleFence(
+export function toggleFence(
 	line: string,
 	fence: { character: "`" | "~"; length: number } | null,
 ): { character: "`" | "~"; length: number } | null {

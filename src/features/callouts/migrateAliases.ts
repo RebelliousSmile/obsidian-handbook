@@ -1,8 +1,6 @@
-import type { BrumesCalloutAliasesSettings } from "../../settings/types";
-import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
-import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
+import type { BrumesCalloutAliasesSettings } from "./settingsContract";
 import { logScope } from "../../utils/logger";
-import { NATIVE_CALLOUTS } from "./nativeCallouts";
+import { NATIVE_CALLOUTS, SCHEMA_CALLOUT_IDS } from "./nativeCallouts";
 import { sanitizeAliases } from "./sanitizeAlias";
 import {
 	CalloutDefinition,
@@ -10,6 +8,7 @@ import {
 	isCalloutFontRole,
 	isCalloutScope,
 	isCalloutTemplate,
+	scopesOverlap,
 } from "./types";
 
 const calloutsLog = logScope("Callouts");
@@ -78,17 +77,14 @@ export function normalizeCallouts(
 	// gets a numeric suffix so the callout stays reachable. Only a callout
 	// visible from the same game can claim an alias: `description` belongs to
 	// City of Mist and to Adrenaline alike, each in its own scope.
-	const schemaCalloutIds: string[] = [];
-	for (const definition of PBTA_VISUAL_CALLOUTS) schemaCalloutIds.push(definition.id);
-	for (const definition of ADRENALINE_VISUAL_CALLOUTS) schemaCalloutIds.push(definition.id);
-	for (const id of schemaCalloutIds) {
+	for (const id of SCHEMA_CALLOUT_IDS) {
 		if (normalized.some((entry) => entry.id === id)) continue;
 		const native = NATIVE_CALLOUTS.find((entry) => entry.id === id);
 		if (!native) continue;
 		const isClaimed = (alias: string): boolean =>
 			normalized.some(
 				(entry) =>
-					(entry.scope === "all" || native.scope === "all" || entry.scope === native.scope) &&
+					scopesOverlap(entry.scope, native.scope) &&
 					entry.aliases.indexOf(alias) !== -1,
 			);
 		const aliases = native.aliases.filter((alias) => !isClaimed(alias));
@@ -167,8 +163,14 @@ function normalizeCalloutEntry(
 		? sanitizeAliases(candidate.aliases.map(String))
 		: [];
 
+	// The id becomes a CSS attribute value and a command id: only the shape
+	// `generateCalloutId` produces is accepted, and never one a native or an
+	// earlier entry already owns.
 	const id =
-		typeof candidate.id === "string" && candidate.id.trim().length > 0
+		typeof candidate.id === "string" &&
+		SAFE_CALLOUT_ID.test(candidate.id) &&
+		!takenIds.has(candidate.id) &&
+		!NATIVE_TAKEN_IDS.has(candidate.id)
 			? candidate.id
 			: generateCalloutId(name, takenIds);
 
@@ -185,6 +187,8 @@ function normalizeCalloutEntry(
 		styleKey: id,
 	};
 }
+
+const SAFE_CALLOUT_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const NATIVE_TAKEN_IDS = new Set<string>();
 for (const entry of NATIVE_CALLOUTS) {

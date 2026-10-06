@@ -1,10 +1,7 @@
 import { CalloutDefinition } from "../features/callouts/types";
 import { NATIVE_CALLOUTS } from "../features/callouts/nativeCallouts";
 import { normalizeCallouts } from "../features/callouts/migrateAliases";
-import {
-	sanitizeAlias,
-	sanitizeAliases,
-} from "../features/callouts/sanitizeAlias";
+import type { BrumesCalloutAliasesSettings } from "../features/callouts/settingsContract";
 import {
 	DEFAULT_GAME_PACK_ID,
 	GAME_REGISTRATIONS,
@@ -13,8 +10,6 @@ import {
 } from "../games/registry";
 import { logScope } from "../utils/logger";
 import { SchemaSource, SchemaSourceReference, isSafeSchemaSourceRepository, schemaSourceId } from "../games/sources";
-
-export { sanitizeAlias, sanitizeAliases };
 
 /**
  * The identifier of a game pack, and the value written in the user's
@@ -52,24 +47,6 @@ export interface BrumesFeatureSettings {
 	adrenalineMonsterParser: boolean;
 	pbtaParser: boolean;
 	roller: boolean;
-}
-
-export interface CityOfMistCalloutAliases {
-	note: string[];
-	move: string[];
-	description: string[];
-	clue: string[];
-	redClue: string[];
-}
-
-export interface LegendInTheMistCalloutAliases {
-	note: string[];
-	readAloud: string[];
-}
-
-export interface BrumesCalloutAliasesSettings {
-	cityOfMist: CityOfMistCalloutAliases;
-	legendInTheMist: LegendInTheMistCalloutAliases;
 }
 
 export interface BrumesSettings {

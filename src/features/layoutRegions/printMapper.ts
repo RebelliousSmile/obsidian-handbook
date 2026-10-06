@@ -1,5 +1,4 @@
-import type { LayoutRegion } from "./parser";
-import { mapRegionToBlocks, SourceBlock } from "./sectionMapper";
+import { LineSpan, mapRegionToBlocks, SourceBlock } from "./sectionMapper";
 
 /** A block of the note as Obsidian's metadata cache lists it. */
 export interface CacheSection {
@@ -8,12 +7,12 @@ export interface CacheSection {
 	lineEnd: number;
 }
 
-export type PrintMapResult =
-	| { ok: true; selections: readonly PrintSelection[]; unmatched: readonly LayoutRegion[] }
+export type PrintMapResult<R extends LineSpan = LineSpan> =
+	| { ok: true; selections: readonly PrintSelection<R>[]; unmatched: readonly R[] }
 	| { ok: false; reason: string };
 
-export interface PrintSelection {
-	region: LayoutRegion;
+export interface PrintSelection<R extends LineSpan = LineSpan> {
+	region: R;
 	blocks: readonly HTMLElement[];
 }
 
@@ -26,12 +25,12 @@ const HEADING_TAG = /^H[1-6]$/;
  * are joined to the metadata cache by rank, and only when every block up to
  * the last region agrees on its kind; otherwise nothing is selected.
  */
-export function mapPrintRegions(
-	regions: readonly LayoutRegion[],
+export function mapPrintRegions<R extends LineSpan>(
+	regions: readonly R[],
 	cacheSections: readonly CacheSection[],
 	sourceLines: readonly string[],
 	printed: readonly HTMLElement[],
-): PrintMapResult {
+): PrintMapResult<R> {
 	const children = printed[0]?.tagName === "H1" ? printed.slice(1) : printed;
 	let sections = cacheSections.filter((section) => !isCommentOnly(section, sourceLines));
 	if (sections[0]?.type === "yaml" && !children[0]?.classList.contains("mod-frontmatter")) {
@@ -56,8 +55,8 @@ export function mapPrintRegions(
 		block,
 		info: index < covered ? { lineStart: sections[index].lineStart, lineEnd: sections[index].lineEnd } : null,
 	}));
-	const selections: PrintSelection[] = [];
-	const unmatched: LayoutRegion[] = [];
+	const selections: PrintSelection<R>[] = [];
+	const unmatched: R[] = [];
 	for (const region of regions) {
 		const selected = mapRegionToBlocks(region, blocks);
 		if (selected) selections.push({ region, blocks: selected });

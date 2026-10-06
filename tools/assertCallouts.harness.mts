@@ -4,6 +4,7 @@ import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { log } from "../src/utils/logger";
 import { NATIVE_CALLOUTS } from "../src/features/callouts/nativeCallouts";
 import { isCalloutAvailable } from "../src/features/callouts/types";
+import { findAliasCollision } from "../src/features/callouts/collisions";
 import { normalizeSettings } from "../src/settings/types";
 import { getAvailableCalloutInsertions, insertCallout } from "../src/features/callouts/contextMenu";
 import { initGameRegistry } from "../src/games/registry";
@@ -257,6 +258,37 @@ function settingsAliases(id: string): string[] | undefined {
 	assert.ok(generated);
 	assert.equal(generated.id, "note-2");
 	assert.equal(generated.styleKey, "note-2");
+}
+
+// A user id read from data.json must be a safe slug that no native owns.
+{
+	const base = { scope: "all", template: "title-body", font: "text", color: { kind: "theme" }, native: false };
+	const settings = normalizeSettings({
+		callouts: [
+			{ ...base, id: 'x"]{}', name: "Hostile", aliases: ["hostile"] },
+			{ ...base, id: NATIVE_CALLOUTS[0].id, name: "Native twin", aliases: ["twin"] },
+			{ ...base, id: "kept-id", name: "Kept", aliases: ["kept"] },
+		],
+	});
+	const hostile = settings.callouts.find((c) => c.aliases.includes("hostile"));
+	const twin = settings.callouts.find((c) => c.aliases.includes("twin"));
+	const kept = settings.callouts.find((c) => c.aliases.includes("kept"));
+	assert.ok(hostile && twin && kept);
+	assert.match(hostile.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+	assert.equal(hostile.styleKey, hostile.id);
+	assert.notEqual(twin.id, NATIVE_CALLOUTS[0].id);
+	assert.equal(kept.id, "kept-id");
+}
+
+// The alias collision check is shared by the modal and the native edit.
+{
+	const callouts = normalizeSettings(undefined).callouts;
+	const first = callouts.find((c) => c.aliases.length > 0);
+	assert.ok(first);
+	const alias = first.aliases[0];
+	assert.equal(findAliasCollision(callouts, alias, first.scope)?.id, first.id);
+	assert.equal(findAliasCollision(callouts, alias, first.scope, first.id), null);
+	assert.equal(findAliasCollision(callouts, "no-such-alias-anywhere", "all"), null);
 }
 
 console.log("Callout migration assertions passed.");

@@ -1,5 +1,11 @@
 import type { LayoutRegion } from "./parser";
 
+/** Anything that covers a run of source lines. */
+export interface LineSpan {
+	lineStart: number;
+	lineEnd: number;
+}
+
 export interface SourceBlock<T> {
 	block: T;
 	info: { lineStart: number; lineEnd: number } | null;
@@ -7,7 +13,7 @@ export interface SourceBlock<T> {
 
 /** Select a contiguous run of complete rendered blocks inside the directive. */
 export function mapRegionToBlocks(
-	region: LayoutRegion,
+	region: LineSpan,
 	blocks: readonly SourceBlock<HTMLElement>[],
 ): readonly HTMLElement[] | null {
 	const selected = blocks.filter(({ info }) =>

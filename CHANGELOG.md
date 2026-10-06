@@ -5,7 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.35.0] - 2026-10-06
+
+### Added
+
+- Adrenaline System: the `[!abstract]` callout is the "Résumé" card of the scenario booklet (schema-adrenaline 3.3.0): a dotted rounded rule, a tab on its top edge, a ruled title and accent-coloured labels. Garnet in light mode, yellow in dark.
+- **Alternate sections**: wrap part of a note in `<!-- handbook-mode: alternate -->` … `<!-- /handbook-mode -->` to show it in the opposite mode of the one the note uses (dark in a light note, light in a dark one, whatever the theme or colour scheme). The context-menu item "Alternate section", right under "Multi-column region", inserts the pair; `dark` and `light` are still accepted by hand to force a mode. A game that lacks the mode ignores the markers and logs one warning. In a PDF export the section only holds when **Printer-friendly export** is off.
 
 ## [2.34.0] - 2026-10-06
 

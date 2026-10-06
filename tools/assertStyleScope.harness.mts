@@ -11,6 +11,8 @@ import {
 	GameStyleWriter,
 } from "../src/features/modes/styleElement";
 import { readPackTokens } from "../src/games/fromSchema";
+import { GAME_REGISTRATIONS, initGameRegistry } from "../src/games/registry";
+import { resolveGameAppearance } from "../src/games/variants";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../src/settings/types";
 
 const MODE_CLASS = "brumes--legend-in-the-mist";
@@ -119,7 +121,7 @@ function printBlocks(sheet: string): string {
 function outsideScreen(sheet: string): string {
 	return splitMedia(sheet, "screen").outside;
 }
-assert.doesNotMatch(outsideScreen(forcedDarkCss), /--forced-dark/, "a forced dark layer reaches print");
+assert.doesNotMatch(outsideScreen(forcedDarkCss), /--forced-dark: dark/, "a forced dark layer reaches print");
 assert.match(printBlocks(forcedDarkCss), /--forced-light: light/);
 assert.match(printBlocks(forcedDarkCss), /body\.brumes--legend-in-the-mist \.print \.markdown-preview-view/);
 assert.doesNotMatch(printBlocks(forcedDarkCss), /brumes--colour-|theme-(dark|light)/);
@@ -135,7 +137,7 @@ const themedCss = buildGameStyle(
 	["light", "dark"],
 );
 assert.match(themedCss, /@media screen \{\nbody\.brumes--legend-in-the-mist\.theme-dark /);
-assert.doesNotMatch(outsideScreen(themedCss), /--forced-dark/, "the dark layer of the vault theme reaches print");
+assert.doesNotMatch(outsideScreen(themedCss), /--forced-dark: dark/, "the dark layer of the vault theme reaches print");
 assert.match(printBlocks(themedCss), /--forced-light: light/);
 
 const darkOnlyCss = buildGameStyle(
@@ -163,7 +165,7 @@ const workspaceDarkCss = buildGameStyle(
 	["light", "dark"],
 	"dark",
 );
-assert.doesNotMatch(outsideScreen(workspaceDarkCss), /--(forced|chrome)-dark/, "a dark workspace layer reaches print");
+assert.doesNotMatch(outsideScreen(workspaceDarkCss), /--(forced|chrome)-dark: dark/, "a dark workspace layer reaches print");
 assert.match(printBlocks(workspaceDarkCss), /body\.brumes--legend-in-the-mist\.brumes--workspace-theme \{\n\t--chrome-light: light;/);
 
 const printScss = readFileSync("src/styles/_print.scss", "utf8");
@@ -476,5 +478,156 @@ const injectedCss = buildGameStyle(
 assert.doesNotMatch(injectedCss, /exfil/);
 assert.doesNotMatch(injectedCss, /evil/);
 assert.match(injectedCss, /--safe-token: red/);
+
+/* ------------------------------------------------------------------ *
+ * A section whose author forced a polarity (`<!-- handbook-mode: <p> -->`)
+ * carries that layer itself, and only for a pack that has both.
+ * ------------------------------------------------------------------ */
+
+const sectionValues = {
+	base: { note: { "--sec-base": "b", "--sec-only-dark": "base-fallback" }, workspace: {} },
+	light: { note: { "--sec-paper": "white" }, workspace: {} },
+	dark: { note: { "--sec-paper": "black", "--sec-only-dark": "d" }, workspace: {} },
+};
+const sectionCss = buildGameStyle(
+	"legend-in-the-mist",
+	sectionValues,
+	false,
+	["light", "dark"],
+);
+const sectionRule = (polarity: string) =>
+	new RegExp(
+		String.raw`body\.brumes--legend-in-the-mist \.handbook-mode-${polarity},\s*body\.brumes--legend-in-the-mist \.handbook-mode-${polarity} \.brumes-block-scope\.brumes--legend-in-the-mist\s*\{[^}]*\}`,
+	);
+const darkSection = sectionCss.match(sectionRule("dark"))?.[0] ?? "";
+const lightSection = sectionCss.match(sectionRule("light"))?.[0] ?? "";
+
+assert.match(darkSection, /--sec-paper: black/);
+assert.match(lightSection, /--sec-paper: white/);
+// A token only the dark layer declares goes back to the base value in light.
+assert.match(lightSection, /--sec-only-dark: base-fallback/);
+assert.match(darkSection, /background-color: var\(--background-primary\)/);
+assert.match(darkSection, /background-image: var\(--brumes-section-texture, none\)/);
+
+// Same weight as the body layer on the block scope: only source order decides.
+const lastBodyScope = sectionCss.lastIndexOf(
+	`.${BLOCK_SCOPE_CLASS}.brumes--legend-in-the-mist`,
+	sectionCss.indexOf(".handbook-mode-light"),
+);
+assert.ok(
+	sectionCss.indexOf(".handbook-mode-light") > lastBodyScope &&
+		sectionCss.indexOf(".handbook-mode-dark") > lastBodyScope,
+	"the section rules must come after every body layer",
+);
+assert.ok(
+	sectionCss.indexOf("@media screen") < sectionCss.indexOf(".handbook-mode-dark") ||
+		sectionCss.indexOf("@media screen") === -1,
+);
+
+// Printer-friendly (default): the dark section lives under `@media screen` only.
+const screenOnly = sectionCss
+	.split("@media screen")
+	.slice(1)
+	.join("@media screen");
+assert.match(screenOnly, /\.handbook-mode-dark/);
+assert.doesNotMatch(sectionCss.split("@media screen")[0], /\.handbook-mode-dark/);
+
+// With printerFriendly off the dark section is written bare, as authored.
+const keptCss = buildGameStyle(
+	"legend-in-the-mist",
+	sectionValues,
+	false,
+	["light", "dark"],
+	"obsidian",
+	false,
+);
+assert.match(keptCss, /\.handbook-mode-dark/);
+assert.doesNotMatch(keptCss, /@media screen/);
+
+// One polarity or none: no section rule at all.
+for (const polarities of [[], ["light"], ["dark"]] as ("light" | "dark")[][]) {
+	assert.doesNotMatch(
+		buildGameStyle("legend-in-the-mist", sectionValues, false, polarities),
+		/handbook-mode/,
+	);
+}
+
+// `alternate`: the opposite of what the note shows, bound to the body theme.
+const altRule = (bodyClass: string) =>
+	new RegExp(
+		String.raw`body\.brumes--legend-in-the-mist${bodyClass} \.handbook-mode-alternate,\s*body\.brumes--legend-in-the-mist${bodyClass} \.handbook-mode-alternate \.brumes-block-scope\.brumes--legend-in-the-mist\s*\{[^}]*\}`,
+	);
+const altObsidian = sectionCss.match(altRule(String.raw`\.theme-dark`))?.[0] ?? "";
+assert.match(altObsidian, /--sec-paper: white/, "alternate under a dark body paints light");
+for (const token of ["--text-accent", "--link-external-color", "--callout-blend-mode: normal"]) {
+	assert.ok(altObsidian.indexOf(token) !== -1, `a forced section re-derives ${token}`);
+}
+assert.match(sectionCss.match(altRule(String.raw`\.theme-light`))?.[0] ?? "", /--sec-paper: black/);
+const altForcedLight = buildGameStyle("legend-in-the-mist", sectionValues, false, ["light", "dark"], "light");
+assert.match(altForcedLight.match(altRule(String.raw`\.brumes--colour-light`))?.[0] ?? "", /--sec-paper: black/);
+assert.doesNotMatch(altForcedLight, /\.theme-(dark|light) \.handbook-mode-alternate/);
+assert.ok(
+	sectionCss.indexOf(".handbook-mode-alternate") > lastBodyScope,
+	"the alternate rules must come after every body layer",
+);
+assert.doesNotMatch(
+	sectionCss.split("@media screen")[0],
+	/--sec-paper: black[^}]*\}[^]*handbook-mode-alternate/,
+);
+
+const matrixStyle = {
+	base: { note: { "--m-base": "b" }, workspace: {} },
+	light: { note: { "--m-paper": "white" }, workspace: {} },
+	dark: { note: { "--m-paper": "black" }, workspace: {} },
+};
+initGameRegistry([
+	// Two polarities, no variant (City of Mist, Adrenaline).
+	{ pack: { id: "two-modes", label: "Two modes", style: matrixStyle, polarities: ["light", "dark"] } },
+	// One polarity only (Legend in the Mist).
+	{ pack: { id: "light-only", label: "Light only", style: matrixStyle, polarities: ["light"] } },
+	// None declared (PbtA).
+	{ pack: { id: "no-mode", label: "No mode", style: matrixStyle } },
+	// Variants that differ in what they offer (Otherscape).
+	{
+		pack: { id: "variants", label: "Variants", style: matrixStyle },
+		installation: {
+			root: "packs/variants", version: "1.0.0", minimumHandbookVersion: "2.7.0", requires: [],
+			variants: [
+				{ id: "both", label: "Both", style: {}, polarities: ["light", "dark"] },
+				{ id: "single", label: "Single", style: {}, polarities: ["dark"] },
+			],
+			defaultVariantId: "both",
+		},
+	},
+]);
+
+// Every registered game and variant: a section rule per polarity it offers,
+// and none unless it offers both.
+let matrixCases = 0;
+for (const registration of GAME_REGISTRATIONS) {
+	const variants = registration.variants?.length
+		? registration.variants.map((variant) => variant.id)
+		: [undefined];
+	for (const variantId of variants) {
+		const appearance = resolveGameAppearance(registration, variantId);
+		const matrixCss = buildGameStyle(
+			registration.pack.id,
+			appearance.style,
+			false,
+			appearance.polarities,
+		);
+		const label = `${registration.pack.id}/${variantId ?? "default"}`;
+		for (const polarity of ["light", "dark"] as const) {
+			const expected = appearance.polarities.length > 1 && appearance.polarities.indexOf(polarity) !== -1;
+			assert.equal(
+				matrixCss.includes(`.handbook-mode-${polarity}`),
+				expected,
+				`${label}: section rule for ${polarity}`,
+			);
+		}
+		matrixCases++;
+	}
+}
+assert.equal(matrixCases, 5);
 
 console.log("game styles stay inside notes and rendered block scopes");

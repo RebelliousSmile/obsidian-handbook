@@ -1,0 +1,42 @@
+// A section whose author forced a mode (`<!-- handbook-mode: dark -->`). The
+// palette is written by `buildGameStyle` on `.handbook-mode-<mode>`; this
+// file only gives the section its band. Obsidian keeps one block per source
+// section and owns their order, so the band is drawn block by block and adjacent
+// blocks read as one.
+@mixin mode-section-band {
+	// Children margins stay inside the block: no strip of the note shows
+	// between two blocks of the same section.
+	display: flow-root;
+	background-color: var(--background-primary);
+	// Full-bleed past the sizer padding and the readable line width: the paper
+	// colour is spread sideways and clipped to the block's own height.
+	box-shadow: 0 0 0 100vmax var(--background-primary);
+	clip-path: inset(0 -100vmax);
+}
+
+.handbook-mode-dark,
+.handbook-mode-light,
+.handbook-mode-alternate {
+	@include mode-section-band;
+}
+
+// A block that holds only a marker comment draws nothing: no empty band.
+.handbook-mode-dark.handbook-layout-marker,
+.handbook-mode-light.handbook-layout-marker,
+.handbook-mode-alternate.handbook-layout-marker {
+	display: none;
+}
+
+// A flowing note never draws a band block by block: in columns, the shadow of a
+// block in one column paints over the text of its neighbour in the next. The
+// host wears the band instead, and the blocks add none of their own.
+@each $mode in dark, light, alternate {
+	.markdown-preview-section.handbook-mode-#{$mode} > .handbook-mode-#{$mode},
+.handbook-layout-flowing > .handbook-mode-#{$mode} {
+		// The section's own paper rule weighs more than this selector.
+		background-color: transparent !important;
+		background-image: none !important;
+		box-shadow: none;
+		clip-path: none;
+	}
+}

@@ -33,18 +33,38 @@
 		border-radius: 0;
 		color: var(--adrenaline-note-ink, var(--adrenaline-callout-ink));
 		background: var(--adrenaline-note-surface, var(--adrenaline-callout-surface));
-		box-shadow: 0.15rem 0.2rem 0.5rem rgba(0, 0, 0, 0.3);
+		// The sheet needs an edge of its own: on a dark page its surface is
+		// close to the ground, and only a rim and a shadow make it paper.
+		box-shadow:
+			inset 0 0 0 1px color-mix(in srgb, var(--adrenaline-note-ink, var(--text-normal)) 16%, transparent),
+			0.15rem 0.25rem 0.6rem rgba(0, 0, 0, 0.55);
 
+		// The paper clip: two nested loops of wire, the outer one across the
+		// top edge of the sheet and the inner one shorter, offset to one side.
+		&::before,
 		&::after {
 			content: "";
 			position: absolute;
-			top: -0.7rem;
+			z-index: 1;
+			border: 2px solid var(--adrenaline-note-clip, var(--text-muted));
+			border-radius: 0.35rem;
+			transform: rotate(-6deg);
+			filter: drop-shadow(0.05rem 0.1rem 0.08rem rgba(0, 0, 0, 0.6));
+			pointer-events: none;
+		}
+
+		&::before {
+			top: -0.8rem;
 			left: 1rem;
-			width: 0.55rem;
-			height: 1.7rem;
-			border: 2px solid var(--text-faint);
-			border-radius: 0.3rem;
-			transform: rotate(-8deg);
+			width: 0.75rem;
+			height: 1.9rem;
+		}
+
+		&::after {
+			top: -0.45rem;
+			left: 1.25rem;
+			width: 0.3rem;
+			height: 1.3rem;
 		}
 
 		.callout-icon {
@@ -63,8 +83,51 @@
 		}
 	}
 
-	.callout:is([data-callout="summary"], [data-callout="abstract"], [data-callout="tldr"], [data-callout="quote"]) {
+	.callout:is([data-callout="summary"], [data-callout="tldr"], [data-callout="quote"]) {
 		background: var(--adrenaline-callout-quote);
+	}
+
+	// Abstract: the scenario's "Résumé" card of the printed booklet. A dotted
+	// rounded rule, a tab on its top edge, the title as a ruled heading and the
+	// bold labels in the accent. Colours are the pack's; only the anatomy is here.
+	.callout[data-callout="abstract"] {
+		overflow: visible;
+		margin-block-start: 1.4rem;
+		border: 3px dotted var(--adrenaline-resume-accent);
+		border-radius: 1.2rem;
+		background: var(--adrenaline-callout-quote);
+
+		&::before {
+			content: "Résumé";
+			position: absolute;
+			top: -0.9rem;
+			left: 50%;
+			transform: translateX(-50%);
+			padding: 0.1rem 0.7rem;
+			background: var(--adrenaline-resume-accent);
+			color: var(--adrenaline-resume-accent-ink);
+			font-family: var(--adrenaline-callout-title-font, inherit);
+			font-size: 0.8em;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+			text-transform: uppercase;
+			white-space: nowrap;
+		}
+
+		.callout-icon {
+			display: none;
+		}
+
+		.callout-title {
+			padding-bottom: 0.3rem;
+			border-bottom: 1px solid var(--adrenaline-resume-accent);
+			font-family: var(--font-header-theme, inherit);
+			--callout-title-size: 1.6em;
+		}
+
+		.callout-content strong {
+			color: var(--adrenaline-resume-accent);
+		}
 	}
 
 	.callout[data-callout="todo"] {
@@ -241,7 +304,7 @@
 	// Encart: the title on a garnet band as wide as its text, the body on the
 	// rosy surface inside a garnet rule.
 	.callout[data-brumes-callout-style="adrenaline-encart"] {
-		border: 1px solid var(--adrenaline-callout-border);
+		border: 1px solid var(--adrenaline-band);
 		background: var(--adrenaline-callout-surface);
 		--booklet-ink: var(--adrenaline-band-ink);
 		--booklet-label: var(--adrenaline-band);
@@ -250,7 +313,7 @@
 	// Role card: the frame and surface of the encart, with the title in the
 	// display face of the page headings.
 	.callout[data-brumes-callout-style="adrenaline-role"] {
-		border: 1px solid var(--adrenaline-callout-border);
+		border: 1px solid var(--adrenaline-band);
 		background: var(--adrenaline-callout-surface);
 		--booklet-ink: var(--adrenaline-band-ink);
 		--booklet-label: var(--adrenaline-band);

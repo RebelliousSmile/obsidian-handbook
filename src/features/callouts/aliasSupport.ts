@@ -1,10 +1,9 @@
 import type BrumesPlugin from "../../BrumesPlugin";
-import { BrumesSettings } from "../../settings/types";
+import { CalloutSettingsView } from "./settingsContract";
 import { logScope } from "../../utils/logger";
-import { findGameRegistration } from "../../games/registry";
-import { isCalloutAvailable } from "./types";
+import { visibleCallouts } from "./visibility";
 
-const BRUMES_CALLOUT_STYLE_ATTR = "data-brumes-callout-style";
+export const BRUMES_CALLOUT_STYLE_ATTR = "data-brumes-callout-style";
 
 const calloutsLog = logScope("Callouts");
 
@@ -53,7 +52,7 @@ export function loadCalloutAliasFeature(plugin: BrumesPlugin): () => void {
 
 function syncCalloutAliases(
 	root: ParentNode & Node,
-	settings: BrumesSettings,
+	settings: CalloutSettingsView,
 	activePackId: string,
 ) {
 	const aliasMap = buildAliasMap(settings, activePackId);
@@ -102,15 +101,10 @@ function getCalloutElements(root: ParentNode & Node): HTMLElement[] {
  * duplicate that slips through anyway keeps the first entry in list order
  * and warns once per session rather than silently overwriting it.
  */
-function buildAliasMap(settings: BrumesSettings, activePackId: string): Map<string, string> {
+function buildAliasMap(settings: CalloutSettingsView, activePackId: string): Map<string, string> {
 	const aliasMap = new Map<string, string>();
-	const required = findGameRegistration(activePackId)?.installation?.requires ?? [];
 
-	for (const entry of settings.callouts) {
-		if (!isCalloutAvailable(entry, activePackId, required)) {
-			continue;
-		}
-
+	for (const entry of visibleCallouts(settings.callouts, activePackId)) {
 		for (const alias of entry.aliases) {
 			if (aliasMap.has(alias)) {
 				const key = `${activePackId}:${alias}`;
