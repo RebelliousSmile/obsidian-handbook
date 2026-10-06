@@ -1,0 +1,106 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "printer-friendly-release",
+	"title": "Release Handbook 2.34.0 (printer-friendly export)",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 79,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/79"
+	},
+	"items": [
+		{
+			"repo": "obsidian-handbook",
+			"issue": 80,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/80",
+			"title": "Release 2.34.0: printer-friendly export setting and Adrenaline print styles",
+			"baseSha": "bb7300b8e4371c2f2ba339d880bae5668af5cb63",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {},
+	"presentation": {
+		"presentedAt": "2026-10-06T12:33:09.961Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:d420908fa473070d7c35cf320f9168f0dac539808b1ef1a2cc8b57e62cbb4d26",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "5f2f71cfeadea57857f5a9f6c9b9c20ff7064101",
+				"baseSha": "bb7300b8e4371c2f2ba339d880bae5668af5cb63",
+				"commits": [
+					{
+						"sha": "5f2f71cfeadea57857f5a9f6c9b9c20ff7064101",
+						"subject": "chore(release): record the closed printer-friendly-export train"
+					}
+				],
+				"diffstat": "supervisor/trains/printer-friendly-export.json | 31 ++++++++++++++++++++++++++\n 1 file changed, 31 insertions(+)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "ok   publish --run completes the schema-in-the-mist manifest, lands its convergence file and validates it (31288 ms; 7 supervise in 27195 ms, 977 git calls)\nok   the convergence step of each provider is pure: it lands what is missing and leaves a person only what it cannot know (2941 ms; 0 supervise in 0 ms, 0 git calls)\nok   preview plans from what the train's providers publish, and installs their packs without touching data.json (6384 ms; 5 supervise in 2377 ms, 55 git calls)\nok   commit lands a provider and its consumers in one command, never the train records (8017 ms; 4 supervise in 4292 ms, 148 git calls)\nok   commit --only lands one repository alone, whatever its role (6309 ms; 5 supervise in 3033 ms, 86 git calls)\nok   the supervisor neither runs nor lands a change to its own code (7059 ms; 7 supervise in 3775 ms, 100 git calls)\nok   ship --run takes an uncommitted change to a closed train in one command, without reading a line (41547 ms; 5 supervise in 37409 ms, 1325 git calls)\nok   ship without --run shows every step of the cycle and commits, presents and dispatches nothing (9825 ms; 7 supervise in 5502 ms, 165 git calls)\nok   a red validation stops ship --run after present: the commits are landed, nothing is published (10731 ms; 5 supervise in 6576 ms, 189 git calls)\nok   ship --run again after an interrupted publication resumes at the missing step, without a second commit or presentation (45889 ms; 6 supervise in 41826 ms, 1491 git calls)\nok   ship refuses to run on supervisor code nobody published, before any step (6571 ms; 5 supervise in 2402 ms, 55 git calls)\nok   ship refuses a repository engaged by another open train, by name, and commits nothing (7003 ms; 5 supervise in 2865 ms, 67 git calls)\n\nSupervisor scenarios passed.\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.34.0 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-7a3qHq\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-7a3qHq\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-7a3qHq\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-7a3qHq\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-7a3qHq\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-7a3qHq\\harness.cjs:306:5)"
+					}
+				]
+			}
+		],
+		"trainFiles": {
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-06T12:33:16.845Z",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"sha": "5f2f71cfeadea57857f5a9f6c9b9c20ff7064101"
+			}
+		],
+		"checks": [
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.34.0",
+			"tag": "v2.34.0",
+			"sha": "5f2f71cfeadea57857f5a9f6c9b9c20ff7064101",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.34.0"
+		}
+	],
+	"closedAt": "2026-10-06T12:48:02.882Z"
+}
