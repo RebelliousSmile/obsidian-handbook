@@ -128,7 +128,7 @@ Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuva
 **Essayer avant de valider** : `pnpm supervise preview --vault <coffre>` fait tourner le code du train dans Obsidian et dans chaque consommateur. La commande exige d'abord ce que `present` exige : chaque dépôt concerné doit être sur `origin/main` et propre. Le changement est donc posé par `commit` avant `preview` ; `ship` n'a alors plus rien à commiter. Elle signale aussi un SHA qui a bougé depuis la présentation. Ensuite :
 
 - elle construit les fournisseurs du train qui ont un script `build` ;
-- elle construit Handbook contre leurs checkouts : chaque paquet déclaré est redirigé vers son dossier, en suivant sa carte `exports` ;
+- elle construit Handbook contre leurs checkouts : chaque paquet déclaré est redirigé vers son dossier, en suivant sa carte `exports` ; le bundle passe par des alias, la vérification de types par un `tsconfig` temporaire hors du checkout (`paths` tirés des conditions `types`), de sorte qu'un contrat plus récent que le tarball épinglé passe le typage. Le script `build:bundle` de Handbook (le `build` sans `tsc`) porte l'étape de bundle ;
 - elle installe dans le coffre les packs que chaque fournisseur publie par son `handbook.json`. L'arborescence est celle de l'installeur (`.obsidian/handbook/sources/<id>/`), et `source.json` porte le HEAD du checkout ;
 - elle déploie `dist/` à côté du `data.json`, qu'elle lit sans jamais l'écrire, puis ouvre le coffre ;
 - elle lance le serveur vite de chaque consommateur sur ces mêmes checkouts, avec sa propre configuration et des alias ajoutés par-dessus. Son `package.json` et ses lockfiles ne sont pas touchés.

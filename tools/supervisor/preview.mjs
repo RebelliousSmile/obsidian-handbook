@@ -17,7 +17,8 @@
  * publishes nothing.
  */
 import { spawn } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { concernedRepos } from "./digest.mjs";
@@ -91,6 +92,43 @@ export function exportAliases(name, dir, exportsMap) {
 	return [...exact, ...patterns.map(({ find, replacement }) => ({ find, replacement }))];
 }
 
+/** The file an `exports` entry names for the type checker: its `types` condition first, else what a bundler imports. */
+function typesTarget(value) {
+	if (value && typeof value === "object" && !Array.isArray(value) && "types" in value) return typesTarget(value.types);
+	return exportTarget(value);
+}
+
+/**
+ * What `exportAliases` is for the bundler, `paths` entries are for `tsc`: each
+ * export of `name` resolved to its checkout, so the type check sees the
+ * contract the bundle is built on and not the pinned tarball's.
+ */
+export function exportTypePaths(name, dir, exportsMap) {
+	const root = slash(resolve(dir));
+	if (!exportsMap || typeof exportsMap !== "object") return { [name]: [root], [`${name}/*`]: [`${root}/*`] };
+	const map = typeof exportsMap === "string" || Object.keys(exportsMap).every((key) => !key.startsWith(".")) ? { ".": exportsMap } : exportsMap;
+	const paths = {};
+	for (const [key, value] of Object.entries(map)) {
+		const target = typesTarget(value);
+		if (!target || !target.startsWith("./")) continue;
+		paths[key === "." ? name : `${name}/${key.slice(2)}`] = [`${root}/${target.slice(2)}`];
+	}
+	return paths;
+}
+
+/**
+ * A `tsconfig` outside the checkout that extends the coordinator's and points
+ * the train's packages at their checkouts; returns its path.
+ */
+export function writeTypecheckConfig(coordinatorDir, paths) {
+	const dir = mkdtempSync(join(tmpdir(), "handbook-preview-"));
+	const root = slash(resolve(coordinatorDir));
+	const file = join(dir, "tsconfig.json");
+	const config = { extends: `${root}/tsconfig.json`, compilerOptions: { noEmit: true, skipLibCheck: true, paths }, include: [`${root}/**/*.ts`], exclude: [`${root}/node_modules`, `${root}/dist`] };
+	writeFileSync(file, JSON.stringify(config, null, "	"));
+	return file;
+}
+
 /** The same identity Handbook derives for a source (`schemaSourceId`). */
 export function schemaSourceId(repository) {
 	return repository.trim().toLowerCase().replace("/", "--");
@@ -153,6 +191,7 @@ export function planPreview(root, topology, train, { vaults = [], configDir = ".
 			dir,
 			name,
 			aliases: exportAliases(name, dir, manifest?.exports),
+			paths: exportTypePaths(name, dir, manifest?.exports),
 			build: manifest?.scripts?.build ? [packageManager(dir), "run", "build"] : null,
 			catalogue: readCatalogue(repo, dir),
 			revision: revParse(dir, "HEAD"),
@@ -171,7 +210,9 @@ export function planPreview(root, topology, train, { vaults = [], configDir = ".
 		dir: coordinatorDir,
 		pluginId,
 		build: coordinatorPackage.scripts?.build ? [packageManager(coordinatorDir), "run", "build"] : null,
+		bundle: coordinatorPackage.scripts?.["build:bundle"] ? [packageManager(coordinatorDir), "run", "build:bundle"] : null,
 		aliases: packages.filter((provider) => declares(coordinatorPackage, provider.name)).flatMap((provider) => provider.aliases),
+		paths: packages.filter((provider) => declares(coordinatorPackage, provider.name)).reduce((all, provider) => ({ ...all, ...provider.paths }), {}),
 		vaults: vaults.map((vault) => ({ vault: resolve(vault), configDir: join(resolve(vault), configDir), pluginDir: join(resolve(vault), configDir, "plugins", pluginId), sourcesDir: join(resolve(vault), configDir, "handbook", "sources") })),
 	};
 
@@ -289,7 +330,15 @@ export async function runPreview(plan, { serve = true, open = true, port } = {})
 	for (const provider of plan.builds) runStep(provider.dir, provider.build, env, provider.repo);
 	if (plan.handbook.vaults.length > 0) {
 		if (!plan.handbook.build) throw new SupervisorError(`preview: ${plan.handbook.repo} has no build script`, 1);
-		runStep(plan.handbook.dir, plan.handbook.build, { ...env, [PREVIEW_ALIASES_ENV]: JSON.stringify(plan.handbook.aliases) }, plan.handbook.repo);
+		const buildEnv = { ...env, [PREVIEW_ALIASES_ENV]: JSON.stringify(plan.handbook.aliases) };
+		if (plan.handbook.bundle && Object.keys(plan.handbook.paths).length > 0) {
+			// `build` type-checks against the pinned tarball, which lags the checkouts the bundle is built on.
+			const tsc = join(plan.handbook.dir, "node_modules", "typescript", "bin", "tsc");
+			runStep(plan.handbook.dir, [process.execPath, tsc, "-p", writeTypecheckConfig(plan.handbook.dir, plan.handbook.paths)], buildEnv, plan.handbook.repo);
+			runStep(plan.handbook.dir, plan.handbook.bundle, buildEnv, plan.handbook.repo);
+		} else {
+			runStep(plan.handbook.dir, plan.handbook.build, buildEnv, plan.handbook.repo);
+		}
 	}
 	const lines = [...installSources(plan), ...deployHandbook(plan)];
 	for (const line of lines) console.log(`preview: ${line}`);

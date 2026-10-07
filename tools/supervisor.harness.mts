@@ -1378,15 +1378,16 @@ scenario("preview plans from what the train's providers publish, and installs th
 	const probe = [
 		"const [root, topologyFile, trainFile, vault] = process.argv.slice(1);",
 		"const { readFileSync } = await import('node:fs');",
-		"const { planPreview, installSources } = await import('./tools/supervisor/preview.mjs');",
+		"const { planPreview, installSources, exportTypePaths } = await import('./tools/supervisor/preview.mjs');",
 		"const read = (file) => JSON.parse(readFileSync(file, 'utf8'));",
 		"const plan = planPreview(root, read(topologyFile), read(trainFile), { vaults: [vault] });",
 		"const lines = installSources(plan, new Date(0));",
 		"const resolveAlias = (aliases, spec) => { const alias = aliases.find(({ find }) => new RegExp(find).test(spec)); return alias ? spec.replace(new RegExp(alias.find), alias.replacement) : null; };",
 		"const specs = ['schema-in-the-mist', 'schema-in-the-mist/presentation', 'schema-in-the-mist/handbook/mist/assets/grain.webp?url&no-inline', 'schema-in-the-mist-other'];",
-		"console.log(JSON.stringify({ plan, lines, resolved: specs.map((spec) => resolveAlias(plan.handbook.aliases, spec)) }));",
+		"const typed = exportTypePaths('pkg', '/p', { '.': { types: './dist/index.d.ts', import: './dist/index.js' }, './x/*': './x/*' });",
+		"console.log(JSON.stringify({ plan, lines, typed, resolved: specs.map((spec) => resolveAlias(plan.handbook.aliases, spec)) }));",
 	].join("\n");
-	const { plan, lines, resolved } = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, trainPath(world), vault]), "preview probe"));
+	const { plan, lines, typed, resolved } = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, trainPath(world), vault]), "preview probe"));
 	const slash = (path: string) => path.split("\\").join("/");
 	assert.deepEqual(plan.packages.map((entry: any) => entry.repo), ["schema-in-the-mist"], "only the train's providers are packages");
 	assert.deepEqual(plan.builds.map((entry: any) => entry.repo), ["schema-in-the-mist"]);
@@ -1395,6 +1396,8 @@ scenario("preview plans from what the train's providers publish, and installs th
 	assert.equal(slash(resolved[1]), `${slash(mist)}/dist/presentation.js`);
 	assert.equal(slash(resolved[2]), `${slash(mist)}/handbook/mist/assets/grain.webp?url&no-inline`, "the query is lost");
 	assert.equal(resolved[3], null, "a longer package name was captured");
+	const probeRoot = slash(resolve("/p"));
+	assert.deepEqual(typed, { pkg: [`${probeRoot}/dist/index.d.ts`], "pkg/x/*": [`${probeRoot}/x/*`] }, "tsc is not pointed at the types of the checkout");
 
 	const sourceDir = resolve(vault, ".obsidian/handbook/sources", sourceId);
 	const source = JSON.parse(readFileSync(resolve(sourceDir, "source.json"), "utf8"));

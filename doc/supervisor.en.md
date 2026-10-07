@@ -128,7 +128,7 @@ The guard fails closed: a refused call exits 97, a missing real binary exits 127
 **Try it before validating**: `pnpm supervise preview --vault <vault>` runs the train's code in Obsidian and in each consumer. The command first requires what `present` requires: every concerned repository must be on `origin/main` and clean. The change is therefore landed by `commit` before `preview`; `ship` then has nothing left to commit. It also warns about a SHA that moved since the presentation. Then:
 
 - it builds the train's providers that have a `build` script;
-- it builds Handbook against their checkouts: each declared package is redirected to its folder, following its `exports` map;
+- it builds Handbook against their checkouts: each declared package is redirected to its folder, following its `exports` map; the bundle through aliases, the type check through a temporary `tsconfig` outside the checkout (`paths` from the `types` conditions), so a contract newer than the pinned tarball type-checks. Handbook's `build:bundle` script (the `build` without `tsc`) carries the bundle step;
 - it installs in the vault the packs each provider publishes through its `handbook.json`. The layout is the installer's (`.obsidian/handbook/sources/<id>/`), and `source.json` carries the checkout's HEAD;
 - it deploys `dist/` next to `data.json`, which it reads and never writes, then opens the vault;
 - it starts each consumer's vite server on those same checkouts, with its own config and aliases merged on top. Its `package.json` and lockfiles are not touched.
