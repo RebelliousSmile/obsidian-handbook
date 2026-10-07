@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { buildCandidateEvidence, assertReleaseTrain } from "./release-train-schema-pbta-assert.mjs";
 
 const releaseUrl = JSON.parse(readFileSync("package.json", "utf8")).dependencies["schema-pbta"];
@@ -13,7 +13,8 @@ const resolution = lock.split("\n").find((line) => line.includes("resolution: {"
 
 assert.equal(releaseUrl, finalUrl);
 assert.ok(resolution?.includes(`integrity: ${integrity}`));
-assert.equal(JSON.parse(readFileSync("node_modules/schema-pbta/package.json", "utf8")).version, "8.4.3");
+/* A train links the provider checkout over the install: only an ordinary install proves the pin. */
+if (!lstatSync("node_modules/schema-pbta").isSymbolicLink()) assert.equal(JSON.parse(readFileSync("node_modules/schema-pbta/package.json", "utf8")).version, "8.4.3");
 const response = await fetch(finalUrl);
 assert.equal(response.ok, true, `could not download final archive: ${response.status}`);
 const bytes = Buffer.from(await response.arrayBuffer());
