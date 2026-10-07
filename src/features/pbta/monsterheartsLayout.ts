@@ -38,12 +38,16 @@ function editorial(doc: Document, id: RegionId, value: Editorial): HTMLElement {
 	return result;
 }
 
-function repeatsCreationChoices(paragraph: string, data: MonsterheartsPlaybook): boolean {
-	const normalizedParagraph = paragraph.toLocaleLowerCase();
-	return (data.creation ?? []).some((question) => {
-		const labels = question.options.map((option) => typeof option === "string" ? option : option.label);
-		return labels.length > 1 && labels.every((label) => normalizedParagraph.includes(label.toLocaleLowerCase()));
-	});
+function foldText(value: string): string {
+	return value.toLocaleLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+/** A creation question is already in the booklet prose when most of its options appear there. */
+function coveredByParagraphs(label: string[], paragraphs: readonly string[]): boolean {
+	if (label.length < 2) return false;
+	const text = foldText(paragraphs.join(" "));
+	const found = label.filter((option) => text.includes(foldText(option))).length;
+	return found * 2 >= label.length;
 }
 
 function list(doc: Document, values: readonly string[]): HTMLElement {
@@ -98,12 +102,13 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		case "monsterhearts-opening": return editorial(doc, id, data.editorial.opening);
 		case "character-identity": {
 			const result = section(doc, id, data.editorial.identity.heading);
-			for (const paragraph of data.editorial.identity.paragraphs) {
-				if (!repeatsCreationChoices(paragraph, data)) result.appendChild(el(doc, "p", paragraph));
-			}
+			const paragraphs = data.editorial.identity.paragraphs;
+			for (const paragraph of paragraphs) result.appendChild(el(doc, "p", paragraph));
 			for (const question of data.creation ?? []) {
+				const options = question.options.map((option) => typeof option === "string" ? option : option.label);
+				if (coveredByParagraphs(options, paragraphs)) continue;
 				result.appendChild(el(doc, "h4", question.label));
-				result.appendChild(list(doc, question.options.map((option) => typeof option === "string" ? option : option.label)));
+				result.appendChild(list(doc, options));
 			}
 			if (data.backstory?.length) {
 				result.appendChild(el(doc, "h4", "Histoire"));
