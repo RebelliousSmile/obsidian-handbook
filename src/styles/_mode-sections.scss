@@ -38,12 +38,15 @@
 		clip-path: none;
 	}
 
-	// A block flowing in a column cannot spread its band sideways: the shadow
-	// of a block in one column paints over the text of its neighbour in the
-	// next. It keeps its own paper only, and what spans the columns around it
-	// keeps the full-bleed band, so the section ends where its source does.
+	// A block flowing in a column cannot spread its band far: the shadow of a
+	// block in one column paints over the text of its neighbour in the next.
+	// It widens by half a column gap on each side instead, so the columns of
+	// the section touch and read as one band, and what spans the columns around
+	// it keeps the full-bleed band: the section ends where its source does.
 	.handbook-layout-flowing > .handbook-layout-flow.handbook-mode-#{$mode} {
 		box-shadow: none;
 		clip-path: none;
+		margin-inline: calc(var(--size-4-8, 2rem) / -2);
+		padding-inline: calc(var(--size-4-8, 2rem) / 2);
 	}
 }

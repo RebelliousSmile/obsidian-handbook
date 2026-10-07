@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.35.2] - 2026-10-07
+
+### Fixed
+
+- Mode sections in a note flowing in columns read as one continuous band again: blocks flowing in neighbouring columns widen by half a column gap on each side so their papers touch, without the shadow that painted over the text of the next column.
+
 ## [2.35.1] - 2026-10-06
 
 ### Fixed
