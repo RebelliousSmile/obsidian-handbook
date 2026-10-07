@@ -552,6 +552,67 @@ for (const polarities of [[], ["light"], ["dark"]] as ("light" | "dark")[][]) {
 	);
 }
 
+/* ------------------------------------------------------------------ *
+ * A pack with a single polarity may publish the paper of its sections:
+ * `alternate` then wears that layer, and nothing else does.
+ * ------------------------------------------------------------------ */
+
+const publishedValues = {
+	...sectionValues,
+	section: { note: { "--sec-paper": "ink", "--sec-published": "s" } },
+};
+const publishedRule = new RegExp(
+	String.raw`body\.brumes--legend-in-the-mist \.handbook-mode-alternate,\s*body\.brumes--legend-in-the-mist \.handbook-mode-alternate \.brumes-block-scope\.brumes--legend-in-the-mist\s*\{[^}]*\}`,
+);
+const publishedCss = buildGameStyle("legend-in-the-mist", publishedValues, false, ["light"]);
+const publishedSectionRule = publishedCss.match(publishedRule)?.[0] ?? "";
+
+assert.match(publishedSectionRule, /--sec-paper: ink/);
+assert.match(publishedSectionRule, /--sec-published: s/);
+assert.match(publishedSectionRule, /background-color: var\(--background-primary\)/);
+assert.match(publishedSectionRule, /background-image: var\(--brumes-section-texture, none\)/);
+assert.match(publishedSectionRule, /--callout-blend-mode: normal/);
+// The pack names tokens, not a polarity: none is guessed for it.
+assert.doesNotMatch(publishedSectionRule, /color-scheme/);
+// Forced modes keep their rule: a single polarity offers no `dark` or `light` section.
+assert.doesNotMatch(publishedCss, /handbook-mode-(dark|light)/);
+assert.ok(
+	publishedCss.indexOf(".handbook-mode-alternate") >
+		publishedCss.lastIndexOf(
+			`.${BLOCK_SCOPE_CLASS}.brumes--legend-in-the-mist`,
+			publishedCss.indexOf(".handbook-mode-alternate"),
+		),
+	"the published section must come after every body layer",
+);
+
+// Printer-friendly (default): no declaration of the section layer reaches paper.
+const publishedOnPaper = publishedCss.split("@media screen")[0];
+assert.doesNotMatch(publishedOnPaper, /handbook-mode/);
+assert.doesNotMatch(publishedOnPaper, /--sec-published/);
+assert.equal(
+	publishedCss.split("@media screen").length,
+	2,
+	"the published section is the only screen-only block of a light pack",
+);
+assert.match(publishedCss.split("@media screen")[1], /--sec-published: s/);
+
+// With printerFriendly off the section is written bare, as authored.
+const publishedKept = buildGameStyle("legend-in-the-mist", publishedValues, false, ["light"], "obsidian", false);
+assert.match(publishedKept.match(publishedRule)?.[0] ?? "", /--sec-published: s/);
+assert.doesNotMatch(publishedKept, /@media screen/);
+
+// Two polarities, or none: the layer is not read, `alternate` stays the other polarity.
+const publishedBoth = buildGameStyle("legend-in-the-mist", publishedValues, false, ["light", "dark"]);
+assert.doesNotMatch(publishedBoth, /--sec-published/);
+assert.equal(publishedBoth, sectionCss, "a second polarity leaves the style as it was without the layer");
+assert.doesNotMatch(buildGameStyle("legend-in-the-mist", publishedValues, false, []), /handbook-mode|--sec-published/);
+
+// An empty layer publishes nothing.
+assert.doesNotMatch(
+	buildGameStyle("legend-in-the-mist", { ...sectionValues, section: { note: {} } }, false, ["light"]),
+	/handbook-mode/,
+);
+
 // `alternate`: the opposite of what the note shows, bound to the body theme.
 const altRule = (bodyClass: string) =>
 	new RegExp(

@@ -4,6 +4,7 @@ import {
 	GameStyleLayer,
 	GameStyleTokens,
 	GameStyleValues,
+	sectionTokens,
 } from "../../games/types";
 import {
 	BLOCK_SCOPE_CLASS,
@@ -264,7 +265,51 @@ export function buildGameStyle(
 		}
 	}
 
+	const section = sectionTokens(values, polarities);
+	if (section) {
+		// A game with one polarity has no other one to alternate with: the
+		// section wears what the pack publishes for it. It is no more paper
+		// than a dark layer is, so it leaves the page the same way.
+		const css = publishedSectionBlock(mode, section);
+		blocks.push(printerFriendly ? mediaBlock("screen", css) : css);
+	}
+
 	return blocks.filter((block) => block.length > 0).join("\n\n");
+}
+
+function modeSectionSelector(
+	mode: BrumesMode,
+	own: string,
+	bodyClass: string,
+): string {
+	return [
+		`body.brumes--${mode}${bodyClass} ${own}`,
+		`body.brumes--${mode}${bodyClass} ${own} .${BLOCK_SCOPE_CLASS}.brumes--${mode}`,
+	].join(",\n");
+}
+
+/** The pack may publish a texture for its sections; a flat paper otherwise. */
+const SECTION_PAPER: GameStyleTokens = {
+	"background-color": "var(--background-primary)",
+	"background-image": "var(--brumes-section-texture, none)",
+	"background-repeat": "repeat",
+	"background-size": "var(--brumes-section-texture-size, auto)",
+};
+
+/**
+ * The `alternate` section of a game that holds a single polarity, painted with
+ * the tokens the pack publishes for it. Appended after the body layers, for
+ * the reason `modeSectionBlock` gives: the rendered blocks inside it carry the
+ * note layer with the same weight, and source order breaks the tie.
+ *
+ * No `color-scheme` is written: the pack names tokens, not a polarity, and
+ * nothing here may guess which one its section is.
+ */
+function publishedSectionBlock(mode: BrumesMode, section: GameStyleTokens): string {
+	return renderTokenBlock(
+		modeSectionSelector(mode, ".handbook-mode-alternate", ""),
+		{ ...section, ...derivedInkTokens(), ...SECTION_PAPER },
+	);
 }
 
 /**
@@ -300,23 +345,11 @@ function modeSectionBlock(
 		tokens[name] = name in values.base.note ? values.base.note[name] : "initial";
 	}
 
-	const selector = [
-		`body.brumes--${mode}${bodyClass} ${own}`,
-		`body.brumes--${mode}${bodyClass} ${own} .${BLOCK_SCOPE_CLASS}.brumes--${mode}`,
-	].join(",\n");
-	const paper: GameStyleTokens = {
-		"background-color": "var(--background-primary)",
-		// The pack may publish a texture for its sections; a flat paper otherwise.
-		"background-image": "var(--brumes-section-texture, none)",
-		"background-repeat": "repeat",
-		"background-size": "var(--brumes-section-texture-size, auto)",
-	};
-
-	return renderTokenBlock(selector, {
+	return renderTokenBlock(modeSectionSelector(mode, own, bodyClass), {
 		...tokens,
 		...layer,
 		...forcedInkTokens(polarity),
-		...paper,
+		...SECTION_PAPER,
 	});
 }
 
@@ -327,8 +360,12 @@ function modeSectionBlock(
  * them again where the note's ink is known, and give the editor the same ink.
  */
 function forcedInkTokens(polarity: GamePolarity): GameStyleTokens {
+	return { "color-scheme": polarity, ...derivedInkTokens() };
+}
+
+/** The same derivation, for a paper whose polarity nobody names. */
+function derivedInkTokens(): GameStyleTokens {
 	return {
-		"color-scheme": polarity,
 		color: "var(--text-normal)",
 		"--text-color": "var(--text-normal)",
 		"--table-header-color": "var(--text-normal)",

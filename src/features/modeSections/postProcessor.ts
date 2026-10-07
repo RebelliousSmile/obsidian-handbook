@@ -51,21 +51,22 @@ function markBlocks(
 ): void {
 	let parsed: ModeSectionParseResult | null = null;
 	const offered = plugin.effectivePolarities();
+	const published = plugin.publishesSection();
 	const blocks = Array.from(parent.children) as HTMLElement[];
 	// The mode shared by every block of the host, when there is one.
 	let shared: ModeSectionMode | null | undefined;
 	for (const block of blocks) {
 		const info = context.getSectionInfo(block);
-		if (info && !parsed) parsed = sourceSections(context, parent, info.text, offered);
+		if (info && !parsed) parsed = sourceSections(context, parent, info.text, offered, published);
 		const section = sectionOfBlock((parsed ?? NO_SECTION).sections, info);
 		for (const mode of MODES) {
 			// A mode the pack cannot honour is never applied.
 			block.classList.toggle(
 				modeSectionClass(mode),
-				section?.mode === mode && isModeOffered(mode, offered),
+				section?.mode === mode && isModeOffered(mode, offered, published),
 			);
 		}
-		const applied = section && isModeOffered(section.mode, offered) ? section.mode : null;
+		const applied = section && isModeOffered(section.mode, offered, published) ? section.mode : null;
 		// A block without source lines says nothing about the host.
 		if (info) shared = shared === undefined || shared === applied ? applied : null;
 	}
@@ -83,6 +84,7 @@ function sourceSections(
 	parent: HTMLElement,
 	sourceText: string,
 	offered: readonly ModeSectionMode[],
+	published: boolean,
 ): ModeSectionParseResult {
 	const existing = sourceByParent.get(parent);
 	let parsed = existing?.text === sourceText ? existing.parsed : null;
@@ -97,7 +99,7 @@ function sourceSections(
 		}
 	}
 	for (const section of parsed.sections) {
-		if (!isModeOffered(section.mode, offered)) {
+		if (!isModeOffered(section.mode, offered, published)) {
 			warnOnce(
 				context.sourcePath,
 				`Mode section at source line ${section.openLine + 1} ignored: the active game does not offer a ${section.mode} mode.`,

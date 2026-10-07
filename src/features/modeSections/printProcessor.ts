@@ -25,7 +25,8 @@ export async function printModeSections(
 	const source = await plugin.app.vault.cachedRead(file);
 	const parsed = parseModeSections(source);
 	const offered = plugin.effectivePolarities();
-	const sections = parsed.sections.filter((section) => isModeOffered(section.mode, offered));
+	const published = plugin.publishesSection();
+	const sections = parsed.sections.filter((section) => isModeOffered(section.mode, offered, published));
 	if (sections.length === 0) return;
 
 	const cache = (plugin.app.metadataCache.getFileCache(file)?.sections ?? []).map((section) => ({

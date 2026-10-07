@@ -1,0 +1,6 @@
+{
+	"id": "section-workspace",
+	"label": "Section workspace",
+	"style": { "section": { "note": { "--kept": "1" }, "workspace": { "--lost": "1" } } },
+	"polarities": ["light"]
+}

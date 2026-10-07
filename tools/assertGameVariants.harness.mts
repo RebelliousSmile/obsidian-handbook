@@ -9,8 +9,11 @@ import {
 } from "../src/games/registry";
 import {
 	effectiveColourScheme,
+	publishedSection,
 	resolveGameAppearance,
 } from "../src/games/variants";
+import { mergeGameStyle, parseGameOverride } from "../src/games/overrides";
+import { log } from "../src/utils/logger";
 import {
 	clearBrumesModeClasses,
 	setBrumesVariantClass,
@@ -107,5 +110,60 @@ assert.equal(classes.has("brumes--variant-metro"), false);
 assert.equal(classes.has("brumes--variant-cairo"), true);
 clearBrumesModeClasses(doc);
 assert.equal(Array.from(classes).some((name) => name.startsWith("brumes--")), false);
+
+/* ------------------------------------------------------------------ *
+ * The section a game publishes is held to its polarities, the user's
+ * file included.
+ * ------------------------------------------------------------------ */
+
+const sectionStyle = {
+	...emptyStyle,
+	section: { note: { "--background-primary": "#111", "--text-normal": "#eee" } },
+};
+const sectionWarnings: string[] = [];
+const realWarn = console.warn;
+log.setLevel("warn");
+console.warn = (...args: unknown[]) => { sectionWarnings.push(args.map(String).join(" ")); };
+
+assert.deepEqual(publishedSection("one-paper", sectionStyle, ["light"]), sectionStyle.section.note);
+assert.equal(sectionWarnings.length, 0, "one polarity reads the layer without a word");
+
+// A second polarity leaves the layer unread, says so once, and refuses nothing.
+assert.equal(publishedSection("two-papers", sectionStyle, ["light", "dark"]), null);
+assert.equal(publishedSection("two-papers", sectionStyle, ["light", "dark"]), null);
+assert.equal(sectionWarnings.filter((line) => line.includes('"two-papers"')).length, 1);
+assert.equal(publishedSection("other-papers", sectionStyle, ["light", "dark"]), null);
+assert.equal(sectionWarnings.filter((line) => line.includes('"other-papers"')).length, 1);
+
+// Nothing to say of a game that publishes no section, whatever it holds.
+assert.equal(publishedSection("plain", emptyStyle, ["light", "dark"]), null);
+assert.equal(publishedSection("plain", emptyStyle, ["light"]), null);
+assert.equal(publishedSection("empty", { ...emptyStyle, section: { note: {} } }, ["light", "dark"]), null);
+assert.equal(publishedSection("no-paper", sectionStyle, []), null);
+assert.equal(sectionWarnings.length, 2);
+
+console.warn = realWarn;
+log.setLevel("error");
+
+// An override file written before the layer existed is read as it was: no
+// section appears in what it says, nor in the style it is merged over.
+const formerOverride = parseGameOverride(
+	JSON.stringify({ style: { base: { note: { "--h1-color": "#abc" } }, dark: { note: { "--text-normal": "#fff" } } } }),
+);
+assert.deepEqual(formerOverride.style, {
+	base: { note: { "--h1-color": "#abc" } },
+	dark: { note: { "--text-normal": "#fff" } },
+});
+assert.equal("section" in mergeGameStyle(emptyStyle, formerOverride.style), false);
+assert.deepEqual(mergeGameStyle(sectionStyle, formerOverride.style).section, sectionStyle.section);
+
+// The same file may now tune the section, token by token.
+const sectionOverride = parseGameOverride(
+	JSON.stringify({ style: { section: { note: { "--text-normal": "#fff", "--bad;name": "x" } } } }),
+);
+assert.deepEqual(sectionOverride.style, { section: { note: { "--text-normal": "#fff" } } });
+assert.deepEqual(mergeGameStyle(sectionStyle, sectionOverride.style).section, {
+	note: { "--background-primary": "#111", "--text-normal": "#fff" },
+});
 
 console.log("Game variant assertions passed.");

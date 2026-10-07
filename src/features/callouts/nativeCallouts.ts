@@ -1,5 +1,5 @@
 import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
-import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
+import { PBTA_PACK_CALLOUTS, PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { CalloutDefinition } from "./types";
 
 const PBTA_VISUAL_ICONS: Record<(typeof PBTA_VISUAL_CALLOUTS)[number]["id"], string> = {
@@ -24,6 +24,42 @@ const PBTA_CALLOUTS: CalloutDefinition[] = [
 		capability: entry.capability,
 	})),
 ];
+
+const PACK_CALLOUT_DEFAULT_ICON = "sticky-note";
+
+// Keyed by id as text, with a default: a pack callout the schema publishes later
+// must not break the build of a Handbook that has not adopted it yet.
+const PBTA_PACK_ICONS: Record<string, string> = {
+	"monsterhearts-note": "notebook-pen",
+	"monsterhearts-note-dark": "moon",
+	"urban-shadows-move": "swords",
+	"urban-shadows-choice": "list-checks",
+	"urban-shadows-aside": "message-square-quote",
+	"urban-shadows-solid": "panel-top",
+	"urban-shadows-archetype": "id-card",
+	"urban-shadows-example": "quote",
+};
+
+// A pack callout belongs to the pack the schema names: its scope is that pack's
+// id, read from the published entry, and its stylesheet ships with the pack.
+const PBTA_PACK_NATIVE_CALLOUTS: CalloutDefinition[] = PBTA_PACK_CALLOUTS.map(
+	(entry): CalloutDefinition => {
+		const id: string = entry.id;
+		return {
+			id,
+			name: entry.label,
+			aliases: [id],
+			scope: entry.pack,
+			template: entry.template,
+			icon: PBTA_PACK_ICONS[id] ?? PACK_CALLOUT_DEFAULT_ICON,
+			font: "header",
+			color: { kind: "theme" },
+			native: true,
+			styleKey: id,
+			capability: entry.capability,
+		};
+	},
+);
 
 // Keyed by id as text: Handbook picks the icon of a callout the schema declares, and a schema
 // release that adds one must not break the build of a Handbook that has not adopted it yet.
@@ -67,6 +103,7 @@ const ADRENALINE_CALLOUTS: CalloutDefinition[] = ADRENALINE_VISUAL_CALLOUTS.map(
 /** Ids of the callouts the schema packages declare, the ones a saved list may predate. */
 export const SCHEMA_CALLOUT_IDS: readonly string[] = [
 	...PBTA_VISUAL_CALLOUTS.map((definition): string => definition.id),
+	...PBTA_PACK_CALLOUTS.map((definition): string => definition.id),
 	...ADRENALINE_VISUAL_CALLOUTS.map((definition): string => definition.id),
 ];
 
@@ -156,5 +193,6 @@ export const NATIVE_CALLOUTS: CalloutDefinition[] = [
 		styleKey: "read-aloud",
 	},
 	...PBTA_CALLOUTS,
+	...PBTA_PACK_NATIVE_CALLOUTS,
 	...ADRENALINE_CALLOUTS,
 ];

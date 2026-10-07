@@ -47,6 +47,8 @@ import {
 import {
 	effectiveColourScheme,
 	GameRegistration,
+	publishedSection,
+	ResolvedGameAppearance,
 	resolveGameAppearance,
 } from "./games/variants";
 import {
@@ -307,15 +309,29 @@ export default class BrumesPlugin extends Plugin {
 		return this.overrides.polarities ?? appearance.polarities;
 	}
 
+	private activeAppearance(): ResolvedGameAppearance {
+		const registration = resolveGameRegistration(this.settings.mode);
+		return resolveGameAppearance(
+			registration,
+			this.settings.gameVariants[registration.pack.id],
+			this.overrides.style,
+		);
+	}
+
 	/** The polarities offered by the active game and variant, overrides included. */
 	effectivePolarities(): GamePolarity[] {
-		const registration = resolveGameRegistration(this.settings.mode);
-		return this.polaritiesOf(
-			resolveGameAppearance(
-				registration,
-				this.settings.gameVariants[registration.pack.id],
-				this.overrides.style,
-			),
+		return this.polaritiesOf(this.activeAppearance());
+	}
+
+	/** Whether the active game, held to one polarity, publishes the paper of a section. */
+	publishesSection(): boolean {
+		const appearance = this.activeAppearance();
+		return (
+			publishedSection(
+				appearance.pack.id,
+				appearance.style,
+				this.polaritiesOf(appearance),
+			) !== null
 		);
 	}
 

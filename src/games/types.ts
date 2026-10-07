@@ -32,11 +32,25 @@ export interface GameStyleLayer {
 	workspace: GameStyleTokens;
 }
 
+/**
+ * What a section of a note wears. It has no `workspace`: a section lives in
+ * the note, never in the interface around it.
+ */
+export interface GameStyleSection {
+	note: GameStyleTokens;
+}
+
 export interface GameStyleValues {
 	/** Applies whichever theme is active. */
 	base: GameStyleLayer;
 	light: GameStyleLayer;
 	dark: GameStyleLayer;
+	/**
+	 * The paper of an `alternate` section, for a game that holds a single
+	 * polarity. Left out by a game that publishes none: with two polarities the
+	 * section is the other one, and this layer is not read.
+	 */
+	section?: GameStyleSection;
 }
 
 /**
@@ -141,6 +155,21 @@ const GAME_PACK_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export function isValidGamePackId(id: unknown): id is string {
 	return typeof id === "string" && GAME_PACK_ID_PATTERN.test(id);
+}
+
+/**
+ * The section tokens a game is held to: the ones it publishes, while it has a
+ * single polarity for them to stand against.
+ */
+export function sectionTokens(
+	style: GameStyleValues,
+	polarities: readonly GamePolarity[],
+): GameStyleTokens | null {
+	const tokens = style.section?.note ?? {};
+
+	return polarities.length === 1 && Object.keys(tokens).length > 0
+		? tokens
+		: null;
 }
 
 export const EMPTY_LAYER: GameStyleLayer = { note: {}, workspace: {} };

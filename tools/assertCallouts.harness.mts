@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
-import { PBTA_VISUAL_CALLOUTS } from "schema-pbta";
+import { PBTA_PACK_CALLOUTS, PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { log } from "../src/utils/logger";
 import { NATIVE_CALLOUTS } from "../src/features/callouts/nativeCallouts";
 import { isCalloutAvailable } from "../src/features/callouts/types";
@@ -35,7 +35,7 @@ function settingsAliases(id: string): string[] | undefined {
 
 // Portable callouts follow the manifest capability, independently of game id.
 {
-	const pbta = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:pbta");
+	const pbta = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:pbta" && entry.scope === "all");
 	// Every PbtA callout is published by the schema; none is declared locally.
 	assert.equal(pbta.length, PBTA_VISUAL_CALLOUTS.length);
 	assert.deepEqual(
@@ -44,6 +44,70 @@ function settingsAliases(id: string): string[] | undefined {
 	);
 	assert.equal(pbta.every((entry) => !isCalloutAvailable(entry, "unknown-game", [])), true);
 	assert.equal(pbta.every((entry) => isCalloutAvailable(entry, "unknown-game", ["style:pbta"])), true);
+}
+
+// A pack publishes its own callouts: each one is visible under its pack with the
+// style capability, and nowhere else. The list is read, never counted.
+{
+	const packIds = PBTA_PACK_CALLOUTS.map((definition): string => definition.pack);
+	const ids = PBTA_PACK_CALLOUTS.map((definition): string => definition.id);
+	assert.equal(new Set(ids).size, ids.length, "a pack callout id is published once");
+	for (const definition of PBTA_PACK_CALLOUTS) {
+		const id: string = definition.id;
+		const pack: string = definition.pack;
+		const entry = NATIVE_CALLOUTS.find((candidate) => candidate.id === id);
+		assert.ok(entry, `${id} is published but not defined`);
+		assert.equal(entry.scope, pack);
+		assert.equal(entry.name, definition.label);
+		assert.equal(entry.styleKey, id);
+		assert.equal(entry.template, definition.template);
+		assert.equal(entry.capability, definition.capability);
+		assert.equal(typeof entry.icon, "string");
+		assert.deepEqual(entry.aliases, [id]);
+		assert.ok(isCalloutAvailable(entry, pack, [definition.capability]), `${id} is missing under ${pack}`);
+		assert.ok(!isCalloutAvailable(entry, pack, []), `${id} needs ${definition.capability}`);
+		assert.ok(!isCalloutAvailable(entry, "unknown-game", [definition.capability]), `${id} leaks outside ${pack}`);
+		for (const other of packIds) {
+			if (other !== pack) assert.ok(!isCalloutAvailable(entry, other, [definition.capability]), `${id} leaks into ${other}`);
+		}
+	}
+	// Every native callout scoped to a publishing pack comes from the published list.
+	const scoped = NATIVE_CALLOUTS.filter((entry) => packIds.indexOf(entry.scope) !== -1);
+	assert.deepEqual(scoped.map((entry) => entry.id), ids);
+}
+
+// Saved settings from before the pack callouts gain them, aliases untouched.
+{
+	const packCalloutIds = PBTA_PACK_CALLOUTS.map((definition): string => definition.id);
+	const older = NATIVE_CALLOUTS.filter((entry) => packCalloutIds.indexOf(entry.id) === -1)
+		.map((entry) => entry.id === NATIVE_CALLOUTS[0].id ? { ...entry, aliases: ["kept-by-the-user"] } : entry);
+	const settings = normalizeSettings({ callouts: older });
+	assert.equal(settings.callouts.length, NATIVE_CALLOUTS.length);
+	assert.deepEqual(settings.callouts.find((entry) => entry.id === NATIVE_CALLOUTS[0].id)?.aliases, ["kept-by-the-user"]);
+	for (const id of packCalloutIds) {
+		assert.deepEqual(settings.callouts.find((entry) => entry.id === id)?.aliases, [id]);
+	}
+}
+
+// The insertion menu of a pack offers its own callouts and none of another pack.
+{
+	const packIds = PBTA_PACK_CALLOUTS.map((definition): string => definition.pack)
+		.filter((pack, index, all) => all.indexOf(pack) === index);
+	initGameRegistry(packIds.map((pack) => ({
+		pack: { id: pack, label: pack, style: EMPTY_STYLE },
+		installation: { version: "1.0.0", root: pack, minimumHandbookVersion: "2.8.0", requires: ["style:pbta"] },
+	})));
+	const settings = normalizeSettings(undefined);
+	for (const pack of packIds) {
+		const insertions = getAvailableCalloutInsertions(settings, pack);
+		for (const definition of PBTA_PACK_CALLOUTS) {
+			const offered = insertions.some((entry) => entry.alias === definition.id);
+			assert.equal(offered, definition.pack === pack, `${definition.id} under ${pack}`);
+		}
+		for (const definition of PBTA_VISUAL_CALLOUTS) {
+			assert.ok(insertions.some((entry) => entry.alias === definition.id), `${definition.id} is missing under ${pack}`);
+		}
+	}
 }
 
 // Adrenaline callouts carry the schema's ids and aliases, and need both the

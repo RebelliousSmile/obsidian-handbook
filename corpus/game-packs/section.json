@@ -1,0 +1,10 @@
+{
+	"id": "single-paper",
+	"label": "Single paper",
+	"style": {
+		"base": { "note": { "--font-text-theme": "Example Serif" } },
+		"light": { "note": { "--background-primary": "#f4efe4", "--text-normal": "#1b1b1b" } },
+		"section": { "note": { "--background-primary": "#1b1b1b", "--text-normal": "#f4efe4" } }
+	},
+	"polarities": ["light"]
+}

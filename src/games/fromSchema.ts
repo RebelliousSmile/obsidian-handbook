@@ -30,6 +30,7 @@ import {
 	GamePack,
 	GamePolarity,
 	GameStyleLayer,
+	GameStyleSection,
 	GameStyleTokens,
 	GameStyleValues,
 	isGamePolarity,
@@ -40,8 +41,10 @@ const log = logScope("Games");
 
 /** The fields a document may carry, by the level they sit at. */
 const PACK_FIELDS = ["id", "label", "style", "polarities", "assets", "shapes"];
-const STYLE_FIELDS = ["base", "light", "dark"];
+const LAYERED_FIELDS = ["base", "light", "dark"];
+const STYLE_FIELDS = [...LAYERED_FIELDS, "section"];
 const LAYER_FIELDS = ["note", "workspace"];
+const SECTION_FIELDS = ["note"];
 const ASSET_FIELDS = ["root", "images", "fonts", "stylesheets", "resources"];
 const FONT_FACE_FIELDS = ["file", "weight", "style"];
 
@@ -282,6 +285,27 @@ function readLayer(value: unknown, where: string): GameStyleLayer {
 	};
 }
 
+/**
+ * The section layer, absent when the document leaves it out. Exported because
+ * the override file reads its own the same way.
+ */
+export function readSection(
+	value: unknown,
+	where: string,
+): GameStyleSection | null {
+	if (!isRecord(value)) {
+		if (value !== undefined) {
+			log.warn(`Ignoring "${where}": not an object.`);
+		}
+
+		return null;
+	}
+
+	reportUnknown(where, unknownFields(value, SECTION_FIELDS));
+
+	return { note: readPackTokens(value.note, `${where}.note`) };
+}
+
 function readStyle(value: unknown): GameStyleValues {
 	if (!isRecord(value)) {
 		if (value !== undefined) {
@@ -297,11 +321,18 @@ function readStyle(value: unknown): GameStyleValues {
 
 	reportUnknown("style", unknownFields(value, STYLE_FIELDS));
 
-	return {
+	const style: GameStyleValues = {
 		base: readLayer(value.base, "style.base"),
 		light: readLayer(value.light, "style.light"),
 		dark: readLayer(value.dark, "style.dark"),
 	};
+	const section = readSection(value.section, "style.section");
+
+	if (section) {
+		style.section = section;
+	}
+
+	return style;
 }
 
 function readFontFace(value: unknown, where: string): string | GameFontFace | null {
@@ -556,8 +587,8 @@ export function readPolarities(
 export function toGamePackDocument(pack: GamePack): Record<string, unknown> {
 	const style: Record<string, unknown> = {};
 
-	for (const layerName of STYLE_FIELDS) {
-		const layer = pack.style[layerName as keyof GameStyleValues];
+	for (const layerName of LAYERED_FIELDS) {
+		const layer = pack.style[layerName as "base" | "light" | "dark"];
 		const slots: Record<string, unknown> = {};
 
 		for (const slotName of LAYER_FIELDS) {
@@ -571,6 +602,10 @@ export function toGamePackDocument(pack: GamePack): Record<string, unknown> {
 		if (Object.keys(slots).length > 0) {
 			style[layerName] = slots;
 		}
+	}
+
+	if (pack.style.section && Object.keys(pack.style.section.note).length > 0) {
+		style.section = { note: pack.style.section.note };
 	}
 
 	const document: Record<string, unknown> = {

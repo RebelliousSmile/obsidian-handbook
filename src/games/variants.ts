@@ -1,5 +1,13 @@
 import { GameStyleOverride, mergeGameStyle } from "./overrides";
-import { GamePack, GamePolarity, GameStyleValues, isValidGamePackId } from "./types";
+import { logScope } from "../utils/logger";
+import {
+	GamePack,
+	GamePolarity,
+	GameStyleTokens,
+	GameStyleValues,
+	isValidGamePackId,
+	sectionTokens,
+} from "./types";
 import type { GamePluginInstallation } from "./pluginManifest";
 
 export interface GameVariant {
@@ -78,6 +86,32 @@ export function resolveGameAppearance(
 		style: mergeGameStyle(variantStyle, override),
 		polarities: variant?.polarities ?? registration.pack.polarities ?? [],
 	};
+}
+
+const log = logScope("Games");
+const unreadSections: string[] = [];
+
+/**
+ * The section tokens the game is held to under these polarities, the user's
+ * file included. A second polarity makes `alternate` the other one: the layer
+ * is then left unread and said so once, and the game stays loaded — a vault
+ * that claims a polarity in its own file must not lose its game for it.
+ */
+export function publishedSection(
+	packId: string,
+	style: GameStyleValues,
+	polarities: readonly GamePolarity[],
+): GameStyleTokens | null {
+	const declared = Object.keys(style.section?.note ?? {}).length > 0;
+
+	if (declared && polarities.length > 1 && unreadSections.indexOf(packId) === -1) {
+		unreadSections.push(packId);
+		log.warn(
+			`Ignoring the section layer of "${packId}": with more than one polarity, an alternate section is painted in the other one.`,
+		);
+	}
+
+	return sectionTokens(style, polarities);
 }
 
 export function effectiveColourScheme<T extends "obsidian" | GamePolarity>(

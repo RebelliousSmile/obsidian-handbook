@@ -20,7 +20,7 @@ Les réglages Handbook, ici pour City of Mist, Legend in the Mist, Adrenaline Sy
 
 Alpha. Version actuelle : 2.35.1 (voir le [journal des changements](CHANGELOG.md)). **Prochaine étape :** stabiliser toutes les fonctionnalités core.
 
-- *Fonctionne aujourd'hui :* installation de packs depuis des dépôts de schémas (City of Mist, Legend in the Mist, :Otherscape, Adrenaline System, packs PbtA) ; régions en colonnes ; sections de mode forcé (`<!-- handbook-mode: alternate -->`) ; export PDF sur papier blanc, réglage `printerFriendly` activé par défaut
+- *Fonctionne aujourd'hui :* installation de packs depuis des dépôts de schémas (City of Mist, Legend in the Mist, :Otherscape, Adrenaline System, packs PbtA) ; régions en colonnes ; sections de mode forcé (`<!-- handbook-mode: alternate -->`), y compris pour un jeu à un seul thème dont le pack publie le papier de ses sections ; export PDF sur papier blanc, réglage `printerFriendly` activé par défaut
 - *Limites connues :* dans une note en colonnes, la bande d'une section de mode forcé s'arrête au texte, élargi d'une demi-gouttière, et n'atteint pas le bord de la page ; les sections de mode restent unies tant que les packs ne publient pas de texture
 
 ## Pourquoi
@@ -83,7 +83,7 @@ Handbook settings, shown for City of Mist, Legend in the Mist, Adrenaline System
 
 Alpha. Current version: 2.35.1 (see the [changelog](CHANGELOG.md)). **Next step:** stabilize all core features.
 
-- *Works today:* installing packs from schema repositories (City of Mist, Legend in the Mist, :Otherscape, Adrenaline System, PbtA packs); column regions; forced mode sections (`<!-- handbook-mode: alternate -->`); PDF export on white paper, with the `printerFriendly` setting on by default
+- *Works today:* installing packs from schema repositories (City of Mist, Legend in the Mist, :Otherscape, Adrenaline System, PbtA packs); column regions; forced mode sections (`<!-- handbook-mode: alternate -->`), including for a game with a single theme whose pack publishes the paper of its sections; PDF export on white paper, with the `printerFriendly` setting on by default
 - *Known limits:* in a column note, the band of a forced mode section stops at the text, widened by half a gutter, and does not reach the page edge; mode sections stay flat until packs publish a texture
 
 ### Why

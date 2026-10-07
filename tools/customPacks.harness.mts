@@ -193,6 +193,67 @@ async function run(): Promise<void> {
 		check("reloading repeats no file or collision diagnosis", errors.length === errorsBeforeReplay);
 	}
 
+	/* A style layer this reader does not know: a flat pack loses the layer and
+	 * keeps the rest, an installed plugin is refused whole. It is what decides
+	 * the delivery order of a new layer: a pack that carries one reaches only
+	 * the Handbook versions that read it. */
+	{
+		const layered = { base: { note: { "--kept": "1" } }, sepia: { note: { "--lost": "1" } } };
+		const errorsBefore = errors.length;
+		const warnings: string[] = [];
+		const originalWarn = console.warn;
+		log.setLevel("warn");
+		console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(" ")); };
+		const { plugin } = fakePlugin({
+			"flat-layer.json": JSON.stringify({ id: "flat-layer", label: "Flat layer", style: layered }),
+			"strict-layer/pack.json": JSON.stringify({
+				...(JSON.parse(gamePlugin("strict-layer")) as Record<string, unknown>),
+				pack: { id: "strict-layer", label: "Strict layer", style: layered },
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		console.warn = originalWarn;
+		log.setLevel("error");
+		const flat = installed.filter(({ pack }) => pack.id === "flat-layer")[0];
+
+		check("a flat pack with an unknown style layer is accepted", flat !== undefined);
+		check("the known layers of that pack are kept", flat?.pack.style.base.note["--kept"] === "1");
+		check("the unknown layer is not read", !JSON.stringify(flat?.pack.style ?? {}).includes("--lost"));
+		check("the unknown layer is reported", warnings.some((warning) => warning.includes("sepia")));
+		check("an installed plugin with an unknown style layer is refused whole", !installed.some(({ pack }) => pack.id === "strict-layer"));
+		check("that refusal is diagnosed once", errors.slice(errorsBefore).filter((line) => line.includes("strict-layer/pack.json")).length === 1);
+	}
+
+	/* The section layer is read from both forms, and its token names are held
+	 * to the same frontier as every other layer. */
+	{
+		const sectioned = {
+			base: { note: { "--kept": "1" } },
+			section: { note: { "--background-primary": "#111", "--unsafe;rule": "x" } },
+		};
+		const errorsBefore = errors.length;
+		const { plugin } = fakePlugin({
+			"flat-section.json": JSON.stringify({ id: "flat-section", label: "Flat section", polarities: ["light"], style: sectioned }),
+			"strict-section/pack.json": JSON.stringify({
+				...(JSON.parse(gamePlugin("strict-section")) as Record<string, unknown>),
+				pack: {
+					id: "strict-section",
+					label: "Strict section",
+					polarities: ["light"],
+					style: { base: sectioned.base, section: { note: { "--background-primary": "#111" } } },
+				},
+			}),
+		});
+		const installed = await loadCustomGamePacks(plugin);
+		const flat = installed.filter(({ pack }) => pack.id === "flat-section")[0];
+		const strict = installed.filter(({ pack }) => pack.id === "strict-section")[0];
+
+		check("a flat pack publishes its section", flat?.pack.style.section?.note["--background-primary"] === "#111");
+		check("an unsafe section token name is not read", flat !== undefined && !JSON.stringify(flat.pack.style).includes("--unsafe"));
+		check("an installed plugin publishes its section", strict?.pack.style.section?.note["--background-primary"] === "#111");
+		check("a section layer is no ground for a diagnostic", errors.slice(errorsBefore).filter((line) => line.includes("strict-section")).length === 0);
+	}
+
 	/* A directory is a strict, versioned plugin whose id matches its folder. */
 	{
 		const { plugin } = fakePlugin({

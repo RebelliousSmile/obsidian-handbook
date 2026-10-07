@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mapPrintRegions } from "../src/features/layoutRegions/printMapper";
 import { wrapInModeSection } from "../src/features/modeSections/insertion";
-import { parseModeSections, sectionOfBlock } from "../src/features/modeSections/parser";
+import { isModeOffered, parseModeSections, sectionOfBlock } from "../src/features/modeSections/parser";
 
 const source = [
 	"before",
@@ -106,5 +106,33 @@ const mapped = mapPrintRegions(
 );
 assert.ok(mapped.ok);
 if (mapped.ok) assert.deepEqual(mapped.selections.map((entry) => entry.blocks.length), [1]);
+
+// Which markers a game honours. `alternate` wants a second paper: the other
+// polarity, or the section a game with a single polarity publishes.
+const offers: [string, string[], boolean, boolean][] = [
+	["alternate", ["light", "dark"], false, true],
+	["alternate", ["light", "dark"], true, true],
+	["alternate", ["light"], true, true],
+	["alternate", ["dark"], true, true],
+	["alternate", ["light"], false, false],
+	["alternate", [], true, false],
+	["alternate", [], false, false],
+	// A published section is no polarity: it never answers a forced mode.
+	["dark", ["light"], true, false],
+	["light", ["dark"], true, false],
+	["light", ["light"], true, true],
+	["dark", ["light", "dark"], false, true],
+	["dark", [], true, false],
+];
+for (const [mode, offered, published, expected] of offers) {
+	assert.equal(
+		isModeOffered(mode as "alternate", offered, published),
+		expected,
+		`${mode} over [${offered.join(", ")}], section ${published ? "published" : "absent"}`,
+	);
+}
+// The third argument is optional: every earlier caller reads as before.
+assert.equal(isModeOffered("alternate", ["light"]), false);
+assert.equal(isModeOffered("alternate", ["light", "dark"]), true);
 
 console.log("Mode sections parse, nest with layout regions and refuse malformed markers.");

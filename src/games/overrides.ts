@@ -1,7 +1,12 @@
 import { Plugin } from "obsidian";
 import { ShapeOverrides } from "../features/blocks/shape";
 import { logScope } from "../utils/logger";
-import { readPackTokens, readPolarities, readShapeOverrides } from "./fromSchema";
+import {
+	readPackTokens,
+	readPolarities,
+	readSection,
+	readShapeOverrides,
+} from "./fromSchema";
 import {
 	GamePolarity,
 	GameStyleLayer,
@@ -23,13 +28,18 @@ const log = logScope("Games");
  */
 export { OVERRIDE_FILE_NAME } from "./storage";
 
-const LAYER_NAMES: (keyof GameStyleValues)[] = ["base", "light", "dark"];
+type LayerName = "base" | "light" | "dark";
+
+const LAYER_NAMES: LayerName[] = ["base", "light", "dark"];
 const SLOT_NAMES: (keyof GameStyleLayer)[] = ["note", "workspace"];
 
 export type GameStyleOverride = {
-	[K in keyof GameStyleValues]?: {
+	[K in LayerName]?: {
 		[S in keyof GameStyleLayer]?: GameStyleTokens;
 	};
+} & {
+	/** Over the section the game publishes, token by token. */
+	section?: { note?: GameStyleTokens };
 };
 
 /**
@@ -120,6 +130,15 @@ export function parseGameOverride(raw: string): GameOverride {
 		override[layerName] = slots;
 	}
 
+	const section = readSection(
+		style.section,
+		`${OVERRIDE_FILE_NAME} section`,
+	);
+
+	if (section) {
+		override.section = section;
+	}
+
 	return {
 		style: override,
 		shapes: readShapeOverrides(
@@ -152,11 +171,24 @@ export function mergeGameStyle(
 	base: GameStyleValues,
 	override: GameStyleOverride,
 ): GameStyleValues {
-	return {
+	const merged: GameStyleValues = {
 		base: mergeLayer(base.base, override.base),
 		light: mergeLayer(base.light, override.light),
 		dark: mergeLayer(base.dark, override.dark),
 	};
+
+	// Left out when neither side names it, so a style that never had a section
+	// merges to the value it merged to before the layer existed.
+	if (base.section || override.section) {
+		merged.section = {
+			note: {
+				...(base.section?.note ?? {}),
+				...(override.section?.note ?? {}),
+			},
+		};
+	}
+
+	return merged;
 }
 
 /**

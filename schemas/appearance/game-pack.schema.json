@@ -146,6 +146,30 @@
             }
           },
           "additionalProperties": false
+        },
+        "section": {
+          "description": "Tokens applied over the single polarity of the pack inside a section of a note. Read only while the game holds one polarity.",
+          "type": "object",
+          "properties": {
+            "note": {
+              "description": "Tokens that dress the blocks of a section.",
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^--[A-Za-z0-9_-]+$",
+                "description": "A CSS custom property name copied verbatim into a renderer-owned declaration block.",
+                "examples": [
+                  "--background-primary",
+                  "--h1-font"
+                ]
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,

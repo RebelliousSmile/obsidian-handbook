@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.37.0] - 2026-10-07
+
+### Added
+
+- A single-polarity pack may publish a page section (`style.section`): the alternate-mode section is drawn from the pack's own tokens and stylesheet, with nothing pack-specific in the plugin.
+- The callouts a PbtA pack publishes are listed in the menu under that pack only, with French labels; saved settings from before this version receive them without losing their aliases.
+
 ## [2.36.0] - 2026-10-07
 
 ### Changed

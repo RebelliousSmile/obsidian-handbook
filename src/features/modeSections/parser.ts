@@ -9,9 +9,17 @@ export type ModeSectionPolarity = "light" | "dark";
 /** A forced polarity, or `alternate`: the opposite of the mode the note shows. */
 export type ModeSectionMode = ModeSectionPolarity | "alternate";
 
-/** `alternate` needs two modes to alternate between; a forced one needs its own. */
-export function isModeOffered(mode: ModeSectionMode, offered: readonly string[]): boolean {
-	return mode === "alternate" ? offered.length > 1 : offered.indexOf(mode) !== -1;
+/**
+ * `alternate` needs two modes to alternate between, or a game that holds one
+ * and publishes the paper of its sections; a forced one needs its own.
+ */
+export function isModeOffered(
+	mode: ModeSectionMode,
+	offered: readonly string[],
+	publishesSection = false,
+): boolean {
+	if (mode !== "alternate") return offered.indexOf(mode) !== -1;
+	return offered.length > 1 || (offered.length === 1 && publishesSection);
 }
 
 /** Class of a rendered block that lies inside a section whose mode is set. */

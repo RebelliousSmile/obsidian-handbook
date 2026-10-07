@@ -1,0 +1,6 @@
+{
+	"id": "unsafe-section",
+	"label": "Unsafe section",
+	"style": { "section": { "note": { "--safe-token": "kept", "--unsafe;rule": "dropped" } } },
+	"polarities": ["light"]
+}
