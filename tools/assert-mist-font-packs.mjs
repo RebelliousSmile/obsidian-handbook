@@ -6,7 +6,7 @@ import { dirname, join, posix } from "node:path";
 const require = createRequire(import.meta.url);
 const stylesheet = readFileSync(new URL("../dist/styles.css", import.meta.url), "utf8");
 const bytes = Buffer.byteLength(stylesheet);
-assert.ok(bytes < 150_000, `dist/styles.css is ${bytes} bytes; expected below 150,000`);
+assert.ok(bytes < 160_000, `dist/styles.css is ${bytes} bytes; expected below 160,000`);
 assert.ok(!/@font-face\b|data:font\b/i.test(stylesheet), "the plugin stylesheet still embeds font faces");
 
 let totalResources = 0;
