@@ -112,8 +112,9 @@
 
 	.handbook-monsterhearts-region[data-region="monsterhearts-opening"] {
 		border-top: 0;
+		font-family: var(--monsterhearts-italic-font, Garamond, Georgia, serif);
 		font-style: italic;
-		font-size: 0.82em;
+		font-size: 0.95em;
 		line-height: 1.15;
 		color: var(--text-normal);
 		text-align: justify;
