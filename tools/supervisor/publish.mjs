@@ -265,7 +265,7 @@ function execute(context, file, next) {
 	const { topology } = context;
 	if (step.type === "workflow") dispatch(file, topology, repo, step);
 	else if (step.type === "local") runLocal(file, topology, repo, dir, evidenceDir, step);
-	else if (step.type === "adopt") adoptArchive(context.root, topology, repo, step.archive, step.consumers, { validate: step.validate, label: "publish" });
+	else if (step.type === "adopt") adoptArchive(context.root, topology, repo, step.archive, step.consumers, { validate: step.validate, label: "publish", train: readTrain(file, topology).id });
 	else if (step.type === "land") landFiles(context.root, topology, step, "publish");
 	else if (step.type === "tag") tag(context, repo, step);
 	else throw new SupervisorError(`publish: unknown step type ${step.type}`);

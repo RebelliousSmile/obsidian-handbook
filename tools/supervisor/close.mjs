@@ -13,6 +13,7 @@
 import { gh, ghJson, releaseExists } from "./gh.mjs";
 import { assertBinding } from "./binding.mjs";
 import { isAncestor, revParse } from "./git.mjs";
+import { trainLogs } from "./logs.mjs";
 import { pinGaps, publishedProviders } from "./converge.mjs";
 import { releaseTargets, releaseUrl, tagCommit, versionAt } from "./consumerRelease.mjs";
 import { readTrain, writeTrain } from "./train.mjs";
@@ -100,6 +101,8 @@ export function closeTrain(context, file, { run = false } = {}) {
 		if (result.status !== 0) throw new SupervisorError(`close: gh ${args.slice(0, 3).join(" ")} on ${issue.repo.repository} failed: ${result.stderr.trim()}; run supervise close --run again`, 1);
 	}
 	writeTrain(file, { ...readTrain(file, topology), status: "closed", closedAt: new Date().toISOString() }, topology);
+	// The logs served the repairs of an open train; the durations stay, they are read from one train to the next.
+	trainLogs(root, topology, train.id).purge();
 	console.log(`Train ${train.id} is closed; ${train.coordinationIssue.url} was closed last.`);
 	return 0;
 }

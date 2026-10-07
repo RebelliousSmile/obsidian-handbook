@@ -1124,7 +1124,12 @@ scenario("close --run records the consumer releases, comments every item and clo
 	assert.match(dry, /Nothing was closed/);
 	assert.deepEqual(issueCalls(world), []);
 
+	assert.ok(existsSync(logsDir(world)), "the open train kept no log");
+	const before = durations(world).length;
+	assert.ok(before > 0, "the open train kept no duration");
 	ok(close(world, topology, true), "close --run");
+	assert.ok(!existsSync(logsDir(world)), "close --run left the logs of the train");
+	assert.equal(durations(world).length, before, "close --run did not keep the durations summary as it was");
 	const record = readRecord(world);
 	assert.equal(record.status, "closed");
 	assert.ok(record.closedAt);
@@ -1667,6 +1672,20 @@ scenario("ship --run takes an uncommitted change to a closed train in one comman
 	const positions = order.map((mark) => result.text.indexOf(mark));
 	assert.ok(positions.every((position) => position >= 0), result.text);
 	assert.doesNotMatch(readFileSync(resolve(HANDBOOK, "tools/supervisor/ship.mjs"), "utf8"), /stdin|readline/);
+
+	const steps = ["commit", "present", "publish", "converge", "release", "close"];
+	for (const step of steps) {
+		assert.match(result.stdout, new RegExp(`^ship: ${step} started at \\d\\d:\\d\\d:\\d\\d$`, "m"), result.stdout);
+		assert.match(result.stdout, new RegExp(`^ship: ${step} took ${DURATION}$`, "m"), result.stdout);
+	}
+	assert.match(result.stdout, new RegExp(`^ship: the cycle took ${DURATION}$`, "m"), result.stdout);
+	const entries = durations(world);
+	assert.deepEqual(entries.filter((entry) => entry.kind === "step").map((entry) => [entry.step, entry.status]), steps.map((step) => [step, 0]));
+	assert.deepEqual(entries.filter((entry) => entry.kind === "cycle").map((entry) => entry.status), [0]);
+	const commands = entries.filter((entry) => entry.kind === "command");
+	assert.ok(commands.length > 0, "no command was measured");
+	assert.equal(commands.length, guardedRuns(result.stderr), "the durations summary does not carry one line per command run");
+	assert.ok(!existsSync(logsDir(world)), "the closed train kept its logs");
 });
 
 scenario("ship without --run shows every step of the cycle and commits, presents and dispatches nothing", (world) => {
@@ -1700,6 +1719,14 @@ scenario("a red validation stops ship --run after present: the commits are lande
 	assert.equal(result.status, 1, result.text);
 	assert.ok(result.stdout.includes(`lantern: ${broken.join(" ")} exited 3`), result.stdout);
 	assert.match(result.stderr, /ship: train "couleur-otherscape" is not presentable; nothing was published/);
+	assert.match(result.stdout, new RegExp(`^ship: present stopped \\(exit 1\\) after ${DURATION}$`, "m"), result.stdout);
+	assert.match(result.stdout, new RegExp(`^ship: the cycle stopped \\(exit 1\\) after ${DURATION}$`, "m"), result.stdout);
+	const entries = durations(world);
+	assert.deepEqual(entries.filter((entry) => entry.kind === "step").map((entry) => [entry.step, entry.status]), [["commit", 0], ["present", 1]]);
+	assert.deepEqual(entries.filter((entry) => entry.kind === "cycle").map((entry) => entry.status), [1]);
+	const log = resolve(logsDir(world), "lantern-1-present.log");
+	assert.ok(result.stdout.includes(`  Whole output: \`${log}\``), result.stdout);
+	assert.match(readFileSync(log, "utf8"), /contract broken/);
 	for (const id of SHIP_REPOS) assert.equal(shipped(world, id), 1, `${id} was not committed before the presentation`);
 	assert.equal(readRecord(world).presentation.presentable, false);
 	assert.equal(readRecord(world).publication["schema-adrenaline"], undefined);
@@ -1725,6 +1752,8 @@ scenario("ship --run again after an interrupted publication resumes at the missi
 	assert.equal(record.presentation.presentedAt, presentedAt, "the train was presented again");
 	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml", "release-train.yml", "release.yml"]);
 	assert.equal(record.status, "closed");
+	assert.deepEqual(durations(world).filter((entry) => entry.kind === "cycle").map((entry) => entry.status), [1, 0], "one entry per ship cycle, red then green");
+	assert.doesNotMatch(again.stdout, /^ship: (commit|present) started/m);
 });
 
 scenario("ship refuses to run on supervisor code nobody published, before any step", (world) => {
@@ -1754,6 +1783,88 @@ scenario("ship refuses a repository engaged by another open train, by name, and 
 	assert.deepEqual(shipHeads(world), before, "ship pushed a repository of another train");
 	assert.equal(shipped(world, "schema-adrenaline"), 0);
 	assert.deepEqual(dispatches(world), []);
+});
+
+// The whole output of a command, and how long it took.
+
+/** Where the supervisor keeps the logs and the durations of the world's trains: the git directory of the coordinator. */
+function logsRoot(world: World): string {
+	return resolve(git(world.dir("obsidian-handbook"), "rev-parse", "--absolute-git-dir"), "supervisor-logs");
+}
+
+function logsDir(world: World, id = TRAIN_ID): string {
+	return resolve(logsRoot(world), id);
+}
+
+/** The durations summary of a train, one entry per line. */
+function durations(world: World, id = TRAIN_ID): any[] {
+	const file = resolve(logsRoot(world), `${id}.durations.jsonl`);
+	if (!existsSync(file)) return [];
+	return readFileSync(file, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
+}
+
+/** How many commands the supervisor says it started behind the guard, read from its own stderr. */
+function guardedRuns(stderr: string): number {
+	return stderr.split("\n").filter((line) => /^(present|publish|converge): .+ in .+$/.test(line.trim())).length;
+}
+
+const DURATION = "(\\d+\\.\\d s|\\d+ min \\d+ s)";
+
+scenario("a red validation leaves its whole output in a file the report names, and every validation says how long it took", (world) => {
+	const noisy = nodeCommand("console.log('first line of the output'); for (let i = 0; i < 60; i += 1) console.log('line ' + i); process.exit(3)");
+	const topology = testTopology(world, { lantern: [PASS, noisy] });
+	doneTrain(world);
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	const log = resolve(logsDir(world), "lantern-2-present.log");
+	assert.ok(result.stdout.includes(`  Whole output: \`${log}\``), result.stdout);
+	assert.ok(result.stdout.includes(`is in \`${logsDir(world)}\`, until the train closes.`), result.stdout);
+	const whole = readFileSync(log, "utf8");
+	assert.ok(whole.startsWith("first line of the output\n"), whole.slice(0, 200));
+	assert.ok(whole.includes("line 59"), "the log lost the end of the output");
+	assert.match(readFileSync(resolve(logsDir(world), "lantern-1-present.log"), "utf8"), /validation passed/);
+	assert.match(result.stdout, new RegExp(`- passed: \`[^\`]+\` \\(${DURATION}\\)`));
+	assert.match(result.stdout, new RegExp(`- \\*\\*failed \\(exit 3\\)\\*\\*: \`[^\`]+\` \\(${DURATION}\\)`));
+
+	const validations = readRecord(world).presentation.repos.find((entry: any) => entry.repo === "lantern").validations;
+	assert.deepEqual(validations.map((entry: any) => entry.status), [0, 3]);
+	assert.ok(validations[1].tail.includes("line 59") && !validations[1].tail.includes("first line of the output"), "the record was expected to keep only the last lines");
+	for (const entry of validations) assert.ok(Number.isInteger(entry.durationMs) && entry.durationMs >= 0, JSON.stringify(entry));
+	assert.ok(!readFileSync(trainPath(world), "utf8").includes("supervisor-logs"), "a local path was written to the train record");
+
+	const commands = durations(world).filter((entry) => entry.kind === "command");
+	assert.equal(commands.length, guardedRuns(result.stderr), JSON.stringify(commands));
+	assert.equal(commands.length, 4);
+	for (const entry of commands) {
+		assert.equal(entry.step, "present");
+		assert.ok(Array.isArray(entry.command) && Number.isInteger(entry.status) && Number.isInteger(entry.durationMs) && !Number.isNaN(Date.parse(entry.at)), JSON.stringify(entry));
+	}
+	assert.deepEqual(commands.filter((entry) => entry.repo === "lantern").map((entry) => entry.status), [0, 3]);
+});
+
+scenario("behind a provider whose build is red, the validations of its consumers are reported not run, with the reason", (world) => {
+	const mist = world.dir("schema-in-the-mist");
+	const manifest = JSON.parse(readFileSync(resolve(mist, "package.json"), "utf8"));
+	world.land("schema-in-the-mist", { "package.json": `${JSON.stringify({ ...manifest, scripts: { build: "tsc" } }, null, "\t")}\n` }, "a build script");
+	// The build runs once per consumer; the world's npm fails it both times.
+	world.updateState((state) => { state.localEffects = { ...state.localEffects, "schema-in-the-mist build": [{ status: 4 }, { status: 4 }] }; });
+	const marker = resolve(world.tmp, "consumer-validated");
+	const touch = nodeCommand(`require('fs').appendFileSync(${JSON.stringify(marker)}, 'x')`);
+	const topology = testTopology(world, { lantern: [touch], "obsidian-handbook": [touch] });
+	doneTrain(world);
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.ok(!existsSync(marker), "a consumer was validated behind a provider that does not build");
+	assert.match(result.stdout, /- schema-in-the-mist: npm run build exited 4 \(whole output: (lantern|obsidian-handbook)-1-build-schema-in-the-mist\.log\)/);
+	for (const consumer of ["lantern", "obsidian-handbook"]) {
+		assert.ok(result.stdout.includes(`- ${consumer}: ${touch.join(" ")} not run: the build of schema-in-the-mist failed`), result.stdout);
+		assert.match(readFileSync(resolve(logsDir(world), `${consumer}-1-build-schema-in-the-mist.log`), "utf8"), /fake npm: build exited 4/);
+		const validations = readRecord(world).presentation.repos.find((entry: any) => entry.repo === consumer).validations;
+		assert.deepEqual(validations, [{ command: touch, status: -1, tail: "", notRun: "the build of schema-in-the-mist failed" }]);
+	}
+	assert.ok(result.stdout.includes(`- **not run**: \`${touch.join(" ")}\` (the build of schema-in-the-mist failed)`), result.stdout);
+	assert.match(result.stdout, new RegExp(`- passed: \`[^\`]+\` \\(${DURATION}\\)`), "the provider's own validation was expected to run");
+	assert.equal(readRecord(world).presentation.presentable, false);
 });
 
 /** The git verbs a scenario ran, most frequent first: where its time goes. */

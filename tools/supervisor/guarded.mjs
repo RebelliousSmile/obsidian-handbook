@@ -6,7 +6,8 @@
  * through here cannot release, push, tag or dispatch a workflow, even by
  * mistake. Every command that runs repository code goes through this module.
  */
-import { delimiter, join, resolve } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pathKey, spawnCommand, withRequire } from "./spawn.mjs";
 
@@ -55,9 +56,15 @@ export function unguardedEnv(env = process.env) {
 	return next;
 }
 
-/** Run `command` in `dir` behind the publication guard; its output is kept to its last lines. */
-export function runGuarded(dir, command, label) {
+/**
+ * Run `command` in `dir` behind the publication guard. The result keeps the
+ * last lines of its output and its duration; with `log`, the whole output is
+ * written to that file, which the caller names (`logs.mjs`): this module knows
+ * neither the train nor the coordinator. Without `log`, nothing is written.
+ */
+export function runGuarded(dir, command, label, { log = null } = {}) {
 	process.stderr.write(`${label}: ${command.join(" ")} in ${dir}\n`);
+	const started = Date.now();
 	// The command itself is resolved past the guard's own shims.
 	const result = spawnCommand(command[0], command.slice(1), {
 		cwd: dir,
@@ -66,10 +73,23 @@ export function runGuarded(dir, command, label) {
 		exclude: [GUARD_DIR],
 		maxBuffer: 256 * 1024 * 1024,
 	});
+	const durationMs = Date.now() - started;
 	const output = `${result.stdout ?? ""}${result.stderr ?? ""}${result.error ? `\n${result.error.message}` : ""}`;
+	let written = null;
+	if (log) {
+		try {
+			mkdirSync(dirname(log), { recursive: true });
+			writeFileSync(log, output);
+			written = log;
+		} catch {
+			// A log that cannot be written never changes the result of the command.
+		}
+	}
 	return {
 		command,
 		status: result.error ? 127 : (result.status ?? 1),
 		tail: output.trimEnd().split("\n").slice(-TAIL).join("\n"),
+		durationMs,
+		log: written,
 	};
 }

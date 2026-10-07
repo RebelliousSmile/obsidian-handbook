@@ -24,7 +24,7 @@ import * as mist from "./adapters/mist.mjs";
 import { adoptArchive, landFiles, readyCheckout } from "./land.mjs";
 import { matrixUpdate } from "./matrix.mjs";
 import { checkCheckouts } from "./present.mjs";
-import { runGuarded } from "./guarded.mjs";
+import { logNote, trainLogs } from "./logs.mjs";
 import { providerOrder, quote } from "./publish.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
@@ -76,7 +76,7 @@ function record(file, topology, convergence) {
 }
 
 /** Each provider's consumers that do not pin its final adopt it: frozen install, commit, push. */
-function adoptFinals(root, topology, gaps) {
+function adoptFinals(root, topology, gaps, train) {
 	const byProvider = new Map();
 	for (const gap of gaps) {
 		const entry = byProvider.get(gap.provider) ?? { final: gap.final, consumers: [] };
@@ -84,7 +84,7 @@ function adoptFinals(root, topology, gaps) {
 		byProvider.set(gap.provider, entry);
 	}
 	for (const [provider, { final, consumers }] of byProvider) {
-		adoptArchive(root, topology, repoById(topology, provider), final, consumers, { validate: false, label: "converge" });
+		adoptArchive(root, topology, repoById(topology, provider), final, consumers, { validate: false, label: "converge", train });
 	}
 }
 
@@ -98,7 +98,7 @@ export function convergeTrain(context, file, { run = false } = {}) {
 	if (run) {
 		const gaps = pinGaps(root, topology, published);
 		if (gaps.length > 0) {
-			adoptFinals(root, topology, gaps);
+			adoptFinals(root, topology, gaps, train.id);
 			assertBinding(root, topology, readTrain(file, topology));
 		}
 		for (const repo of repos) readyCheckout(repo, repoDir(root, repo), "converge");
@@ -115,6 +115,7 @@ export function convergeTrain(context, file, { run = false } = {}) {
 	const shas = repos.map((repo) => ({ repo: repo.id, sha: heads[repo.id] }));
 	const checks = [];
 	const notes = [];
+	const logs = trainLogs(root, topology, train.id);
 	const fail = (note, code = 1) => {
 		record(file, topology, { status: "failed", at, repos: shas, checks, notes: [...notes, note] });
 		return code;
@@ -137,9 +138,9 @@ export function convergeTrain(context, file, { run = false } = {}) {
 	for (const repo of consumers) {
 		if (!repo.convergence?.length) notes.push(`${repo.id}: no convergence command is configured in the topology`);
 		for (const command of repo.convergence ?? []) {
-			const result = runGuarded(repoDir(root, repo), command, "converge");
+			const result = logs.run(repo.id, "converge", repoDir(root, repo), command, "converge");
 			checks.push({ repo: repo.id, command, status: result.status });
-			if (result.status !== 0 && result.tail) console.log(`${repo.id}: ${command.join(" ")} exited ${result.status}\n${result.tail}`);
+			if (result.status !== 0) console.log(`${repo.id}: ${command.join(" ")} exited ${result.status}\n${result.tail}${logNote(result)}`);
 		}
 	}
 
@@ -177,19 +178,19 @@ export function convergeTrain(context, file, { run = false } = {}) {
 					landFiles(root, topology, step, "converge");
 					continue;
 				}
-				const result = runGuarded(dir, step.command, "converge");
+				const result = logs.run(repo.id, "converge", dir, step.command, "converge");
 				checks.push({ repo: repo.id, command: step.command, status: result.status });
 				if (result.status !== 0) {
-					if (result.tail) console.log(result.tail);
+					console.log(`${result.tail}${logNote(result)}`);
 					return fail(`${repo.id}: ${step.command.join(" ")} exited ${result.status}`);
 				}
 				continue;
 			}
 			notes.push(...step.notes);
 			for (const command of step.commands) {
-				const result = runGuarded(dir, command, "converge");
+				const result = logs.run(repo.id, "converge", dir, command, "converge");
 				checks.push({ repo: repo.id, command, status: result.status });
-				if (result.status !== 0 && result.tail) console.log(`${repo.id}: ${command.join(" ")} exited ${result.status}\n${result.tail}`);
+				if (result.status !== 0) console.log(`${repo.id}: ${command.join(" ")} exited ${result.status}\n${result.tail}${logNote(result)}`);
 			}
 			break;
 		}

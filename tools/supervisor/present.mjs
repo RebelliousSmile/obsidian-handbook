@@ -10,11 +10,16 @@
  *
  * A consumer the train changes must carry a version that has no release yet:
  * `release` tags what `package.json` says, it writes no version.
+ *
+ * The whole output of each command is kept beside the train (`logs.mjs`), and
+ * the report names it for every failure. The record keeps the duration of a
+ * validation, never the path of its log: a record is committed, a log is local.
  */
 import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { announcedPublications, computeDigest, concernedRepos, trainFilesOf } from "./digest.mjs";
 import { evaluateTrain } from "./next.mjs";
-import { runGuarded } from "./guarded.mjs";
+import { basename } from "node:path";
+import { formatDuration, trainLogs } from "./logs.mjs";
 import { packageManager, packageJson } from "./preview.mjs";
 import { planProviderLinks, withProviderLinks } from "./providerLinks.mjs";
 import { releaseExists } from "./gh.mjs";
@@ -90,7 +95,10 @@ function releasedVersions(root, topology, train, entries) {
 	return reasons;
 }
 
-export function presentTrain(root, topology, train) {
+/** The step a validation's log is filed under; its rank is its place among the repository's validations, from 1. */
+const PRESENT_STEP = "present";
+
+export function presentTrain(root, topology, train, logs = trainLogs(root, topology, train.id)) {
 	if (train.status !== "open") throw new SupervisorError(`present: train "${train.id}" is closed`);
 	const repos = concernedRepos(topology, train);
 	const heads = checkPreconditions(root, topology, train, repos);
@@ -107,18 +115,29 @@ export function presentTrain(root, topology, train) {
 			: [];
 		const diffstat = baseKnown ? gitOut(dir, ["diff", "--stat", base, sha]) : "";
 		const links = repo.role === "provider" ? [] : planProviderLinks(root, topology, train, repo);
+		const broken = [];
 		for (const link of links) {
-			const build = packageJson(link.dir)?.scripts?.build ? runGuarded(link.dir, [packageManager(link.dir), "run", "build"], "present") : null;
-			if (build && build.status !== 0) buildFailures.push(`${link.repo}: ${build.command.join(" ")} exited ${build.status}`);
+			const build = packageJson(link.dir)?.scripts?.build ? logs.run(repo.id, `build-${link.repo}`, link.dir, [packageManager(link.dir), "run", "build"], "present") : null;
+			if (!build || build.status === 0) continue;
+			broken.push(link.repo);
+			buildFailures.push(`${link.repo}: ${build.command.join(" ")} exited ${build.status}${build.log ? ` (whole output: ${basename(build.log)})` : ""}`);
 		}
-		const validations = withProviderLinks(dir, links, () => (repo.validations ?? []).map((command) => runGuarded(dir, command, "present")));
+		// Behind a provider that does not build, a consumer's validations cannot pass: they are not started.
+		const validations = broken.length > 0
+			? (repo.validations ?? []).map((command) => ({ command, status: -1, tail: "", notRun: `the build of ${broken.join(", ")} failed` }))
+			: withProviderLinks(dir, links, () => (repo.validations ?? []).map((command) => {
+				const result = logs.run(repo.id, PRESENT_STEP, dir, command, "present");
+				return { command: result.command, status: result.status, tail: result.tail, durationMs: result.durationMs };
+			}));
 		return { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat, validations };
 	});
 	const reasons = [...buildFailures];
 	for (const entry of entries) {
 		if (entry.validations.length === 0) reasons.push(`${entry.repo}: no local validation is configured in the topology`);
 		for (const validation of entry.validations.filter((result) => result.status !== 0)) {
-			reasons.push(`${entry.repo}: ${validation.command.join(" ")} exited ${validation.status}`);
+			reasons.push(validation.notRun
+				? `${entry.repo}: ${validation.command.join(" ")} not run: ${validation.notRun}`
+				: `${entry.repo}: ${validation.command.join(" ")} exited ${validation.status}`);
 		}
 	}
 	reasons.push(...releasedVersions(root, topology, train, entries));
@@ -139,7 +158,8 @@ function short(sha) {
 	return sha ? sha.slice(0, 10) : "-";
 }
 
-export function renderPresentation(train, presentation) {
+/** `logs` names, for each failure, the file that holds its whole output; without it the report keeps to the last lines. */
+export function renderPresentation(train, presentation, logs = null) {
 	const lines = [
 		`# Train \`${train.id}\`: ${train.title}`,
 		"",
@@ -160,11 +180,21 @@ export function renderPresentation(train, presentation) {
 		}
 		lines.push("", "Validations (behind the publication guard):");
 		if (entry.validations.length === 0) lines.push("- none configured");
-		for (const validation of entry.validations) {
-			lines.push(`- ${validation.status === 0 ? "passed" : `**failed (exit ${validation.status})**`}: \`${validation.command.join(" ")}\``);
-			if (validation.status !== 0 && validation.tail) lines.push("", "```", validation.tail, "```");
+		for (const [index, validation] of entry.validations.entries()) {
+			const command = `\`${validation.command.join(" ")}\``;
+			if (validation.notRun) {
+				lines.push(`- **not run**: ${command} (${validation.notRun})`);
+				continue;
+			}
+			const took = Number.isInteger(validation.durationMs) ? ` (${formatDuration(validation.durationMs)})` : "";
+			lines.push(`- ${validation.status === 0 ? "passed" : `**failed (exit ${validation.status})**`}: ${command}${took}`);
+			if (validation.status === 0) continue;
+			const log = logs?.file(entry.repo, index + 1, PRESENT_STEP);
+			if (log) lines.push(`  Whole output: \`${log}\``);
+			if (validation.tail) lines.push("", "```", validation.tail, "```");
 		}
 	}
+	if (logs?.dir) lines.push("", `The whole output of every command above is in \`${logs.dir}\`, until the train closes.`);
 	lines.push("", "## Try it before publishing", "", "`pnpm supervise preview --vault <vault>` builds these checkouts, installs the Handbook packs of each provider in the vault, deploys Handbook next to its `data.json`, and serves each consumer's dev server on the same checkouts.");
 	lines.push("", "## Publications `publish` will make", "", ...presentation.publications.map((publication) => `- ${publication}`));
 	return lines.join("\n");

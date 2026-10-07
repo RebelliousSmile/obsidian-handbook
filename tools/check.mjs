@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
+import { runCheck } from "./checkRun.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(
@@ -36,7 +37,6 @@ const forced = process.env.CI === "true" || process.env.HANDBOOK_CHECK_FORCE ===
 // HANDBOOK_CHECK_SKIP="assert:a,assert:b" leaves named gates out, and says so. A workflow uses it
 // for a gate another job of the same pipeline already proves (the supervisor harness: its Windows job).
 const skipped = new Set((process.env.HANDBOOK_CHECK_SKIP ?? "").split(",").map((name) => name.trim()).filter(Boolean));
-const SUPERVISOR_SCRIPT = "assert:supervisor";
 const SUPERVISOR_INPUTS = [
 	/^tools\/supervisor\//,
 	/^tools\/fixtures\/supervisor\//,
@@ -78,15 +78,6 @@ function writeStamps(stamps) {
 	if (stampFile) writeFileSync(stampFile, `${JSON.stringify(stamps, null, "\t")}\n`);
 }
 
-const stamps = readStamps();
-const fullHash = contentHash((file) => !file.startsWith("supervisor/trains/"));
-const supervisorHash = contentHash((file) => SUPERVISOR_INPUTS.some((pattern) => pattern.test(file)));
-
-if (fullHash && stamps.full === fullHash) {
-	console.log("\ncheck: this exact content already passed; nothing replayed (HANDBOOK_CHECK_FORCE=1 to replay).");
-	process.exit(0);
-}
-
 function scriptInvocation(command) {
 	if (!npmCli) return { file: "npm", args: ["run", command] };
 	const isJavaScriptCli = /\.(?:c?js|mjs)$/i.test(npmCli);
@@ -102,13 +93,15 @@ function runPackageScript(command) {
 
 // Gates that only read the checkout (`build` writes `dist/`, nothing else reads it): run them together,
 // first, so an evident failure (types, lint, version, lockfile, schema pins) comes back in seconds
-// instead of after the long gates. The first failure stops the others.
+// instead of after the long gates. In stop mode the first failure stops the others.
 const QUICK_GATES = ["build", "lint", "assert:release-version", "assert:ci-install", "assert:consumer-schema-pins"];
 
-function runQuickGates(gates) {
+/** The exit code of each gate; null for a gate stopped because another one failed first. */
+function runQuickGates(gates, { stopOnFailure }) {
 	return new Promise((resolveGates) => {
 		const running = new Map();
-		let failed = null;
+		const codes = {};
+		let stopped = false;
 		const stopAll = () => {
 			for (const child of running.values()) {
 				if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore" });
@@ -124,14 +117,17 @@ function runQuickGates(gates) {
 			running.set(gate, child);
 			const finish = (code) => {
 				if (!running.delete(gate)) return;
-				if (code === 0) {
-					if (!failed) console.log(`> check: ${gate} ok`);
-				} else if (!failed) {
-					failed = gate;
-					console.log(`\n> check: ${gate} FAILED (stopping the other quick gates)\n${output}`);
-					stopAll();
+				if (stopped) codes[gate] = null;
+				else {
+					codes[gate] = code;
+					if (code === 0) console.log(`> check: ${gate} ok`);
+					else if (stopOnFailure) {
+						stopped = true;
+						console.log(`\n> check: ${gate} FAILED (stopping the other quick gates)\n${output}`);
+						stopAll();
+					} else console.log(`\n> check: ${gate} FAILED\n${output}`);
 				}
-				if (running.size === 0) resolveGates(failed ? 1 : 0);
+				if (running.size === 0) resolveGates(codes);
 			};
 			child.on("error", (error) => { output += String(error); finish(1); });
 			child.on("close", (code) => finish(code ?? 1));
@@ -139,36 +135,30 @@ function runQuickGates(gates) {
 	});
 }
 
-console.log(`\n> check: quick gates in parallel (${QUICK_GATES.join(", ")})`);
-const quickStatus = await runQuickGates(QUICK_GATES);
-if (quickStatus !== 0) process.exit(quickStatus);
+// Collect mode: behind `supervise present` every red gate is worth one reading, not one cycle each.
+const collect = process.env.SUPERVISOR_PRESENT === "1" || process.env.HANDBOOK_CHECK_COLLECT === "1";
 
-for (const command of commands) {
-	if (QUICK_GATES.includes(command)) continue;
-	if (skipped.has(command)) {
-		console.log(`\n> check: ${command} skipped by HANDBOOK_CHECK_SKIP`);
-		continue;
-	}
-	if (command === SUPERVISOR_SCRIPT && supervisorHash && stamps.supervisor === supervisorHash) {
-		console.log(`\n> check: ${command} skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)`);
-		continue;
-	}
-	console.log(`\n> check: ${command}`);
-	const result = runPackageScript(command);
-	if (result.error) throw result.error;
-	if (result.status !== 0) {
-		process.exit(result.status ?? 1);
-	}
-	if (command === SUPERVISOR_SCRIPT && supervisorHash) {
-		stamps.supervisor = supervisorHash;
-		writeStamps(stamps);
-	}
-}
+const { status, reused } = await runCheck({
+	gates: commands,
+	quickGates: QUICK_GATES,
+	skipped,
+	stamps: readStamps(),
+	hashes: {
+		full: contentHash((file) => !file.startsWith("supervisor/trains/")),
+		supervisor: contentHash((file) => SUPERVISOR_INPUTS.some((pattern) => pattern.test(file))),
+	},
+	collect,
+	launcher: {
+		quick: runQuickGates,
+		run(gate) {
+			const result = runPackageScript(gate);
+			if (result.error) throw result.error;
+			return result.status ?? 1;
+		},
+	},
+	log: (line) => console.log(line),
+	writeStamps,
+});
 
-// A run that left a gate out proves less than the content: it must not stand for a full green.
-if (fullHash && skipped.size === 0) {
-	stamps.full = fullHash;
-	writeStamps(stamps);
-}
-
-console.log("\nHandbook core check passed.");
+if (status !== 0) process.exit(status);
+if (!reused) console.log("\nHandbook core check passed.");

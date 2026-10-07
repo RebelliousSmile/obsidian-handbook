@@ -108,6 +108,8 @@ Avant le premier commit, `ship` refuse un train clos, un dépôt engagé par un 
 
 Sans `--run`, `ship` affiche le plan de commit et la suite des étapes, et n'écrit rien : ni commit, ni dossier de train, ni dispatch.
 
+Avec `--run`, chaque étape qui tourne annonce son heure de départ (`ship: publish started at 14:03:27`) puis sa durée (`ship: publish took 3 min 12 s`, ou `ship: present stopped (exit 1) after 41.0 s`), et le cycle se termine par sa durée totale, vert ou rouge. Une étape sautée à la reprise n'annonce rien. Ces mesures rejoignent le résumé des durées du train (voir [Lire un échec](#lire-un-échec-journaux-et-durées)).
+
 ### 5. `present` : les preuves, sans rien publier
 
 ```bash
@@ -124,6 +126,14 @@ Le garde a une seule table de règles (`tools/supervisor/guard/rules.cjs`) et de
 - un **hook `NODE_OPTIONS=--require`** (`hook.cjs`), hérité par chaque processus Node : il arrête un outil Node qui lance `gh` ou `git` sans shell, ce qui sous Windows trouve directement `gh.exe` et saute les shims.
 
 Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuvable en 127, et aucun des deux n'atteint le binaire.
+
+Chaque validation est rapportée avec sa durée. Une validation rouge garde ses dernières lignes dans le rapport et nomme le fichier qui porte sa sortie entière (`Whole output: …`). Trois états ne se confondent pas :
+
+- **`passed`** / **`failed (exit N)`** : la commande a tourné ;
+- **`not run`** : la commande n'a pas été lancée, et la raison suit. C'est le cas des validations d'un consommateur quand le `build` d'un fournisseur du train est rouge (`the build of <fournisseur> failed`) : mesurer le consommateur sur un fournisseur qui ne se construit pas ne dirait rien. Une validation non lancée rend le train non présentable, au même titre qu'une rouge ;
+- **`skipped`** (dans la sortie de `pnpm check`) : une porte écartée par son nom (`HANDBOOK_CHECK_SKIP`) ou dont le contenu a déjà passé. Ce n'est pas un échec.
+
+Sous `present`, `pnpm check` tourne en **mode collecte** : au lieu de s'arrêter à la première porte rouge, il les lance toutes et termine par un récapitulatif (`check: 3 gate(s) failed: …`), de sorte qu'un seul passage nomme tout ce qui est à corriger. Le harnais du superviseur, le plus long, passe alors en dernier et n'est pas lancé si une porte avant lui est rouge (`not run`). Le superviseur pose `SUPERVISOR_PRESENT=1` pour cela ; à la main, `HANDBOOK_CHECK_COLLECT=1 pnpm check` fait de même. Sans ces variables, `pnpm check` garde son arrêt au premier rouge.
 
 **Valider contre le train** : `present` ne mesure pas un consommateur sur son épingle quand le train change le fournisseur. Pour chaque fournisseur du train que le consommateur déclare, il construit le checkout (script `build`) puis, le temps des validations du consommateur, remplace son lien `node_modules/<paquet>` par le checkout, et le remet ensuite quoi qu'il arrive. Un contrat cassant passe donc le typage et les harnais du consommateur avant `publish`. Seul un lien est remplacé (disposition pnpm) : un dossier réel est refusé, pas déplacé. Rien de suivi n'est écrit.
 
@@ -186,7 +196,18 @@ pnpm supervise close           # montre ce qui serait fermé
 pnpm supervise close --run     # ferme
 ```
 
-Exige une convergence `passed`, une présentation qui tient, des `origin/main` qui **descendent** des SHA de la convergence (les commits de release des consommateurs arrivent après elle), aucun écart de pins, et les releases de Lantern et de Handbook décrites ci-dessus. Tout manque est nommé, et rien n'est fermé. Avec `--run`, `close` consigne `consumerReleases`, commente ou ferme chaque issue, ferme l'issue de coordination **en dernier**, puis passe le train à `closed`.
+Exige une convergence `passed`, une présentation qui tient, des `origin/main` qui **descendent** des SHA de la convergence (les commits de release des consommateurs arrivent après elle), aucun écart de pins, et les releases de Lantern et de Handbook décrites ci-dessus. Tout manque est nommé, et rien n'est fermé. Avec `--run`, `close` consigne `consumerReleases`, commente ou ferme chaque issue, ferme l'issue de coordination **en dernier**, puis passe le train à `closed`. Il supprime aussi les journaux du train ; le résumé des durées reste.
+
+## Lire un échec : journaux et durées
+
+Toute commande que le superviseur lance derrière le garde (builds et validations de `present`, installation et validations d'une adoption, vérifications de `converge`) laisse **sa sortie entière** dans un fichier, et sa durée dans un résumé. Les deux vivent dans le répertoire git du coordinateur (`git rev-parse --absolute-git-dir` dans Handbook : `.git/`, ou `.git/worktrees/<nom>/` depuis un worktree du superviseur), donc hors du checkout et jamais commités :
+
+- `supervisor-logs/<train>/<dépôt>-<rang>-<étape>.log` : la sortie d'une commande. `<rang>` est son rang dans l'étape pour ce dépôt, à partir de 1 ; `<étape>` vaut `present`, `build-<fournisseur>`, `converge`, ou `publish-<fournisseur>` / `converge-<fournisseur>` pour une adoption. Une relance réécrit le fichier ;
+- `supervisor-logs/<train>.durations.jsonl` : une ligne JSON par commande (`kind: "command"`, dépôt, étape, commande, code de sortie, `durationMs`), par étape de `ship` (`kind: "step"`) et par cycle `ship` (`kind: "cycle"`), chacune datée.
+
+Devant un rouge, le rapport ou le message d'erreur nomme le fichier : c'est lui qu'on ouvre, pas la fin de sortie reprise dans le rapport. Le rapport de `present` rappelle le dossier en dernière ligne. `close --run` supprime les journaux et garde le résumé des durées, qui dit après coup où le temps d'un train est passé.
+
+Le dossier de train, lui, ne porte aucun de ces chemins : il est commité, et ils sont locaux. Il garde pour chaque validation sa durée (`durationMs`) et, le cas échéant, la raison pour laquelle elle n'a pas été lancée (`notRun`).
 
 ## Automatique, humain, jamais dans une validation
 

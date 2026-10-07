@@ -374,6 +374,14 @@
 										},
 										"tail": {
 											"type": "string"
+										},
+										"durationMs": {
+											"type": "integer",
+											"minimum": 0
+										},
+										"notRun": {
+											"type": "string",
+											"minLength": 1
 										}
 									}
 								}

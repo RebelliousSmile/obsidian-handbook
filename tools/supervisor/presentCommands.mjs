@@ -8,6 +8,7 @@
  * nothing is typed to confirm it.
  */
 import { concernedRepos } from "./digest.mjs";
+import { trainLogs } from "./logs.mjs";
 import { checkCheckouts, presentTrain, renderPresentation } from "./present.mjs";
 import { comparePresentation, planPreview, runPreview } from "./preview.mjs";
 import { resolveTrain, writeTrain } from "./train.mjs";
@@ -21,9 +22,10 @@ export const PRESENT_COMMANDS = {
 		options: { ...TRAIN },
 		run(context, values) {
 			const { train, file } = resolveTrain(context.root, context.topology, values.train);
-			const presentation = presentTrain(context.root, context.topology, train);
+			const logs = trainLogs(context.root, context.topology, train.id);
+			const presentation = presentTrain(context.root, context.topology, train, logs);
 			writeTrain(file, { ...train, presentation }, context.topology);
-			console.log(renderPresentation(train, presentation));
+			console.log(renderPresentation(train, presentation, logs));
 			return presentation.presentable ? 0 : 1;
 		},
 	},

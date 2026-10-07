@@ -13,6 +13,7 @@ import { dirname, resolve } from "node:path";
 import { fetchOrigin, git, mainCheckoutProblem, revParse } from "./git.mjs";
 import { npmLockPin, parsePinUrl, pnpmLockPins, readPin, trackedLockfiles } from "./pins.mjs";
 import { runGuarded } from "./guarded.mjs";
+import { logNote, trainLogs } from "./logs.mjs";
 import { TRAINS_PATH } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 
@@ -139,8 +140,12 @@ export function installCommand(dir) {
  * the publication guard. A failure restores the pins and names the consumer,
  * the command and its output; nothing of that consumer is committed. The
  * consumers before it keep their adoption, the next run resumes after them.
+ * With `train` (its id), the whole output of each command is kept beside the
+ * train and the error names the file.
  */
-export function adoptArchive(root, topology, provider, archive, ids, { validate, label }) {
+export function adoptArchive(root, topology, provider, archive, ids, { validate, label, train = null }) {
+	const logs = train ? trainLogs(root, topology, train) : null;
+	const step = `${label}-${provider.id}`;
 	for (const id of ids) {
 		const repo = repoById(topology, id);
 		const dir = repoDir(root, repo);
@@ -150,11 +155,11 @@ export function adoptArchive(root, topology, provider, archive, ids, { validate,
 		const install = installCommand(dir);
 		const commands = [...(install ? [install] : []), ...(validate ? repo.validations ?? [] : [])];
 		for (const command of commands) {
-			const result = runGuarded(dir, command, label);
+			const result = logs ? logs.run(id, step, dir, command, label) : runGuarded(dir, command, label);
 			if (result.status === 0) continue;
 			run(dir, ["checkout", "HEAD", "--", ...files], label);
 			if (install) runGuarded(dir, install, label);
-			throw new SupervisorError(`${label}: ${id} does not pass with ${provider.package} ${archive.tag}: \`${command.join(" ")}\` exited ${result.status}; its pins are restored and nothing of ${id} was committed\n${result.tail}`, 1);
+			throw new SupervisorError(`${label}: ${id} does not pass with ${provider.package} ${archive.tag}: \`${command.join(" ")}\` exited ${result.status}; its pins are restored and nothing of ${id} was committed\n${result.tail}${logNote(result)}`, 1);
 		}
 		const message = `chore(deps): adopt ${provider.package} ${archive.tag}`;
 		const sha = commitAndPush(repo, dir, files, message, label);
