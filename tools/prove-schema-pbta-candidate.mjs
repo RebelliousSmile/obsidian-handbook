@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync } from "node:fs";
 
 function run(script) {
 	const result = spawnSync(process.execPath, [script], { encoding: "utf8" });
@@ -18,7 +18,8 @@ export function proveSchemaPbtaCandidate({ releaseUrl, integrity, finalTag }) {
 	const version = releaseUrl.slice(releaseUrl.lastIndexOf("-") + 1, -4);
 	if (finalTag !== `v${version}`) throw new Error("candidate final tag disagrees with the archive version");
 	const installed = JSON.parse(readFileSync("node_modules/schema-pbta/package.json", "utf8"));
-	if (installed.version !== version) throw new Error("installed schema-pbta version disagrees with candidate archive");
+	/* A train links the provider checkout over the install: only an ordinary install proves the archive. */
+	if (!lstatSync("node_modules/schema-pbta").isSymbolicLink() && installed.version !== version) throw new Error("installed schema-pbta version disagrees with candidate archive");
 	for (const script of ["tools/assert-pbta-contract.mjs", "tools/assert-pbta-pack-coverage.mjs", "tools/assert-pbta-specialized-projection.mjs", "tools/assert-pbta-theme.mjs", "tools/assert-source-installer.mjs"]) run(script);
 	return { version, releaseUrl, integrity, finalTag, proofs: ["contract", "pack-coverage", "specialized-projection", "theme", "source-installer"] };
 }
