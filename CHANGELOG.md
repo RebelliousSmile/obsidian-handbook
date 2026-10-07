@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.36.0] - 2026-10-07
+
+### Changed
+
+- PbtA: every pack is light-only, The Sprawl included. The Monsterhearts "Drowned Lake" variant is removed from the styles and the assertions.
+- Monsterhearts playbook layout follows the published presentation contract (schema-pbta 9): region headings come from the contract, "Relations" and "State" merge into "Ascendants & conditions", harm is drawn as four boxes, advances are checkable, and the action marker is a filled or empty shell.
+- Monsterhearts playbooks may carry an optional "Playing the skin" section (`editorial.play`), shown in its own region when present.
+
+### Removed
+
+- The four hardcoded PbtA callouts (`pbta-rule`, `pbta-trigger`, `pbta-choice`, `pbta-result`): each pack publishes its own callouts.
+
+### Added
+
+- `assert:monsterhearts-layout`, and a check that every published PbtA pack declares exactly the light polarity.
+
 ## [2.35.2] - 2026-10-07
 
 ### Fixed
