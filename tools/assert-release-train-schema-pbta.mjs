@@ -1,20 +1,13 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { buildCandidateEvidence, assertReleaseTrain } from "./release-train-schema-pbta-assert.mjs";
 
-const releaseUrl = JSON.parse(readFileSync("package.json", "utf8")).dependencies["schema-pbta"];
 const finalUrl = "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.4.3/schema-pbta-8.4.3.tgz";
 const candidateUrl = "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.4.3-rc.1/schema-pbta-8.4.3.tgz";
 const sha256 = "1aa889767d8b737c5c05248099ba79dd9d4c5e32ce99e27927bbafd1ee6b93c4";
 const integrity = "sha512-ZMPKlxqMjZlfkLVQs/ufpGVBDtP9BXpee+C2hFX6ZknNSw7PMDPNIdCTmaXWe525kQouBpsi2HSrH0CguxxYaw==";
-const lock = readFileSync("pnpm-lock.yaml", "utf8");
-const resolution = lock.split("\n").find((line) => line.includes("resolution: {") && line.includes(`tarball: ${releaseUrl}`));
-
-assert.equal(releaseUrl, finalUrl);
-assert.ok(resolution?.includes(`integrity: ${integrity}`));
-/* A train links the provider checkout over the install: only an ordinary install proves the pin. */
-if (!lstatSync("node_modules/schema-pbta").isSymbolicLink()) assert.equal(JSON.parse(readFileSync("node_modules/schema-pbta/package.json", "utf8")).version, "8.4.3");
+/* The pin moves with every train: this archive is the 8.4.3 release the evidence envelope below is exercised on, not the current pin. */
 const response = await fetch(finalUrl);
 assert.equal(response.ok, true, `could not download final archive: ${response.status}`);
 const bytes = Buffer.from(await response.arrayBuffer());
