@@ -12,7 +12,8 @@
  * provider would find its own `node_modules` (its own zod, its own types) and
  * not the consumer's, which two copies of one library make incompatible. The
  * checkout is copied beside the siblings pnpm gives the installed package, so
- * it resolves its dependencies as the published package will.
+ * it resolves its dependencies as the published package will (the consumer's
+ * own copy of a library both install, as a re-resolved lock would give).
  */
 import { cpSync, lstatSync, mkdirSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, unlinkSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
@@ -53,7 +54,9 @@ function stageProvider(consumerDir, link, original, staged) {
 	for (const entry of readdirSync(modules)) {
 		if (entry === top) continue;
 		const sibling = join(stagedModules, entry);
-		symlinkSync(realpathSync(join(modules, entry)), sibling, "junction");
+		// A dependency the consumer installs itself is the consumer's copy: adopting the provider re-resolves the lock onto it.
+		const own = join(consumerDir, "node_modules", entry);
+		symlinkSync(realpathSync(lstatSync(own, { throwIfNoEntry: false }) ? own : join(modules, entry)), sibling, "junction");
 		staged.push(sibling);
 	}
 	return copy;
