@@ -114,14 +114,18 @@
 		border-top: 0;
 		font-family: var(--monsterhearts-script-font, Garamond, Georgia, serif);
 		font-style: italic;
-		font-weight: 700;
-		font-feature-settings: "swsh" 1, "kern" 1;
-		font-size: 1.02em;
-		line-height: 1.2;
+		font-weight: 600;
+		font-feature-settings: "kern" 1, "liga" 1, "dlig" 1, "calt" 1, "swsh" 1;
+		font-kerning: normal;
+		text-rendering: optimizeLegibility;
+		letter-spacing: -0.012em;
+		word-spacing: -0.02em;
+		font-size: 1.08em;
+		line-height: 1.12;
 		color: var(--text-normal);
-		text-align: justify;
-		hyphens: auto;
-		p { line-height: 1.15; margin: 0; color: var(--text-normal); }
+		text-align: left;
+		hyphens: manual;
+		p { line-height: 1.12; margin: 0; color: var(--text-normal); }
 	}
 
 	.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"],
