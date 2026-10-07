@@ -113,11 +113,12 @@
 	.handbook-monsterhearts-region[data-region="monsterhearts-opening"] {
 		border-top: 0;
 		font-style: italic;
-		font-size: 0.95em;
-		line-height: 1.25;
+		font-size: 0.82em;
+		line-height: 1.15;
+		color: var(--text-normal);
 		text-align: justify;
 		hyphens: auto;
-		p { line-height: 1.25; }
+		p { line-height: 1.15; margin: 0; color: var(--text-normal); }
 	}
 
 	.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"],
