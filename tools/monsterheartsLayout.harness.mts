@@ -38,7 +38,9 @@ assert.ok(!base.some((node) => node.dataset.region === "monsterhearts-play"), "n
 const merged = base.find((node) => node.dataset.region === "ascendants-and-conditions");
 assert.ok(merged, "the merged region renders");
 assert.equal(merged.children[0].textContent, contract.regions.find((region) => region.id === "ascendants-and-conditions")?.label);
-const boxes = merged.walk().filter((node) => node.tag === "input");
+const harmRegion = base.find((node) => node.dataset.region === "harm-tracker");
+assert.ok(harmRegion, "the harm tracker renders its own region");
+const boxes = harmRegion.walk().filter((node) => node.tag === "input");
 assert.deepEqual(boxes.map((box) => box.checked), [true, true, false, false], "harm is 4 boxes, `harm` filled");
 assert.ok(boxes.every((box) => box.type === "checkbox"));
 
