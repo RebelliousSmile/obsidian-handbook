@@ -114,12 +114,12 @@
 		border-top: 0;
 		font-family: var(--monsterhearts-script-font, Garamond, Georgia, serif);
 		font-style: italic;
-		font-weight: 600;
+		font-weight: 400;
 		font-feature-settings: "kern" 1, "liga" 1, "dlig" 1, "calt" 1, "swsh" 1;
 		font-kerning: normal;
 		text-rendering: optimizeLegibility;
-		letter-spacing: -0.012em;
-		word-spacing: -0.02em;
+		letter-spacing: 0;
+		word-spacing: 0;
 		font-size: 1.08em;
 		line-height: 1.12;
 		color: var(--text-normal);
