@@ -117,26 +117,16 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 			return result;
 		}
 		case "stat-profiles": {
-			if (!Object.keys(data.stats).length && !data.statProfiles?.length) return null;
+			if (!Object.keys(data.stats).length) return null;
 			const result = section(doc, id, regionLabel(id));
-			const renderStats = (stats: Record<string, number>) => {
-				const dl = el(doc, "dl");
-				for (const name of Object.keys(stats)) {
-					const value = stats[name];
-					const bounds = data.statRanges?.[name];
-					dl.appendChild(row(doc, name, bounds ? `${value} (${bounds.min}–${bounds.max})` : value));
-				}
-				return dl;
-			};
-			if (Object.keys(data.stats).length) result.appendChild(renderStats(data.stats));
-			for (const profile of data.statProfiles ?? []) {
-				const group = el(doc, "div");
-				group.classList.add("handbook-monsterhearts-stat-profile");
-				group.appendChild(el(doc, "h4", profile.label));
-				group.appendChild(renderStats(profile.stats));
-				result.appendChild(group);
+			const dl = el(doc, "dl");
+			dl.classList.add("handbook-monsterhearts-stats");
+			for (const name of Object.keys(data.stats)) {
+				const value = data.stats[name];
+				const bounds = data.statRanges?.[name];
+				dl.appendChild(row(doc, name, bounds ? `${value} (${bounds.min}–${bounds.max})` : value));
 			}
-			if (data.statsDetail) result.appendChild(el(doc, "p", data.statsDetail));
+			result.appendChild(dl);
 			return result;
 		}
 		case "playbook-portrait": {

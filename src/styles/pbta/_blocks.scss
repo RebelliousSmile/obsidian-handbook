@@ -122,10 +122,18 @@
 		dd { margin: 0; text-align: end; }
 	}
 
-	.handbook-monsterhearts-stat-profile {
-		margin-top: 0.45rem;
-		padding: 0.5rem;
-		background: var(--background-primary-alt);
+	.handbook-monsterhearts-stats {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+		gap: 0.4rem;
+
+		.handbook-monsterhearts-row {
+			flex-direction: column;
+			align-items: center;
+			gap: 0;
+			border: 1px solid var(--background-modifier-border);
+			dd { text-align: center; font-weight: 600; }
+		}
 	}
 
 	.handbook-monsterhearts-portrait {
