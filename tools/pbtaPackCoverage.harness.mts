@@ -266,13 +266,16 @@ if (offered.length > 0) {
 	console.log(`  offered upstream and not implemented here: ${offered.join(", ")}`);
 }
 
-/* Every published PbtA pack is light-only: no pack may declare a dark layer. */
-import { readdirSync, readFileSync } from "node:fs";
+/* Every published PbtA pack is light-only: no pack may publish a dark variant. Read from the contracts the package ships (`packs/<id>/appearance-contract.json`), not from the checkout-only `handbook/` sources. */
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-const handbookDir = join("node_modules", "schema-pbta", "handbook");
-const packIds = readdirSync(handbookDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "shared").map((entry) => entry.name);
-assert.ok(packIds.length > 0, "no published PbtA pack found");
-for (const id of packIds) {
-	const manifest = JSON.parse(readFileSync(join(handbookDir, id, "pack.json"), "utf8"));
-	assert.deepEqual(manifest.pack.polarities, ["light"], `${id} must declare exactly ["light"]`);
+const packsDir = join("node_modules", "schema-pbta", "packs");
+const appearances = readdirSync(packsDir, { withFileTypes: true })
+	.filter((entry) => entry.isDirectory() && existsSync(join(packsDir, entry.name, "appearance-contract.json")))
+	.map((entry) => entry.name);
+assert.ok(appearances.length > 0, "no published PbtA appearance contract found");
+for (const id of appearances) {
+	const contract = JSON.parse(readFileSync(join(packsDir, id, "appearance-contract.json"), "utf8")) as { variants?: { id: string }[] };
+	const variants = (contract.variants ?? []).map((variant) => variant.id);
+	assert.ok(!variants.some((variant) => /dark/i.test(variant)), `${id} must publish no dark variant, found: ${variants.join(", ")}`);
 }
