@@ -164,6 +164,17 @@
 		p { break-inside: avoid; }
 	}
 
+	.handbook-monsterhearts-fill {
+		display: inline-block;
+		min-width: 4rem;
+		width: 60%;
+		height: 1em;
+		border-bottom: 1px solid var(--background-modifier-border);
+		vertical-align: baseline;
+	}
+
+	h4 + .handbook-monsterhearts-fill { display: block; width: 100%; height: 2.2em; }
+
 	.handbook-monsterhearts-label { font-variant: small-caps; }
 
 	.handbook-monsterhearts-portrait {

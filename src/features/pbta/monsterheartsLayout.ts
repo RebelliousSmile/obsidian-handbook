@@ -50,6 +50,13 @@ function coveredByParagraphs(label: string[], paragraphs: readonly string[]): bo
 	return found * 2 >= label.length;
 }
 
+/** A blank to fill in at the table: the page shows no choices, only room to write. */
+function fill(doc: Document): HTMLElement {
+	const result = el(doc, "span");
+	result.classList.add("handbook-monsterhearts-fill");
+	return result;
+}
+
 function list(doc: Document, values: readonly string[]): HTMLElement {
 	const result = el(doc, "ul");
 	for (const value of values) result.appendChild(el(doc, "li", value));
@@ -113,19 +120,21 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 				}
 				const line = el(doc, "p");
 				line.appendChild(el(doc, "span", `${labelled[1]} :`)).classList.add("handbook-monsterhearts-label");
-				line.appendChild(doc.createTextNode(` ${labelled[2]}`));
+				line.appendChild(fill(doc));
 				fields.appendChild(line);
 			}
 			if (fields.childElementCount) result.appendChild(fields);
+			let asked = false;
 			for (const question of data.creation ?? []) {
 				const options = question.options.map((option) => typeof option === "string" ? option : option.label);
 				if (coveredByParagraphs(options, paragraphs)) continue;
 				result.appendChild(el(doc, "h4", question.label));
-				result.appendChild(list(doc, options));
+				result.appendChild(fill(doc));
+				asked = true;
 			}
-			if (data.backstory?.length) {
-				result.appendChild(el(doc, "h4", "Histoire"));
-				result.appendChild(list(doc, data.backstory));
+			if (data.backstory?.length && !asked) {
+				result.appendChild(el(doc, "h4", "Histoire personnelle"));
+				result.appendChild(fill(doc));
 			}
 			return result;
 		}
@@ -211,7 +220,15 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		case "monsterhearts-sex-move": return editorial(doc, id, data.editorial.sexMove);
 		case "monsterhearts-play": return data.editorial.play ? editorial(doc, id, data.editorial.play) : null;
 		case "monsterhearts-progression": {
-			const result = editorial(doc, id, data.editorial.progression);
+			const result = section(doc, id, data.editorial.progression.heading);
+			for (const paragraph of data.editorial.progression.paragraphs) {
+				const named = /^([^:.]{1,40}) : ([\s\S]+)$/.exec(paragraph);
+				if (!named) {
+					result.appendChild(el(doc, "p", paragraph));
+					continue;
+				}
+				result.appendChild(moveCard(doc, { name: named[1], moveType: "skin", description: named[2], checked: false } as MoveEntry, []));
+			}
 			if (data.advances.length) {
 				result.appendChild(el(doc, "h4", "Avancées"));
 				const ul = el(doc, "ul");
