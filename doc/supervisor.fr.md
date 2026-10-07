@@ -76,6 +76,15 @@ pnpm supervise commit lantern --only --message "feat(adrenaline-pj): print the M
 
 `--only` applique les mêmes vérifications à ce seul dépôt et laisse les autres tels qu'ils sont, modifiés ou non. `--message` remplace le fichier préparé ; les deux à la fois sont refusés.
 
+**Faire tourner un train à côté d'un autre travail** : chaque commande veut des checkouts propres, donc un travail en cours (un autre plan, par exemple) bloque le train. Les worktrees lèvent ce blocage :
+
+```bash
+pnpm supervise worktree ../train [--repos a,b] [--no-install]
+pnpm supervise commit schema-pbta --root ../train
+```
+
+`worktree <dir>` crée un worktree lié par dépôt sous `<dir>/<path>`, détaché sur `origin/main` (git ne garde `main` que dans un seul checkout), puis lance l'installation gelée de chacun, nécessaire aux validations (`--no-install` la saute). Tout refus arrive avant la première création : un dépôt absent, un `fetch` en échec, un dossier cible déjà là. Ensuite, toute commande prend `--root <dir>` et travaille là, sans toucher aux checkouts habituels ni à leur travail non commité. Le travail du train se prépare dans ces worktrees. Dans un worktree lié, `commit` et les écritures du superviseur acceptent une branche autre que `main` ou une tête détachée, et poussent `HEAD:main` ; ils exigent toujours d'être au niveau de `origin/main`. Le superviseur ne supprime jamais un worktree : `git worktree remove <dir>` reste un geste humain.
+
 **Le superviseur ne se modifie pas lui-même.** Toute commande sauf `status` refuse de tourner si son propre code diffère de `origin/main` : `tools/supervise.mjs`, `tools/supervisor/`, ses harnais (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` hors dossiers de train, et le script `supervise` de `package.json`. Un changement du superviseur est commité et poussé à la main, par une personne, avant que le superviseur n'agisse de nouveau.
 
 ### 4. `ship` : valider, et tout publier

@@ -16,7 +16,7 @@
  */
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
-import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
+import { fetchOrigin, git, gitOut, isRepository, mainCheckoutProblem, revParse } from "./git.mjs";
 import { TRAINS_PATH } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 
@@ -59,8 +59,8 @@ export function planCommit(root, repos, inline = "", { shared = false } = {}) {
 			continue;
 		}
 		if (!fetchOrigin(dir)) problems.push(`${repo.id}: git fetch origin failed in ${dir}`);
-		const branch = gitOut(dir, ["branch", "--show-current"]);
-		if (branch !== "main") problems.push(`${repo.id}: on "${branch || "(detached)"}", not main`);
+		const wrongBranch = mainCheckoutProblem(dir);
+		if (wrongBranch) problems.push(`${repo.id}: ${wrongBranch}`);
 		const head = revParse(dir, "HEAD");
 		const originMain = revParse(dir, "origin/main");
 		if (!originMain) problems.push(`${repo.id}: origin/main is unknown in ${dir}`);

@@ -19,6 +19,7 @@ import { TRAIN_COMMANDS } from "./supervisor/trainCommands.mjs";
 import { PRESENT_COMMANDS } from "./supervisor/presentCommands.mjs";
 import { PUBLISH_COMMANDS } from "./supervisor/publishCommands.mjs";
 import { COMMIT_COMMANDS } from "./supervisor/commit.mjs";
+import { WORKTREE_COMMANDS } from "./supervisor/worktree.mjs";
 import { assertSelfPublished } from "./supervisor/self.mjs";
 import { DEFAULT_TOPOLOGY, HANDBOOK_ROOT, loadTopology, SupervisorError } from "./supervisor/topology.mjs";
 
@@ -43,6 +44,7 @@ const COMMANDS = {
 	},
 	...TRAIN_COMMANDS,
 	...COMMIT_COMMANDS,
+	...WORKTREE_COMMANDS,
 	...PRESENT_COMMANDS,
 	...PUBLISH_COMMANDS,
 };

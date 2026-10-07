@@ -76,6 +76,15 @@ pnpm supervise commit lantern --only --message "feat(adrenaline-pj): print the M
 
 `--only` runs the same checks on that repository alone and leaves the others as they are, changed or not. `--message` stands for the prepared file; both at once are refused.
 
+**Running a train beside other work**: every command wants clean checkouts, so any work in progress (another plan, for instance) blocks the train. Worktrees lift that:
+
+```bash
+pnpm supervise worktree ../train [--repos a,b] [--no-install]
+pnpm supervise commit schema-pbta --root ../train
+```
+
+`worktree <dir>` creates one linked worktree per repository under `<dir>/<path>`, detached at `origin/main` (git keeps `main` in a single checkout), then runs each one's frozen install, which the validations need (`--no-install` skips it). Every refusal comes before the first creation: a missing repository, a failed `fetch`, a target directory that already exists. After that, any command takes `--root <dir>` and works there, leaving the usual checkouts and their uncommitted work alone. The work of the train is prepared in those worktrees. In a linked worktree, `commit` and the supervisor's own writes accept a branch other than `main` or a detached head, and push `HEAD:main`; they still require being level with `origin/main`. The supervisor never removes a worktree: `git worktree remove <dir>` stays a human act.
+
 **The supervisor does not change itself.** Every command but `status` refuses to run when its own code differs from `origin/main`: `tools/supervise.mjs`, `tools/supervisor/`, its harnesses (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` outside the train records, and the `supervise` script of `package.json`. A change to the supervisor is committed and pushed by hand, by a person, before the supervisor acts again.
 
 ### 4. `ship`: validate, and publish everything

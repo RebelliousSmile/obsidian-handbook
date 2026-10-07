@@ -10,7 +10,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { fetchOrigin, git, gitOut, revParse } from "./git.mjs";
+import { fetchOrigin, git, mainCheckoutProblem, revParse } from "./git.mjs";
 import { npmLockPin, parsePinUrl, pnpmLockPins, readPin, trackedLockfiles } from "./pins.mjs";
 import { runGuarded } from "./guarded.mjs";
 import { TRAINS_PATH } from "./train.mjs";
@@ -25,8 +25,8 @@ function run(dir, args, label) {
 /** On main, clean apart from `ignore`, at origin/main: fast-forwarded when only behind, refused otherwise. */
 export function readyCheckout(repo, dir, label, ignore = []) {
 	if (!fetchOrigin(dir)) throw new SupervisorError(`${label}: git fetch origin failed in ${dir}`, 1);
-	const branch = gitOut(dir, ["branch", "--show-current"]);
-	if (branch !== "main") throw new SupervisorError(`${label}: ${repo.id} is on "${branch || "(detached)"}", not main (${dir})`, 1);
+	const wrongBranch = mainCheckoutProblem(dir);
+	if (wrongBranch) throw new SupervisorError(`${label}: ${repo.id} is ${wrongBranch} (${dir})`, 1);
 	const excluded = [...(repo.role === "coordinator" ? [TRAINS_PATH] : []), ...ignore].map((path) => `:(exclude)${path}`);
 	const dirty = git(dir, ["status", "--porcelain", "--untracked-files=all", "--", ".", ...excluded]).stdout.replace(/\s+$/, "");
 	if (dirty) throw new SupervisorError(`${label}: ${repo.id} has uncommitted changes in ${dir}; commit or stash them first\n  ${dirty.split("\n").join("\n  ")}`, 1);

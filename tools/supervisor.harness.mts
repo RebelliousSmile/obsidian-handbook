@@ -1505,6 +1505,36 @@ scenario("commit --only lands one repository alone, whatever its role", (world) 
 	assert.equal(originMain(world, "obsidian-handbook"), before["obsidian-handbook"], "a consumer moved on the provider's commit");
 });
 
+scenario("a train runs from worktrees while other work stays dirty in the usual checkouts", (world) => {
+	const topology = testTopology(world);
+	const ids = ["schema-adrenaline", "obsidian-handbook", "lantern"];
+	const target = join(world.tmp, "train");
+	world.write("obsidian-handbook", { "src/masks.ts": "export {};\n" });
+	const usual = Object.fromEntries(ids.map((id) => [id, git(world.dir(id), "rev-parse", "HEAD")]));
+
+	let result = world.supervise(["worktree", target, "--no-install"], { topology });
+	assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+	for (const id of ["obsidian-handbook", "lantern", "schema-pbta", "schema-adrenaline", "schema-in-the-mist"]) {
+		const dir = join(target, id);
+		assert.equal(git(dir, "branch", "--show-current"), "", `${id} is not detached`);
+		assert.equal(git(dir, "rev-parse", "HEAD"), git(world.dir(id), "rev-parse", "origin/main"), `${id} is not at origin/main`);
+	}
+	result = world.supervise(["worktree", target, "--no-install"], { topology });
+	assert.equal(result.status, 1, "worktree overwrote an existing directory");
+	assert.match(result.stderr, /already exists/);
+
+	// The work of the train is committed there and lands on origin/main; the usual checkout keeps its own.
+	writeFileSync(join(target, "obsidian-handbook", "src", "pj.ts"), "export {};\n");
+	const before = originMain(world, "obsidian-handbook");
+	result = world.supervise(["commit", "obsidian-handbook", "--only", "--message", "feat(adrenaline-pj): print the Malus column", "--root", target], { topology });
+	assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+	assert.notEqual(originMain(world, "obsidian-handbook"), before, "the worktree commit was not pushed");
+	assert.equal(git(join(target, "obsidian-handbook"), "rev-parse", "HEAD"), originMain(world, "obsidian-handbook"));
+	assert.equal(git(world.dir("obsidian-handbook"), "rev-parse", "HEAD"), usual["obsidian-handbook"], "the usual checkout moved");
+	assert.ok(existsSync(join(world.dir("obsidian-handbook"), "src", "masks.ts")), "the usual checkout lost its work");
+	assert.match(git(world.dir("obsidian-handbook"), "status", "--porcelain"), /src\/masks\.ts/);
+});
+
 scenario("the supervisor neither runs nor lands a change to its own code", (world) => {
 	const topology = testTopology(world);
 	const before = originMain(world, "obsidian-handbook");

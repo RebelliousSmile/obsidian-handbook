@@ -45,13 +45,16 @@ pnpm check             # la porte complète, dont tous les assert:*
 pnpm assert:<nom>      # un harnais seul (voir package.json)
 pnpm dump:dom          # DOM des corpus canoniques, à comparer d'une phase à l'autre
 pnpm supervise         # superviseur multi-dépôts (doc/supervisor.fr.md)
+pnpm supervise worktree ../train   # worktrees pour un train à côté d'un autre travail, puis --root ../train
 ```
 
 Pas de vitest/jest et pas question d'en ajouter : les preuves sont des harnais `tools/<nom>.mjs` + `tools/<nom>.harness.mts`, bundlés par esbuild. Aucune dépendance neuve (`tsx` inclus).
 
 ## Règles de travail
 
-- **Tout se fait sur `main`** (`.codex/rules/00-architecture/0-main-only-execution.md`) : pas de branche, pas de worktree.
+- **Tout se fait sur `main`** (`.codex/rules/00-architecture/0-main-only-execution.md`) : pas de branche, pas de worktree à la main.
+- **Seule exception : les worktrees du superviseur.** Un autre travail en cours (un autre plan) bloque un train, qui veut des checkouts propres. `pnpm supervise worktree <dir>` crée un worktree détaché par dépôt ; on prépare alors le travail du train dedans et on lance chaque commande avec `--root <dir>` (détail : `doc/supervisor.fr.md`). Ils se poussent toujours sur `main` (`HEAD:main`). Ne jamais les créer par `git worktree add` direct, ni créer de branche ; ne jamais en supprimer sans demande (`git worktree remove` est un geste de l'utilisateur).
+- Quand on travaille dans un tel worktree, les chemins relatifs, `pnpm build` et `pnpm check` s'y exécutent ; le coffre de test et `dist/` se déploient depuis lui, pas depuis le checkout habituel.
 - Ne pas commiter ni pousser sans demande explicite. Messages de commit en anglais. Ne jamais commiter `dist/`.
 - Avant tout commit : `rtk proxy pnpm build` vert **et** les deux portées de lint à zéro erreur (`eslint src --ext .ts` et `pnpm lint` — aucune ne fait foi seule).
 - **Flux inter-dépôts** (`.codex/rules/00-architecture/0-cross-repo-contract-flow.md`) : contrat et sémantique de présentation vivent dans les paquets `schema-*` ; étendre le schéma **avant** le travail consommateur et le **publier avant** de l'adopter ; menus pilotés par les métadonnées publiées ; aucun repli sémantique local.

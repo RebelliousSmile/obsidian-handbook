@@ -43,6 +43,28 @@ export function isRepository(dir) {
 	return existsSync(resolve(dir, ".git"));
 }
 
+/** True when `dir` is a linked worktree: its git dir is not the repository's common dir. */
+export function isLinkedWorktree(dir) {
+	const gitDir = git(dir, ["rev-parse", "--absolute-git-dir"]);
+	const common = git(dir, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+	if (gitDir.status !== 0 || common.status !== 0) return false;
+	return resolve(gitDir.stdout.trim()) !== resolve(common.stdout.trim());
+}
+
+/**
+ * Why `dir` may not carry the work of a train, or null when it may.
+ * The primary checkout must be on main. A linked worktree cannot be: git
+ * keeps main in one checkout only, so it may sit on any other branch or be
+ * detached. What it commits is still pushed as `HEAD:main`, and every write
+ * checks it is level with `origin/main` first.
+ */
+export function mainCheckoutProblem(dir) {
+	const branch = gitOut(dir, ["branch", "--show-current"]);
+	if (branch === "main") return null;
+	if (isLinkedWorktree(dir)) return null;
+	return `on "${branch || "(detached)"}", not main`;
+}
+
 export function fetchOrigin(dir) {
 	return git(dir, ["fetch", "--quiet", "origin"]).status === 0;
 }
