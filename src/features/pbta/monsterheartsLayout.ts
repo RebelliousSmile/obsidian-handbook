@@ -103,7 +103,20 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		case "character-identity": {
 			const result = section(doc, id, data.editorial.identity.heading);
 			const paragraphs = data.editorial.identity.paragraphs;
-			for (const paragraph of paragraphs) result.appendChild(el(doc, "p", paragraph));
+			const fields = el(doc, "div");
+			fields.classList.add("handbook-monsterhearts-identity-fields");
+			for (const paragraph of paragraphs) {
+				const labelled = /^([^:]{1,24}) : ([\s\S]+)$/.exec(paragraph);
+				if (!labelled) {
+					result.appendChild(el(doc, "p", paragraph));
+					continue;
+				}
+				const line = el(doc, "p");
+				line.appendChild(el(doc, "span", `${labelled[1]} :`)).classList.add("handbook-monsterhearts-label");
+				line.appendChild(doc.createTextNode(` ${labelled[2]}`));
+				fields.appendChild(line);
+			}
+			if (fields.childElementCount) result.appendChild(fields);
 			for (const question of data.creation ?? []) {
 				const options = question.options.map((option) => typeof option === "string" ? option : option.label);
 				if (coveredByParagraphs(options, paragraphs)) continue;
@@ -117,16 +130,23 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 			return result;
 		}
 		case "stat-profiles": {
-			if (!Object.keys(data.stats).length) return null;
+			const profiles = data.statProfiles ?? [];
+			if (!Object.keys(data.stats).length && !profiles.length) return null;
 			const result = section(doc, id, regionLabel(id));
-			const dl = el(doc, "dl");
-			dl.classList.add("handbook-monsterhearts-stats");
-			for (const name of Object.keys(data.stats)) {
-				const value = data.stats[name];
-				const bounds = data.statRanges?.[name];
-				dl.appendChild(row(doc, name, bounds ? `${value} (${bounds.min}–${bounds.max})` : value));
-			}
-			result.appendChild(dl);
+			const renderStats = (stats: Record<string, number>) => {
+				const dl = el(doc, "dl");
+				for (const name of Object.keys(stats)) {
+					const value = stats[name];
+					const bounds = data.statRanges?.[name];
+					dl.appendChild(row(doc, name, bounds ? `${value} (${bounds.min}–${bounds.max})` : value));
+				}
+				return dl;
+			};
+			const spread = el(doc, "div");
+			spread.classList.add("handbook-monsterhearts-stats");
+			if (profiles.length) for (const profile of profiles) spread.appendChild(renderStats(profile.stats));
+			else spread.appendChild(renderStats(data.stats));
+			result.appendChild(spread);
 			return result;
 		}
 		case "playbook-portrait": {
@@ -144,6 +164,9 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 				frame.classList.add("handbook-monsterhearts-portrait--empty");
 				frame.appendChild(el(doc, "span", "Portrait à ajouter"));
 			}
+			const caption = el(doc, "figcaption", data.name);
+			caption.classList.add("handbook-monsterhearts-portrait-name");
+			frame.appendChild(caption);
 			result.appendChild(frame);
 			return result;
 		}

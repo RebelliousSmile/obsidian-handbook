@@ -92,7 +92,9 @@
 
 		> h3 {
 			margin: 0 0 0.4rem;
-			font-family: var(--hb-body, var(--font-text-theme, Georgia, serif));
+			font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
 			font-size: 1.1rem;
 			font-weight: 600;
 			color: var(--monsterhearts-title-ink, var(--text-normal));
@@ -106,6 +108,31 @@
 	.handbook-monsterhearts-region[data-region="game-identity"] {
 		grid-column: 1 / -1;
 		> h2 { margin: 0 0 0.2rem; }
+	}
+
+	.handbook-monsterhearts-region[data-region="monsterhearts-opening"] {
+		border-top: 0;
+		font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
+		font-style: italic;
+		font-size: 1.05em;
+	}
+
+	.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"],
+	.handbook-monsterhearts-region[data-region="monsterhearts-sex-move"],
+	.handbook-monsterhearts-region[data-region="monsterhearts-play"] {
+		border-top: 0;
+		font-size: 1.05em;
+		> h3 { font-size: 1.25rem; }
+	}
+
+	.handbook-monsterhearts-region[data-region="monsterhearts-play"] > h3 { text-align: center; }
+
+	.handbook-monsterhearts-portrait-name {
+		text-align: center;
+		font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
+		font-size: 1.8rem;
+		font-style: italic;
+		margin-top: 0.3rem;
 	}
 
 	.handbook-monsterhearts-region[data-region="playbook-portrait"] {
@@ -124,17 +151,20 @@
 
 	.handbook-monsterhearts-stats {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
-		gap: 0.4rem;
-
-		.handbook-monsterhearts-row {
-			flex-direction: column;
-			align-items: center;
-			gap: 0;
-			border: 1px solid var(--background-modifier-border);
-			dd { text-align: center; font-weight: 600; }
-		}
+		grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+		gap: 0 1.2rem;
+		dl { margin: 0; }
+		.handbook-monsterhearts-row { border-bottom: 0; padding: 0.1rem 0; }
+		dt { font-variant: small-caps; }
 	}
+
+	.handbook-monsterhearts-identity-fields {
+		columns: 2 8rem;
+		column-gap: 1.2rem;
+		p { break-inside: avoid; }
+	}
+
+	.handbook-monsterhearts-label { font-variant: small-caps; }
 
 	.handbook-monsterhearts-portrait {
 		aspect-ratio: 4 / 5;
