@@ -204,35 +204,42 @@
 		p { margin-inline-start: 1.6rem; }
 	}
 
-	.handbook-monsterhearts-move-symbol {
-		flex: 0 0 1.1rem;
-		font-size: 1.2rem;
-		line-height: 1;
-		color: var(--monsterhearts-title-ink, var(--text-normal));
+	// One box for every tick in the playbook: moves, advances and harm.
+	.handbook-monsterhearts-move-symbol,
+	.handbook-monsterhearts-playbook input[type="checkbox"] {
+		--checkbox-size: 1.25rem;
+		box-sizing: border-box;
+		flex: 0 0 1.25rem;
+		width: 1.25rem;
+		height: 1.25rem;
+		margin: 0;
+		border: 1px solid var(--checkbox-border-color, var(--text-faint));
+		border-radius: var(--checkbox-radius, 5px);
 	}
 
-	// The shell is drawn in CSS: filled when acquired, empty otherwise.
 	.handbook-monsterhearts-move-symbol {
-		box-sizing: border-box;
-		width: 1.1rem;
-		height: 1.1rem;
-		border: 2px solid currentcolor;
-		border-radius: 50%;
+		display: inline-block;
+		position: relative;
+		background: transparent;
 	}
 
 	.handbook-monsterhearts-move[data-acquired="true"] .handbook-monsterhearts-move-symbol {
-		background: currentcolor;
+		background: var(--checkbox-color, var(--interactive-accent));
+		border-color: var(--checkbox-color, var(--interactive-accent));
+		&::after {
+			content: "";
+			position: absolute;
+			inset: 0.12rem 0.38rem 0.3rem 0.34rem;
+			border: solid var(--text-on-accent, #fff);
+			border-width: 0 2px 2px 0;
+			transform: rotate(45deg);
+		}
 	}
 
 	.handbook-monsterhearts-harm {
 		display: flex;
 		gap: 0.4rem;
 		margin-block: 0.4rem;
-	}
-
-	.handbook-monsterhearts-harm input[type="checkbox"] {
-		--checkbox-size: 1.3rem;
-		margin: 0;
 	}
 
 	.handbook-monsterhearts-region[data-region="monsterhearts-progression"] li {
@@ -264,6 +271,7 @@
 	.handbook-monsterhearts-region[data-region="monsterhearts-sex-move"] { order: 9; }
 	.handbook-monsterhearts-region[data-region="monsterhearts-play"] { order: 10; }
 	.handbook-monsterhearts-region[data-region="monsterhearts-progression"] { order: 11; }
+	.handbook-monsterhearts-region[data-region="harm-tracker"] { order: 12; }
 
 	@media print {
 		.handbook-monsterhearts-playbook { display: grid; grid-template-columns: 1fr; }
