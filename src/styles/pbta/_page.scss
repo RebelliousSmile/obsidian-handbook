@@ -34,6 +34,16 @@
 			column-rule: 1px solid var(--pbta-column-rule, var(--color-accent));
 		}
 
+		// A mode section in editorial columns: its full-bleed shadow would paint
+		// over the text of the neighbouring column. The band widens by half a column
+		// gap on each side instead, so both columns of the section read as one band.
+		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer:not(:has(.handbook-pbta-playbook)):not(:has(> .handbook-layout-region)):not(.handbook-layout-flowing) > :is(.handbook-mode-dark, .handbook-mode-light, .handbook-mode-alternate) {
+			box-shadow: none;
+			clip-path: none;
+			margin-inline: calc(var(--pbta-column-gap, 2.4rem) / -2);
+			padding-inline: calc(var(--pbta-column-gap, 2.4rem) / 2);
+		}
+
 		// Obsidian groups the inline title and properties in `.mod-header`.
 		// Keep that complete document header above the editorial columns.
 		.markdown-reading-view .markdown-preview-view:not(.pbta-one-column) .markdown-preview-sizer > .mod-header {

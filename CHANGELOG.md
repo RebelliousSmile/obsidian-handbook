@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A single-polarity pack may publish a page section (`style.section`): the alternate-mode section is drawn from the pack's own tokens and stylesheet, with nothing pack-specific in the plugin.
 - The callouts a PbtA pack publishes are listed in the menu under that pack only, with French labels; saved settings from before this version receive them without losing their aliases.
 
+### Fixed
+
+- In a PbtA note laid out in two columns, a mode section (`dark`, `light`, `alternate`) no longer paints its band over the text of the neighbouring column: it widens by half a column gap instead.
+
 ## [2.36.0] - 2026-10-07
 
 ### Changed
