@@ -158,14 +158,9 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 			return result;
 		}
 		case "playbook-moves": {
-			if (!data.moves.length && !data.choiceSets?.length) return null;
+			if (!data.moves.length) return null;
 			const result = section(doc, id, regionLabel(id));
 			for (const move of data.moves) result.appendChild(moveCard(doc, move, data.startingMoves ?? []));
-			for (const group of data.choiceSets ?? []) {
-				result.appendChild(el(doc, "h4", group.title));
-				if (group.description) result.appendChild(el(doc, "p", group.description));
-				result.appendChild(list(doc, group.choices.map((choice) => "ref" in choice ? choice.ref : choice.name)));
-			}
 			return result;
 		}
 		case "ascendants-and-conditions": {
