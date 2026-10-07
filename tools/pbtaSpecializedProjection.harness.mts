@@ -118,7 +118,8 @@ assert.ok(portrait, "a missing image still reserves the Monsterhearts portrait f
 const firstLayoutRow = elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-layout-row")[0];
 assert.deepEqual(firstLayoutRow?.children[1]?.children.map((child) => child.dataset.region), ["playbook-portrait"], "portrait alone occupies the first row's middle cell");
 assert.ok(renderedRegions.includes("stat-profiles") && renderedRegions.includes("ascendants-and-conditions"), "stat and ascendant regions are distinct");
-assert.ok(text(monsterheartsRendered).includes("Au quart de tour"), "published stat profiles remain visible");
+assert.ok(["hot", "cold", "volatile", "dark"].every((stat) => text(monsterheartsRendered).includes(stat)), "published stats remain visible");
+assert.ok(!text(monsterheartsRendered).includes("Au quart de tour"), "the compact row drops the column choice");
 assert.ok(!/\b(?:KEY|LABEL|OPTIONS|CHECKED|GAME IDENTITY|PLAYBOOK MOVES)\b/.test(text(monsterheartsRendered)), "schema field names do not leak into the playbook");
 assert.equal(text(monsterheartsRendered).split("Bersh").length - 1, 0, "creation choices are not shown: the page leaves a blank to fill");
 assert.equal(elementsWithClass(monsterheartsRendered, "handbook-monsterhearts-move-symbol").length, 2, "every move carries an acquired or available symbol");
