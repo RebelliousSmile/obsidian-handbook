@@ -85,8 +85,9 @@ export function withProviderLinks(consumerDir, links, fn) {
 				throw new SupervisorError(`present: ${target} is a directory, not a link; reinstall with pnpm so it can be pointed at ${link.repo}`, 1);
 			}
 			swapped.push({ target, original: readlinkSync(target) });
+			const stage = stageProvider(consumerDir, link, target, staged);
 			unlinkSync(target);
-			symlinkSync(resolve(link.dir), target, "junction");
+			symlinkSync(stage ?? resolve(link.dir), target, "junction");
 		}
 		return fn();
 	} finally {
