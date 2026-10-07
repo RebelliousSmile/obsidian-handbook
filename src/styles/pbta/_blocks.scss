@@ -112,7 +112,6 @@
 
 	.handbook-monsterhearts-region[data-region="monsterhearts-opening"] {
 		border-top: 0;
-		font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
 		font-style: italic;
 		font-size: 1.05em;
 	}
@@ -130,8 +129,9 @@
 	.handbook-monsterhearts-portrait-name {
 		text-align: center;
 		font-family: var(--monsterhearts-title-font, var(--font-header-theme, Georgia, serif));
-		font-size: 1.8rem;
-		font-style: italic;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-size: 1.5rem;
 		margin-top: 0.3rem;
 	}
 
