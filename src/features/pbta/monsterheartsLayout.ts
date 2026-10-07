@@ -229,7 +229,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 					result.appendChild(el(doc, "p", paragraph));
 					continue;
 				}
-				result.appendChild(moveCard(doc, { name: named[1], moveType: "skin", description: named[2], checked: false } as MoveEntry, []));
+				result.appendChild(moveCard(doc, { name: named[1], moveType: "skin", description: named[2], checked: false }, []));
 			}
 			if (data.advances.length) {
 				result.appendChild(el(doc, "h4", "Avancées"));
