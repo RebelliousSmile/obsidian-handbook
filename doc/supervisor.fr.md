@@ -125,6 +125,8 @@ Le garde a une seule table de règles (`tools/supervisor/guard/rules.cjs`) et de
 
 Le garde échoue fermé : un appel refusé sort en 97, un binaire réel introuvable en 127, et aucun des deux n'atteint le binaire.
 
+**Valider contre le train** : `present` ne mesure pas un consommateur sur son épingle quand le train change le fournisseur. Pour chaque fournisseur du train que le consommateur déclare, il construit le checkout (script `build`) puis, le temps des validations du consommateur, remplace son lien `node_modules/<paquet>` par le checkout, et le remet ensuite quoi qu'il arrive. Un contrat cassant passe donc le typage et les harnais du consommateur avant `publish`. Seul un lien est remplacé (disposition pnpm) : un dossier réel est refusé, pas déplacé. Rien de suivi n'est écrit.
+
 **Essayer avant de valider** : `pnpm supervise preview --vault <coffre>` fait tourner le code du train dans Obsidian et dans chaque consommateur. La commande exige d'abord ce que `present` exige : chaque dépôt concerné doit être sur `origin/main` et propre. Le changement est donc posé par `commit` avant `preview` ; `ship` n'a alors plus rien à commiter. Elle signale aussi un SHA qui a bougé depuis la présentation. Ensuite :
 
 - elle construit les fournisseurs du train qui ont un script `build` ;

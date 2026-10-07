@@ -15,6 +15,8 @@ import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { announcedPublications, computeDigest, concernedRepos, trainFilesOf } from "./digest.mjs";
 import { evaluateTrain } from "./next.mjs";
 import { runGuarded } from "./guarded.mjs";
+import { packageManager, packageJson } from "./preview.mjs";
+import { planProviderLinks, withProviderLinks } from "./providerLinks.mjs";
 import { releaseExists } from "./gh.mjs";
 import { tagCommit, versionAt } from "./consumerRelease.mjs";
 import { TRAINS_PATH } from "./train.mjs";
@@ -92,6 +94,7 @@ export function presentTrain(root, topology, train) {
 	if (train.status !== "open") throw new SupervisorError(`present: train "${train.id}" is closed`);
 	const repos = concernedRepos(topology, train);
 	const heads = checkPreconditions(root, topology, train, repos);
+	const buildFailures = [];
 	const entries = repos.map((repo) => {
 		const dir = repoDir(root, repo);
 		const item = train.items.find((entry) => entry.repo === repo.id) ?? null;
@@ -103,10 +106,15 @@ export function presentTrain(root, topology, train) {
 				.map((line) => ({ sha: line.slice(0, 40), subject: line.slice(41) }))
 			: [];
 		const diffstat = baseKnown ? gitOut(dir, ["diff", "--stat", base, sha]) : "";
-		const validations = (repo.validations ?? []).map((command) => runGuarded(dir, command, "present"));
+		const links = repo.role === "provider" ? [] : planProviderLinks(root, topology, train, repo);
+		for (const link of links) {
+			const build = packageJson(link.dir)?.scripts?.build ? runGuarded(link.dir, [packageManager(link.dir), "run", "build"], "present") : null;
+			if (build && build.status !== 0) buildFailures.push(`${link.repo}: ${build.command.join(" ")} exited ${build.status}`);
+		}
+		const validations = withProviderLinks(dir, links, () => (repo.validations ?? []).map((command) => runGuarded(dir, command, "present")));
 		return { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat, validations };
 	});
-	const reasons = [];
+	const reasons = [...buildFailures];
 	for (const entry of entries) {
 		if (entry.validations.length === 0) reasons.push(`${entry.repo}: no local validation is configured in the topology`);
 		for (const validation of entry.validations.filter((result) => result.status !== 0)) {

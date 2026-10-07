@@ -7,7 +7,7 @@
  * what it printed, what it wrote, and which git and gh calls it made.
  */
 import assert from "assert/strict";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "fs";
 import { basename, delimiter, join, resolve } from "path";
 import Ajv from "ajv";
 import { createWorld, git, HANDBOOK, sh, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
@@ -1411,6 +1411,41 @@ scenario("preview plans from what the train's providers publish, and installs th
 	const refused = world.supervise(["preview", "--no-serve"], { topology });
 	assert.equal(refused.status, 2, refused.stderr);
 	assert.match(refused.stderr, /nothing to show without --vault/);
+});
+
+scenario("present points a consumer's installed provider at the checkout, then puts the link back", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	const mist = world.dir("schema-in-the-mist");
+	const consumer = world.dir("lantern");
+	world.write("schema-in-the-mist", { "package.json": `${JSON.stringify({ name: "schema-in-the-mist", version: "1.0.0" })}
+` });
+	world.write("lantern", { "package.json": `${JSON.stringify({ name: "lantern", dependencies: { "schema-in-the-mist": "1.0.0" } })}
+` });
+	const pinned = resolve(world.tmp, "pinned");
+	mkdirSync(pinned, { recursive: true });
+	writeFileSync(resolve(pinned, "marker"), "pinned");
+	mkdirSync(resolve(consumer, "node_modules"), { recursive: true });
+	symlinkSync(pinned, resolve(consumer, "node_modules/schema-in-the-mist"), "junction");
+	const probe = [
+		"const [root, topologyFile, trainFile, consumerDir] = process.argv.slice(1);",
+		"const { readFileSync, existsSync, readlinkSync } = await import('node:fs');",
+		"const { planProviderLinks, withProviderLinks } = await import('./tools/supervisor/providerLinks.mjs');",
+		"const read = (file) => JSON.parse(readFileSync(file, 'utf8'));",
+		"const topology = read(topologyFile);",
+		"const links = planProviderLinks(root, topology, read(trainFile), topology.repos.find((repo) => repo.id === 'lantern'));",
+		"const link = consumerDir + '/node_modules/schema-in-the-mist';",
+		"const during = withProviderLinks(consumerDir, links, () => existsSync(link + '/package.json'));",
+		"let thrown = false;",
+		"try { withProviderLinks(consumerDir, links, () => { throw new Error('boom'); }); } catch { thrown = true; }",
+		"console.log(JSON.stringify({ names: links.map((entry) => entry.name), during, thrown, after: existsSync(link + '/marker') }));",
+	].join("\n");
+	const result = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, trainPath(world), consumer]), "provider links probe"));
+	assert.deepEqual(result.names, ["schema-in-the-mist"]);
+	assert.equal(result.during, true, "the consumer did not see the checkout of the provider");
+	assert.equal(result.thrown, true);
+	assert.equal(result.after, true, "the pinned link was not restored");
+	assert.ok(existsSync(resolve(mist, "package.json")));
 });
 
 // The commit of a provider and its consumers.

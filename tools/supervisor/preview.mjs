@@ -134,11 +134,11 @@ export function schemaSourceId(repository) {
 	return repository.trim().toLowerCase().replace("/", "--");
 }
 
-function packageManager(dir) {
+export function packageManager(dir) {
 	return existsSync(join(dir, "pnpm-lock.yaml")) && !existsSync(join(dir, "package-lock.json")) ? "pnpm" : "npm";
 }
 
-function packageJson(dir) {
+export function packageJson(dir) {
 	const file = join(dir, "package.json");
 	return existsSync(file) ? readJson(file) : null;
 }
