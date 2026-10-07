@@ -186,7 +186,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		}
 		case "ascendants-and-conditions": {
 				const hasStrings = data.strings !== undefined || !!data.ascendants?.length;
-				if (!hasStrings && !data.conditions?.length && data.harm === undefined) return null;
+				if (!hasStrings && !data.conditions?.length) return null;
 				const result = section(doc, id, regionLabel(id));
 				if (hasStrings) {
 					result.appendChild(el(doc, "h4", "Ascendants"));
@@ -197,19 +197,21 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 						result.appendChild(dl);
 					}
 				}
-				if (data.harm !== undefined) {
-					result.appendChild(el(doc, "h4", "Dégâts"));
-					const harm = el(doc, "div");
-					harm.classList.add("handbook-monsterhearts-harm");
-					for (let index = 1; index <= 4; index += 1) harm.appendChild(checkbox(doc, index <= (data.harm ?? 0), `Dégât ${index}`));
-					result.appendChild(harm);
-				}
 				for (const condition of data.conditions ?? []) {
 					result.appendChild(el(doc, "h4", condition.name));
 					if (condition.description) result.appendChild(el(doc, "p", condition.description));
 				}
 				return result;
 			}
+		case "harm-tracker": {
+			if (data.harm === undefined) return null;
+			const result = section(doc, id, regionLabel(id));
+			const harm = el(doc, "div");
+			harm.classList.add("handbook-monsterhearts-harm");
+			for (let index = 1; index <= 4; index += 1) harm.appendChild(checkbox(doc, index <= data.harm, `Dégât ${index}`));
+			result.appendChild(harm);
+			return result;
+		}
 		case "gear": {
 			if (!data.gear?.length) return null;
 			const result = section(doc, id, regionLabel(id));
