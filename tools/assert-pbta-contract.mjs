@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { lstatSync, readFileSync } from "node:fs";
 import {
 	PBTA_DOCUMENT_CODECS,
 	PBTA_TOML_VERSION,
@@ -40,7 +40,11 @@ assert.equal(
 /* schema-pbta does not export ./package.json, so import.meta.resolve fails with
    ERR_PACKAGE_PATH_NOT_EXPORTED: the installed manifest is read off the install path. */
 const installedPackage = JSON.parse(readFileSync("node_modules/schema-pbta/package.json", "utf8"));
-assert.equal(installedPackage.version, pinnedVersion, "the installed package must be the pinned release");
+/* A train links the provider checkout over the install (supervisor `present`): its version is the one the
+   train publishes, not the pin yet. Only an ordinary install proves the pin. */
+if (!lstatSync("node_modules/schema-pbta").isSymbolicLink()) {
+	assert.equal(installedPackage.version, pinnedVersion, "the installed package must be the pinned release");
+}
 
 const manifestUrl = import.meta.resolve("schema-pbta/corpus/cases.json");
 const manifest = JSON.parse(readFileSync(new URL(manifestUrl), "utf8"));
