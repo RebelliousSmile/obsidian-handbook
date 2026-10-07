@@ -106,7 +106,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 			result.appendChild(el(doc, "p", data.description));
 			return result;
 		}
-		case "monsterhearts-opening": return editorial(doc, id, data.editorial.opening);
+		case "monsterhearts-opening": return editorial(doc, id, { ...data.editorial.opening, heading: "" });
 		case "character-identity": {
 			const result = section(doc, id, data.editorial.identity.heading);
 			const paragraphs = data.editorial.identity.paragraphs;
