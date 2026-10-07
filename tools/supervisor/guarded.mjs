@@ -16,6 +16,14 @@ export const GUARD_DIR = fileURLToPath(new URL("./guard", import.meta.url));
 const TAIL = 30;
 
 /**
+ * What the validations of a consumer are linked to, when `present` replaces
+ * its installed providers: `<provider>@<fingerprint>`, comma-separated. A
+ * validation that reuses a result proved on a content (`tools/check.mjs`)
+ * reads it: the linked provider is under `node_modules`, outside that content.
+ */
+export const LINKED_PROVIDERS = "SUPERVISOR_LINKED_PROVIDERS";
+
+/**
  * The environment of a guarded validation. The guard leads the PATH, under
  * the key the environment already uses (`Path` on Windows), so a shell call
  * meets its shims; its hook is preloaded in every Node child, so a Node tool
@@ -53,23 +61,26 @@ export function unguardedEnv(env = process.env) {
 	if (options) next.NODE_OPTIONS = options;
 	else delete next.NODE_OPTIONS;
 	delete next.SUPERVISOR_PRESENT;
+	delete next[LINKED_PROVIDERS];
 	return next;
 }
 
 /**
  * Run `command` in `dir` behind the publication guard. The result keeps the
- * last lines of its output and its duration; with `log`, the whole output is
- * written to that file, which the caller names (`logs.mjs`): this module knows
- * neither the train nor the coordinator. Without `log`, nothing is written.
+ * last lines of its output, its standard output and its duration; with `log`,
+ * the whole output is written to that file, which the caller names
+ * (`logs.mjs`): this module knows neither the train nor the coordinator.
+ * Without `log`, nothing is written. `env` adds variables to the guarded
+ * environment; it cannot remove the guard.
  */
-export function runGuarded(dir, command, label, { log = null } = {}) {
+export function runGuarded(dir, command, label, { log = null, env = {} } = {}) {
 	process.stderr.write(`${label}: ${command.join(" ")} in ${dir}\n`);
 	const started = Date.now();
 	// The command itself is resolved past the guard's own shims.
 	const result = spawnCommand(command[0], command.slice(1), {
 		cwd: dir,
 		encoding: "utf8",
-		env: guardedEnv(),
+		env: guardedEnv({ ...process.env, ...env }),
 		exclude: [GUARD_DIR],
 		maxBuffer: 256 * 1024 * 1024,
 	});
@@ -89,6 +100,7 @@ export function runGuarded(dir, command, label, { log = null } = {}) {
 		command,
 		status: result.error ? 127 : (result.status ?? 1),
 		tail: output.trimEnd().split("\n").slice(-TAIL).join("\n"),
+		stdout: result.stdout ?? "",
 		durationMs,
 		log: written,
 	};

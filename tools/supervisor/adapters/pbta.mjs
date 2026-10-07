@@ -9,6 +9,10 @@
  * used: its candidate is named by no manifest, so the train could not tie it
  * to the presentation.
  *
+ * The two steps of the train manifest (landing it, dispatching
+ * `release-train.yml` on it) carry `rehearse`: `publish` plays the rehearsal
+ * the topology declares before either of them (`rehearse.mjs`).
+ *
  * The candidate is recorded in the train as soon as the receipt is read,
  * before its manifest is committed: the presentation admits a commit only when
  * every release URL and SRI it introduces is already known to the train.
@@ -109,12 +113,14 @@ export function nextStep(o) {
 	}
 	const adoption = adoptStep(o);
 	if (adoption) return adoption;
+	// What `release-train.yml` is given: the manifest it validates, and the commit origin/main must descend from.
+	const rehearse = { path: o.trainPath, commit: o.sha };
 	if (o.trainProblem) {
 		const consumers = o.consumers.map((entry) => ({ ...entry, path: entry.role, proof: { ...PROOF } }));
-		return landStep(repo, "manifest", o.trainPath, json({ protocol: 1, candidate: fields, consumers }), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`);
+		return { ...landStep(repo, "manifest", o.trainPath, json({ protocol: 1, candidate: fields, consumers }), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`), rehearse };
 	}
 	if (pending(o.runs.train)) return wait(o.runs.train);
-	if (!succeeded(o.runs.train)) return workflowStep(repo, "release-train", "release-train.yml", o.inputs.train, `prove ${o.trainPath} against the consumers`);
+	if (!succeeded(o.runs.train)) return { ...workflowStep(repo, "release-train", "release-train.yml", o.inputs.train, `prove ${o.trainPath} against the consumers`), rehearse };
 	if (pending(o.runs.promote)) return wait(o.runs.promote);
 	if (succeeded(o.runs.promote)) return inspect(repo.id, o.runs.promote, `release ${o.finalTag} is not published`);
 	return workflowStep(repo, "promote", "release.yml", o.inputs.promote, `publish ${o.finalTag} with the bytes of ${o.candidate.tag}`);

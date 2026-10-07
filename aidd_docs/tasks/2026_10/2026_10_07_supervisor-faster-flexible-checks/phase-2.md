@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Présenter contre l'archive empaquetée du fournisseur

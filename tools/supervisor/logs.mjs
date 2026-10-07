@@ -68,12 +68,12 @@ export function trainLogs(root, topology, trainId) {
 				// A summary that cannot be written never fails the command it measures.
 			}
 		},
-		/** `runGuarded`, its whole output kept and its duration recorded. Ranks restart with each `trainLogs`. */
-		run(repo, step, cwd, command, label) {
+		/** `runGuarded`, its whole output kept and its duration recorded. Ranks restart with each `trainLogs`. `env` adds to the guarded environment. */
+		run(repo, step, cwd, command, label, { env = {} } = {}) {
 			const key = `${repo}\0${step}`;
 			const rank = (ranks.get(key) ?? 0) + 1;
 			ranks.set(key, rank);
-			const result = runGuarded(cwd, command, label, { log: logs.file(repo, rank, step) });
+			const result = runGuarded(cwd, command, label, { log: logs.file(repo, rank, step), env });
 			logs.record({ kind: "command", repo, step, command, status: result.status, durationMs: result.durationMs });
 			return result;
 		},

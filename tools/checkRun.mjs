@@ -12,8 +12,21 @@
  * A gate ends in one of five states: "passed", "failed", "skipped" (left out
  * by name), "reused" (its own stamp still holds) or "not-run".
  */
+import { createHash } from "node:crypto";
 
 export const SUPERVISOR_GATE = "assert:supervisor";
+
+/**
+ * The `full` stamp of a content checked against linked providers. The content
+ * hash covers the checkout, and `supervise present` replaces a provider under
+ * `node_modules`, which is outside it: a green proved on the pin would stand
+ * for a provider it never met. `linked` names what was linked, with its
+ * fingerprint; without any, the stamp is the content hash itself.
+ */
+export function linkedStamp(hash, linked) {
+	if (!hash || !linked) return hash;
+	return createHash("sha256").update(`${hash}\nlinked providers: ${linked}`).digest("hex");
+}
 
 /**
  * @param {object} options

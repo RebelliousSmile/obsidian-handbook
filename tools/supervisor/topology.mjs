@@ -18,6 +18,9 @@ export const DEFAULT_TOPOLOGY = resolve(SUPERVISOR_DIR, "topology.json");
 
 const OUT_OF_SCOPE = ["obsidian-notebook"];
 
+/** In a `rehearsal` command of the topology, the path of the manifest that is rehearsed. */
+export const MANIFEST_TOKEN = "{manifest}";
+
 export class SupervisorError extends Error {
 	constructor(message, exitCode = 2) {
 		super(message);
@@ -81,6 +84,18 @@ export function checkTopology(topology, source = "topology") {
 	for (const repo of topology.repos) {
 		if (repo.matrix && !isTrainFile(repo, repo.matrix)) {
 			throw new SupervisorError(`${source}: ${repo.id} keeps its registry in ${repo.matrix}, which is not one of its train files`);
+		}
+	}
+
+	for (const repo of topology.repos) {
+		if (!repo.rehearsal) continue;
+		if (repo.role !== "provider") {
+			throw new SupervisorError(`${source}: ${repo.id} is a ${repo.role} and declares a rehearsal: only a provider rehearses a train manifest`);
+		}
+		for (const command of repo.rehearsal) {
+			if (!command.some((argument) => argument.includes(MANIFEST_TOKEN))) {
+				throw new SupervisorError(`${source}: ${repo.id} declares the rehearsal command \`${command.join(" ")}\` without ${MANIFEST_TOKEN}: a rehearsal reads the manifest it is given`);
+			}
 		}
 	}
 

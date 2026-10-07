@@ -3,7 +3,7 @@
  * no script is started, a gate "runs" by giving the exit code the case names.
  */
 import assert from "node:assert/strict";
-import { runCheck, SUPERVISOR_GATE } from "./checkRun.mjs";
+import { linkedStamp, runCheck, SUPERVISOR_GATE } from "./checkRun.mjs";
 
 const QUICK = ["build", "lint", "assert:release-version"];
 // The supervisor harness sits in the middle, as the alphabetical order of package.json puts it.
@@ -172,6 +172,36 @@ prove("without a content hash (no git directory) every gate runs and no stamp is
 	assert.equal(outcome.status, 0);
 	assert.deepEqual(outcome.started, GATES);
 	assert.deepEqual(outcome.written, []);
+});
+
+prove("a green proved on the pin does not stand for a linked provider, nor one linked provider for another", async () => {
+	assert.equal(linkedStamp(HASHES.full, ""), HASHES.full, "without a linked provider the stamp is the content hash");
+	assert.equal(linkedStamp(null, "schema-pbta@aaa"), null);
+	const first = linkedStamp(HASHES.full, "schema-pbta@aaa") as string;
+	const second = linkedStamp(HASHES.full, "schema-pbta@bbb") as string;
+	assert.ok(first !== HASHES.full && second !== HASHES.full && first !== second, "the linked provider does not enter the stamp");
+	assert.equal(linkedStamp(HASHES.full, "schema-pbta@aaa"), first);
+
+	// Green on the pin, then the same checkout under `present`, its provider replaced.
+	const pinned = await check();
+	const stamps = pinned.written[pinned.written.length - 1];
+	assert.equal(stamps.full, HASHES.full);
+	const linked = await check({ stamps, hashes: { full: first, supervisor: HASHES.supervisor } });
+	assert.equal(linked.reused, false, "the green of the pin was reused for a linked provider");
+	assert.deepEqual(linked.started, GATES.filter((gate) => gate !== SUPERVISOR_GATE), "every gate but the harness, whose own inputs did not change, replays");
+	assert.equal(linked.written[linked.written.length - 1].full, first);
+
+	// The same provider content again: that green holds.
+	const again = await check({ stamps: linked.written[linked.written.length - 1], hashes: { full: first, supervisor: HASHES.supervisor } });
+	assert.equal(again.reused, true);
+	assert.deepEqual(again.started, []);
+
+	// Another content of the provider, and back on the pin: replayed both times.
+	for (const full of [second, HASHES.full]) {
+		const other = await check({ stamps: linked.written[linked.written.length - 1], hashes: { full, supervisor: HASHES.supervisor } });
+		assert.equal(other.reused, false);
+		assert.ok(other.started.includes("build"));
+	}
 });
 
 async function main(): Promise<void> {

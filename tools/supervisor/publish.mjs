@@ -11,6 +11,10 @@
  * step is recomputed from what GitHub and the repositories show; the runs the
  * train records only say which dispatch was already tried, so a failed run is
  * retried while a published candidate is never published again.
+ *
+ * A step a provider rehearses (`rehearse.mjs`) is run only once its rehearsal
+ * is green: a manifest its own workflow would refuse is neither landed nor
+ * dispatched.
  */
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
@@ -22,6 +26,7 @@ import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
 import { adoptArchive, landFiles, pushTag, readyCheckout } from "./land.mjs";
+import { rehearsalCommands, rehearse } from "./rehearse.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
 import { spawnCommand } from "./spawn.mjs";
@@ -297,6 +302,7 @@ export function publishTrain(context, file, { run = false } = {}) {
 			: step.type === "tag" ? showFile(dir, "origin/main", `.github/workflows/${step.workflow}`) ?? ""
 				: null;
 		console.log(render(repo, dir, step));
+		for (const command of rehearsalCommands(repo, step)) console.log(`  rehearsed first: $ ${command.map(quote).join(" ")} (in ${dir})`);
 		if (step.kind === "human") return { code: 0, published: false };
 		if (!run) {
 			console.log(step.kind === "wait" ? "Watch it with: pnpm supervise publish --run" : "Nothing was run. Run it with: pnpm supervise publish --run");
@@ -311,6 +317,7 @@ export function publishTrain(context, file, { run = false } = {}) {
 		ran.add(key);
 		preflight(repo, step, workflowText);
 		assertBinding(context.root, context.topology, readTrain(file, context.topology));
+		rehearse(context.root, context.topology, train.id, repo, dir, step);
 		execute(context, file, next);
 	}
 }

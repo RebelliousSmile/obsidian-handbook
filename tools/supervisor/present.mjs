@@ -11,6 +11,10 @@
  * A consumer the train changes must carry a version that has no release yet:
  * `release` tags what `package.json` says, it writes no version.
  *
+ * A provider of the train is packed for nothing, once (`packedFiles.mjs`): the
+ * files its package publishes are what its consumers are validated against
+ * (`providerLinks.mjs`), and their fingerprint is written beside its commit.
+ *
  * The whole output of each command is kept beside the train (`logs.mjs`), and
  * the report names it for every failure. The record keeps the duration of a
  * validation, never the path of its log: a record is committed, a log is local.
@@ -19,7 +23,9 @@ import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { announcedPublications, computeDigest, concernedRepos, trainFilesOf } from "./digest.mjs";
 import { evaluateTrain } from "./next.mjs";
 import { basename } from "node:path";
+import { LINKED_PROVIDERS } from "./guarded.mjs";
 import { formatDuration, trainLogs } from "./logs.mjs";
+import { packedFiles } from "./packedFiles.mjs";
 import { packageManager, packageJson } from "./preview.mjs";
 import { planProviderLinks, withProviderLinks } from "./providerLinks.mjs";
 import { releaseExists } from "./gh.mjs";
@@ -98,11 +104,57 @@ function releasedVersions(root, topology, train, entries) {
 /** The step a validation's log is filed under; its rank is its place among the repository's validations, from 1. */
 const PRESENT_STEP = "present";
 
+/** Whether a `prepack` script runs the `build` script itself: packing then builds, a separate build would run it twice. */
+function prepackBuilds(scripts) {
+	return /(^|[\s&|;])(npm|pnpm|yarn)(\s+run)?\s+build(?=$|[\s&|;])/.test(scripts.prepack ?? "");
+}
+
+/**
+ * Build, then pack for nothing, each provider the train changes: once, whatever
+ * the number of its consumers. The result of a provider is what its package
+ * publishes (`files`, `sha256`), or the step that failed (`failed`).
+ */
+function packProviders(root, topology, train, repos, logs, failures) {
+	const packed = new Map();
+	const whole = (result) => (result.log ? ` (whole output: ${basename(result.log)})` : "");
+	for (const repo of repos.filter((candidate) => candidate.role === "provider" && train.items.some((item) => item.repo === candidate.id))) {
+		const dir = repoDir(root, repo);
+		const scripts = packageJson(dir)?.scripts ?? {};
+		if (scripts.build && !prepackBuilds(scripts)) {
+			const build = logs.run(repo.id, "build", dir, [packageManager(dir), "run", "build"], "present");
+			if (build.status !== 0) {
+				failures.push(`${repo.id}: ${build.command.join(" ")} exited ${build.status}${whole(build)}`);
+				packed.set(repo.id, { failed: "build" });
+				continue;
+			}
+		}
+		const pack = packedFiles(dir, (command) => logs.run(repo.id, "pack", dir, command, "present"));
+		if (pack.error) {
+			failures.push(`${repo.id}: ${pack.error}${whole(pack.result)}`);
+			packed.set(repo.id, { failed: "packaging" });
+			continue;
+		}
+		packed.set(repo.id, { files: pack.files, sha256: pack.sha256 });
+	}
+	return packed;
+}
+
+/** Why the validations of a consumer are not started: the providers it would be linked to that could not be built or packed. */
+function brokenProviders(links, packed) {
+	const steps = [];
+	for (const step of ["build", "packaging"]) {
+		const ids = links.filter((link) => packed.get(link.repo)?.failed === step).map((link) => link.repo);
+		if (ids.length > 0) steps.push(`the ${step} of ${ids.join(", ")} failed`);
+	}
+	return steps.join("; ");
+}
+
 export function presentTrain(root, topology, train, logs = trainLogs(root, topology, train.id)) {
 	if (train.status !== "open") throw new SupervisorError(`present: train "${train.id}" is closed`);
 	const repos = concernedRepos(topology, train);
 	const heads = checkPreconditions(root, topology, train, repos);
 	const buildFailures = [];
+	const packed = packProviders(root, topology, train, repos, logs, buildFailures);
 	const entries = repos.map((repo) => {
 		const dir = repoDir(root, repo);
 		const item = train.items.find((entry) => entry.repo === repo.id) ?? null;
@@ -114,22 +166,27 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 				.map((line) => ({ sha: line.slice(0, 40), subject: line.slice(41) }))
 			: [];
 		const diffstat = baseKnown ? gitOut(dir, ["diff", "--stat", base, sha]) : "";
+		const entry = { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat };
+		const own = packed.get(repo.id);
+		if (own?.sha256) entry.packed = { sha256: own.sha256, files: own.files.length };
 		const links = repo.role === "provider" ? [] : planProviderLinks(root, topology, train, repo);
-		const broken = [];
-		for (const link of links) {
-			const build = packageJson(link.dir)?.scripts?.build ? logs.run(repo.id, `build-${link.repo}`, link.dir, [packageManager(link.dir), "run", "build"], "present") : null;
-			if (!build || build.status === 0) continue;
-			broken.push(link.repo);
-			buildFailures.push(`${link.repo}: ${build.command.join(" ")} exited ${build.status}${build.log ? ` (whole output: ${basename(build.log)})` : ""}`);
+		const broken = brokenProviders(links, packed);
+		// Behind a provider that does not build or pack, a consumer's validations cannot pass: they are not started.
+		if (broken) {
+			entry.validations = (repo.validations ?? []).map((command) => ({ command, status: -1, tail: "", notRun: broken }));
+			return entry;
 		}
-		// Behind a provider that does not build, a consumer's validations cannot pass: they are not started.
-		const validations = broken.length > 0
-			? (repo.validations ?? []).map((command) => ({ command, status: -1, tail: "", notRun: `the build of ${broken.join(", ")} failed` }))
-			: withProviderLinks(dir, links, () => (repo.validations ?? []).map((command) => {
-				const result = logs.run(repo.id, PRESENT_STEP, dir, command, "present");
+		const published = links.map((link) => ({ ...link, files: packed.get(link.repo).files }));
+		entry.validations = withProviderLinks(dir, published, (replaced) => {
+			const linked = replaced.map((link) => link.repo).sort();
+			if (linked.length > 0) entry.linkedProviders = linked;
+			const env = linked.length > 0 ? { [LINKED_PROVIDERS]: linked.map((id) => `${id}@${packed.get(id).sha256}`).join(",") } : {};
+			return (repo.validations ?? []).map((command) => {
+				const result = logs.run(repo.id, PRESENT_STEP, dir, command, "present", { env });
 				return { command: result.command, status: result.status, tail: result.tail, durationMs: result.durationMs };
-			}));
-		return { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat, validations };
+			});
+		});
+		return entry;
 	});
 	const reasons = [...buildFailures];
 	for (const entry of entries) {
@@ -177,6 +234,11 @@ export function renderPresentation(train, presentation, logs = null) {
 			lines.push("", `Commits since \`${short(entry.baseSha)}\`:`);
 			lines.push(...(entry.commits.length ? entry.commits.map((commit) => `- \`${short(commit.sha)}\` ${commit.subject}`) : ["- none"]));
 			if (entry.diffstat) lines.push("", "```", entry.diffstat, "```");
+		}
+		if (entry.packed) lines.push("", `Package: ${entry.packed.files} file(s), fingerprint \`${entry.packed.sha256}\`.`);
+		for (const id of entry.linkedProviders ?? []) {
+			const provider = presentation.repos.find((candidate) => candidate.repo === id);
+			lines.push("", `Validated against the package of ${id}${provider?.packed ? `, fingerprint \`${provider.packed.sha256}\`` : ""}, in place of the installed one.`);
 		}
 		lines.push("", "Validations (behind the publication guard):");
 		if (entry.validations.length === 0) lines.push("- none configured");

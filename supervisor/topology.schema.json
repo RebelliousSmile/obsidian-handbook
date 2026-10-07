@@ -58,6 +58,10 @@
 					}
 				},
 				"validations": { "$ref": "#/definitions/commands" },
+				"rehearsal": {
+					"description": "Provider only. The static proofs of its train workflow, played in its checkout before its train manifest is landed and before the workflow is dispatched. `{manifest}` stands for the path of the manifest, and every command names it.",
+					"$ref": "#/definitions/commands"
+				},
 				"convergence": { "$ref": "#/definitions/commands" }
 			},
 			"if": { "properties": { "role": { "const": "provider" } } },

@@ -11,9 +11,33 @@
  * is what a local promotion does, or write a file of the checkout, as a
  * convergence writes its evidence. `--output <file>` is written, as the
  * assertion writes its provenance.
+ *
+ * `npm pack --dry-run --json` (script `pack`) lists what the package of the
+ * working directory publishes: `package.json` and the entries of its `files`,
+ * or the whole directory without that field. Like a `prepack` script, it
+ * writes a line on the standard output before the JSON.
+ *
+ * `npm run validate:release-train -- <manifest>` reads the manifest it is
+ * given, as the validation of a provider does: a green one that finds no
+ * readable JSON at that path of the working directory exits 93.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+
+/** The files under `path` (relative to the working directory), a file or a directory. */
+function walk(path, found = []) {
+	const full = join(process.cwd(), path);
+	if (!existsSync(full)) return found;
+	if (!statSync(full).isDirectory()) {
+		found.push(path.split("\\").join("/"));
+		return found;
+	}
+	for (const entry of readdirSync(full)) {
+		if (entry === ".git" || entry === "node_modules") continue;
+		walk(path === "." ? entry : join(path, entry), found);
+	}
+	return found;
+}
 
 const statePath = process.env.FAKE_GH_STATE;
 if (!statePath) {
@@ -23,6 +47,22 @@ if (!statePath) {
 const state = JSON.parse(readFileSync(statePath, "utf8"));
 const args = process.argv.slice(2);
 state.localCalls = [...(state.localCalls ?? []), { args, cwd: process.cwd() }];
+
+if (args[0] === "pack" && args.includes("--dry-run") && args.includes("--json")) {
+	const effect = ((state.localEffects ?? {})[`${basename(process.cwd())} pack`] ?? []).shift() ?? {};
+	writeFileSync(statePath, JSON.stringify(state, null, "\t"));
+	const status = effect.status ?? 0;
+	if (status !== 0) {
+		process.stderr.write(`fake npm: prepack exited ${status}\n`);
+		process.exit(status);
+	}
+	const manifest = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8"));
+	const entries = Array.isArray(manifest.files) ? ["package.json", ...manifest.files] : ["."];
+	const files = [...new Set(entries.reduce((found, entry) => walk(entry, found), []))];
+	process.stdout.write("fake npm: prepack wrote its files\n[not the listing]\n");
+	process.stdout.write(`${JSON.stringify([{ name: manifest.name, version: manifest.version, files: files.map((path) => ({ path })) }], null, 2)}\n`);
+	process.exit(0);
+}
 
 const install = args[0] === "install" || args[0] === "ci";
 // `pnpm <script>` is pnpm's shorthand for `pnpm run <script>`.
@@ -51,5 +91,14 @@ if (status === 0) {
 	}
 }
 writeFileSync(statePath, JSON.stringify(state, null, "\t"));
+if (status === 0 && script === "validate:release-train") {
+	const manifest = args[args.indexOf("--") + 1] ?? "";
+	try {
+		JSON.parse(readFileSync(join(process.cwd(), manifest), "utf8"));
+	} catch {
+		process.stderr.write(`fake npm: ${manifest} is not a readable manifest\n`);
+		process.exit(93);
+	}
+}
 process.stdout.write(`fake npm: ${script} exited ${status}\n`);
 process.exit(status);

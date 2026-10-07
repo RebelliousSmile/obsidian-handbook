@@ -132,6 +132,15 @@
 					"run",
 					"check"
 				]
+			],
+			"rehearsal": [
+				[
+					"npm",
+					"run",
+					"validate:release-train",
+					"--",
+					"{manifest}"
+				]
 			]
 		},
 		{

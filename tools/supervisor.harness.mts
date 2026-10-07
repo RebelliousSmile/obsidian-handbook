@@ -7,7 +7,7 @@
  * what it printed, what it wrote, and which git and gh calls it made.
  */
 import assert from "assert/strict";
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "fs";
 import { basename, delimiter, join, resolve } from "path";
 import Ajv from "ajv";
 import { createWorld, git, HANDBOOK, sh, TOPOLOGY, World } from "./fixtures/supervisor/world.mts";
@@ -501,7 +501,7 @@ scenario("a failing validation makes the train not presentable and publish --run
 	assert.match(refused.stderr, /the last presentation of train "couleur-otherscape" is not presentable/);
 	assert.ok(refused.stderr.includes(`schema-in-the-mist: ${broken.join(" ")} exited 3`), refused.stderr);
 	assert.deepEqual(dispatches(world), []);
-	assert.equal(world.readState().localCalls, undefined);
+	assert.deepEqual(publishCalls(world), []);
 });
 
 /** A shell validation: `cmd /d /s /c` on Windows, `sh -c` elsewhere. Lines joined by the shell's own separator. */
@@ -654,6 +654,15 @@ function lastSubject(world: World, id: string): string {
 }
 
 /** The installs the supervisor ran, as `<repository directory> <args>`. */
+/**
+ * What ran in a checkout past its presentation. `present` packs every provider
+ * the train changes (`npm pack --dry-run --json`); those calls are its own, and
+ * a scenario about what `publish` ran does not count them.
+ */
+function publishCalls(world: World, dir?: string): any[] {
+	return (world.readState().localCalls ?? []).filter((call: any) => call.args[0] !== "pack" && (dir === undefined || call.cwd === dir));
+}
+
 function installs(world: World): string[] {
 	return (world.readState().localCalls ?? [])
 		.filter((call: any) => call.args[0] === "install" || call.args[0] === "ci")
@@ -780,6 +789,133 @@ scenario("publish --run takes schema-pbta through digest, stage, release-train a
 	assert.match(ok(publish(world, false), "the presentation still holds after the publication"), /Every provider of train couleur-otherscape is published/);
 });
 
+// The rehearsal of a train manifest: the static proofs of the train workflow, before it is landed and before it is dispatched.
+
+const REHEARSAL = "validate:release-train";
+
+/** The rehearsals the supervisor ran, as `<repository directory> <args>`. */
+function rehearsals(world: World): string[] {
+	return (world.readState().localCalls ?? [])
+		.filter((call: any) => call.args[1] === REHEARSAL)
+		.map((call: any) => `${basename(call.cwd)} ${call.args.join(" ")}`);
+}
+
+function rehearsed(world: World): Array<[string, number]> {
+	return durations(world).filter((entry) => entry.step === "rehearse").map((entry): [string, number] => [entry.repo, entry.status]);
+}
+
+scenario("publish --run rehearses the train manifest of schema-pbta before it lands it, and again before it dispatches release-train.yml", (world) => {
+	const topology = presentedTrain(world, ["schema-pbta"]);
+	const shown = ok(publish(world, false, topology), "publish");
+	assert.ok(!shown.includes("rehearsed"), "a step no rehearsal comes before announces one");
+	const { trainPath, result } = drivePbta(world, topology);
+	const output = ok(result, "publish --run");
+	// The stand-in validation is red on a manifest it cannot read: both times the file was in the checkout.
+	const call = `schema-pbta run ${REHEARSAL} -- ${trainPath}`;
+	assert.deepEqual(rehearsals(world), [call, call]);
+	assert.deepEqual(rehearsed(world), [["schema-pbta", 0], ["schema-pbta", 0]]);
+	assert.ok(output.includes(`  rehearsed first: $ npm run ${REHEARSAL} -- ${trainPath} (in ${world.dir("schema-pbta")})`), output);
+	assert.ok(output.includes(`schema-pbta: rehearsed ${trainPath}: 1 command(s) green in `), output);
+	assert.equal(dispatches(world, "release-train.yml").length, 1);
+	assert.equal(git(world.dir("schema-pbta"), "status", "--porcelain"), "", "the rehearsal left the checkout changed");
+});
+
+scenario("a red rehearsal stops publish --run before the manifest is landed, then before release-train.yml is dispatched, and its whole output is kept", (world) => {
+	const topology = presentedTrain(world, ["schema-pbta"]);
+	world.updateState((state) => { state.localEffects = { ...state.localEffects, [`schema-pbta ${REHEARSAL}`]: [{ status: 7 }, {}, { status: 8 }] }; });
+	const { trainPath, result } = drivePbta(world, topology);
+	const dir = world.dir("schema-pbta");
+	const log = resolve(logsDir(world), "schema-pbta-1-rehearse.log");
+	const onOrigin = () => sh(dir, "git", ["cat-file", "-e", `origin/main:${trainPath}`]).status === 0;
+
+	// Before the manifest is landed.
+	assert.equal(result.status, 1, result.stdout);
+	assert.ok(result.stderr.includes(`publish: the rehearsal of ${trainPath} is red in schema-pbta: \`npm run ${REHEARSAL} -- ${trainPath}\` exited 7; nothing was landed or dispatched`), result.stderr);
+	assert.ok(result.stderr.includes(`Whole output: ${log}`), result.stderr);
+	assert.match(readFileSync(log, "utf8"), /fake npm: validate:release-train exited 7/);
+	assert.deepEqual(dispatches(world).map((args) => `${args[2]} ${args[8]}`), ["release.yml mode=digest", "release.yml mode=stage"], "something was dispatched behind a red rehearsal");
+	assert.ok(!onOrigin(), "the manifest was landed behind a red rehearsal");
+	assert.ok(!existsSync(resolve(dir, trainPath)), "the rehearsed manifest was left in the checkout");
+	assert.equal(git(dir, "status", "--porcelain"), "");
+
+	// Landed once its rehearsal is green; red again before the dispatch.
+	const second = publish(world, true, topology);
+	assert.equal(second.status, 1, second.stdout);
+	assert.match(second.stderr, /exited 8; nothing was landed or dispatched/);
+	assert.ok(onOrigin(), "the manifest was not landed behind its green rehearsal");
+	assert.deepEqual(dispatches(world, "release-train.yml"), [], "release-train.yml was dispatched behind a red rehearsal");
+	assert.equal(git(dir, "status", "--porcelain"), "");
+
+	const third = ok(publish(world, true, topology), "publish --run, the rehearsal green");
+	assert.match(third, /Every provider of train couleur-otherscape is published/);
+	assert.equal(dispatches(world, "release-train.yml").length, 1, "release-train.yml was dispatched more than once");
+	assert.equal(rehearsals(world).length, 4);
+	assert.deepEqual(rehearsed(world).map((entry) => entry[1]), [7, 0, 8, 0]);
+});
+
+scenario("a rehearsal refuses a commit origin/main does not descend from, before any command", (world) => {
+	const topology = presentedTrain(world, ["schema-pbta"]);
+	const elsewhere = git(world.dir("schema-pbta"), "commit-tree", "HEAD^{tree}", "-m", "elsewhere");
+	// rehearse.mjs is an ES module that locates the repository by import.meta: it is loaded by node itself, not bundled.
+	const probe = [
+		"const [root, topologyFile, ...commits] = process.argv.slice(1);",
+		"const { loadTopology, repoById, repoDir } = await import('./tools/supervisor/topology.mjs');",
+		"const { rehearse } = await import('./tools/supervisor/rehearse.mjs');",
+		"const topology = loadTopology(topologyFile);",
+		"const repo = repoById(topology, 'schema-pbta');",
+		"const messages = [];",
+		"for (const commit of commits) {",
+		"\ttry {",
+		"\t\trehearse(root, topology, 'couleur-otherscape', repo, repoDir(root, repo), { type: 'workflow', rehearse: { path: 'release-train/absent.json', commit } });",
+		"\t\tmessages.push('rehearsed');",
+		"\t} catch (error) {",
+		"\t\tmessages.push(error.message);",
+		"\t}",
+		"}",
+		"console.log(JSON.stringify(messages));",
+	].join("\n");
+	const unknown = "0".repeat(40);
+	const messages = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, elsewhere, unknown]), "rehearsal probe"));
+	assert.deepEqual(messages, [elsewhere, unknown].map((commit) => `publish: schema-pbta: origin/main does not descend from ${commit.slice(0, 10)}, the commit its train workflow is given; nothing was landed or dispatched`));
+	assert.deepEqual(rehearsals(world), [], "a command ran for a commit origin/main does not descend from");
+});
+
+scenario("a provider that declares no rehearsal is published as before, and nothing is rehearsed", (world) => {
+	const topology = presentedTrain(world, ["schema-pbta"]);
+	const declared = JSON.parse(readFileSync(topology, "utf8"));
+	delete declared.repos.find((repo: any) => repo.id === "schema-pbta").rehearsal;
+	writeFileSync(topology, JSON.stringify(declared));
+	const output = ok(drivePbta(world, topology).result, "publish --run");
+	assert.match(output, /Every provider of train couleur-otherscape is published/);
+	assert.ok(!output.includes("rehearsed"), output);
+	assert.deepEqual(rehearsals(world), []);
+	assert.deepEqual(rehearsed(world), []);
+	assert.equal(dispatches(world, "release-train.yml").length, 1);
+});
+
+scenario("a rehearsal that is not a list of commands, that does not name the manifest, or that a consumer declares, is refused before any git command", (world) => {
+	const declare = (name: string, id: string, rehearsal: unknown): string => {
+		const topology = JSON.parse(JSON.stringify(TOPOLOGY));
+		topology.repos.find((repo: any) => repo.id === id).rehearsal = rehearsal;
+		const file = resolve(world.tmp, name);
+		writeFileSync(file, JSON.stringify(topology));
+		return file;
+	};
+	const refused: Array<[string, RegExp]> = [
+		[declare("rehearsal-text.json", "schema-pbta", `npm run ${REHEARSAL}`), /invalid topology\n.*rehearsal should be array/],
+		[declare("rehearsal-blind.json", "schema-pbta", [["npm", "run", REHEARSAL]]), /schema-pbta declares the rehearsal command `npm run validate:release-train` without \{manifest\}: a rehearsal reads the manifest it is given/],
+		[declare("rehearsal-consumer.json", "lantern", [["npm", "run", REHEARSAL, "--", "{manifest}"]]), /lantern is a consumer and declares a rehearsal: only a provider rehearses a train manifest/],
+	];
+	for (const [topology, message] of refused) {
+		const result = world.supervise(["status"], { topology });
+		assert.equal(result.status, 2, result.stderr);
+		assert.match(result.stderr, message);
+	}
+	assert.deepEqual(world.gitCalls(), [], "git ran before the topology was accepted");
+	const shipped = TOPOLOGY.repos.filter((repo: any) => repo.rehearsal).map((repo: any) => [repo.id, repo.rehearsal]);
+	assert.deepEqual(shipped, [["schema-pbta", [["npm", "run", REHEARSAL, "--", "{manifest}"]]]], "the shipped topology declares another rehearsal than the validation of schema-pbta");
+});
+
 scenario("publish --run promotes schema-in-the-mist locally in its checkout, with the candidate's bytes", (world) => {
 	const topology = presentedTrain(world, ["schema-in-the-mist"]);
 	const { candidate, result } = driveMist(world, bytesOf("schema-in-the-mist"), topology);
@@ -788,7 +924,7 @@ scenario("publish --run promotes schema-in-the-mist locally in its checkout, wit
 	assert.match(output, /Every provider of train couleur-otherscape is published/);
 	const mistDir = world.dir("schema-in-the-mist");
 	const evidence = resolve(world.dir("obsidian-handbook"), "supervisor/trains", `${TRAIN_ID}.evidence`, `schema-in-the-mist-v${NEXT}.provenance.json`);
-	const mistCalls = world.readState().localCalls.filter((call: any) => call.cwd === mistDir).map((call: any) => call.args);
+	const mistCalls = publishCalls(world, mistDir).map((call: any) => call.args);
 	assert.deepEqual(mistCalls.slice(0, 2), [
 		["run", "release-train:assert", "--", `release-trains/v${NEXT}.json`, "--output", evidence],
 		["run", "release-train:promote", "--", `release-trains/v${NEXT}.json`, "--evidence", evidence],
@@ -820,7 +956,7 @@ scenario("without a presentation that holds, publish --run dispatches nothing an
 	assert.equal(result.status, 1, result.stdout);
 	assert.ok(result.stderr.includes(`commit ${outside.slice(0, 10)} changes src/late.ts, outside the train files`), result.stderr);
 	assert.deepEqual(dispatches(world), []);
-	assert.equal(world.readState().localCalls, undefined);
+	assert.deepEqual(publishCalls(world), []);
 });
 
 scenario("a consumer that fails with the candidate stops publish --run by name, its pins restored and nothing of it committed", (world) => {
@@ -836,7 +972,7 @@ scenario("a consumer that fails with the candidate stops publish --run by name, 
 	assert.equal(git(world.dir("lantern"), "status", "--porcelain"), "", "the pins of lantern were not restored");
 	assert.deepEqual(installs(world).filter((entry) => entry.startsWith("lantern ")), ["lantern install --frozen-lockfile", "lantern install --frozen-lockfile"], "the restored pins were not installed again");
 	assert.equal(readRecord(world).publication["schema-in-the-mist"].final, undefined);
-	assert.deepEqual(world.readState().localCalls.filter((call: any) => call.cwd === world.dir("schema-in-the-mist")), [], "the provider went on without its consumer");
+	assert.deepEqual(publishCalls(world, world.dir("schema-in-the-mist")), [], "the provider went on without its consumer");
 });
 
 scenario("after a failed release-train, publish resumes at the proof, pushes the final tag and follows the release it starts", (world) => {
@@ -873,7 +1009,7 @@ scenario("after a failed release-train, publish resumes at the proof, pushes the
 	assert.equal(final.protocol, 2);
 	assert.equal(final.artifact.releaseUrl, world.archive("schema-adrenaline", `v${NEXT}`).url);
 	assert.deepEqual(final.consumers.map((consumer: any) => [consumer.role, consumer.ref]), [["handbook", originMain(world, "obsidian-handbook")], ["lantern", originMain(world, "lantern")]]);
-	assert.deepEqual(world.readState().localCalls.filter((call: any) => call.cwd === world.dir("schema-adrenaline")).map((call: any) => call.args), [["run", "release-train:verify-final"]]);
+	assert.deepEqual(publishCalls(world, world.dir("schema-adrenaline")).map((call: any) => call.args), [["run", "release-train:verify-final"]]);
 	assert.equal(readRecord(world).convergence.status, "passed");
 });
 
@@ -1308,7 +1444,7 @@ scenario("publish --run completes the schema-in-the-mist manifest, lands its con
 	assert.equal(originFile(world, "schema-in-the-mist", evidencePath), "{\"converged\": true}");
 	assert.equal(git(mist, "status", "--porcelain"), "", "the checkout of schema-in-the-mist is left dirty");
 	const evidence = resolve(world.dir("obsidian-handbook"), "supervisor/trains", `${TRAIN_ID}.evidence`, `schema-in-the-mist-v${NEXT}.provenance.json`);
-	assert.deepEqual(world.readState().localCalls.filter((call: any) => call.cwd === mist).slice(2).map((call: any) => call.args), [
+	assert.deepEqual(publishCalls(world, mist).slice(2).map((call: any) => call.args), [
 		["run", "release-train:converge", "--", path, "--candidate-evidence", evidence],
 		["run", "release-train:validate", "--", "--require-complete", `v${NEXT}`],
 	]);
@@ -1418,7 +1554,7 @@ scenario("preview plans from what the train's providers publish, and installs th
 	assert.match(refused.stderr, /nothing to show without --vault/);
 });
 
-scenario("present points a consumer's installed provider at the checkout, then puts the link back", (world) => {
+scenario("present replaces a consumer's installed provider by its package, then puts the link back", (world) => {
 	const topology = testTopology(world);
 	doneTrain(world);
 	const mist = world.dir("schema-in-the-mist");
@@ -1438,19 +1574,131 @@ scenario("present points a consumer's installed provider at the checkout, then p
 		"const { planProviderLinks, withProviderLinks } = await import('./tools/supervisor/providerLinks.mjs');",
 		"const read = (file) => JSON.parse(readFileSync(file, 'utf8'));",
 		"const topology = read(topologyFile);",
-		"const links = planProviderLinks(root, topology, read(trainFile), topology.repos.find((repo) => repo.id === 'lantern'));",
+		"const links = planProviderLinks(root, topology, read(trainFile), topology.repos.find((repo) => repo.id === 'lantern')).map((link) => ({ ...link, files: ['package.json'] }));",
 		"const link = consumerDir + '/node_modules/schema-in-the-mist';",
-		"const during = withProviderLinks(consumerDir, links, () => existsSync(link + '/package.json'));",
+		"const during = withProviderLinks(consumerDir, links, (replaced) => replaced.length === 1 && existsSync(link + '/package.json') && !existsSync(link + '/src'));",
 		"let thrown = false;",
 		"try { withProviderLinks(consumerDir, links, () => { throw new Error('boom'); }); } catch { thrown = true; }",
 		"console.log(JSON.stringify({ names: links.map((entry) => entry.name), during, thrown, after: existsSync(link + '/marker') }));",
 	].join("\n");
 	const result = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, world.root, topology, trainPath(world), consumer]), "provider links probe"));
 	assert.deepEqual(result.names, ["schema-in-the-mist"]);
-	assert.equal(result.during, true, "the consumer did not see the checkout of the provider");
+	assert.equal(result.during, true, "the consumer did not see the package of the provider, or saw more than it");
 	assert.equal(result.thrown, true);
 	assert.equal(result.after, true, "the pinned link was not restored");
 	assert.ok(existsSync(resolve(mist, "package.json")));
+});
+
+// What a consumer is validated against: the package of the provider, not its checkout.
+
+const PACKAGE_LINK = "node_modules/schema-in-the-mist";
+
+/**
+ * A provider whose package publishes `dist/` and leaves `unpublished/` out,
+ * and a consumer that installed its last release the way pnpm does: a link to
+ * a copy that sits among its own dependencies.
+ */
+function packagedProvider(world: World): { link: string; pinned: string } {
+	const manifest = JSON.parse(readFileSync(resolve(world.dir("schema-in-the-mist"), "package.json"), "utf8"));
+	world.land("schema-in-the-mist", {
+		"package.json": `${JSON.stringify({ ...manifest, files: ["dist"] }, null, "\t")}\n`,
+		"dist/index.js": "module.exports = 'train';\n",
+		"unpublished/data.json": "{}\n",
+	}, "a package that leaves a directory out");
+	world.land("lantern", { ".gitignore": "node_modules\n" }, "ignore the install");
+	const consumer = world.dir("lantern");
+	const store = resolve(consumer, "node_modules/.pnpm/schema-in-the-mist@1.0.0/node_modules");
+	const pinned = resolve(store, "schema-in-the-mist");
+	mkdirSync(resolve(pinned, "dist"), { recursive: true });
+	writeFileSync(resolve(pinned, "package.json"), JSON.stringify({ name: "schema-in-the-mist", version: "1.0.0" }));
+	writeFileSync(resolve(pinned, "dist/index.js"), "module.exports = 'pinned';\n");
+	mkdirSync(resolve(store, "zod"), { recursive: true });
+	writeFileSync(resolve(store, "zod/index.js"), "module.exports = 'zod';\n");
+	const link = resolve(consumer, PACKAGE_LINK);
+	symlinkSync(pinned, link, "junction");
+	return { link, pinned };
+}
+
+/** The install of the consumer is as it was: its link on the pinned copy, no staged copy left. */
+function assertInstallRestored(world: World, { link, pinned }: { link: string; pinned: string }): void {
+	assert.equal(realpathSync(link), realpathSync(pinned), "the link of the installed package was not put back");
+	assert.equal(readFileSync(resolve(link, "dist/index.js"), "utf8"), "module.exports = 'pinned';\n");
+	assert.ok(!existsSync(resolve(world.dir("lantern"), "node_modules/.train-providers")), ".train-providers was left in the consumer");
+	assert.equal(git(world.dir("lantern"), "status", "--porcelain"), "", "the consumer checkout was changed");
+}
+
+function packedOf(world: World): any {
+	return readRecord(world).presentation.repos.find((entry: any) => entry.repo === "schema-in-the-mist").packed;
+}
+
+scenario("present validates a consumer against the package of the provider and writes its fingerprint, the same for the same content", (world) => {
+	const install = packagedProvider(world);
+	const measure = nodeCommand("const sibling = require.resolve('zod', { paths: [require('fs').realpathSync('node_modules/schema-in-the-mist')] }); const value = require('schema-in-the-mist/dist/index.js'); if (value !== 'train' || !sibling) { console.error('measured ' + value); process.exit(6); } console.log('linked: ' + process.env.SUPERVISOR_LINKED_PROVIDERS)");
+	const environment = nodeCommand("console.log('linked: ' + process.env.SUPERVISOR_LINKED_PROVIDERS)");
+	const topology = testTopology(world, { lantern: [measure], "obsidian-handbook": [environment] });
+	doneTrain(world);
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+	const packed = packedOf(world);
+	assert.match(packed.sha256, /^[0-9a-f]{64}$/);
+	assert.equal(packed.files, 2, "package.json and dist/index.js, not unpublished/data.json");
+	assert.ok(result.stdout.includes(`Package: 2 file(s), fingerprint \`${packed.sha256}\`.`), result.stdout);
+	assert.ok(result.stdout.includes(`Validated against the package of schema-in-the-mist, fingerprint \`${packed.sha256}\`, in place of the installed one.`), result.stdout);
+	const repos = readRecord(world).presentation.repos;
+	assert.deepEqual(repos.find((entry: any) => entry.repo === "lantern").linkedProviders, ["schema-in-the-mist"]);
+	const handbook = repos.find((entry: any) => entry.repo === "obsidian-handbook");
+	assert.ok(!("linkedProviders" in handbook) && !("packed" in handbook), "a consumer that does not install the provider was reported linked");
+	assert.equal(readFileSync(resolve(logsDir(world), "lantern-1-present.log"), "utf8").trim(), `linked: schema-in-the-mist@${packed.sha256}`);
+	assert.equal(readFileSync(resolve(logsDir(world), "obsidian-handbook-1-present.log"), "utf8").trim(), "linked: undefined");
+	assert.match(readFileSync(resolve(logsDir(world), "schema-in-the-mist-1-pack.log"), "utf8"), /"path": "dist\/index\.js"/);
+	assert.deepEqual(durations(world).filter((entry) => entry.step === "pack").map((entry) => [entry.repo, entry.status]), [["schema-in-the-mist", 0]], "the provider is packed once, whatever the number of its consumers");
+	assertInstallRestored(world, install);
+
+	ok(world.supervise(["present"], { topology }), "second present");
+	assert.equal(packedOf(world).sha256, packed.sha256, "two presentations of one content gave two fingerprints");
+
+	world.land("schema-in-the-mist", { "unpublished/data.json": "{ \"changed\": true }\n" }, "a file the package leaves out");
+	ok(world.supervise(["present"], { topology }), "present after an unpublished change");
+	assert.equal(packedOf(world).sha256, packed.sha256, "a file outside the package changed the fingerprint");
+
+	world.land("schema-in-the-mist", { "dist/index.js": "module.exports = 'train'; \n" }, "one more byte in a published file");
+	ok(world.supervise(["present"], { topology }), "present after a published change");
+	assert.notEqual(packedOf(world).sha256, packed.sha256, "a byte of a published file did not change the fingerprint");
+	assertInstallRestored(world, install);
+});
+
+scenario("a consumer that reads a file the provider leaves out of its package is red at present, and the file is named", (world) => {
+	const install = packagedProvider(world);
+	const read = nodeCommand("require('fs').readFileSync('node_modules/schema-in-the-mist/unpublished/data.json')");
+	const topology = testTopology(world, { lantern: [read] });
+	doneTrain(world);
+	assert.ok(existsSync(resolve(world.dir("schema-in-the-mist"), "unpublished/data.json")), "the checkout of the provider has the file");
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stdout, /- lantern: .+ exited 1$/m);
+	assert.match(result.stdout, /ENOENT[^\n]*schema-in-the-mist[\\/]+unpublished[\\/]+data\.json/, result.stdout);
+	assert.equal(readRecord(world).presentation.presentable, false);
+	assert.deepEqual(dispatches(world), [], "a candidate was started");
+	assertInstallRestored(world, install);
+});
+
+scenario("behind a provider that cannot be packed, the validations of its consumers are not started, and the reason is named", (world) => {
+	const install = packagedProvider(world);
+	world.updateState((state) => { state.localEffects = { ...state.localEffects, "schema-in-the-mist pack": [{ status: 5 }] }; });
+	const marker = resolve(world.tmp, "consumer-validated");
+	const touch = nodeCommand(`require('fs').appendFileSync(${JSON.stringify(marker)}, 'x')`);
+	const topology = testTopology(world, { lantern: [touch], "obsidian-handbook": [touch] });
+	doneTrain(world);
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.ok(!existsSync(marker), "a consumer was validated behind a provider that cannot be packed");
+	assert.ok(result.stdout.includes("- schema-in-the-mist: npm pack --dry-run --json exited 5 (whole output: schema-in-the-mist-1-pack.log)"), result.stdout);
+	assert.match(readFileSync(resolve(logsDir(world), "schema-in-the-mist-1-pack.log"), "utf8"), /fake npm: prepack exited 5/);
+	for (const consumer of ["lantern", "obsidian-handbook"]) {
+		assert.ok(result.stdout.includes(`- ${consumer}: ${touch.join(" ")} not run: the packaging of schema-in-the-mist failed`), result.stdout);
+	}
+	assert.equal(packedOf(world), undefined, "a fingerprint was written for a package that was not listed");
+	assertInstallRestored(world, install);
 });
 
 // The commit of a provider and its consumers.
@@ -1834,9 +2082,9 @@ scenario("a red validation leaves its whole output in a file the report names, a
 
 	const commands = durations(world).filter((entry) => entry.kind === "command");
 	assert.equal(commands.length, guardedRuns(result.stderr), JSON.stringify(commands));
-	assert.equal(commands.length, 4);
+	assert.equal(commands.length, 5);
+	assert.deepEqual(commands.filter((entry) => entry.step !== "present").map((entry) => [entry.repo, entry.step]), [["schema-in-the-mist", "pack"]]);
 	for (const entry of commands) {
-		assert.equal(entry.step, "present");
 		assert.ok(Array.isArray(entry.command) && Number.isInteger(entry.status) && Number.isInteger(entry.durationMs) && !Number.isNaN(Date.parse(entry.at)), JSON.stringify(entry));
 	}
 	assert.deepEqual(commands.filter((entry) => entry.repo === "lantern").map((entry) => entry.status), [0, 3]);
@@ -1846,8 +2094,8 @@ scenario("behind a provider whose build is red, the validations of its consumers
 	const mist = world.dir("schema-in-the-mist");
 	const manifest = JSON.parse(readFileSync(resolve(mist, "package.json"), "utf8"));
 	world.land("schema-in-the-mist", { "package.json": `${JSON.stringify({ ...manifest, scripts: { build: "tsc" } }, null, "\t")}\n` }, "a build script");
-	// The build runs once per consumer; the world's npm fails it both times.
-	world.updateState((state) => { state.localEffects = { ...state.localEffects, "schema-in-the-mist build": [{ status: 4 }, { status: 4 }] }; });
+	// The build runs once, whatever the number of consumers; the world's npm fails it.
+	world.updateState((state) => { state.localEffects = { ...state.localEffects, "schema-in-the-mist build": [{ status: 4 }] }; });
 	const marker = resolve(world.tmp, "consumer-validated");
 	const touch = nodeCommand(`require('fs').appendFileSync(${JSON.stringify(marker)}, 'x')`);
 	const topology = testTopology(world, { lantern: [touch], "obsidian-handbook": [touch] });
@@ -1855,10 +2103,11 @@ scenario("behind a provider whose build is red, the validations of its consumers
 	const result = world.supervise(["present"], { topology });
 	assert.equal(result.status, 1, result.stderr);
 	assert.ok(!existsSync(marker), "a consumer was validated behind a provider that does not build");
-	assert.match(result.stdout, /- schema-in-the-mist: npm run build exited 4 \(whole output: (lantern|obsidian-handbook)-1-build-schema-in-the-mist\.log\)/);
+	assert.match(result.stdout, /- schema-in-the-mist: npm run build exited 4 \(whole output: schema-in-the-mist-1-build\.log\)/);
+	assert.match(readFileSync(resolve(logsDir(world), "schema-in-the-mist-1-build.log"), "utf8"), /fake npm: build exited 4/);
+	assert.equal(durations(world).filter((entry) => entry.step === "pack").length, 0, "a provider that does not build was packed");
 	for (const consumer of ["lantern", "obsidian-handbook"]) {
 		assert.ok(result.stdout.includes(`- ${consumer}: ${touch.join(" ")} not run: the build of schema-in-the-mist failed`), result.stdout);
-		assert.match(readFileSync(resolve(logsDir(world), `${consumer}-1-build-schema-in-the-mist.log`), "utf8"), /fake npm: build exited 4/);
 		const validations = readRecord(world).presentation.repos.find((entry: any) => entry.repo === consumer).validations;
 		assert.deepEqual(validations, [{ command: touch, status: -1, tail: "", notRun: "the build of schema-in-the-mist failed" }]);
 	}

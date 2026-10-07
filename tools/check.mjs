@@ -3,7 +3,8 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
-import { runCheck } from "./checkRun.mjs";
+import { linkedStamp, runCheck } from "./checkRun.mjs";
+import { LINKED_PROVIDERS } from "./supervisor/guarded.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packageJson = JSON.parse(
@@ -29,7 +30,8 @@ const npmCli = process.env.npm_execpath;
 // A green result is reused when the content it was proved on has not changed.
 // Two stamps, kept in the git directory (outside the checkout, never committed):
 //   - `full`: the whole checkout (minus the train records, which `present` and
-//     `publish` rewrite between two checks of the same code);
+//     `publish` rewrite between two checks of the same code), and the providers
+//     `present` links in place of the installed ones, which are outside it;
 //   - `supervisor`: only what `assert:supervisor` exercises. That harness takes
 //     many minutes, so a change elsewhere does not replay it.
 // A stamp is written only after a green run. CI and HANDBOOK_CHECK_FORCE=1 replay everything.
@@ -144,7 +146,7 @@ const { status, reused } = await runCheck({
 	skipped,
 	stamps: readStamps(),
 	hashes: {
-		full: contentHash((file) => !file.startsWith("supervisor/trains/")),
+		full: linkedStamp(contentHash((file) => !file.startsWith("supervisor/trains/")), process.env[LINKED_PROVIDERS] ?? ""),
 		supervisor: contentHash((file) => SUPERVISOR_INPUTS.some((pattern) => pattern.test(file))),
 	},
 	collect,
