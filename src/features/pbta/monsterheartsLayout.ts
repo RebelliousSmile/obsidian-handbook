@@ -11,12 +11,25 @@ function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTM
 	return result;
 }
 
+/** Region headings come from the published contract, never from literals here. */
+function regionLabel(id: RegionId): string {
+	return contract.regions.find((region) => region.id === id)?.label ?? id;
+}
+
 function section(doc: Document, id: RegionId, heading?: string): HTMLElement {
 	const result = el(doc, "section");
 	result.classList.add("handbook-monsterhearts-region");
 	result.dataset.region = id;
 	if (heading) result.appendChild(el(doc, "h3", heading));
 	return result;
+}
+
+function checkbox(doc: Document, checked: boolean, label: string): HTMLElement {
+	const input = el(doc, "input") as HTMLInputElement;
+	input.type = "checkbox";
+	input.checked = checked;
+	input.setAttribute("aria-label", label);
+	return input;
 }
 
 function editorial(doc: Document, id: RegionId, value: Editorial): HTMLElement {
@@ -53,7 +66,7 @@ function moveCard(doc: Document, move: MoveEntry, startingMoves: readonly string
 	const acquired = move.checked ?? ("ref" in move && startingMoves.includes(move.ref));
 	card.dataset.acquired = String(acquired);
 	const heading = el(doc, "h4");
-	const symbol = el(doc, "span", acquired ? "♥" : "♡");
+	const symbol = el(doc, "span");
 	symbol.classList.add("handbook-monsterhearts-move-symbol");
 	symbol.setAttribute("aria-label", acquired ? "Action acquise" : "Action non acquise");
 	heading.appendChild(symbol);
@@ -100,7 +113,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		}
 		case "stat-profiles": {
 			if (!Object.keys(data.stats).length && !data.statProfiles?.length) return null;
-			const result = section(doc, id, "Caractéristiques");
+			const result = section(doc, id, regionLabel(id));
 			const renderStats = (stats: Record<string, number>) => {
 				const dl = el(doc, "dl");
 				for (const name of Object.keys(stats)) {
@@ -141,7 +154,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		}
 		case "playbook-moves": {
 			if (!data.moves.length && !data.choiceSets?.length) return null;
-			const result = section(doc, id, "Actions");
+			const result = section(doc, id, regionLabel(id));
 			for (const move of data.moves) result.appendChild(moveCard(doc, move, data.startingMoves ?? []));
 			for (const group of data.choiceSets ?? []) {
 				result.appendChild(el(doc, "h4", group.title));
@@ -150,44 +163,51 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 			}
 			return result;
 		}
-		case "relationships": {
-			if (!data.strings && !data.ascendants?.length) return null;
-			const result = section(doc, id, "Relations");
-			if (data.strings) {
-				result.appendChild(el(doc, "h4", "Ascendants"));
-				result.appendChild(el(doc, "p", `${data.strings.starting ?? 0} au départ · ${data.strings.max} maximum`));
+		case "ascendants-and-conditions": {
+				const hasStrings = data.strings !== undefined || !!data.ascendants?.length;
+				if (!hasStrings && !data.conditions?.length && data.harm === undefined) return null;
+				const result = section(doc, id, regionLabel(id));
+				if (hasStrings) {
+					result.appendChild(el(doc, "h4", "Ascendants"));
+					if (data.strings) result.appendChild(el(doc, "p", `${data.strings.starting ?? 0} au départ · ${data.strings.max} maximum`));
+					if (data.ascendants?.length) {
+						const dl = el(doc, "dl");
+						for (const item of data.ascendants) dl.appendChild(row(doc, item.name, item.value));
+						result.appendChild(dl);
+					}
+				}
+				if (data.harm !== undefined) {
+					const harm = el(doc, "div");
+					harm.classList.add("handbook-monsterhearts-harm");
+					for (let index = 1; index <= 4; index += 1) harm.appendChild(checkbox(doc, index <= (data.harm ?? 0), `Dégât ${index}`));
+					result.appendChild(harm);
+				}
+				for (const condition of data.conditions ?? []) {
+					result.appendChild(el(doc, "h4", condition.name));
+					if (condition.description) result.appendChild(el(doc, "p", condition.description));
+				}
+				return result;
 			}
-			if (data.ascendants?.length) {
-				const dl = el(doc, "dl");
-				for (const item of data.ascendants) dl.appendChild(row(doc, item.name, item.value));
-				result.appendChild(dl);
-			}
-			return result;
-		}
-		case "conditions-and-harm": {
-			if (!data.conditions?.length && data.harm === undefined) return null;
-			const result = section(doc, id, "État");
-			if (data.harm !== undefined) result.appendChild(el(doc, "p", `Dégâts : ${data.harm}`));
-			for (const condition of data.conditions ?? []) {
-				result.appendChild(el(doc, "h4", condition.name));
-				if (condition.description) result.appendChild(el(doc, "p", condition.description));
-			}
-			return result;
-		}
 		case "gear": {
 			if (!data.gear?.length) return null;
-			const result = section(doc, id, "Équipement");
+			const result = section(doc, id, regionLabel(id));
 			result.appendChild(list(doc, data.gear.map((item) => `${item.name}${item.quantity ? ` × ${item.quantity}` : ""}${item.description ? ` — ${item.description}` : ""}`)));
 			return result;
 		}
 		case "monsterhearts-darkest-self": return editorial(doc, id, data.editorial.darkestSelf);
 		case "monsterhearts-sex-move": return editorial(doc, id, data.editorial.sexMove);
+		case "monsterhearts-play": return data.editorial.play ? editorial(doc, id, data.editorial.play) : null;
 		case "monsterhearts-progression": {
 			const result = editorial(doc, id, data.editorial.progression);
 			if (data.advances.length) {
 				result.appendChild(el(doc, "h4", "Avancées"));
 				const ul = el(doc, "ul");
-				for (const advance of data.advances) ul.appendChild(el(doc, "li", `${advance.checked ? "☑" : "☐"} ${advance.label}`));
+				for (const advance of data.advances) {
+					const item = el(doc, "li");
+					item.appendChild(checkbox(doc, advance.checked === true, advance.label));
+					item.appendChild(el(doc, "span", advance.label));
+					ul.appendChild(item);
+				}
 				result.appendChild(ul);
 			}
 			return result;

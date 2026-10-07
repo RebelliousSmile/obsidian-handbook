@@ -265,3 +265,14 @@ if (unresolved.length > 0) {
 if (offered.length > 0) {
 	console.log(`  offered upstream and not implemented here: ${offered.join(", ")}`);
 }
+
+/* Every published PbtA pack is light-only: no pack may declare a dark layer. */
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+const handbookDir = join("node_modules", "schema-pbta", "handbook");
+const packIds = readdirSync(handbookDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "shared").map((entry) => entry.name);
+assert.ok(packIds.length > 0, "no published PbtA pack found");
+for (const id of packIds) {
+	const manifest = JSON.parse(readFileSync(join(handbookDir, id, "pack.json"), "utf8"));
+	assert.deepEqual(manifest.pack.polarities, ["light"], `${id} must declare exactly ["light"]`);
+}

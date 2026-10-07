@@ -56,8 +56,9 @@ Obsidian + outils de développement
 ## Diagnostiquer un défaut visuel
 
 1. Reproduire le défaut avec le jeu, la variante, le mode clair ou sombre et la
-   vue Markdown exacts. Pour Drowned Lake, vérifier notamment la présence des
-   classes `brumes--monsterhearts` et `brumes--variant-drowned-lake`.
+   vue Markdown exacts. Les packs PbtA sont clairs seuls (la variante
+   Drowned Lake a été retirée) : vérifier la présence de la classe de jeu,
+   par exemple `brumes--monsterhearts`.
 2. Ouvrir les outils de développement d'Obsidian (`Ctrl+Shift+I`), sélectionner
    l'élément fautif et examiner les règles appliquées, les règles écrasées et la
    valeur calculée de chaque propriété ou variable CSS.

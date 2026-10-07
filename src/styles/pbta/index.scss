@@ -85,25 +85,7 @@
 		text-transform: uppercase;
 	}
 
-	&.brumes--variant-drowned-lake {
-		--monsterhearts-note-mark: var(--brumes-image-variant-mark);
-		--monsterhearts-note-mark-width: clamp(14rem, 28vw, 24rem);
-		--monsterhearts-note-mark-ratio: 1.5;
-		--monsterhearts-note-mark-opacity: 0.18;
-
-		.markdown-source-view :is(.inline-title, h1),
-		.markdown-reading-view :is(.inline-title, h1) {
-			-webkit-text-fill-color: var(--monsterhearts-title-ink, var(--h1-color, var(--text-normal)));
-			-webkit-text-stroke: 1px var(--drowned-lake-title-outline);
-			paint-order: stroke fill;
-			text-shadow:
-				0.055em 0.055em 0 var(--drowned-lake-title-shadow),
-				-0.025em -0.025em 0 var(--drowned-lake-title-shadow);
-		}
-	}
-
-	&.brumes-missing--game-mark:not(.brumes--variant-drowned-lake),
-	&.brumes--variant-drowned-lake.brumes-missing--variant-mark {
+	&.brumes-missing--game-mark {
 		.markdown-source-view .cm-sizer::before,
 		.markdown-reading-view .markdown-preview-sizer::before {
 			content: none;

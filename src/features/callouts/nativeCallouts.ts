@@ -10,26 +10,6 @@ const PBTA_VISUAL_ICONS: Record<(typeof PBTA_VISUAL_CALLOUTS)[number]["id"], str
 };
 
 const PBTA_CALLOUTS: CalloutDefinition[] = [
-	{
-		id: "pbta-rule", name: "PbtA rule", aliases: ["pbta-rule"], scope: "all",
-		template: "title-body", icon: "book-open-check", font: "header",
-		color: { kind: "theme" }, native: true, styleKey: "pbta-rule", capability: "style:pbta",
-	},
-	{
-		id: "pbta-trigger", name: "PbtA trigger", aliases: ["pbta-trigger"], scope: "all",
-		template: "body-only", icon: "zap", font: "text",
-		color: { kind: "theme" }, native: true, styleKey: "pbta-trigger", capability: "style:pbta",
-	},
-	{
-		id: "pbta-choice", name: "PbtA choice", aliases: ["pbta-choice"], scope: "all",
-		template: "title-body", icon: "list-checks", font: "text",
-		color: { kind: "theme" }, native: true, styleKey: "pbta-choice", capability: "style:pbta",
-	},
-	{
-		id: "pbta-result", name: "PbtA result", aliases: ["pbta-result"], scope: "all",
-		template: "title-body", icon: "dice-6", font: "text",
-		color: { kind: "theme" }, native: true, styleKey: "pbta-result", capability: "style:pbta",
-	},
 	...PBTA_VISUAL_CALLOUTS.map((entry): CalloutDefinition => ({
 		id: entry.id,
 		name: entry.label,

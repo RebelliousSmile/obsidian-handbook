@@ -55,7 +55,7 @@ journey
 
 > Make candidate adoption failures observable without importing game semantics into Handbook.
 
-1. Add harness fixtures for descriptor, manifests, tokens/assets and base/drowned-lake variants.
+1. Add harness fixtures for descriptor, manifests, tokens/assets and base/drowned-lake variants (historical: the drowned-lake variant was removed by the 2026-10 light-only plan).
 2. Exercise the source-installer separately against the explicit schema repository ref when GitHub-source delivery is requested; do not treat it as tarball installation.
 3. Assert mismatched archive, ref or integrity fails with a named reason.
 

@@ -36,7 +36,8 @@ function settingsAliases(id: string): string[] | undefined {
 // Portable callouts follow the manifest capability, independently of game id.
 {
 	const pbta = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:pbta");
-	assert.equal(pbta.length, 8);
+	// Every PbtA callout is published by the schema; none is declared locally.
+	assert.equal(pbta.length, PBTA_VISUAL_CALLOUTS.length);
 	assert.deepEqual(
 		pbta.filter((entry) => PBTA_VISUAL_CALLOUTS.some((definition) => definition.id === entry.id)).map((entry) => entry.id),
 		PBTA_VISUAL_CALLOUTS.map((definition) => definition.id),

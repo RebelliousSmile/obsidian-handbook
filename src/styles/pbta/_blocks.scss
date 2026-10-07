@@ -157,6 +157,38 @@
 		color: var(--monsterhearts-title-ink, var(--text-normal));
 	}
 
+	// The shell is drawn in CSS: filled when acquired, empty otherwise.
+	.handbook-monsterhearts-move-symbol {
+		box-sizing: border-box;
+		width: 1.1rem;
+		height: 1.1rem;
+		border: 2px solid currentcolor;
+		border-radius: 50%;
+	}
+
+	.handbook-monsterhearts-move[data-acquired="true"] .handbook-monsterhearts-move-symbol {
+		background: currentcolor;
+	}
+
+	.handbook-monsterhearts-harm {
+		display: flex;
+		gap: 0.4rem;
+		margin-block: 0.4rem;
+	}
+
+	.handbook-monsterhearts-harm input[type="checkbox"] {
+		width: 1.3rem;
+		height: 1.3rem;
+		margin: 0;
+	}
+
+	.handbook-monsterhearts-region[data-region="monsterhearts-progression"] li {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		list-style: none;
+	}
+
 	@container (min-width: 840px) {
 		.handbook-monsterhearts-layout-row {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -173,11 +205,11 @@
 	.handbook-monsterhearts-region[data-region="stat-profiles"] { order: 3; }
 	.handbook-monsterhearts-region[data-region="playbook-portrait"] { order: 4; }
 	.handbook-monsterhearts-region[data-region="playbook-moves"] { order: 5; }
-	.handbook-monsterhearts-region[data-region="relationships"] { order: 6; }
-	.handbook-monsterhearts-region[data-region="conditions-and-harm"] { order: 7; }
-	.handbook-monsterhearts-region[data-region="gear"] { order: 8; }
-	.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"] { order: 9; }
-	.handbook-monsterhearts-region[data-region="monsterhearts-sex-move"] { order: 10; }
+	.handbook-monsterhearts-region[data-region="ascendants-and-conditions"] { order: 6; }
+	.handbook-monsterhearts-region[data-region="gear"] { order: 7; }
+	.handbook-monsterhearts-region[data-region="monsterhearts-darkest-self"] { order: 8; }
+	.handbook-monsterhearts-region[data-region="monsterhearts-sex-move"] { order: 9; }
+	.handbook-monsterhearts-region[data-region="monsterhearts-play"] { order: 10; }
 	.handbook-monsterhearts-region[data-region="monsterhearts-progression"] { order: 11; }
 
 	@media print {
