@@ -137,8 +137,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 				const dl = el(doc, "dl");
 				for (const name of Object.keys(stats)) {
 					const value = stats[name];
-					const bounds = data.statRanges?.[name];
-					dl.appendChild(row(doc, name, bounds ? `${value} (${bounds.min}–${bounds.max})` : value));
+					dl.appendChild(row(doc, name, value));
 				}
 				return dl;
 			};
@@ -182,7 +181,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 				const result = section(doc, id, regionLabel(id));
 				if (hasStrings) {
 					result.appendChild(el(doc, "h4", "Ascendants"));
-					if (data.strings) result.appendChild(el(doc, "p", `${data.strings.starting ?? 0} au départ · ${data.strings.max} maximum`));
+					if (data.strings && !data.ascendants?.length) result.appendChild(el(doc, "p", `${data.strings.starting ?? 0} au départ · ${data.strings.max} maximum`));
 					if (data.ascendants?.length) {
 						const dl = el(doc, "dl");
 						for (const item of data.ascendants) dl.appendChild(row(doc, item.name, item.value));
@@ -190,6 +189,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 					}
 				}
 				if (data.harm !== undefined) {
+					result.appendChild(el(doc, "h4", "Dégâts"));
 					const harm = el(doc, "div");
 					harm.classList.add("handbook-monsterhearts-harm");
 					for (let index = 1; index <= 4; index += 1) harm.appendChild(checkbox(doc, index <= (data.harm ?? 0), `Dégât ${index}`));
