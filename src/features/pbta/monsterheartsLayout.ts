@@ -255,8 +255,6 @@ export function renderMonsterheartsLayout(data: MonsterheartsPlaybook, doc: Docu
 		const region = renderRegion(doc, id, data, resolveImage);
 		if (region) rendered.set(id, region);
 	}
-	const identity = rendered.get("game-identity");
-	if (identity) root.appendChild(identity);
 	const placed = new Set<RegionId>(["game-identity"]);
 	for (const [rowIndex, columns] of (contract.rows ?? []).entries()) {
 		const layoutRow = el(doc, "div");
