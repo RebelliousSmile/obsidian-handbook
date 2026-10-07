@@ -113,10 +113,11 @@
 	.handbook-monsterhearts-region[data-region="monsterhearts-opening"] {
 		border-top: 0;
 		font-family: var(--monsterhearts-script-font, Garamond, Georgia, serif);
-		font-style: normal;
-		font-weight: 400;
-		font-size: 1em;
-		line-height: 1.1;
+		font-style: italic;
+		font-weight: 500;
+		font-feature-settings: "swsh" 1, "kern" 1;
+		font-size: 1.02em;
+		line-height: 1.2;
 		color: var(--text-normal);
 		text-align: justify;
 		hyphens: auto;
