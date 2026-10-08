@@ -183,7 +183,7 @@ const unlock = bookRegions(book).find((node) => node.dataset.region === "masks-m
 assert.equal(unlock?.walk().filter((node) => node.tag === "input")[0].checked, sheet.momentUnlocked === true, "unlock box reflects the document");
 
 /* No illustration in the document: the column is empty and nothing throws. */
-assert.ok(bookRegions(book).every((node) => node.dataset.region !== "masks-illustration"), "no illustration without playbookImage");
+assert.ok(bookRegions(book).some((node) => node.dataset.region === "masks-illustration"), "the illustration frame is drawn even without playbookImage");
 
 /* The booklet is drawn for play: what is chosen at creation is not drawn, whatever the document carries. */
 const completeIds = bookRegions(book).map((node) => node.dataset.region);

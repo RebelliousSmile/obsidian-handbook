@@ -190,15 +190,22 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(plainList(doc, data.influence));
 		return result;
 	},
+	/* The frame is always drawn, like Monsterhearts: a vault path or an https link fills it, otherwise it stays a blank frame to fill in. */
 	"masks-illustration": (doc, id, data, resolveImage) => {
-		if (!data.playbookImage) return null;
-		const src = resolveImage ? resolveImage(data.playbookImage) : data.playbookImage;
-		if (!src) return null;
 		const result = section(doc, id);
-		const image = el(doc, "img") as HTMLImageElement;
-		image.src = src;
-		image.alt = data.heroName ?? data.name;
-		result.appendChild(image);
+		const frame = el(doc, "figure");
+		const reference = data.playbookImage?.trim();
+		const source = reference ? resolveImage?.(reference) ?? (/^https:\/\//i.test(reference) ? reference : null) : null;
+		if (source) {
+			const image = el(doc, "img") as HTMLImageElement;
+			image.src = source;
+			image.alt = data.heroName ?? data.name;
+			frame.appendChild(image);
+		} else {
+			frame.dataset.empty = "true";
+			frame.appendChild(el(doc, "span", "Illustration à ajouter"));
+		}
+		result.appendChild(frame);
 		return result;
 	},
 };

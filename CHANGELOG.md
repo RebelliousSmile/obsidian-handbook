@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Masks booklet: the identity face comes first, as in the printed playbooks; the illustration frame is always drawn (a vault path or an https link, otherwise a blank frame to fill in); backstory and relationships are drawn when filled; orange and blue taken from the official booklet.
 - Masks 2E character booklet: under the `masks` pack, a `pbta-playbook` is drawn as a two-face sheet (front, then back) whose regions, order and headings come from the pack's published presentation contract. Labels are tracks with the current value marked, conditions and moves are checklists, the Moment of Truth has an unlock box, Potential is a row of boxes, and the identity lines are left blank to fill in. Regions without data are left out.
 - `pbta-npc` block: a character card for the PbtA packs that publish a character template (Masks: a Mask's NPC with Labels, conditions and moves); other packs get a sober card with the same fields.
 - The generic PbtA playbook rendering shows the Masks fields (Moment of Truth, Potential, influence, conditions, drives).
