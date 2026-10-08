@@ -106,3 +106,23 @@
 	li { list-style: none; }
 	li::marker { content: none; }
 }
+
+.brumes--urban-shadows .handbook-urban-shadows-move {
+	h4 {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		margin: 0.6rem 0 0.1rem;
+		font-family: var(--urban-shadows-title-font, var(--font-header-theme));
+		font-size: 1.15em;
+		font-weight: 400;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+	}
+
+	p {
+		margin: 0.1rem 0;
+		font-size: 0.85em;
+		line-height: 1.35;
+	}
+}
