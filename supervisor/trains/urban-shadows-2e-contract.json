@@ -1,0 +1,54 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "urban-shadows-2e-contract",
+	"title": "Urban Shadows 2E : contrat, apparence, sections et callouts",
+	"status": "open",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 90,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/90"
+	},
+	"items": [
+		{
+			"repo": "schema-pbta",
+			"issue": 43,
+			"url": "https://github.com/RebelliousSmile/schema-pbta/issues/43",
+			"title": "Urban Shadows 2E : livret aligné sur les feuilles, présentation, callouts et apparence du pack",
+			"baseSha": "ec3a08ef312abaff4090d93e8d4c769957329e0d",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 91,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/91",
+			"title": "Section d'un pack à une seule polarité et callouts publiés par les packs",
+			"baseSha": "e3d33966eea59c861102ac2c611c36391606a4fb",
+			"dependsOn": [
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		},
+		{
+			"repo": "lantern",
+			"issue": 54,
+			"url": "https://github.com/RebelliousSmile/lantern/issues/54",
+			"title": "Adopter le contrat Urban Shadows 2E de schema-pbta",
+			"baseSha": "3efce9af919e975330dc9672a8142d70695a0b63",
+			"dependsOn": [
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {}
+}
