@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.37.0",
+	"version": "2.38.0",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"packageManager": "pnpm@10.5.2",
@@ -48,6 +48,7 @@
 		"assert:release-train-protocol-1": "node tools/assert-release-train-protocol-1.mjs",
 		"assert:pbta-specialized-projection": "node tools/assert-pbta-specialized-projection.mjs",
 		"assert:monsterhearts-layout": "node tools/assert-monsterhearts-layout.mjs",
+		"assert:urban-shadows-layout": "node tools/assert-urban-shadows-layout.mjs",
 		"assert:pbta-pack-coverage": "node tools/assert-pbta-pack-coverage.mjs",
 		"assert:settings-ui": "node tools/assert-settings-ui.mjs",
 		"assert:reload-styles": "node tools/assert-reload-styles.mjs",

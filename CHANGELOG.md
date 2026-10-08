@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.38.0] - 2026-10-08
+
+### Added
+
+- Urban Shadows character booklet: under the `urban-shadows` pack, a `pbta-playbook` is drawn as a two-face sheet (front, then back) whose regions, order and headings come from the pack's published presentation contract. Stats are lozenges, Circles are rings with three status pips, harm and corruption are rows of empty boxes, and moves, advances, scars and mortal relationships are checklists. Regions without data are left out.
+- The generic PbtA playbook rendering shows the Urban Shadows fields (status, harm, scars, Circles to advance, later advances, let it out, intimacy, debts, frames).
+
+### Changed
+
+- The PbtA playbook block chooses its pack layout from a table of (pack, document type) instead of a pack test in the renderer.
+
 ## [2.37.0] - 2026-10-07
 
 ### Added

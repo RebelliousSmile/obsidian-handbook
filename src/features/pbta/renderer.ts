@@ -17,8 +17,14 @@ function section(doc: Document, shape: BlockShape, zone: BlockZone): HTMLElement
 }
 
 function formatValue(value: unknown): string {
-	if (Array.isArray(value)) return value.join(", ");
+	if (Array.isArray(value)) return value.map(formatValue).join(", ");
 	if (typeof value === "boolean") return value ? "Yes" : "No";
+	if (value && typeof value === "object") {
+		const record = value as Record<string, unknown>;
+		if (typeof record.label === "string") return record.label;
+		if (typeof record.name === "string") return record.name;
+		return Object.keys(record).map((key) => `${key}: ${formatValue(record[key])}`).join("; ");
+	}
 	return String(value);
 }
 
@@ -150,7 +156,7 @@ export const PBTA_SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["targe
 	"masks-playbook": ["momentOfTruth", "potential", "influence"],
 	"monster-of-the-week-playbook": ["improvements", "luck", "ratings"],
 	"monsterhearts-playbook": ["strings", "ascendants", "conditions", "advances"],
-	"urban-shadows-playbook": ["corruption", "endMove"],
+	"urban-shadows-playbook": ["corruption", "endMove", "statuses", "harm", "scars", "advancementCircles", "laterAdvancement", "letItOut", "intimacy", "debts", "extras"],
 	"the-sprawl-playbook": ["directives", "missionGear", "cred"],
 };
 
