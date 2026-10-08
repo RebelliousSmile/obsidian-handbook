@@ -16,6 +16,12 @@
  * The candidate is recorded in the train as soon as the receipt is read,
  * before its manifest is committed: the presentation admits a commit only when
  * every release URL and SRI it introduces is already known to the train.
+ *
+ * Everything that names the commit of the candidate (the inputs of the four
+ * dispatches, the candidate manifests, the receipt, both manifests) reads
+ * `ctx.candidateSha`: the presented commit, or the commit a recorded candidate
+ * was packed from when the presented one publishes the same files
+ * (`candidateIdentity.mjs`). When the two parted, the step says why.
  */
 import {
 	adoptStep, candidateFields, checks, done, inspect, json, landStep, lastRun, manifestProblem,
@@ -49,8 +55,11 @@ export function trainManifest(repo, finalTag) {
 	return `release-train/${repo.package}-${finalTag}.json`;
 }
 
-export function observe(ctx, base) {
-	const { root, topology, repo, dir, sha, version, record } = ctx;
+export function observe(given, givenBase) {
+	const sha = given.candidateSha ?? given.sha;
+	const ctx = { ...given, sha };
+	const base = { ...givenBase, sha, candidateReason: given.candidateReason ?? null };
+	const { root, topology, repo, dir, version, record } = ctx;
 	const { tags, finalTag } = base;
 	const inputs = {
 		digest: { mode: "digest", provider_commit: sha },
@@ -95,7 +104,13 @@ export function observe(ctx, base) {
 	};
 }
 
+/** The step, saying why a recorded candidate is not taken for the presented commit when it is not. */
 export function nextStep(o) {
+	const step = stepFor(o);
+	return o.candidateReason && step.description ? { ...step, description: `${step.description}; ${o.candidateReason}` } : step;
+}
+
+function stepFor(o) {
 	const { repo } = o;
 	if (o.final) return done();
 	if (!o.candidate) {

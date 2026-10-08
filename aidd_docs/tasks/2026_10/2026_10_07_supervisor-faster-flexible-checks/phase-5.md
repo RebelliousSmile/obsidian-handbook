@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Candidat reconnu par ascendance et par contenu empaqueté
@@ -90,6 +90,17 @@ journey
 1. Ajouter les scénarios du Test Scope ; conserver sans les assouplir les scénarios existants sur les octets du final.
 2. Documenter dans `doc/supervisor.fr.md` ce qui identifie un candidat et ce qui en exige un nouveau.
 3. Passer `rtk proxy pnpm build`, les deux portées de lint et `pnpm check`.
+
+## Bilan (2026-10-08)
+
+Build, les deux lints et `pnpm assert:supervisor` verts. Rien de commité.
+
+- Tâche 1 : le scénario de l'enregistrement ancien rejoue la perte ; le constat (deux manifestes re-posés, `release-train` et `promote` redispatchés, ni digest ni stage) est au tableau Decisions.
+- Tâche 2 : `publication.<fournisseur>.candidate` porte `commit` et `packed`, écrits ensemble à la première inscription ; `supervisor/train.schema.json` les déclare facultatifs et liés.
+- Tâche 3 : `tools/supervisor/candidateIdentity.mjs`, appelé par `publish.mjs` ; l'adaptateur PbtA nomme le commit du candidat partout (quatre dispatches, filtre des manifestes, reçu, deux manifestes, répétition) et ajoute la raison à la description de l'étape quand la règle ne tient pas.
+- Tâche 4 : quatre scénarios dans `tools/supervisor.harness.mts`, section « Candidat reconnu… » dans `doc/supervisor.fr.md`.
+
+`settleCandidate`, le contrôle `final.sha256 === candidate.sha256`, `adrenaline.mjs`, `mist.mjs` et les workflows ne sont pas touchés.
 
 ## Test acceptance criteria
 

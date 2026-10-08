@@ -58,7 +58,7 @@
 				"type": "object",
 				"properties": {
 					"candidate": {
-						"$ref": "#/definitions/archive"
+						"$ref": "#/definitions/candidate"
 					},
 					"final": {
 						"$ref": "#/definitions/archive"
@@ -235,6 +235,32 @@
 				"at": {
 					"type": "string"
 				}
+			}
+		},
+		"candidate": {
+			"description": "The candidate archive, with the commit it was packed from and the package fingerprint of that commit when the presentation held one; a record written before these two fields has neither.",
+			"allOf": [
+				{
+					"$ref": "#/definitions/archive"
+				}
+			],
+			"properties": {
+				"commit": {
+					"type": "string",
+					"pattern": "^[0-9a-f]{40}$"
+				},
+				"packed": {
+					"type": "string",
+					"pattern": "^[0-9a-f]{64}$"
+				}
+			},
+			"dependencies": {
+				"commit": [
+					"packed"
+				],
+				"packed": [
+					"commit"
+				]
 			}
 		},
 		"archive": {

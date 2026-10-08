@@ -226,7 +226,8 @@ export function tagStep(repo, tag, workflow, description) {
 
 /**
  * What is wrong with a committed release-train manifest, or null. The three
- * providers share its core: a candidate naming the presented commit, the final
+ * providers share its core: a candidate naming its commit (`expected.sha`: the
+ * presented one, or the one an adapter kept for it, `candidateIdentity.mjs`), the final
  * tag and the train's archive, and one consumer entry per consumer whose ref
  * pins that archive.
  */
@@ -303,7 +304,7 @@ export function inspect(repoId, run, missing) {
 	return human(repoId, `${run.url ? `run ${run.url}` : `\`${run.command.join(" ")}\``} succeeded but ${missing}; inspect it before anything else is published`);
 }
 
-/** The fields a manifest's candidate carries. */
+/** The fields a manifest's candidate carries; `observation.sha` is the commit of the candidate. */
 export function candidateFields(observation) {
 	const { candidate } = observation;
 	return {

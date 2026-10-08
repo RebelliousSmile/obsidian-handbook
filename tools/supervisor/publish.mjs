@@ -12,6 +12,11 @@
  * train records only say which dispatch was already tried, so a failed run is
  * retried while a published candidate is never published again.
  *
+ * A recorded candidate keeps the commit it was packed from when a later
+ * presentation binds its provider to a descendant that publishes the same
+ * files (`candidateIdentity.mjs`): the adapter is then told that commit, so
+ * its manifests, its receipt and its runs are found again.
+ *
  * A step a provider rehearses (`rehearse.mjs`) is run only once its rehearsal
  * is green: a manifest its own workflow would refuse is neither landed nor
  * dispatched.
@@ -19,8 +24,9 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { gh, ghJson } from "./gh.mjs";
-import { showFile } from "./git.mjs";
+import { isAncestor, showFile } from "./git.mjs";
 import { assertBinding, boundSha } from "./binding.mjs";
+import { candidateIdentity, stampCandidate } from "./candidateIdentity.mjs";
 import { dispatchInputs, listReleases, observeArchive, workflowSecrets } from "./adapters/common.mjs";
 import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
@@ -124,6 +130,8 @@ function stepOf(context, train, file, repo) {
 	const version = manifest.version;
 	const finalTag = `v${version}`;
 	const tags = listReleases(repo);
+	const packed = (train.presentation?.repos ?? []).find((entry) => entry.repo === repo.id)?.packed?.sha256 ?? null;
+	const identity = candidateIdentity({ candidate: record.candidate, sha, packed, descends: (ancestor, descendant) => isAncestor(dir, ancestor, descendant) });
 	const final = tags.includes(finalTag) ? observeArchive(repo, finalTag, version) : null;
 	const ctx = {
 		root: context.root,
@@ -133,6 +141,8 @@ function stepOf(context, train, file, repo) {
 		sha,
 		version,
 		record,
+		candidateSha: identity.sha,
+		candidateReason: identity.reason,
 		evidenceDir: resolve(trainsDir(context.root, context.topology), `${train.id}.evidence`),
 	};
 	const observation = adapter.observe(ctx, { repo, provider: repo.id, sha, version, tags, finalTag, final });
@@ -148,7 +158,7 @@ function stepOf(context, train, file, repo) {
 	const changed = (candidate && record.candidate?.sha256 !== candidate.sha256) || (final && record.final?.sha256 !== final.sha256);
 	if (changed) {
 		updateRecord(file, context.topology, repo.id, (next) => {
-			if (candidate) next.candidate = candidate;
+			if (candidate) next.candidate = record.candidate ? candidate : stampCandidate(candidate, sha, packed);
 			if (final) next.final = final;
 		});
 	}

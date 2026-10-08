@@ -249,6 +249,14 @@ Dans Handbook, `pnpm assert:guards-by-role` (dans `pnpm check`) refuse un numér
 | Finale | `release.yml` en `mode=promote`, mêmes octets que la candidate | tag final poussé par le superviseur (`git push origin origin/main:refs/tags/<tag>`), qui déclenche `release.yml` | `npm run release-train:promote` en local, dans le checkout du fournisseur, propre et sur `origin/main` |
 | Convergence | aucun outil propre : les pins finaux des deux consommateurs font foi, et le rapport le signale | `release-train/<pkg>-vX-final.json` posé par le superviseur, puis `npm run release-train:verify-final` | manifeste passé à `completed` avec son bloc `final` et fichier de convergence de `release-train:converge`, tous deux posés par le superviseur, puis `release-train:validate -- --require-complete <tag>` |
 
+### Candidat reconnu après une nouvelle présentation
+
+Une candidate est empaquetée depuis un commit, et ses manifestes, son reçu et ses runs nomment ce commit. Le train l'enregistre avec la candidate, ainsi que l'empreinte des fichiers publiés à ce commit (`publication.<fournisseur>.candidate.commit` et `.packed`).
+
+Si le fournisseur reçoit ensuite un commit et que le train est présenté à nouveau, `publish` garde la candidate quand le commit présenté **descend** de celui de la candidate **et** publie les mêmes fichiers (même empreinte). Pour `schema-pbta`, les dispatches, les manifestes et le reçu continuent alors de nommer le commit de la candidate : aucun run vert n'est relancé, aucun manifeste n'est posé une seconde fois. Un commit d'outillage hors paquet ne coûte donc plus un cycle.
+
+Si l'empreinte a changé, ou si le commit présenté ne descend pas de celui de la candidate, rien ne change par rapport à avant : les étapes sont recalculées sur le commit présenté, et la description de l'étape dit pourquoi, en nommant les deux commits ou les deux empreintes. Une candidate enregistrée avant ces deux champs est tenue au commit présenté. Des octets de finale différents de ceux de la candidate arrêtent toujours la publication.
+
 ## En cas de problème
 
 - **« the repositories are not ready »** : un checkout n'est pas propre ou pas sur `origin/main`. La commande à lancer est affichée.

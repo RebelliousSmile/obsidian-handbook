@@ -789,6 +789,169 @@ scenario("publish --run takes schema-pbta through digest, stage, release-train a
 	assert.match(ok(publish(world, false), "the presentation still holds after the publication"), /Every provider of train couleur-otherscape is published/);
 });
 
+// A candidate recognised by ancestry and by packaged content (`candidateIdentity.mjs`).
+
+/**
+ * schema-pbta, whose package publishes `dist/` alone, taken to a candidate
+ * that is published, adopted and proved, and whose promotion failed: every
+ * manifest is landed, every run but the last is green.
+ */
+function stagedPbta(world: World) {
+	const topology = presentedTrain(world, ["schema-pbta"], {
+		before: () => {
+			world.land("schema-pbta", {
+				"package.json": `${JSON.stringify({ name: "schema-pbta", version: NEXT, files: ["dist"] }, null, "\t")}\n`,
+				"dist/index.js": "module.exports = 'train';\n",
+				"tools/guard.mjs": "// outside the package\n",
+			}, "a package that publishes dist alone");
+		},
+		present: false,
+	});
+	presentTrain(world, topology);
+	const pbta = REPOSITORY["schema-pbta"];
+	const sha = boundTo(world, "schema-pbta");
+	const candidate = world.archive("schema-pbta", `v${NEXT}-rc.1`, bytesOf("schema-pbta"));
+	const receipt = resolve(world.tmp, "receipt", "candidate-digest.json");
+	mkdirSync(resolve(world.tmp, "receipt"));
+	writeFileSync(receipt, JSON.stringify({ protocol: 1, providerCommit: sha, version: NEXT, filename: `schema-pbta-${NEXT}.tgz`, sha256: candidate.sha256, integrity: candidate.integrity }));
+	world.updateState((state) => {
+		state.workflowEffects[`${pbta} release.yml`] = [
+			{ artifacts: [{ name: `schema-pbta-digest-${sha}`, file: receipt }] },
+			{ createRelease: world.release("schema-pbta", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-pbta")) },
+			{ conclusion: "failure" },
+		];
+	});
+	const result = publish(world, true, topology);
+	assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
+	assert.match(result.stderr, /release\.yml run \S+ concluded failure/);
+	assert.deepEqual(readRecord(world).publication["schema-pbta"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "release-train success", "promote failure"]);
+	return {
+		pbta,
+		sha,
+		topology,
+		candidatePath: `release-train/candidates/schema-pbta-v${NEXT}-rc.1.json`,
+		trainPath: `release-train/schema-pbta-v${NEXT}.json`,
+		head: () => git(world.dir("schema-pbta"), "rev-parse", "origin/main"),
+	};
+}
+
+function boundTo(world: World, repo: string): any {
+	return readRecord(world).presentation.repos.find((entry: any) => entry.repo === repo).sha;
+}
+
+function fingerprintOf(world: World, repo: string): string {
+	return readRecord(world).presentation.repos.find((entry: any) => entry.repo === repo).packed.sha256;
+}
+
+scenario("a commit outside the package keeps the candidate: no green run is dispatched again and no manifest is landed again", (world) => {
+	const fingerprint = () => fingerprintOf(world, "schema-pbta");
+	const { pbta, sha, topology, candidatePath, trainPath, head } = stagedPbta(world);
+	const recorded = readRecord(world).publication["schema-pbta"].candidate;
+	assert.equal(recorded.commit, sha, "the candidate does not record the commit it was packed from");
+	assert.equal(recorded.packed, fingerprint());
+	const before = dispatches(world).length;
+
+	world.land("schema-pbta", { "tools/guard.mjs": "// a guard rewritten by role\n" }, "a guard, outside the package");
+	presentTrain(world, topology);
+	assert.notEqual(boundTo(world, "schema-pbta"), sha, "the second presentation bound the same commit");
+	assert.equal(fingerprint(), recorded.packed, "a file outside the package changed the fingerprint");
+	const landed = head();
+
+	const shown = ok(publish(world, false, topology), "publish after a commit outside the package");
+	assert.ok(shown.includes(`-f mode=promote -f provider_commit=${sha} -f config=${trainPath}`), shown);
+	assert.ok(!shown.includes("was packed from"), shown);
+
+	world.updateState((state) => {
+		state.workflowEffects[`${pbta} release.yml`] = [{ createRelease: world.release("schema-pbta", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-pbta")) }];
+	});
+	assert.match(ok(publish(world, true, topology), "publish --run"), /Every provider of train couleur-otherscape is published/);
+	assert.deepEqual(dispatches(world).slice(before), [
+		["workflow", "run", "release.yml", "-R", pbta, "--ref", "main", "-f", "mode=promote", "-f", `provider_commit=${sha}`, "-f", `config=${trainPath}`],
+	]);
+	assert.equal(head(), landed, "a manifest was landed again");
+	assert.equal(JSON.parse(originFile(world, "schema-pbta", candidatePath)).candidate.providerCommit, sha);
+	assert.equal(readRecord(world).publication["schema-pbta"].candidate.commit, sha);
+});
+
+scenario("a change of what the package publishes does not keep the candidate: the same steps as ever, both fingerprints named", (world) => {
+	const { sha, topology, candidatePath } = stagedPbta(world);
+	const recorded = readRecord(world).publication["schema-pbta"].candidate;
+	world.land("schema-pbta", { "dist/index.js": "module.exports = 'train'; \n" }, "one more byte in a published file");
+	presentTrain(world, topology);
+	const presented = boundTo(world, "schema-pbta");
+	const packed = fingerprintOf(world, "schema-pbta");
+	assert.notEqual(packed, recorded.packed);
+
+	const shown = ok(publish(world, false, topology), "publish after a published change");
+	assert.ok(shown.includes(`land ${candidatePath} (it is not on origin/main)`), shown);
+	assert.ok(shown.includes(`the candidate v${NEXT}-rc.1 was packed from ${sha.slice(0, 10)} with the package fingerprint ${recorded.packed}, the presented commit ${presented.slice(0, 10)} has ${packed}`), shown);
+});
+
+scenario("a candidate recorded without its commit and its fingerprint is held to the presented commit, as it always was", (world) => {
+	const { pbta, topology, candidatePath, trainPath: manifestPath, head } = stagedPbta(world);
+	world.land("schema-pbta", { "tools/guard.mjs": "// a guard rewritten by role\n" }, "a guard, outside the package");
+	presentTrain(world, topology);
+	const train = readRecord(world);
+	const { commit: _commit, packed: _packed, ...archive } = train.publication["schema-pbta"].candidate;
+	train.publication["schema-pbta"].candidate = archive;
+	writeFileSync(trainPath(world), `${JSON.stringify(train, null, "\t")}\n`);
+
+	const shown = ok(publish(world, false, topology), "publish on an older record");
+	assert.ok(shown.includes(`land ${candidatePath} (it is not on origin/main)`), shown);
+	assert.ok(!shown.includes("was packed from"), shown);
+	assert.ok(!("commit" in readRecord(world).publication["schema-pbta"].candidate), "an older record was given a commit it never observed");
+
+	// What the presented commit costs such a record: both manifests landed again, the proof and the promotion dispatched on it.
+	const presented = boundTo(world, "schema-pbta");
+	const before = dispatches(world).length;
+	const landed = head();
+	world.updateState((state) => {
+		state.workflowEffects[`${pbta} release.yml`] = [{ createRelease: world.release("schema-pbta", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-pbta")) }];
+	});
+	assert.match(ok(publish(world, true, topology), "publish --run on an older record"), /Every provider of train couleur-otherscape is published/);
+	assert.deepEqual(dispatches(world).slice(before).map((args) => `${args[2]} ${args.slice(7).join(" ")}`), [
+		`release-train.yml -f provider_commit=${presented} -f config=${manifestPath}`,
+		`release.yml -f mode=promote -f provider_commit=${presented} -f config=${manifestPath}`,
+	]);
+	assert.deepEqual(git(world.dir("schema-pbta"), "log", "--format=%s", `${landed}..origin/main`).split("\n").reverse(), [
+		`chore(release-train): add the v${NEXT}-rc.1 candidate manifest`,
+		`chore(release-train): add the v${NEXT} manifest`,
+	]);
+});
+
+scenario("the identity of a candidate: its own commit for a descendant that publishes the same files, else the presented one and the reason", () => {
+	const own = "c".repeat(40);
+	const presented = "d".repeat(40);
+	const E = "e".repeat(64);
+	const F = "f".repeat(64);
+	const candidate = { tag: "v1.1.0-rc.1", commit: own, packed: E };
+	const cases = [
+		{ candidate: null, sha: presented, packed: E, descends: true },
+		{ candidate: { tag: candidate.tag }, sha: presented, packed: E, descends: true },
+		{ candidate, sha: own, packed: F, descends: true },
+		{ candidate, sha: presented, packed: E, descends: true },
+		{ candidate, sha: presented, packed: E, descends: false },
+		{ candidate, sha: presented, packed: F, descends: true },
+		{ candidate, sha: presented, packed: null, descends: true },
+	];
+	const probe = [
+		"const { candidateIdentity, stampCandidate } = await import('./tools/supervisor/candidateIdentity.mjs');",
+		"const cases = JSON.parse(process.argv[1]);",
+		"const identities = cases.map((entry) => candidateIdentity({ ...entry, descends: () => entry.descends }));",
+		"const archive = { tag: 't', url: 'u', sha256: 's', integrity: 'i' };",
+		"console.log(JSON.stringify({ identities, stamped: stampCandidate(archive, cases[0].sha, cases[0].packed), bare: stampCandidate(archive, cases[0].sha, null) }));",
+	].join("\n");
+	const { identities, stamped, bare } = JSON.parse(ok(sh(HANDBOOK, process.execPath, ["--input-type=module", "-e", probe, JSON.stringify(cases)]), "identity probe"));
+	assert.deepEqual(identities.map((identity: any) => identity.sha), [presented, presented, own, own, presented, presented, presented]);
+	assert.deepEqual(identities.slice(0, 4).map((identity: any) => identity.reason), [null, null, null, null]);
+	// A rewritten history: both commits named.
+	assert.equal(identities[4].reason, `the candidate v1.1.0-rc.1 was packed from ${own.slice(0, 10)}, which the presented commit ${presented.slice(0, 10)} does not descend from`);
+	assert.ok(identities[5].reason.includes(E) && identities[5].reason.includes(F), identities[5].reason);
+	assert.match(identities[6].reason, /the presentation holds no fingerprint for d{10}$/);
+	assert.deepEqual(stamped, { tag: "t", url: "u", sha256: "s", integrity: "i", commit: presented, packed: E });
+	assert.deepEqual(bare, { tag: "t", url: "u", sha256: "s", integrity: "i" }, "a candidate was stamped without a fingerprint");
+});
+
 // The rehearsal of a train manifest: the static proofs of the train workflow, before it is landed and before it is dispatched.
 
 const REHEARSAL = "validate:release-train";
