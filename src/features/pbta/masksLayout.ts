@@ -118,7 +118,8 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(el(doc, "p", data.momentOfTruth));
 		const unlock = el(doc, "label");
 		unlock.classList.add("handbook-masks-unlock");
-		unlock.appendChild(checkbox(doc, data.momentUnlocked === true, "unlocked"));
+		unlock.appendChild(checkbox(doc, data.momentUnlocked === true, "Débloqué"));
+		unlock.appendChild(el(doc, "span", "Débloqué"));
 		result.appendChild(unlock);
 		return result;
 	},
