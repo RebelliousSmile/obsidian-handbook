@@ -72,9 +72,16 @@ assert.deepEqual(pips, [["true", "true", "false"], ["true", "true", "true"]], "t
 
 // Blank witness: a region without data is not emitted, nothing throws.
 const empty = ids(render(blank));
-for (const id of ["urban-shadows-scars", "urban-shadows-let-it-out", "harm-tracker", "urban-shadows-intimacy", "urban-shadows-debts", "urban-shadows-extras", "gear"]) {
+for (const id of ["urban-shadows-scars", "urban-shadows-let-it-out", "harm-tracker", "urban-shadows-intimacy", "urban-shadows-extras", "gear"]) {
 	assert.ok(empty.indexOf(id) < 0, `${id} has no data, so no region`);
 }
+
+// Creation is never drawn; debts always leave room to write, with no starting debt.
+for (const list of [emitted, empty]) {
+	assert.ok(list.indexOf("urban-shadows-creation") < 0, "the sheet has no creation column");
+	assert.ok(list.indexOf("urban-shadows-debts") >= 0, "debts always leave room to write");
+}
+assert.ok(regions(full).find((node) => node.dataset.region === "urban-shadows-debts")?.walk().every((node) => node.tagName !== "LI"), "no starting debt is listed");
 
 // A region the contract publishes and the layout does not know: noted, the rest still renders, no failure.
 log.setLevel("warn");

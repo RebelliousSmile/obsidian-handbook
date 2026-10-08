@@ -16,6 +16,7 @@ const STATUS_PIPS = 3;
  * Local fallback, to move into the contract: the harm tracks are three lines of
  * one region, and the contract publishes one label per region only.
  */
+const DEBT_LINES = 4;
 const HARM_LABELS = { faint: "Légers", serious: "Graves", critical: "Critiques", armor: "Armure" } as const;
 
 function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTMLElement {
@@ -291,44 +292,12 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(el(doc, "p", data.endMove));
 		return result;
 	},
-	"urban-shadows-creation": (doc, id, data) => {
-		const questions = data.creation ?? [];
-		const profiles = data.statProfiles ?? [];
-		const sets = data.choiceSets ?? [];
-		const attributes = Object.keys(data.attributes ?? {});
-		if (!questions.length && !profiles.length && !sets.length && !attributes.length) return null;
-		const result = section(doc, id, regionLabel(id));
-		if (questions.length) {
-			const list = el(doc, "ul");
-			list.classList.add("handbook-urban-shadows-creation-list");
-			for (const question of questions) {
-				const item = el(doc, "li");
-				item.appendChild(el(doc, "strong", question.label)).classList.add("handbook-urban-shadows-name");
-				const options = question.options.map((option) => typeof option === "string" ? option : option.label);
-				if (options.length) item.appendChild(el(doc, "span", options.join(" · "))).classList.add("handbook-urban-shadows-property");
-				item.appendChild(el(doc, "span")).classList.add("handbook-urban-shadows-fill");
-				list.appendChild(item);
-			}
-			result.appendChild(list);
-		}
-		for (const profile of profiles) {
-			const dl = el(doc, "dl");
-			dl.appendChild(el(doc, "dt", profile.label));
-			for (const key of Object.keys(profile.stats)) dl.appendChild(row(doc, key, signed(profile.stats[key])));
-			result.appendChild(dl);
-		}
-		for (const set of sets) {
-			result.appendChild(el(doc, "h4", set.title));
-			if (set.description) result.appendChild(el(doc, "p", set.description));
-		}
-		return result;
-	},
-	"urban-shadows-debts": (doc, id, data) => {
-		if (!data.debts?.length) return null;
-		const result = section(doc, id, regionLabel(id));
-		const list = el(doc, "ul");
-		for (const debt of data.debts) list.appendChild(el(doc, "li", debt));
-		result.appendChild(list);
+	/** Creation choices are made once; the sheet records only what was chosen, so it has no creation column. */
+	"urban-shadows-creation": () => null,
+	/** A place to write the debts in play, never the starting ones. The heading is local until the contract publishes one. */
+	"urban-shadows-debts": (doc, id) => {
+		const result = section(doc, id, "Dettes");
+		for (let index = 0; index < DEBT_LINES; index += 1) result.appendChild(fill(doc));
 		return result;
 	},
 	"urban-shadows-mortal-relationships": (doc, id, data) => {
