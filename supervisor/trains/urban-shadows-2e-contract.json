@@ -2,7 +2,7 @@
 	"$schema": "../train.schema.json",
 	"id": "urban-shadows-2e-contract",
 	"title": "Urban Shadows 2E : contrat, apparence, sections et callouts",
-	"status": "open",
+	"status": "closed",
 	"coordinationIssue": {
 		"repo": "obsidian-handbook",
 		"number": 90,
@@ -50,5 +50,379 @@
 			]
 		}
 	],
-	"publication": {}
+	"publication": {
+		"schema-pbta": {
+			"runs": [
+				{
+					"step": "digest",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "digest",
+						"provider_commit": "3548fdaeff586977f960d7ac4dd058be7ea95481"
+					},
+					"id": 37738586453,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37738586453",
+					"conclusion": "failure",
+					"at": "2026-10-08T06:36:59.926Z"
+				},
+				{
+					"step": "digest",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "digest",
+						"provider_commit": "0285cc39da7aab22d601bd766a5103ebbf1e1e54"
+					},
+					"id": 37739574082,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37739574082",
+					"conclusion": "success",
+					"at": "2026-10-08T06:47:27.858Z"
+				},
+				{
+					"step": "stage",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "stage",
+						"provider_commit": "0285cc39da7aab22d601bd766a5103ebbf1e1e54",
+						"config": "release-train/candidates/schema-pbta-v10.0.0-rc.1.json"
+					},
+					"id": 37739707619,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37739707619",
+					"conclusion": "success",
+					"at": "2026-10-08T06:48:54.157Z"
+				},
+				{
+					"step": "release-train",
+					"workflow": "release-train.yml",
+					"inputs": {
+						"provider_commit": "0285cc39da7aab22d601bd766a5103ebbf1e1e54",
+						"config": "release-train/schema-pbta-v10.0.0.json"
+					},
+					"id": 37739931942,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37739931942",
+					"conclusion": "success",
+					"at": "2026-10-08T06:51:16.779Z"
+				},
+				{
+					"step": "promote",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "promote",
+						"provider_commit": "0285cc39da7aab22d601bd766a5103ebbf1e1e54",
+						"config": "release-train/schema-pbta-v10.0.0.json"
+					},
+					"id": 37740078569,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37740078569",
+					"conclusion": "success",
+					"at": "2026-10-08T06:52:49.151Z"
+				}
+			],
+			"candidate": {
+				"tag": "v10.0.0-rc.1",
+				"url": "https://github.com/RebelliousSmile/schema-pbta/releases/download/v10.0.0-rc.1/schema-pbta-10.0.0.tgz",
+				"sha256": "dba6c7992e9c02b6b70dbd87f2832d5510008eb4e0348554a95f7530bb325751",
+				"integrity": "sha512-gAaCOYX6+X4IdixeOhlw9t+RT0vxzGTnY6/P/Dn1QurueuLt3lV1ISFuWvNvFQcq8rJ2HghNUQM1X2CvDZRa3Q=="
+			},
+			"final": {
+				"tag": "v10.0.0",
+				"url": "https://github.com/RebelliousSmile/schema-pbta/releases/download/v10.0.0/schema-pbta-10.0.0.tgz",
+				"sha256": "dba6c7992e9c02b6b70dbd87f2832d5510008eb4e0348554a95f7530bb325751",
+				"integrity": "sha512-gAaCOYX6+X4IdixeOhlw9t+RT0vxzGTnY6/P/Dn1QurueuLt3lV1ISFuWvNvFQcq8rJ2HghNUQM1X2CvDZRa3Q=="
+			}
+		}
+	},
+	"presentation": {
+		"presentedAt": "2026-10-08T06:47:16.147Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:29bf528e0f478327600513c5f5ab189c6eb8c20b27f2c33a2e353aa063a512a6",
+		"repos": [
+			{
+				"repo": "schema-pbta",
+				"role": "provider",
+				"sha": "0285cc39da7aab22d601bd766a5103ebbf1e1e54",
+				"baseSha": "ec3a08ef312abaff4090d93e8d4c769957329e0d",
+				"commits": [
+					{
+						"sha": "0285cc39da7aab22d601bd766a5103ebbf1e1e54",
+						"subject": "ci: pin the Handbook producer to a commit that accepts the pack fields"
+					},
+					{
+						"sha": "3548fdaeff586977f960d7ac4dd058be7ea95481",
+						"subject": "fix(urban-shadows): draw list marks and ticks of a callout like reading view"
+					},
+					{
+						"sha": "0c74c88484c95849698814a9a4532d74a5bd0923",
+						"subject": "fix(urban-shadows): draw reading-view lozenge bullets on the item and tidy ticked choices"
+					},
+					{
+						"sha": "45803f403d05dd94588b56e38b665040e08bd978",
+						"subject": "fix(urban-shadows): draw lozenge bullets over any host theme and keep ticked choices in line"
+					},
+					{
+						"sha": "72051e489d3d554402eff1e1937f476582e9e1a0",
+						"subject": "fix(urban-shadows): draw one box per choice, not two"
+					},
+					{
+						"sha": "df1abc78a230a701fc0067968440e5db39c6efae",
+						"subject": "fix(urban-shadows): lozenge list marks in violet, readable headings in the night section"
+					},
+					{
+						"sha": "7b19295febe3785120aa2ead38a86d51ea7dc91e",
+						"subject": "fix(urban-shadows): drop the ink drips and keep section headings readable"
+					},
+					{
+						"sha": "614a978ddab29db1abc2016f76aa92a5b0f93c32",
+						"subject": "fix(handbook): drop the theme's heading gutter bar in every PbtA pack, white page for Urban Shadows"
+					},
+					{
+						"sha": "0441a70c8d3da0710008918ca17d713bae3b9e7a",
+						"subject": "feat(urban-shadows): align the booklet with the sheets, publish its presentation, callouts and appearance"
+					}
+				],
+				"diffstat": ".github/workflows/ci.yml                           |    2 +-\n .github/workflows/release.yml                      |    2 +-\n CHANGELOG.md                                       |   12 +\n LICENSES/HANDBOOK-ASSETS.md                        |   10 +-\n corpus/contract/cases.json                         |    3 +\n ...ban-shadows-playbook-corruption-track-zero.toml |   65 +\n ...urban-shadows-playbook-extra-unknown-field.toml |   66 +\n .../valid/urban-shadows-playbook-blank.toml        |   48 +\n .../valid/urban-shadows-playbook-complete.toml     |   17 +\n .../invalid/urban-shadows-layout-mixed-faces.json  |    3 +\n .../urban-shadows-layout-unknown-region.json       |    3 +\n .../valid/urban-shadows-appearance-base.json       |   13 +\n .../valid/urban-shadows-layout-unplaced.json       |    3 +\n cross-tool-provider.json                           |    2 +-\n docs/compatibility.md                              |    1 +\n .../urban-shadows-playbook/the-aware.toml          |   17 +\n handbook.json                                      |    4 +-\n handbook/masks/assets/styles/headings.css          |   11 +\n handbook/masks/pack.json                           |    2 +-\n .../monster-of-the-week/assets/styles/headings.css |   11 +\n handbook/monster-of-the-week/pack.json             |    2 +-\n handbook/monsterhearts/assets/styles/headings.css  |   11 +\n handbook/monsterhearts/pack.json                   |    2 +-\n handbook/salvage-run/assets/styles/headings.css    |   11 +\n handbook/salvage-run/pack.json                     |    2 +-\n handbook/the-sprawl/assets/styles/headings.css     |   11 +\n handbook/the-sprawl/pack.json                      |    2 +-\n handbook/urban-shadows/README.md                   |   42 +-\n .../assets/fonts/OFL-CaveatBrush-1.1.txt           |   93 +\n handbook/urban-shadows/assets/fonts/README.md      |   16 +-\n .../assets/fonts/caveat-brush-400-normal.woff2     |  Bin 0 -> 89408 bytes\n .../urban-shadows/assets/images/city-sigil.svg     |    2 +-\n .../urban-shadows/assets/images/night-windows.svg  |    1 +\n handbook/urban-shadows/assets/styles/callouts.css  |  181 +-\n handbook/urban-shadows/assets/styles/layout.css    |  246 +++\n handbook/urban-shadows/assets/styles/page.css      |   56 +\n handbook/urban-shadows/assets/styles/section.css   |   30 +\n handbook/urban-shadows/pack.json                   |   92 +-\n handbook/urban-shadows/styles/base.css             |    8 +-\n package-lock.json                                  |    4 +-\n package.json                                       |    4 +-\n packs/masks/pack-contract.json                     |    2 +-\n packs/monster-of-the-week/pack-contract.json       |    2 +-\n packs/monsterhearts/pack-contract.json             |    2 +-\n packs/salvage-run/pack-contract.json               |    2 +-\n packs/the-sprawl/pack-contract.json                |    2 +-\n packs/urban-shadows/appearance-contract.json       |   29 +\n packs/urban-shadows/assets/fonts/OFL-1.1.txt       |   93 +\n .../assets/fonts/OFL-CaveatBrush-1.1.txt           |   93 +\n .../assets/fonts/caveat-brush-400-normal.woff2     |  Bin 0 -> 89408 bytes\n .../fonts/league-gothic-latin-400-normal.woff2     |  Bin 0 -> 10436 bytes\n .../fonts/source-serif-4-latin-wght-normal.woff2   |  Bin 0 -> 50824 bytes\n packs/urban-shadows/assets/images/city-sigil.svg   |    1 +\n packs/urban-shadows/pack-contract.json             |    2 +-\n packs/urban-shadows/presentation-contract.json     |  277 +++\n packs/urban-shadows/styles/theme-tokens.css        |   32 +\n schemas/v10/masks/front.schema.json                |  351 ++++\n schemas/v10/masks/game-definition.schema.json      | 1774 ++++++++++++++++++++\n schemas/v10/masks/masks-playbook.schema.json       |  782 +++++++++\n schemas/v10/masks/move.schema.json                 |  134 ++\n schemas/v10/masks/npc.schema.json                  |  221 +++\n schemas/v10/masks/playbook.schema.json             |  648 +++++++\n schemas/v10/monster-of-the-week/front.schema.json  |  351 ++++\n .../game-definition.schema.json                    | 1774 ++++++++++++++++++++\n .../monster-of-the-week-playbook.schema.json       |  805 +++++++++\n schemas/v10/monster-of-the-week/move.schema.json   |  134 ++\n schemas/v10/monster-of-the-week/npc.schema.json    |  221 +++\n .../v10/monster-of-the-week/playbook.schema.json   |  648 +++++++\n .../v10/monsterhearts/game-definition.schema.json  | 1774 ++++++++++++++++++++\n .../monsterhearts-playbook.schema.json             |  954 +++++++++++\n schemas/v10/monsterhearts/move.schema.json         |  134 ++\n schemas/v10/monsterhearts/playbook.schema.json     |  648 +++++++\n .../v10/salvage-run/game-definition.schema.json    | 1774 ++++++++++++++++++++\n schemas/v10/salvage-run/move.schema.json           |  134 ++\n .../salvage-run/salvage-run-playbook.schema.json   |  648 +++++++\n schemas/v10/the-sprawl/game-definition.schema.json | 1774 ++++++++++++++++++++\n schemas/v10/the-sprawl/move.schema.json            |  134 ++\n schemas/v10/the-sprawl/playbook.schema.json        |  648 +++++++\n .../v10/the-sprawl/the-sprawl-playbook.schema.json |  786 +++++++++\n .../v10/urban-shadows/game-definition.schema.json  | 1774 ++++++++++++++++++++\n schemas/v10/urban-shadows/move.schema.json         |  134 ++\n schemas/v10/urban-shadows/playbook.schema.json     |  648 +++++++\n .../urban-shadows-playbook.schema.json             | 1015 +++++++++++\n src/contract-version.ts                            |    6 +-\n src/index.ts                                       |   14 +-\n src/pack-manifest.ts                               |   17 +-\n src/presentation/callouts.ts                       |    6 +\n src/presentation/collections.ts                    |    5 +\n src/presentation/index.ts                          |   14 +-\n src/presentation/urban-shadows-appearance.ts       |   59 +\n src/presentation/urban-shadows-playbook.ts         |  153 ++\n src/zod/urban-shadows-playbook.ts                  |   16 +-\n tools/gen-presentation-contracts.ts                |   12 +-\n tools/validate-handbook-packs.ts                   |   57 +-\n tools/validate-pack-manifest.ts                    |   50 +-\n tools/validate-package.ts                          |   42 +-\n tools/validate-presentation-appearance.ts          |   47 +-\n tools/validate-presentation-contract.ts            |   88 +-\n tools/validate-reference-fixtures.ts               |   29 +\n tools/validate-references.ts                       |   23 +\n tools/validate-version-compat.ts                   |    2 +-\n 101 files changed, 22997 insertions(+), 113 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"check"
+						],
+						"status": 0,
+						"tail": "✓ 6 packs own 6 specialised targets; 5 generic targets are shared.\n  read as a portable playbook, so generic downstream: salvage-run-playbook\n  generic targets no pack documents yet: move, playbook, npc, front\n\n> schema-pbta@10.0.0 validate:cross-tool:provider\n> tsx tools/validate-cross-tool-provider.ts\n\n✓ cross-tool-provider.json declares contract 10, a live corpus and 6 pack manifests; the shared schema accepts 2 foreign descriptors.\n\n> schema-pbta@10.0.0 validate:cross-tool:pins\n> tsx tools/validate-cross-tool-pins.ts\n\n✓ 5 cross-tool checkouts are pinned and the .github/workflows/ci.yml contract job runs them.\n\n> schema-pbta@10.0.0 validate:release-train\n> tsx tools/validate-release-train.ts\n\n✓ release train stages v8.4.2 from v8.4.2-rc.1 for lantern and handbook\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n⚠️  No example files found in: examples\\monsterhearts\\playbook\n⚠️  No example files found in: examples\\urban-shadows\\playbook\n⚠️  No example files found in: examples\\the-sprawl\\playbook\n⚠️  No example files found in: examples\\masks\\playbook\n⚠️  No example files found in: examples\\monster-of-the-week\\playbook",
+						"durationMs": 61514
+					}
+				]
+			},
+			{
+				"repo": "lantern",
+				"role": "consumer",
+				"sha": "4d688d6a56e7bcfcfde898ea89d1bd7219c3462f",
+				"baseSha": "3efce9af919e975330dc9672a8142d70695a0b63",
+				"commits": [
+					{
+						"sha": "4d688d6a56e7bcfcfde898ea89d1bd7219c3462f",
+						"subject": "feat(urban-shadows): adopt the Urban Shadows 2E contract of schema-pbta"
+					}
+				],
+				"diffstat": "CHANGELOG.md      | 6 ++++++\n package-lock.json | 4 ++--\n package.json      | 2 +-\n 3 files changed, 9 insertions(+), 3 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"lint"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 lint\n> eslint .\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 6589
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"typecheck"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 typecheck\n> tsc -b\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 13665
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 assert:release-train\n> node tools/release-train-protocol.harness.mjs\n\nRelease-train protocol-1 and protocol-2 consumer proofs verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 591
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-identity"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 assert:release-identity\n> node tools/assert-release-identity.mjs && node tools/release-identity.harness.mjs\n\nRelease metadata verified for v0.21.0.\nRelease identity fixtures verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 523
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train-matrix:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 assert:release-train-matrix:unit\n> node tools/release-train-matrix.harness.mjs\n\nRelease train matrix covers 11 real manifests and rejects mutable, duplicate, or fixture inputs.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 471
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:consumer-schema-pins:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 assert:consumer-schema-pins:unit\n> node tools/consumer-schema-pins.harness.mjs\n\nConsumer pin checks reject candidate URLs, lock drift, redirects, and wrong published bytes.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 461
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:workspace"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.21.0 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:132016:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:131526:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:131665:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:27277:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:131659:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:131745:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-rEHzpE/workspace.mjs:132018:31",
+						"durationMs": 2295
+					}
+				]
+			},
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "ecda27a43df0aaf12ee7e794599a0a67596be5fd",
+				"baseSha": "e3d33966eea59c861102ac2c611c36391606a4fb",
+				"commits": [
+					{
+						"sha": "ecda27a43df0aaf12ee7e794599a0a67596be5fd",
+						"subject": "chore(supervisor): add the train of the Urban Shadows 2E contract"
+					},
+					{
+						"sha": "a80f08525c73fa83d1c804efe74dea5e5a8b561f",
+						"subject": "feat(supervisor): keep whole outputs, measure every step, collect check failures"
+					},
+					{
+						"sha": "4c8615949696b203d7e5ae0e4b90d89424e39c2d",
+						"subject": "fix(pbta): keep a mode section from painting over the neighbouring editorial column"
+					},
+					{
+						"sha": "f3fa9ca687a82f85213fddaf1da8870243aa02a6",
+						"subject": "feat(packs): publish a single-polarity pack section and the callouts of a pack"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  11 ++\n README.md                                          |   4 +-\n .../single-polarity-pack-publishes-a-section.md    |  61 +++++++\n aidd_docs/memory/internal/game-packs.md            |   2 +\n .../phase-1.md                                     | 119 +++++++++++++\n .../phase-2.md                                     | 108 ++++++++++++\n .../phase-3.md                                     | 101 +++++++++++\n .../phase-4.md                                     |  99 +++++++++++\n .../phase-5.md                                     | 104 +++++++++++\n .../phase-6.md                                     | 121 +++++++++++++\n .../phase-7.md                                     | 126 +++++++++++++\n .../plan.md                                        |  48 +++++\n corpus/game-packs/invalid-section-token-name.json  |   6 +\n corpus/game-packs/invalid-section-workspace.json   |   6 +\n corpus/game-packs/section.json                     |  10 ++\n doc/supervisor.fr.md                               |  23 ++-\n manifest.json                                      |   2 +-\n package.json                                       |   3 +-\n schemas/appearance/game-pack.schema.json           |  24 +++\n src/BrumesPlugin.ts                                |  30 +++-\n src/features/callouts/nativeCallouts.ts            |  40 ++++-\n src/features/modeSections/parser.ts                |  14 +-\n src/features/modeSections/postProcessor.ts         |  10 +-\n src/features/modeSections/printProcessor.ts        |   3 +-\n src/features/modes/styleElement.ts                 |  67 +++++--\n src/games/fromSchema.ts                            |  43 ++++-\n src/games/overrides.ts                             |  40 ++++-\n src/games/types.ts                                 |  29 +++\n src/games/variants.ts                              |  36 +++-\n src/styles/pbta/_page.scss                         |  10 ++\n supervisor/train.schema.json                       |   8 +\n supervisor/trains/urban-shadows-2e-contract.json   |  54 ++++++\n tools/assert-check-run.mjs                         |  33 ++++\n tools/assertCallouts.harness.mts                   |  68 ++++++-\n tools/assertGameVariants.harness.mts               |  58 ++++++\n tools/assertStyleScope.harness.mts                 |  61 +++++++\n tools/check.mjs                                    |  96 +++++-----\n tools/checkRun.harness.mts                         | 195 +++++++++++++++++++++\n tools/checkRun.mjs                                 | 103 +++++++++++\n tools/customPacks.harness.mts                      |  61 +++++++\n tools/gamePackContract.harness.mts                 |  36 +++-\n tools/modeSections.harness.mts                     |  30 +++-\n tools/supervisor.harness.mts                       | 111 ++++++++++++\n tools/supervisor/close.mjs                         |   3 +\n tools/supervisor/converge.mjs                      |  21 +--\n tools/supervisor/guarded.mjs                       |  26 ++-\n tools/supervisor/land.mjs                          |  11 +-\n tools/supervisor/logs.mjs                          |  91 ++++++++++\n tools/supervisor/present.mjs                       |  50 ++++--\n tools/supervisor/presentCommands.mjs               |   6 +-\n tools/supervisor/publish.mjs                       |   2 +-\n tools/supervisor/ship.mjs                          |  68 ++++++-\n versions.json                                      |   3 +-\n 53 files changed, 2354 insertions(+), 141 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "\n> obsidian-handbook@2.37.0 check C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\us2e\\obsidian-handbook\n> node tools/check.mjs\n\n\ncheck: this exact content already passed; nothing replayed (HANDBOOK_CHECK_FORCE=1 to replay).",
+						"durationMs": 709
+					}
+				]
+			}
+		],
+		"trainFiles": {
+			"schema-pbta": [
+				"release-train/"
+			],
+			"lantern": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"package-lock.json",
+				"release-train.matrix.json",
+				"CHANGELOG.md",
+				"release-train/"
+			],
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"schema-pbta: release candidate of schema-pbta",
+			"schema-pbta: final release of schema-pbta, same bytes as the candidate",
+			"lantern: release",
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-08T06:54:56.695Z",
+		"repos": [
+			{
+				"repo": "schema-pbta",
+				"sha": "f4782bfe3b6ec0ac7837ee445eaabe2becfd6142"
+			},
+			{
+				"repo": "lantern",
+				"sha": "6d8dacdb5398f13861039f1f28894c485ef05832"
+			},
+			{
+				"repo": "obsidian-handbook",
+				"sha": "cf5393453334f4e8a5249f980c31efe662fe16e1"
+			}
+		],
+		"checks": [
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-train-matrix"
+				],
+				"status": 0
+			},
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			}
+		],
+		"notes": [
+			"schema-pbta: no convergence tool of its own; its convergence rests on the final v10.0.0 pinned by both consumers and on their convergence commands"
+		]
+	},
+	"consumerReleases": [
+		{
+			"repo": "lantern",
+			"version": "0.21.0",
+			"tag": "v0.21.0",
+			"sha": "6d8dacdb5398f13861039f1f28894c485ef05832",
+			"url": "https://github.com/RebelliousSmile/lantern/releases/tag/v0.21.0"
+		},
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.37.0",
+			"tag": "v2.37.0",
+			"sha": "cf5393453334f4e8a5249f980c31efe662fe16e1",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.37.0"
+		}
+	],
+	"closedAt": "2026-10-08T07:02:52.808Z"
 }
