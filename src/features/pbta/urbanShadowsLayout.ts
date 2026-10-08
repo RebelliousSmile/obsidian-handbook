@@ -253,17 +253,25 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	},
 	"harm-tracker": (doc, id, data) => {
 		if (!data.harm) return null;
-		const result = section(doc, id, regionLabel(id));
+		const result = section(doc, id);
+		const head = el(doc, "div");
+		head.classList.add("handbook-urban-shadows-harm-head");
+		head.appendChild(el(doc, "h3", regionLabel(id)));
+		if (data.harm.armor !== undefined) {
+			const armor = el(doc, "div");
+			armor.classList.add("handbook-urban-shadows-armor");
+			armor.appendChild(el(doc, "span", HARM_LABELS.armor));
+			armor.appendChild(boxes(doc, Math.max(data.harm.armor, 1), HARM_LABELS.armor));
+			head.appendChild(armor);
+		}
+		result.appendChild(head);
 		for (const key of ["faint", "serious", "critical"] as const) {
 			const count = data.harm[key];
 			if (!count) continue;
-			result.appendChild(el(doc, "h4", HARM_LABELS[key]));
-			result.appendChild(boxes(doc, count, HARM_LABELS[key]));
-		}
-		if (data.harm.armor !== undefined) {
-			const line = el(doc, "p");
-			line.appendChild(el(doc, "span", `${HARM_LABELS.armor} : `)).classList.add("handbook-urban-shadows-label");
-			line.appendChild(el(doc, "span", String(data.harm.armor)));
+			const line = el(doc, "div");
+			line.classList.add("handbook-urban-shadows-harm-line");
+			line.appendChild(boxes(doc, count, HARM_LABELS[key]));
+			line.appendChild(el(doc, "span", HARM_LABELS[key]));
 			result.appendChild(line);
 		}
 		return result.childElementCount > 1 ? result : null;

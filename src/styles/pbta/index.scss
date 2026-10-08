@@ -133,3 +133,44 @@ body.brumes--urban-shadows .markdown-rendered :is(.handbook-urban-shadows-checks
 		line-height: 1.35;
 	}
 }
+
+/* Harm: title and armour box on one row, then one ruled line per track, boxes before the name. */
+.brumes--urban-shadows [data-region="harm-tracker"] {
+	.handbook-urban-shadows-harm-head {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 0.6rem;
+
+		h3 { margin: 0; }
+	}
+
+	.handbook-urban-shadows-armor {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-family: var(--urban-shadows-title-font, var(--font-header-theme));
+		text-transform: uppercase;
+	}
+
+	.handbook-urban-shadows-harm-line {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.15rem 0;
+		border-bottom: 1px solid var(--text-normal);
+		font-family: var(--urban-shadows-title-font, var(--font-header-theme));
+		text-transform: uppercase;
+	}
+
+	.handbook-urban-shadows-boxes { display: inline-flex; gap: 0.2rem; }
+}
+
+/* Scars: two columns of ticked lines, as printed. */
+.brumes--urban-shadows [data-region="urban-shadows-scars"] .handbook-urban-shadows-checks {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.1rem 0.8rem;
+	padding-inline-start: 0;
+	font-size: 0.85em;
+}
