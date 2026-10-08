@@ -183,7 +183,7 @@ pnpm supervise converge --run   # adopts the finals and lands the convergence fi
 
 Requires each provider of the train to have its final published, a presentation that holds and clean checkouts at `origin/main`. Without `--run`, each consumer still on a candidate is named, with the URL it pins and the final's URL. With `--run`, it adopts the final: these are the same bytes as the candidate already validated, so only the frozen install runs before the commit. It then updates the provider registry of a consumer that keeps one (the `matrix` field of the topology, Lantern's `release-train.matrix.json`): `handbook.ref` moves to Handbook's `origin/main`, which pins the finals, and each provider of the train to its `origin/main`, with its train manifest added (same commit as `validatorRef`). Not to the commit of the final tag: the one of `schema-pbta` names the provider commit, which precedes the manifest. The registry is a train file, so that commit keeps the presentation valid. Without `--run`, a stale registry is named and fails the convergence. Then, behind the guard:
 
-- the consumers' `convergence` commands (topology): Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs` and `assert:release-train-matrix`;
+- the consumers' `convergence` commands (topology): Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs`, `assert:release-train-matrix` and `assert:presentation-coverage`;
 - each provider's convergence step (see below).
 
 The result is recorded in the `convergence` block of the record (status, date, SHA of each repository, checks, notes). A failing check, or a consumer without a convergence command, fails the convergence and names it.
@@ -243,6 +243,12 @@ What stays human: the corrections, the validation itself, and any deletion (bran
 A train moves the version of a provider, the pin of each consumer and the tags that go with them. A validation or a convergence check therefore never compares one of these values to a figure written in its script: it reads the source that declares it (`package.json`, the lockfile, the manifest or the train record) and asserts that the role is held — the pin is a final release of the provider, the installed version is the one of the pin, the published bytes are those the lockfile records. What a guard cannot read reaches it through an argument of its command in the topology, like `--final`; none guesses the step of the cycle from the environment.
 
 In Handbook, `pnpm assert:guards-by-role` (in `pnpm check`) refuses a version number, a tag or an archive URL written in figures in a guard of that family. A closed test datum keeps its literal and carries `guard-fixture: <reason>` on its line.
+
+## Coverage of the presentation contract
+
+A schema publishes a presentation contract for each pack (`packs/<id>/presentation-contract.json`: regions, and the fields of each region). A consumer that draws the pack has to account for all of it. Lantern declares this in the topology: `assert:presentation-coverage` is one of its `validations` and one of its `convergence` commands. For every pack Lantern has a template for, the command reads the installed contract and requires each region to be drawn by the preview and each field to be editable in the editor; a gap turns `present` or `converge` red and names the pack, the region and the field.
+
+The check reads the template sources: it proves that a field is named there, not that it is rendered correctly. Rendering is still judged at validation. A consumer declares this check as a command of its own topology entry; the supervisor knows nothing of its detail.
 
 ## The three providers
 

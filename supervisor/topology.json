@@ -90,6 +90,11 @@
 					"npm",
 					"run",
 					"assert:workspace"
+				],
+				[
+					"npm",
+					"run",
+					"assert:presentation-coverage"
 				]
 			],
 			"convergence": [
@@ -109,6 +114,11 @@
 					"npm",
 					"run",
 					"assert:release-train-matrix"
+				],
+				[
+					"npm",
+					"run",
+					"assert:presentation-coverage"
 				]
 			]
 		},

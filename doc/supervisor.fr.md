@@ -183,7 +183,7 @@ pnpm supervise converge --run   # adopte les finales et pose les fichiers de con
 
 Exige que chaque fournisseur du train ait sa finale publiée, une présentation qui tient et des checkouts propres sur `origin/main`. Sans `--run`, chaque consommateur encore sur une candidate est nommé, avec l'URL qu'il pinne et celle de la finale. Avec `--run`, il adopte la finale : ce sont les mêmes octets que la candidate déjà validée, donc seule l'installation gelée tourne avant le commit. Puis il met à jour le registre de fournisseurs d'un consommateur qui en tient un (champ `matrix` de la topologie, `release-train.matrix.json` de Lantern) : `handbook.ref` passe à l'`origin/main` de Handbook, qui pinne les finales, et chaque fournisseur du train à son `origin/main`, avec son manifeste de train ajouté (même commit en `validatorRef`). Pas au commit du tag final : celui de `schema-pbta` désigne le commit fournisseur, antérieur au manifeste. Le registre est un fichier de train, donc ce commit garde la présentation valide. Sans `--run`, un registre périmé est nommé et fait échouer la convergence. Ensuite, derrière le garde :
 
-- les commandes `convergence` des consommateurs (topologie) : Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs` et `assert:release-train-matrix` ;
+- les commandes `convergence` des consommateurs (topologie) : Handbook `assert:consumer-schema-pins --final`, Lantern `assert:consumer-schema-pins`, `assert:release-inputs`, `assert:release-train-matrix` et `assert:presentation-coverage` ;
 - l'étape de convergence de chaque fournisseur (voir plus bas).
 
 Le résultat est consigné dans le bloc `convergence` du dossier (statut, date, SHA de chaque dépôt, vérifications, notes). Une vérification qui échoue, ou un consommateur sans commande de convergence, fait échouer la convergence en le nommant.
@@ -243,6 +243,12 @@ Restent à l'humain : les corrections, la validation elle-même, et toute suppre
 Un train déplace la version d'un fournisseur, l'épingle de chaque consommateur et les tags qui vont avec. Une validation ou une vérification de convergence ne compare donc jamais l'une de ces valeurs à un chiffre écrit dans son script : elle lit la source qui la déclare (`package.json`, le lockfile, le manifeste ou l'enregistrement du train) et affirme que le rôle est tenu — l'épingle est une release finale du fournisseur, la version installée est celle de l'épingle, les octets publiés sont ceux que le lockfile enregistre. Ce qu'une garde ne peut pas lire lui arrive par un argument de sa commande dans la topologie, comme `--final` ; aucune ne devine l'étape du cycle par l'environnement.
 
 Dans Handbook, `pnpm assert:guards-by-role` (dans `pnpm check`) refuse un numéro de version, un tag ou une URL d'archive écrits en chiffres dans une garde de cette famille. Une donnée de test fermée garde son littéral et porte `guard-fixture: <raison>` sur sa ligne.
+
+## Couverture du contrat de présentation
+
+Un schéma publie pour chaque pack un contrat de présentation (`packs/<id>/presentation-contract.json` : régions, champs de chaque région). Un consommateur qui dessine ce pack doit en tenir compte en entier. Lantern le déclare dans la topologie : `assert:presentation-coverage` figure dans ses `validations` et dans sa `convergence`. Pour chaque pack dont Lantern a un modèle, la commande lit le contrat installé et exige que chaque région soit dessinée par l'aperçu et que chaque champ soit modifiable dans l'éditeur ; un manque rend `present` ou `converge` rouge en nommant le pack, la région et le champ.
+
+Le contrôle lit les sources du modèle : il prouve qu'un champ y est nommé, pas que son rendu est juste. Le rendu reste jugé à la validation. Un consommateur déclare ce contrôle par une commande de sa propre entrée dans la topologie ; le superviseur n'en connaît pas le détail.
 
 ## Les trois fournisseurs
 
