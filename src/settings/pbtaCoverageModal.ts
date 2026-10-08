@@ -21,13 +21,15 @@ function installedPbtaCoverageInput(): PbtaCoverageInput[] {
 }
 
 /**
- * The pack a specialised format expects, read back off the target name. This is the exact inverse of
- * the `<pack.id>-playbook` form `assert:pbta-pack-coverage` proves against every published pack
- * contract, so the name shown here needs no upstream metadata embedded in the bundle.
+ * The pack a specialised format expects, read back off the target name. A target is
+ * `<pack.id>-<type>` where the type is one word (`playbook`, `npc`, `team`, ...) and the pack id may
+ * hold hyphens, so the pack is everything before the last hyphen. `assert:pbta-pack-coverage` proves
+ * this form against every published pack contract (`documents[].target`), so the name shown here
+ * needs no upstream metadata embedded in the bundle.
  */
 function expectedPackId(target: string): string {
-	const suffix = "-playbook";
-	return target.endsWith(suffix) ? target.slice(0, -suffix.length) : target;
+	const cut = target.lastIndexOf("-");
+	return cut > 0 ? target.slice(0, cut) : target;
 }
 
 /** Coverage of the build, measured against the packs this vault has installed. */

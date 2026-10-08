@@ -226,6 +226,14 @@ l'`@include`. Jamais dupliquer les valeurs, jamais dupliquer l'image.
    dans le package externe quand il publie un manifeste partagé, sinon dans le
    corpus local de Handbook.
 
+Cas des blocs `pbta-*` : un bloc PbtA existant se prolonge, il ne se double
+pas. `pbta-npc` (`src/features/pbta/npc.ts`) lit la cible générique `npc` et
+les cibles `<pack.id>-npc` ; il réutilise le drapeau `pbtaParser` et ne porte
+aucun partial SCSS, la géométrie venant du `layout.css` du pack, qui ne lit que
+les hooks `data-region`, `data-primitive`, `data-row`, `data-column`,
+`data-face`. Le layout d'un pack (`masksNpc.ts`, `masksLayout.ts`) n'est
+appliqué que sous ce pack ; sans lui, le rendu sobre sert.
+
 Deux règles de compatibilité qui ne souffrent pas d'exception :
 
 - renommer un bloc = garder l'ancien id dans `aliases` (le registre logue la

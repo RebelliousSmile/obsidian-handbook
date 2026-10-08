@@ -10,18 +10,23 @@ import { currentPbtaCoverage, pbtaCoverageSummary } from "../src/settings/pbtaCo
 import { initGameRegistry } from "../src/games/registry";
 import { EMPTY_STYLE } from "../src/games/types";
 import { PBTA_PROJECTED_TARGETS } from "../src/features/pbta/specializedPlaybooks";
+import { PBTA_NPC_PROJECTED_TARGETS } from "../src/features/pbta/npc";
 import { PBTA_SPECIALIZED_FIELDS } from "../src/features/pbta/renderer";
 import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../src/games/capabilities";
 import { loadPbtaProviderContract } from "./pbtaProviderContract.mts";
 import {
 	loadPbtaContractCases,
+	PBTA_SPECIALIZED_NPC_TARGETS,
 	PBTA_SPECIALIZED_PLAYBOOK_TARGETS,
 	PBTA_TARGET_TO_BLOCK,
 } from "./pbtaContractCorpus.mts";
 
 const cases = loadPbtaContractCases();
 const targets = Object.keys(PBTA_DOCUMENT_CODECS);
-const projected = PBTA_PROJECTED_TARGETS as readonly string[];
+const projectedPlaybooks = PBTA_PROJECTED_TARGETS as readonly string[];
+const projected = [...projectedPlaybooks, ...(PBTA_NPC_PROJECTED_TARGETS as readonly string[])];
+/* A pack owns `<pack.id>-<type>`: the id is what precedes the last dash. */
+const ownerOf = (target: string): string => target.slice(0, target.lastIndexOf("-"));
 
 /* The declared generic split has to name real codecs, or the specialised set is silently wrong. */
 const report = pbtaCoverageReport([]);
@@ -84,7 +89,7 @@ assert.deepEqual(
 );
 
 /* Every projected target prints mechanics its own witness carries, so a renamed field is caught. */
-for (const target of projected) {
+for (const target of projectedPlaybooks) {
 	const fields = PBTA_SPECIALIZED_FIELDS[target as keyof typeof PBTA_SPECIALIZED_FIELDS];
 	assert.ok(fields && fields.length > 0, `${target} declares no mechanical field to print`);
 	const witness = cases.find((entry) => entry.target === target && entry.expect === "accept");
@@ -99,9 +104,9 @@ for (const target of projected) {
 
 /* The corpus helpers carry their own lists; pinning them here keeps the older harnesses from drifting. */
 assert.deepEqual(
-	[...PBTA_SPECIALIZED_PLAYBOOK_TARGETS].sort(),
+	[...PBTA_SPECIALIZED_PLAYBOOK_TARGETS, ...PBTA_SPECIALIZED_NPC_TARGETS].sort(),
 	[...projected].sort(),
-	"PBTA_SPECIALIZED_PLAYBOOK_TARGETS no longer matches the targets Handbook resolves",
+	"the corpus helper lists no longer match the targets Handbook resolves",
 );
 for (const target of projected) {
 	assert.ok(
@@ -114,7 +119,7 @@ for (const target of projected) {
 const empty = pbtaCoverageReport([]);
 assert.deepEqual([...empty.missingPacks].sort(), [...projected].sort(), "an empty vault must report every format as unreachable");
 const installed = pbtaCoverageReport(
-	projected.map((target) => ({ id: target.slice(0, target.lastIndexOf("-playbook")), requires: ["block:pbta-playbook"] })),
+	projected.map((target) => ({ id: ownerOf(target), requires: ["block:pbta-playbook"] })),
 );
 assert.deepEqual(installed.missingPacks, [], "installing every owning pack must leave no unreachable format");
 assert.deepEqual(
@@ -128,7 +133,7 @@ assert.deepEqual(
 	"the report disagrees with the measured unresolved formats",
 );
 /* Tolerating an upstream addition is only safe if the user is told: the finding carries the name. */
-const addedTarget = `${projected[0].slice(0, projected[0].lastIndexOf("-playbook"))}-alternate-playbook`;
+const addedTarget = `${ownerOf(projected[0])}-alternate-playbook`;
 const added = { ...installed, unresolved: [addedTarget] };
 assert.ok(
 	describePbtaCoverage(added).some((line) => line.indexOf(addedTarget) >= 0),
@@ -154,7 +159,7 @@ assert.deepEqual(
 assert.deepEqual(pbtaCoverageReport([{ id: "masks", requires: ["style:city-of-mist"] }]).packs, []);
 
 /* The settings check reads the registry, not the disk: what initGameRegistry accepts is what it reports. */
-const owner = projected[0].slice(0, projected[0].lastIndexOf("-playbook"));
+const owner = ownerOf(projected[0]);
 initGameRegistry([
 	{ pack: { id: owner, label: owner, style: EMPTY_STYLE }, installation: { version: "1.0.0", root: owner, minimumHandbookVersion: "0.0.1", requires: ["block:pbta-playbook"] } }, // guard-fixture: a made-up installation
 	{ pack: { id: "silent", label: "silent", style: EMPTY_STYLE }, installation: { version: "1.0.0", root: "silent", minimumHandbookVersion: "0.0.1", requires: ["style:city-of-mist"] } }, // guard-fixture: a made-up installation
@@ -212,8 +217,8 @@ for (const pack of contract.packs) {
 		/* The form the runtime report inverts to name the expected pack. Anything else makes
 		   missingPacks silently wrong for that format, which no user could notice. */
 		assert.ok(
-			PBTA_GENERIC_TARGETS.includes(document.target) || document.target === `${pack.id}-playbook`,
-			`pack ${pack.id} publishes ${document.target}: a specialised target must be ${pack.id}-playbook, ` +
+			PBTA_GENERIC_TARGETS.includes(document.target) || document.target.indexOf(`${pack.id}-`) === 0,
+			`pack ${pack.id} publishes ${document.target}: a specialised target must be ${pack.id}-<type>, ` +
 				"the form the coverage report reads ownership off",
 		);
 		assert.ok(

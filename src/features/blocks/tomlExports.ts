@@ -40,6 +40,7 @@ import {
 	pbtaPlaybookBlock,
 	pbtaPlaybookToToml,
 } from "../pbta/block";
+import { pbtaNpcBlock, pbtaNpcToToml } from "../pbta/npc";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -207,6 +208,14 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: pbtaMoveToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta move contract"),
+	},
+	{
+		block: pbtaNpcBlock,
+		commandId: "copy-pbta-npc-as-toml",
+		noun: "PbtA non-player character",
+		toToml: pbtaNpcToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta npc contract"),
 	},
 ];
 

@@ -467,9 +467,10 @@ async function run(): Promise<void> {
 		check("an unknown game id can install the portable PbtA contract", installed.length === 1);
 		check("the unknown PbtA game remains the active mode", settings.mode === id);
 		check("the PbtA playbook is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-playbook")!, settings));
+		check("the PbtA non-player character is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-npc")!, settings));
 		check("the PbtA move is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-move")!, settings));
 		check("the unknown PbtA game exposes one handout", contents.handouts.map((block) => block.id).join(",") === "pbta-playbook");
-		check("the unknown PbtA game exposes both code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-move,pbta-playbook");
+		check("the unknown PbtA game exposes all three code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-move,pbta-npc,pbta-playbook");
 		check("the unknown PbtA game exposes the four visual callouts of the schema", contents.callouts.filter((callout) => callout.capability === "style:pbta").length === 4);
 	}
 

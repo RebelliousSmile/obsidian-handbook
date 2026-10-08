@@ -32,6 +32,13 @@ const PACK_CALLOUT_DEFAULT_ICON = "sticky-note";
 const PBTA_PACK_ICONS: Record<string, string> = {
 	"monsterhearts-note": "notebook-pen",
 	"monsterhearts-note-dark": "moon",
+	"masks-chapter": "book-open",
+	"masks-sidebar": "panel-top",
+	"masks-read-aloud": "scroll-text",
+	"masks-move": "swords",
+	"masks-crisis": "siren",
+	"masks-portrait": "id-card",
+	"masks-caption": "captions",
 	"urban-shadows-move": "swords",
 	"urban-shadows-choice": "list-checks",
 	"urban-shadows-aside": "message-square-quote",

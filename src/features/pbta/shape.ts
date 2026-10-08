@@ -17,6 +17,15 @@ export const pbtaPlaybookShape: BlockShape = {
 	],
 };
 
+export const pbtaNpcShape: BlockShape = {
+	block: "pbta-npc",
+	root: "handbook-pbta-npc",
+	zones: [
+		{ name: "identity", holds: "character name, description, drive and game-specific lines" },
+		{ name: "moves", holds: "move lines or references", optional: true },
+	],
+};
+
 export const pbtaMoveShape: BlockShape = {
 	block: "pbta-move",
 	root: "handbook-pbta-move",

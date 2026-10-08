@@ -11,6 +11,7 @@ export const PBTA_TARGET_TO_BLOCK = {
 	"monsterhearts-playbook": "pbta-playbook",
 	"urban-shadows-playbook": "pbta-playbook",
 	"the-sprawl-playbook": "pbta-playbook",
+	"masks-npc": "pbta-npc",
 } as const;
 
 export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
@@ -20,6 +21,8 @@ export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
 	"urban-shadows-playbook",
 	"the-sprawl-playbook",
 ] as const;
+
+export const PBTA_SPECIALIZED_NPC_TARGETS = ["masks-npc"] as const;
 
 export type PbtaRenderTarget = keyof typeof PBTA_TARGET_TO_BLOCK;
 

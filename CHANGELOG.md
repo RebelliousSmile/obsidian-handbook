@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.39.0] - 2026-10-08
+
+### Added
+
+- Masks 2E character booklet: under the `masks` pack, a `pbta-playbook` is drawn as a two-face sheet (front, then back) whose regions, order and headings come from the pack's published presentation contract. Labels are tracks with the current value marked, conditions and moves are checklists, the Moment of Truth has an unlock box, Potential is a row of boxes, and the identity lines are left blank to fill in. Regions without data are left out.
+- `pbta-npc` block: a character card for the PbtA packs that publish a character template (Masks: a Mask's NPC with Labels, conditions and moves); other packs get a sober card with the same fields.
+- The generic PbtA playbook rendering shows the Masks fields (Moment of Truth, Potential, influence, conditions, drives).
+- Masks callouts (chapter, sidebar, read-aloud, move, crisis, portrait, caption) get their icons.
+
 ## [2.38.0] - 2026-10-08
 
 ### Added

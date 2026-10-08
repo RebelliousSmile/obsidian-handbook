@@ -1,12 +1,14 @@
 import {
 	parseMoveToml,
 	stringifyMoveToml,
+	type MasksPlaybook,
 	type MonsterheartsPlaybook,
 	type Move,
 	type UrbanShadowsPlaybook,
 } from "schema-pbta";
 import type { BrumesBlock } from "../blocks/types";
 import { renderPbtaMove, renderPbtaPlaybook } from "./renderer";
+import { renderMasksLayout } from "./masksLayout";
 import { renderMonsterheartsLayout } from "./monsterheartsLayout";
 import { renderUrbanShadowsLayout } from "./urbanShadowsLayout";
 import { pbtaMoveShape, pbtaPlaybookShape } from "./shape";
@@ -16,6 +18,9 @@ type PlaybookLayout = (resolved: ResolvedPbtaPlaybook, doc: Document, resolveIma
 
 /** A pack draws its playbook itself for one target; any other pairing falls back to the generic rendering. */
 const PLAYBOOK_LAYOUTS: Record<string, Record<string, PlaybookLayout>> = {
+	"masks": {
+		"masks-playbook": (resolved, doc, resolveImage) => renderMasksLayout(resolved.data as MasksPlaybook, doc, resolveImage),
+	},
 	"monsterhearts": {
 		"monsterhearts-playbook": (resolved, doc, resolveImage) => renderMonsterheartsLayout(resolved.data as MonsterheartsPlaybook, doc, resolveImage),
 	},

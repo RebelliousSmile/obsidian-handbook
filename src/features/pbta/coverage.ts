@@ -1,6 +1,10 @@
 import { PBTA_DOCUMENT_CODECS } from "schema-pbta";
 import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../../games/capabilities";
 import { PBTA_PROJECTED_TARGETS } from "./specializedPlaybooks";
+import { PBTA_NPC_PROJECTED_TARGETS } from "./npc";
+
+/** Every specialised target Handbook resolves from a document alone: playbooks and non-player characters. */
+export const PBTA_ALL_PROJECTED_TARGETS: readonly string[] = [...PBTA_PROJECTED_TARGETS, ...PBTA_NPC_PROJECTED_TARGETS];
 
 /**
  * Targets every PbtA game shares. Anything else a build carries is specialised:
@@ -72,19 +76,19 @@ function codecTargets(): string[] {
 export function pbtaCoverageReport(installed: readonly PbtaCoverageInput[]): PbtaCoverageReport {
 	const targets = codecTargets();
 	const specialised = targets.filter((target) => !PBTA_GENERIC_TARGETS.includes(target));
-	const projected = specialised.filter((target) => (PBTA_PROJECTED_TARGETS as readonly string[]).includes(target));
+	const projected = specialised.filter((target) => PBTA_ALL_PROJECTED_TARGETS.includes(target));
 	const packs: string[] = [];
 	for (const pack of installed) {
 		const requires = pack.requires ?? [];
 		if (requires.some((capability) => PBTA_CAPABILITIES.includes(capability))) packs.push(pack.id);
 	}
-	const unprojected = specialised.filter((target) => !(PBTA_PROJECTED_TARGETS as readonly string[]).includes(target));
+	const unprojected = specialised.filter((target) => !PBTA_ALL_PROJECTED_TARGETS.includes(target));
 	return {
 		projected,
 		aliases: unprojected.filter((target) => PBTA_ALIAS_TARGETS.includes(target)),
 		unresolved: unprojected.filter((target) => !PBTA_ALIAS_TARGETS.includes(target)),
 		packs,
-		/* Ownership is read off the target name: a specialised target is `<pack.id>-playbook`. The
+		/* Ownership is read off the target name: a specialised target is `<pack.id>-<type>`. The
 		   assertion proves that form against every pack contract the pinned tarball publishes, so a
 		   broken convention fails the build instead of making this report lie at runtime. */
 		missingPacks: projected.filter((target) => !packs.some((id) => target.indexOf(id + "-") === 0)),
