@@ -1,5 +1,6 @@
 import type { UrbanShadowsPlaybook } from "schema-pbta";
 import contract from "schema-pbta/packs/urban-shadows/presentation-contract.json";
+import { t } from "../../utils/i18n";
 import { logScope } from "../../utils/logger";
 
 const log = logScope("urban-shadows-layout");
@@ -13,11 +14,11 @@ type Renderer = (doc: Document, id: RegionId, data: UrbanShadowsPlaybook, resolv
 const STATUS_PIPS = 3;
 
 /**
- * Local fallback, to move into the contract: the harm tracks are three lines of
- * one region, and the contract publishes one label per region only.
+ * The harm tracks are three lines of one region and the contract publishes one
+ * label per region only: their words go through the interface language.
  */
 const DEBT_LINES = 4;
-const HARM_LABELS = { faint: "Légers", serious: "Graves", critical: "Critiques", armor: "Armure" } as const;
+const HARM_TERMS = { faint: "Faint", serious: "Serious", critical: "Critical", armor: "Armor" } as const;
 
 function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTMLElement {
 	const result = doc.createElement(tag);
@@ -25,10 +26,25 @@ function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTM
 	return result;
 }
 
-/** Region headings come from the published contract, never from literals here. */
+/** A term of the interface language, or `fallback` when the language has none. */
+function term(key: string, fallback: string): string {
+	const translated = t(key);
+	return translated === key ? fallback : translated;
+}
+
+/** Region headings come from the published contract; a language may word one differently. */
 function regionLabel(id: RegionId): string {
-	for (const region of contract.regions) if (region.id === id) return region.label;
+	for (const region of contract.regions) if (region.id === id) return term(`region:${id}`, region.label);
 	return id;
+}
+
+/** Stats and Circles are keys of the document; the language names them. */
+function statLabel(key: string): string {
+	return term(`term:${key}`, key);
+}
+
+function harmLabel(key: keyof typeof HARM_TERMS): string {
+	return t(HARM_TERMS[key]);
 }
 
 function regionPrimitive(id: RegionId): string {
@@ -117,7 +133,7 @@ function marks(doc: Document, kind: "lozenge" | "ring", entries: ReadonlyArray<{
 		const value = el(doc, "span", signed(entry.value));
 		value.classList.add("handbook-urban-shadows-mark-value");
 		mark.appendChild(value);
-		mark.appendChild(el(doc, "span", entry.key));
+		mark.appendChild(el(doc, "span", statLabel(entry.key)));
 		if (entry.status !== undefined) {
 			const pips = el(doc, "span");
 			pips.classList.add("handbook-urban-shadows-pips");
@@ -212,7 +228,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		for (const profile of profiles) {
 			const dl = el(doc, "dl");
 			dl.appendChild(el(doc, "dt", profile.label));
-			for (const key of Object.keys(profile.stats)) dl.appendChild(row(doc, key, signed(profile.stats[key])));
+			for (const key of Object.keys(profile.stats)) dl.appendChild(row(doc, statLabel(key), signed(profile.stats[key])));
 			result.appendChild(dl);
 		}
 		return result;
@@ -260,8 +276,8 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		if (data.harm.armor !== undefined) {
 			const armor = el(doc, "div");
 			armor.classList.add("handbook-urban-shadows-armor");
-			armor.appendChild(el(doc, "span", HARM_LABELS.armor));
-			armor.appendChild(boxes(doc, Math.max(data.harm.armor, 1), HARM_LABELS.armor));
+			armor.appendChild(el(doc, "span", harmLabel("armor")));
+			armor.appendChild(boxes(doc, Math.max(data.harm.armor, 1), harmLabel("armor")));
 			head.appendChild(armor);
 		}
 		result.appendChild(head);
@@ -270,8 +286,8 @@ const RENDERERS: Record<RegionId, Renderer> = {
 			if (!count) continue;
 			const line = el(doc, "div");
 			line.classList.add("handbook-urban-shadows-harm-line");
-			line.appendChild(boxes(doc, count, HARM_LABELS[key]));
-			line.appendChild(el(doc, "span", HARM_LABELS[key]));
+			line.appendChild(boxes(doc, count, harmLabel(key)));
+			line.appendChild(el(doc, "span", harmLabel(key)));
 			result.appendChild(line);
 		}
 		return result.childElementCount > 1 ? result : null;
@@ -282,7 +298,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(checks(doc, data.scars.map((scar) => ({
 			label: scar.name,
 			checked: false,
-			note: scar.stat && scar.modifier !== undefined ? `${scar.stat} ${signed(scar.modifier)}` : undefined,
+			note: scar.stat && scar.modifier !== undefined ? `${statLabel(scar.stat)} ${signed(scar.modifier)}` : undefined,
 		}))));
 		return result;
 	},
@@ -304,7 +320,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"urban-shadows-creation": () => null,
 	/** A place to write the debts in play, never the starting ones. The heading is local until the contract publishes one. */
 	"urban-shadows-debts": (doc, id) => {
-		const result = section(doc, id, "Dettes");
+		const result = section(doc, id, t("Debts"));
 		for (let index = 0; index < DEBT_LINES; index += 1) result.appendChild(fill(doc));
 		return result;
 	},
