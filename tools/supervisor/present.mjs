@@ -28,6 +28,7 @@ import { fetchOrigin, git, gitOut, isRepository, revParse } from "./git.mjs";
 import { announcedPublications, computeDigest, concernedRepos, trainFilesOf } from "./digest.mjs";
 import { evaluateTrain } from "./next.mjs";
 import { basename } from "node:path";
+import { evidenceKey, isGreen, reusableValidations } from "./evidence.mjs";
 import { LINKED_PROVIDERS } from "./guarded.mjs";
 import { formatDuration, trainLogs } from "./logs.mjs";
 import { packedFiles } from "./packedFiles.mjs";
@@ -178,7 +179,12 @@ function brokenProviders(links, packed) {
 	return steps.join("; ");
 }
 
-export function presentTrain(root, topology, train, logs = trainLogs(root, topology, train.id)) {
+/**
+ * `fresh` validates everything; otherwise a repository whose last green
+ * presentation was proved on the same files, packages, commands and Node keeps
+ * its result (`evidence.mjs`).
+ */
+export function presentTrain(root, topology, train, logs = trainLogs(root, topology, train.id), { fresh = false } = {}) {
 	if (train.status !== "open") throw new SupervisorError(`present: train "${train.id}" is closed`);
 	const repos = concernedRepos(topology, train);
 	const heads = checkPreconditions(root, topology, train, repos);
@@ -205,6 +211,15 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 			entry.validations = (repo.validations ?? []).map((command) => ({ command, status: -1, tail: "", notRun: broken }));
 			return entry;
 		}
+		const key = evidenceKey({ dir, repo, sha, links: links.map((link) => ({ repo: link.repo, sha256: packed.get(link.repo)?.sha256 })), validations: repo.validations ?? [] });
+		const previous = train.presentation?.repos?.find((candidate) => candidate.repo === repo.id);
+		const reused = reusableValidations(previous, key, { fresh });
+		if (reused) {
+			entry.validations = reused;
+			entry.evidence = previous.evidence;
+			if (links.length > 0) entry.linkedProviders = links.map((link) => link.repo).sort();
+			return entry;
+		}
 		const published = links.map((link) => ({ ...link, files: packed.get(link.repo).files }));
 		entry.validations = withProviderLinks(dir, published, (replaced) => {
 			const linked = replaced.map((link) => link.repo).sort();
@@ -215,6 +230,7 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 				return { command: result.command, status: result.status, tail: result.tail, durationMs: result.durationMs };
 			});
 		});
+		if (key !== null && isGreen(entry.validations)) entry.evidence = { key, provedAt: new Date().toISOString() };
 		return entry;
 	});
 	const reasons = [...buildFailures];
@@ -279,6 +295,10 @@ export function renderPresentation(train, presentation, logs = null) {
 				continue;
 			}
 			const took = Number.isInteger(validation.durationMs) ? ` (${formatDuration(validation.durationMs)})` : "";
+			if (validation.reused) {
+				lines.push(`- **reused**: ${command}${took}, proved at ${validation.reused} on the same files, packages, commands and Node; \`--fresh\` validates again`);
+				continue;
+			}
 			lines.push(`- ${validation.status === 0 ? "passed" : `**failed (exit ${validation.status})**`}: ${command}${took}`);
 			if (validation.status === 0) continue;
 			const log = logs?.file(entry.repo, index + 1, PRESENT_STEP);

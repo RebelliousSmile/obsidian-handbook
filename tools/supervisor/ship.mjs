@@ -82,7 +82,7 @@ function timed(logs, step, action, code = () => 0) {
 }
 
 /** Returns the exit code. `message` is the commit message of every repository that has none prepared. */
-export function shipTrain(context, file, { message = "", run = false } = {}) {
+export function shipTrain(context, file, { message = "", run = false, fresh = false } = {}) {
 	const { root, topology } = context;
 	const train = readTrain(file, topology);
 	if (train.status !== "open") throw new SupervisorError(`ship: train "${train.id}" is closed`);
@@ -98,7 +98,7 @@ export function shipTrain(context, file, { message = "", run = false } = {}) {
 	const started = Date.now();
 	let status = 1;
 	try {
-		status = runCycle(context, file, train, plan, logs);
+		status = runCycle(context, file, train, plan, logs, { fresh });
 		return status;
 	} catch (error) {
 		status = error instanceof SupervisorError ? error.exitCode : 1;
@@ -110,7 +110,7 @@ export function shipTrain(context, file, { message = "", run = false } = {}) {
 	}
 }
 
-function runCycle(context, file, train, plan, logs) {
+function runCycle(context, file, train, plan, logs, { fresh = false } = {}) {
 	const { root, topology } = context;
 	if (hasWork(plan)) {
 		timed(logs, "commit", () => {
@@ -123,7 +123,7 @@ function runCycle(context, file, train, plan, logs) {
 	const committed = readTrain(file, topology);
 	if (bindingProblems(root, topology, committed).length > 0) {
 		timed(logs, "present", () => {
-			const presentation = presentTrain(root, topology, committed, logs);
+			const presentation = presentTrain(root, topology, committed, logs, { fresh });
 			writeTrain(file, { ...committed, presentation }, topology);
 			console.log(renderPresentation(committed, presentation, logs));
 			if (!presentation.presentable) throw new SupervisorError(`ship: train "${train.id}" is not presentable; nothing was published`, 1);

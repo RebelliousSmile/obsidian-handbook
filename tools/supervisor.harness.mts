@@ -524,6 +524,64 @@ scenario("a validation that rewrites a tracked file makes the train not presenta
 	ok(world.supervise(["present"], { topology: clean }), "present");
 });
 
+// Phase 6: what a green validation was proved on is not proved again.
+
+/** A validation that records each run in a file of the world, outside every checkout. */
+function countingValidation(world: World, repo: string, exitCode = 0): string[] {
+	const file = resolve(world.tmp, `runs-${repo}.log`);
+	return nodeCommand(`require('node:fs').appendFileSync(${JSON.stringify(file)}, 'x'); process.exit(${exitCode})`);
+}
+
+function runsOf(world: World, repo: string): number {
+	const file = resolve(world.tmp, `runs-${repo}.log`);
+	return existsSync(file) ? readFileSync(file, "utf8").length : 0;
+}
+
+const EVIDENCE_REPOS = ["schema-in-the-mist", "obsidian-handbook", "lantern"];
+
+scenario("a re-presentation on the same files takes the green validations over and says so; --fresh and an old record run them again", (world) => {
+	const topology = testTopology(world, Object.fromEntries(EVIDENCE_REPOS.map((repo) => [repo, [countingValidation(world, repo)]])));
+	doneTrain(world);
+	ok(world.supervise(["present"], { topology }), "present");
+	assert.deepEqual(EVIDENCE_REPOS.map((repo) => runsOf(world, repo)), [1, 1, 1]);
+	for (const entry of readRecord(world).presentation.repos) assert.match(entry.evidence.key, /^[0-9a-f]{64}$/, "a green repository carries its key");
+
+	const again = ok(world.supervise(["present"], { topology }), "present again");
+	assert.deepEqual(EVIDENCE_REPOS.map((repo) => runsOf(world, repo)), [1, 1, 1], "nothing was run again");
+	assert.match(again, /\*\*reused\*\*: `[^`]+`.*proved at \d{4}-\d{2}-\d{2}T/, again);
+	assert.ok(!again.includes("passed:"), "a result taken over is not reported as passed");
+	assert.match(again, /\*\*Presentable\.\*\*/);
+
+	const fresh = ok(world.supervise(["present", "--fresh"], { topology }), "present --fresh");
+	assert.deepEqual(EVIDENCE_REPOS.map((repo) => runsOf(world, repo)), [2, 2, 2], "--fresh runs everything");
+	assert.ok(fresh.includes("passed:") && !fresh.includes("**reused**"), fresh);
+
+	// A record written before the evidence existed has no key: everything runs again.
+	const record = readRecord(world);
+	for (const entry of record.presentation.repos) delete entry.evidence;
+	writeFileSync(trainPath(world), JSON.stringify(record, null, "\t"));
+	ok(world.supervise(["present"], { topology }), "present on an old record");
+	assert.deepEqual(EVIDENCE_REPOS.map((repo) => runsOf(world, repo)), [3, 3, 3]);
+});
+
+scenario("only the repository whose files changed is validated again; a red result is never taken over", (world) => {
+	const topology = testTopology(world, Object.fromEntries(EVIDENCE_REPOS.map((repo) => [repo, [countingValidation(world, repo)]])));
+	doneTrain(world);
+	ok(world.supervise(["present"], { topology }), "present");
+	world.land("lantern", { "src/more.ts": "export {};\n" }, "Fix lantern");
+	const report = ok(world.supervise(["present"], { topology }), "present after a consumer fix");
+	assert.deepEqual(EVIDENCE_REPOS.map((repo) => runsOf(world, repo)), [1, 1, 2], "only lantern ran again");
+	assert.match(report, /## lantern[\s\S]*?passed:/);
+
+	const red = Object.fromEntries(EVIDENCE_REPOS.map((repo) => [repo, [countingValidation(world, repo, repo === "lantern" ? 3 : 0)]]));
+	const failing = testTopology(world, red, {}, "red-topology.json");
+	world.land("lantern", { "src/red.ts": "export {};\n" }, "Break lantern");
+	assert.equal(world.supervise(["present"], { topology: failing }).status, 1);
+	assert.equal(world.supervise(["present"], { topology: failing }).status, 1);
+	assert.equal(runsOf(world, "lantern"), 4, "a red result is run again each time");
+});
+
+
 /** A shell validation: `cmd /d /s /c` on Windows, `sh -c` elsewhere. Lines joined by the shell's own separator. */
 function shellCommand(lines: string[]): string[] {
 	return process.platform === "win32" ? ["cmd", "/d", "/s", "/c", lines.join(" & ")] : ["sh", "-c", lines.join("; ")];

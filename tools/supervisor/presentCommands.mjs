@@ -18,12 +18,12 @@ const TRAIN = { train: { type: "string" } };
 
 export const PRESENT_COMMANDS = {
 	present: {
-		usage: "present                                   validate every concerned repository and report, without publishing",
-		options: { ...TRAIN },
+		usage: "present [--fresh]                         validate every concerned repository and report, without publishing; --fresh validates again what a green presentation already proved",
+		options: { ...TRAIN, fresh: { type: "boolean" } },
 		run(context, values) {
 			const { train, file } = resolveTrain(context.root, context.topology, values.train);
 			const logs = trainLogs(context.root, context.topology, train.id);
-			const presentation = presentTrain(context.root, context.topology, train, logs);
+			const presentation = presentTrain(context.root, context.topology, train, logs, { fresh: Boolean(values.fresh) });
 			writeTrain(file, { ...train, presentation }, context.topology);
 			console.log(renderPresentation(train, presentation, logs));
 			return presentation.presentable ? 0 : 1;

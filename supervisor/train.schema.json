@@ -408,6 +408,10 @@
 										"notRun": {
 											"type": "string",
 											"minLength": 1
+										},
+										"reused": {
+											"type": "string",
+											"minLength": 1
 										}
 									}
 								}
@@ -427,6 +431,24 @@
 									"files": {
 										"type": "integer",
 										"minimum": 1
+									}
+								}
+							},
+							"evidence": {
+								"type": "object",
+								"additionalProperties": false,
+								"required": [
+									"key",
+									"provedAt"
+								],
+								"properties": {
+									"key": {
+										"type": "string",
+										"pattern": "^[0-9a-f]{64}$"
+									},
+									"provedAt": {
+										"type": "string",
+										"minLength": 1
 									}
 								}
 							},

@@ -28,12 +28,12 @@ function openTrainFile(context, values, label) {
 
 export const PUBLISH_COMMANDS = {
 	ship: {
-		usage: "ship [--message <text>] [--run]           show the whole cycle of a validated change; --run commits, presents, publishes, converges, releases and closes",
-		options: { train: { type: "string" }, message: { type: "string" }, run: { type: "boolean" } },
+		usage: "ship [--message <text>] [--fresh] [--run]  show the whole cycle of a validated change; --run commits, presents, publishes, converges, releases and closes",
+		options: { train: { type: "string" }, message: { type: "string" }, fresh: { type: "boolean" }, run: { type: "boolean" } },
 		run(context, values) {
 			const message = (values.message ?? "").trim();
 			if (values.message !== undefined && !message) throw new SupervisorError("ship: --message is empty", 2);
-			return shipTrain(context, openTrainFile(context, values, "ship"), { message, run: Boolean(values.run) });
+			return shipTrain(context, openTrainFile(context, values, "ship"), { message, run: Boolean(values.run), fresh: Boolean(values.fresh) });
 		},
 	},
 	publish: {
