@@ -26,6 +26,41 @@ export const pbtaNpcShape: BlockShape = {
 	],
 };
 
+export const pbtaTeamShape: BlockShape = {
+	block: "pbta-team",
+	root: "handbook-pbta-team",
+	zones: [
+		{ name: "identity", holds: "team name and epigraph" },
+		{ name: "start", holds: "getting started and setup lines", optional: true },
+		{ name: "choices", holds: "enemies, allies, maneuvers, assets and styles to tick" },
+		{ name: "improvement", holds: "improvement track and its options", optional: true },
+		{ name: "context", holds: "introduction written under the card", optional: true },
+	],
+};
+
+export const pbtaMonsterShape: BlockShape = {
+	block: "pbta-monster",
+	root: "handbook-pbta-monster",
+	zones: [
+		{ name: "identity", holds: "monster name, type and bestiary" },
+		{ name: "motivation", holds: "what the monster wants" },
+		{ name: "statblock", holds: "powers, attacks, harm, armour and weaknesses", optional: true },
+		{ name: "context", holds: "description written under the card", optional: true },
+	],
+};
+
+export const pbtaThreatShape: BlockShape = {
+	block: "pbta-threat",
+	root: "handbook-pbta-threat",
+	zones: [
+		{ name: "identity", holds: "threat name, type and mystery" },
+		{ name: "motivation", holds: "what the threat wants" },
+		{ name: "stages", holds: "steps of the plan to tick", optional: true },
+		{ name: "statblock", holds: "powers, attacks, harm, armour and weaknesses", optional: true },
+		{ name: "context", holds: "description written under the card", optional: true },
+	],
+};
+
 export const pbtaMoveShape: BlockShape = {
 	block: "pbta-move",
 	root: "handbook-pbta-move",

@@ -66,6 +66,9 @@ for (const testCase of manifest.cases) {
 for (const target of [
 	"masks-playbook",
 	"masks-npc",
+	"monster-of-the-week-team",
+	"monster-of-the-week-monster",
+	"monster-of-the-week-threat",
 	"monster-of-the-week-playbook",
 	"monsterhearts-playbook",
 	"urban-shadows-playbook",

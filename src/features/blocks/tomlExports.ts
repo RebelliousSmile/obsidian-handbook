@@ -41,6 +41,14 @@ import {
 	pbtaPlaybookToToml,
 } from "../pbta/block";
 import { pbtaNpcBlock, pbtaNpcToToml } from "../pbta/npc";
+import {
+	pbtaMonsterBlock,
+	pbtaMonsterToToml,
+	pbtaTeamBlock,
+	pbtaTeamToToml,
+	pbtaThreatBlock,
+	pbtaThreatToToml,
+} from "../pbta/motwBlocks";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -216,6 +224,30 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: pbtaNpcToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta npc contract"),
+	},
+	{
+		block: pbtaTeamBlock,
+		commandId: "copy-pbta-team-as-toml",
+		noun: "PbtA team",
+		toToml: pbtaTeamToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta team contract"),
+	},
+	{
+		block: pbtaMonsterBlock,
+		commandId: "copy-pbta-monster-as-toml",
+		noun: "PbtA monster",
+		toToml: pbtaMonsterToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta monster contract"),
+	},
+	{
+		block: pbtaThreatBlock,
+		commandId: "copy-pbta-threat-as-toml",
+		noun: "PbtA threat",
+		toToml: pbtaThreatToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta threat contract"),
 	},
 ];
 

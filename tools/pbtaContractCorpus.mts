@@ -12,6 +12,9 @@ export const PBTA_TARGET_TO_BLOCK = {
 	"urban-shadows-playbook": "pbta-playbook",
 	"the-sprawl-playbook": "pbta-playbook",
 	"masks-npc": "pbta-npc",
+	"monster-of-the-week-team": "pbta-team",
+	"monster-of-the-week-monster": "pbta-monster",
+	"monster-of-the-week-threat": "pbta-threat",
 } as const;
 
 export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
@@ -23,6 +26,13 @@ export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
 ] as const;
 
 export const PBTA_SPECIALIZED_NPC_TARGETS = ["masks-npc"] as const;
+
+/** Documents of their own, one block each: a team, a monster and a threat. */
+export const PBTA_SPECIALIZED_CARD_TARGETS = [
+	"monster-of-the-week-team",
+	"monster-of-the-week-monster",
+	"monster-of-the-week-threat",
+] as const;
 
 export type PbtaRenderTarget = keyof typeof PBTA_TARGET_TO_BLOCK;
 

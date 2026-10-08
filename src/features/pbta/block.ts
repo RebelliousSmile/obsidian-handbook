@@ -3,12 +3,14 @@ import {
 	stringifyMoveToml,
 	type MasksPlaybook,
 	type MonsterheartsPlaybook,
+	type MonsterOfTheWeekPlaybook,
 	type Move,
 	type UrbanShadowsPlaybook,
 } from "schema-pbta";
 import type { BrumesBlock } from "../blocks/types";
 import { renderPbtaMove, renderPbtaPlaybook } from "./renderer";
 import { renderMasksLayout } from "./masksLayout";
+import { renderMotwLayout } from "./motwLayout";
 import { renderMonsterheartsLayout } from "./monsterheartsLayout";
 import { renderUrbanShadowsLayout } from "./urbanShadowsLayout";
 import { pbtaMoveShape, pbtaPlaybookShape } from "./shape";
@@ -20,6 +22,9 @@ type PlaybookLayout = (resolved: ResolvedPbtaPlaybook, doc: Document, resolveIma
 const PLAYBOOK_LAYOUTS: Record<string, Record<string, PlaybookLayout>> = {
 	"masks": {
 		"masks-playbook": (resolved, doc, resolveImage) => renderMasksLayout(resolved.data as MasksPlaybook, doc, resolveImage),
+	},
+	"monster-of-the-week": {
+		"monster-of-the-week-playbook": (resolved, doc) => renderMotwLayout(resolved.data as MonsterOfTheWeekPlaybook, doc),
 	},
 	"monsterhearts": {
 		"monsterhearts-playbook": (resolved, doc, resolveImage) => renderMonsterheartsLayout(resolved.data as MonsterheartsPlaybook, doc, resolveImage),

@@ -2,9 +2,14 @@ import { PBTA_DOCUMENT_CODECS } from "schema-pbta";
 import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../../games/capabilities";
 import { PBTA_PROJECTED_TARGETS } from "./specializedPlaybooks";
 import { PBTA_NPC_PROJECTED_TARGETS } from "./npc";
+import { PBTA_MOTW_PROJECTED_TARGETS } from "./motwBlocks";
 
-/** Every specialised target Handbook resolves from a document alone: playbooks and non-player characters. */
-export const PBTA_ALL_PROJECTED_TARGETS: readonly string[] = [...PBTA_PROJECTED_TARGETS, ...PBTA_NPC_PROJECTED_TARGETS];
+/** Every specialised target Handbook resolves from a document alone: playbooks, non-player characters, teams, monsters and threats. */
+export const PBTA_ALL_PROJECTED_TARGETS: readonly string[] = [
+	...PBTA_PROJECTED_TARGETS,
+	...PBTA_NPC_PROJECTED_TARGETS,
+	...PBTA_MOTW_PROJECTED_TARGETS,
+];
 
 /**
  * Targets every PbtA game shares. Anything else a build carries is specialised:

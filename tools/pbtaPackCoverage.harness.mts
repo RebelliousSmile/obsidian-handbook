@@ -11,11 +11,13 @@ import { initGameRegistry } from "../src/games/registry";
 import { EMPTY_STYLE } from "../src/games/types";
 import { PBTA_PROJECTED_TARGETS } from "../src/features/pbta/specializedPlaybooks";
 import { PBTA_NPC_PROJECTED_TARGETS } from "../src/features/pbta/npc";
+import { PBTA_MOTW_PROJECTED_TARGETS } from "../src/features/pbta/motwBlocks";
 import { PBTA_SPECIALIZED_FIELDS } from "../src/features/pbta/renderer";
 import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../src/games/capabilities";
 import { loadPbtaProviderContract } from "./pbtaProviderContract.mts";
 import {
 	loadPbtaContractCases,
+	PBTA_SPECIALIZED_CARD_TARGETS,
 	PBTA_SPECIALIZED_NPC_TARGETS,
 	PBTA_SPECIALIZED_PLAYBOOK_TARGETS,
 	PBTA_TARGET_TO_BLOCK,
@@ -24,7 +26,7 @@ import {
 const cases = loadPbtaContractCases();
 const targets = Object.keys(PBTA_DOCUMENT_CODECS);
 const projectedPlaybooks = PBTA_PROJECTED_TARGETS as readonly string[];
-const projected = [...projectedPlaybooks, ...(PBTA_NPC_PROJECTED_TARGETS as readonly string[])];
+const projected = [...projectedPlaybooks, ...(PBTA_NPC_PROJECTED_TARGETS as readonly string[]), ...PBTA_MOTW_PROJECTED_TARGETS];
 /* A pack owns `<pack.id>-<type>`: the id is what precedes the last dash. */
 const ownerOf = (target: string): string => target.slice(0, target.lastIndexOf("-"));
 
@@ -104,7 +106,7 @@ for (const target of projectedPlaybooks) {
 
 /* The corpus helpers carry their own lists; pinning them here keeps the older harnesses from drifting. */
 assert.deepEqual(
-	[...PBTA_SPECIALIZED_PLAYBOOK_TARGETS, ...PBTA_SPECIALIZED_NPC_TARGETS].sort(),
+	[...PBTA_SPECIALIZED_PLAYBOOK_TARGETS, ...PBTA_SPECIALIZED_NPC_TARGETS, ...PBTA_SPECIALIZED_CARD_TARGETS].sort(),
 	[...projected].sort(),
 	"the corpus helper lists no longer match the targets Handbook resolves",
 );

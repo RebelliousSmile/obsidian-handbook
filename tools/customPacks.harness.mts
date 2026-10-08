@@ -470,7 +470,10 @@ async function run(): Promise<void> {
 		check("the PbtA non-player character is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-npc")!, settings));
 		check("the PbtA move is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-move")!, settings));
 		check("the unknown PbtA game exposes one handout", contents.handouts.map((block) => block.id).join(",") === "pbta-playbook");
-		check("the unknown PbtA game exposes all three code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-move,pbta-npc,pbta-playbook");
+		for (const id of ["pbta-team", "pbta-monster", "pbta-threat"]) {
+			check(`the ${id} block is available from manifest capabilities`, isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === id)!, settings));
+		}
+		check("the unknown PbtA game exposes all six code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-monster,pbta-move,pbta-npc,pbta-playbook,pbta-team,pbta-threat");
 		check("the unknown PbtA game exposes the four visual callouts of the schema", contents.callouts.filter((callout) => callout.capability === "style:pbta").length === 4);
 	}
 

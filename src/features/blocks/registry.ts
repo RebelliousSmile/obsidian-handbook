@@ -20,6 +20,7 @@ import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
 import { pbtaNpcBlock } from "../pbta/npc";
+import { pbtaMonsterBlock, pbtaTeamBlock, pbtaThreatBlock } from "../pbta/motwBlocks";
 import { rollerBlock } from "../rollers/block";
 import { openRollerContextMenu } from "../rollers/contextMenu";
 import {
@@ -50,6 +51,9 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	pbtaPlaybookBlock,
 	pbtaMoveBlock,
 	pbtaNpcBlock,
+	pbtaTeamBlock,
+	pbtaMonsterBlock,
+	pbtaThreatBlock,
 	rollerBlock,
 ];
 

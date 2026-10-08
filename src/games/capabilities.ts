@@ -11,7 +11,14 @@ export interface GameSupport {
 
 /** Capabilities any installed pack may opt into without its id being known here. */
 export const PORTABLE_GAME_PLUGIN_SUPPORT: GameSupport = {
-	blocks: ["block:pbta-playbook", "block:pbta-move", "block:pbta-npc"],
+	blocks: [
+		"block:pbta-playbook",
+		"block:pbta-move",
+		"block:pbta-npc",
+		"block:pbta-team",
+		"block:pbta-monster",
+		"block:pbta-threat",
+	],
 	styles: ["style:pbta"],
 	presentations: ["presentation:pbta-layout"],
 };

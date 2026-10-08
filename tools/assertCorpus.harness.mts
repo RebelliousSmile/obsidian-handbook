@@ -55,7 +55,7 @@ function fail(file: string, reason: string): void {
 
 /* ------------------------------------------------------------------ *
  * A document stub. The renderers touch createElement, appendChild,
- * classList.add, dataset and textContent, and nothing else.
+ * classList.add, dataset, setAttribute and textContent, and nothing else.
  * ------------------------------------------------------------------ */
 
 class El {
@@ -71,6 +71,11 @@ class El {
 		},
 	};
 	classes: string[] = [];
+	attributes: Record<string, string> = {};
+
+	setAttribute(name: string, value: string): void {
+		this.attributes[name] = value;
+	}
 
 	constructor(tagName: string) {
 		this.tagName = tagName;
