@@ -233,6 +233,12 @@ Tout ce qui est technique avance sans demander : cohérence des packs et des ver
 
 Restent à l'humain : les corrections, la validation elle-même, le code du superviseur, et toute suppression (branches, traces, fichiers).
 
+## Ce qu'une garde peut attendre d'un train
+
+Un train déplace la version d'un fournisseur, l'épingle de chaque consommateur et les tags qui vont avec. Une validation ou une vérification de convergence ne compare donc jamais l'une de ces valeurs à un chiffre écrit dans son script : elle lit la source qui la déclare (`package.json`, le lockfile, le manifeste ou l'enregistrement du train) et affirme que le rôle est tenu — l'épingle est une release finale du fournisseur, la version installée est celle de l'épingle, les octets publiés sont ceux que le lockfile enregistre. Ce qu'une garde ne peut pas lire lui arrive par un argument de sa commande dans la topologie, comme `--final` ; aucune ne devine l'étape du cycle par l'environnement.
+
+Dans Handbook, `pnpm assert:guards-by-role` (dans `pnpm check`) refuse un numéro de version, un tag ou une URL d'archive écrits en chiffres dans une garde de cette famille. Une donnée de test fermée garde son littéral et porte `guard-fixture: <raison>` sur sa ligne.
+
 ## Les trois fournisseurs
 
 | | `schema-pbta` | `schema-adrenaline` | `schema-in-the-mist` |

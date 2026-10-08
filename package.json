@@ -72,6 +72,7 @@
 		"assert:contextual-toml-export": "node tools/assert-contextual-toml-export.mjs",
 		"assert:contextual-pack-blocks": "node tools/assert-contextual-pack-blocks.mjs",
 		"supervise": "node tools/supervise.mjs",
+		"assert:guards-by-role": "node tools/assert-guards-by-role.mjs",
 		"assert:supervisor": "node tools/assert-supervisor.mjs"
 	},
 	"keywords": [

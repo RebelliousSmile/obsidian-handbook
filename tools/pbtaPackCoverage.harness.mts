@@ -156,8 +156,8 @@ assert.deepEqual(pbtaCoverageReport([{ id: "masks", requires: ["style:city-of-mi
 /* The settings check reads the registry, not the disk: what initGameRegistry accepts is what it reports. */
 const owner = projected[0].slice(0, projected[0].lastIndexOf("-playbook"));
 initGameRegistry([
-	{ pack: { id: owner, label: owner, style: EMPTY_STYLE }, installation: { version: "1.0.0", root: owner, minimumHandbookVersion: "0.0.1", requires: ["block:pbta-playbook"] } },
-	{ pack: { id: "silent", label: "silent", style: EMPTY_STYLE }, installation: { version: "1.0.0", root: "silent", minimumHandbookVersion: "0.0.1", requires: ["style:city-of-mist"] } },
+	{ pack: { id: owner, label: owner, style: EMPTY_STYLE }, installation: { version: "1.0.0", root: owner, minimumHandbookVersion: "0.0.1", requires: ["block:pbta-playbook"] } }, // guard-fixture: a made-up installation
+	{ pack: { id: "silent", label: "silent", style: EMPTY_STYLE }, installation: { version: "1.0.0", root: "silent", minimumHandbookVersion: "0.0.1", requires: ["style:city-of-mist"] } }, // guard-fixture: a made-up installation
 ]);
 const fromSettings = currentPbtaCoverage();
 assert.ok(fromSettings.packs.includes(owner), `the settings check ignores the installed pack ${owner}`);
@@ -174,7 +174,7 @@ assert.equal(
 	"the summary line disagrees with the findings it summarises",
 );
 initGameRegistry([
-	{ pack: { id: "adrenaline", label: "Adrenaline", style: EMPTY_STYLE }, installation: { version: "2.6.0", root: "adrenaline", minimumHandbookVersion: "0.0.1", requires: ["block:adrenaline-pj", "style:adrenaline"] } },
+	{ pack: { id: "adrenaline", label: "Adrenaline", style: EMPTY_STYLE }, installation: { version: "2.6.0", root: "adrenaline", minimumHandbookVersion: "0.0.1", requires: ["block:adrenaline-pj", "style:adrenaline"] } }, // guard-fixture: a made-up installation
 ]);
 assert.deepEqual(currentPbtaCoverage().packs, [], "an Adrenaline-only vault should not show PbtA coverage");
 

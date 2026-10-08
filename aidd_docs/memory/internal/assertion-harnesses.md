@@ -24,3 +24,13 @@ Deux pièges qui coûtent un aller-retour chacun (constatés le 2026-09-08) :
 
 - **Le script de bundling du harnais doit vivre à la racine du dépôt**, pas dans un dossier temporaire : écrit ailleurs, `node` ne résout pas `esbuild` et sort `ERR_MODULE_NOT_FOUND: Cannot find package 'esbuild'`.
 - **`log.warn` est muet par défaut.** `src/utils/logger.ts` démarre à `currentLogLevel = "error"` et `shouldLog` compare `LEVEL_ORDER[currentLogLevel] <= LEVEL_ORDER[level]` : un harnais qui affirme un avertissement doit appeler `log.setLevel("warn")` d'abord, sinon il mesure un silence et le prend pour un échec.
+
+## Une garde s'écrit par rôle, jamais par littéral
+
+Un train déplace des versions, des épingles et des tags : c'est son travail. Une garde qui compare l'un d'eux à un chiffre écrit dans sa source devient rouge parce que le train a fait ce qu'on lui demandait, et coûte un cycle.
+
+- Une garde qui mesure une épingle, une version ou un train **lit la source qui déclare la valeur** (`package.json`, `pnpm-lock.yaml`, manifeste ou enregistrement du train). `finalPin` de `tools/guardsByRole.mjs` rend le rôle « release finale qu'un consommateur épingle » : URL, version, integrity.
+- `pnpm assert:guards-by-role` refuse, dans les gardes de la table `GUARDS` du même module, un numéro de version à trois composantes, un tag de release et une URL d'archive de release écrits en chiffres. Une expression régulière sans chiffres figés n'est pas un littéral ; une ligne de commentaire seul n'est pas lue.
+- Une **donnée de test fermée** (une release close exercée pour elle-même, un pack inventé) garde son littéral et le dit sur la ligne même : `// guard-fixture: <raison>`. Un marqueur sans raison n'admet rien.
+- Une garde neuve de cette famille s'ajoute à `GUARDS`.
+- Si l'attendu d'une garde dépend de l'étape du cycle, l'étape lui arrive par un argument de sa commande dans la topologie (comme `--final`), jamais par une variable d'environnement.

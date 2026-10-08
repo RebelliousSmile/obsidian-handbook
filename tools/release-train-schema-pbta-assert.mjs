@@ -23,25 +23,28 @@ function run(command, args) {
 	}
 }
 
+/** The Obsidian host the candidate proof runs in. */
+export const PINNED_OBSIDIAN = "1.13.7"; // guard-fixture: the host the proof is pinned to, which no train moves
+
 export function runRealHostProof() {
 	if (!process.env.HANDBOOK_E2E_OBSIDIAN) {
-		throw new Error("PbtA candidate host proof requires HANDBOOK_E2E_OBSIDIAN pointing to pinned Obsidian 1.13.7; provision the host and xvfb-run before invoking release-train:assert");
+		throw new Error(`PbtA candidate host proof requires HANDBOOK_E2E_OBSIDIAN pointing to pinned Obsidian ${PINNED_OBSIDIAN}; provision the host and xvfb-run before invoking release-train:assert`);
 	}
 	run("pnpm", ["build"]);
 	run(process.execPath, ["tools/assert-plugin-bundle.mjs"]);
 	run("bash", ["tools/e2e/plugin-load-journey.sh"]);
-	return { obsidianVersion: "1.13.7", sha256: createHash("sha256").update(readFileSync("dist/main.js")).digest("hex") };
+	return { obsidianVersion: PINNED_OBSIDIAN, sha256: createHash("sha256").update(readFileSync("dist/main.js")).digest("hex") };
 }
 
 export function buildCandidateEvidence(manifest, consumer, proof, host) {
-	if (host.obsidianVersion !== "1.13.7" || !/^[a-f0-9]{64}$/.test(host.sha256)) throw new Error("host proof must identify pinned Obsidian 1.13.7 and the production bundle SHA-256");
+	if (host.obsidianVersion !== PINNED_OBSIDIAN || !/^[a-f0-9]{64}$/.test(host.sha256)) throw new Error(`host proof must identify pinned Obsidian ${PINNED_OBSIDIAN} and the production bundle SHA-256`);
 	return {
 		protocol: 1,
 		status: "passed",
 		candidate: manifest.candidate,
 		consumer: { role: consumer.role, repository: consumer.repository, ref: consumer.ref, resolved: { version: manifest.candidate.version, releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity } },
 		lock: { file: "pnpm-lock.yaml", releaseUrl: manifest.candidate.releaseUrl, integrity: manifest.candidate.integrity },
-		journey: { id: "schema-pbta-candidate-adoption", status: "passed", checks: [...proof.proofs, "production-build", "commonjs-plugin-build", "obsidian-load", "obsidian-1.13.7-plugin-load", `artifact-sha256:${host.sha256}`, `obsidian-version:${host.obsidianVersion}`] },
+		journey: { id: "schema-pbta-candidate-adoption", status: "passed", checks: [...proof.proofs, "production-build", "commonjs-plugin-build", "obsidian-load", `obsidian-${PINNED_OBSIDIAN}-plugin-load`, `artifact-sha256:${host.sha256}`, `obsidian-version:${host.obsidianVersion}`] },
 	};
 }
 

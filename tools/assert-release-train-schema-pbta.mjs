@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { buildCandidateEvidence, assertReleaseTrain } from "./release-train-schema-pbta-assert.mjs";
+import { buildCandidateEvidence, assertReleaseTrain, PINNED_OBSIDIAN } from "./release-train-schema-pbta-assert.mjs";
 
-const finalUrl = "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.4.3/schema-pbta-8.4.3.tgz";
-const candidateUrl = "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.4.3-rc.1/schema-pbta-8.4.3.tgz";
+const finalUrl = "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.4.3/schema-pbta-8.4.3.tgz"; // guard-fixture: the closed release the envelope is exercised on, not the pin
+const candidateUrl = "https://github.com/RebelliousSmile/schema-pbta/releases/download/v8.4.3-rc.1/schema-pbta-8.4.3.tgz"; // guard-fixture: the staged candidate of that closed release
 const sha256 = "1aa889767d8b737c5c05248099ba79dd9d4c5e32ce99e27927bbafd1ee6b93c4";
 const integrity = "sha512-ZMPKlxqMjZlfkLVQs/ufpGVBDtP9BXpee+C2hFX6ZknNSw7PMDPNIdCTmaXWe525kQouBpsi2HSrH0CguxxYaw==";
 /* The pin moves with every train: this archive is the 8.4.3 release the evidence envelope below is exercised on, not the current pin. */
@@ -16,16 +16,16 @@ assert.equal(`sha512-${createHash("sha512").update(bytes).digest("base64")}`, in
 
 // Exercise the evidence envelope in memory. A final consumer pin cannot be
 // rerun as a protocol-1 staged-candidate adoption without falsifying its lock.
-const candidate = { provider: "schema-pbta", releaseUrl: candidateUrl, sha256, integrity, version: "8.4.3", stagingTag: "v8.4.3-rc.1", finalTag: "v8.4.3", providerCommit: "06181fbe1e5fc1c33f85d30edfae2e1cb6581db1" };
+const candidate = { provider: "schema-pbta", releaseUrl: candidateUrl, sha256, integrity, version: "8.4.3", stagingTag: "v8.4.3-rc.1", finalTag: "v8.4.3", providerCommit: "06181fbe1e5fc1c33f85d30edfae2e1cb6581db1" }; // guard-fixture: the record of that closed release
 const consumer = { role: "handbook", repository: "RebelliousSmile/obsidian-handbook", ref: "a".repeat(40) };
-const host = { obsidianVersion: "1.13.7", sha256: createHash("sha256").update(readFileSync("dist/main.js")).digest("hex") };
+const host = { obsidianVersion: PINNED_OBSIDIAN, sha256: createHash("sha256").update(readFileSync("dist/main.js")).digest("hex") };
 const evidence = buildCandidateEvidence({ candidate }, consumer, { proofs: ["contract", "source-installer"] }, host);
 assert.equal(evidence.status, "passed");
 assert.deepEqual(evidence.lock, { file: "pnpm-lock.yaml", releaseUrl: candidateUrl, integrity });
-for (const check of ["production-build", "commonjs-plugin-build", "obsidian-load", "obsidian-1.13.7-plugin-load", `artifact-sha256:${host.sha256}`, "obsidian-version:1.13.7"]) {
+for (const check of ["production-build", "commonjs-plugin-build", "obsidian-load", `obsidian-${PINNED_OBSIDIAN}-plugin-load`, `artifact-sha256:${host.sha256}`, `obsidian-version:${PINNED_OBSIDIAN}`]) {
 	assert.ok(evidence.journey.checks.includes(check), `candidate evidence is missing ${check}`);
 }
-assert.throws(() => buildCandidateEvidence({ candidate }, consumer, { proofs: [] }, { ...host, obsidianVersion: "1.13.6" }), /pinned Obsidian/);
+assert.throws(() => buildCandidateEvidence({ candidate }, consumer, { proofs: [] }, { ...host, obsidianVersion: "1.13.6" }), /pinned Obsidian/); // guard-fixture: any host other than the pinned one
 
 const manifestPath = "tools/.release-train-schema-pbta-test.json";
 const evidencePath = `${manifestPath}.evidence.json`;

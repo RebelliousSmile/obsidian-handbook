@@ -28,7 +28,7 @@ try {
 	assert.deepEqual(readMistCandidateManifest(candidateManifestPath), { candidate, consumer });
 	for (const invalid of [
 		{ candidate: { ...candidate, releaseUrl: candidate.releaseUrl.replace("-rc.1", "") }, consumer },
-		{ candidate: { ...candidate, finalTag: "v0.0.0" }, consumer },
+		{ candidate: { ...candidate, finalTag: "v0.0.0" }, consumer }, // guard-fixture: a tag no release carries
 		{ candidate, consumer: { ...consumer, ref: "0".repeat(40) } },
 	]) {
 		writeFileSync(candidateManifestPath, JSON.stringify(invalid));

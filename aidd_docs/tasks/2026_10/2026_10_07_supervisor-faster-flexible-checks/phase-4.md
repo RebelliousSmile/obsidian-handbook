@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Gardes écrites par rôle
@@ -86,6 +86,22 @@ journey
 2. Écrire `tools/guardsByRole.harness.mts` sur le motif de bundling du dépôt, avec les cas du Test Scope ; déclarer `assert:guards-by-role` dans `package.json`.
 3. Ajouter la règle à `aidd_docs/memory/internal/assertion-harnesses.md` et à `doc/supervisor.fr.md`.
 4. Passer `rtk proxy pnpm build`, les deux portées de lint et `pnpm check` ; lancer les validations de la topologie dans chaque dépôt modifié.
+
+## Bilan (2026-10-08)
+
+Phase lancée sur une question (« il y a une phase 4 ? ») lue comme une demande d'implémentation, puis confirmée.
+
+**Handbook** — build, les deux lints et `pnpm check` complet forcé verts, `assert:guards-by-role` compris (13 gardes sans chiffre figé).
+
+- Tâche 1 : inventaire dans le tableau Decisions du plan.
+- Tâche 2 : `tools/assert-release-train-schema-adrenaline.mjs` réécrite avec `finalPin` ; version d'Obsidian en constante unique `PINNED_OBSIDIAN` dans `tools/release-train-schema-pbta-assert.mjs` ; marqueurs de fixture dans `assert-release-train-schema-pbta.mjs`, `assert-release-train-schema-in-the-mist.mjs` et `pbtaPackCoverage.harness.mts`.
+- Tâche 3 : `tools/guardsByRole.mjs`, `tools/assert-guards-by-role.mjs`, `tools/guardsByRole.harness.mts`, script `assert:guards-by-role`, règle dans `assertion-harnesses.md` et `doc/supervisor.fr.md`.
+
+**Fournisseur PbtA** — `npm run check` vert en entier. `tools/validate-package.ts` lit la version de contrat et le tag dans `src/contract-version` ; `tools/validate-handbook-packs.ts` et `tools/validate-handbook-install.ts` lisent le minimum d'hôte dans `tools/handbook-minimum-host.ts`. Commit local sur `main`, non poussé.
+
+**Rien à réécrire** dans Lantern ni dans les fournisseurs Adrenaline et Mist.
+
+**Écarts consignés au plan** : l'affirmation sha256 de la garde Adrenaline est retirée ; cette garde passe de rouge à verte ; le minimum d'hôte PbtA était surclassé par l'inventaire.
 
 ## Test acceptance criteria
 
