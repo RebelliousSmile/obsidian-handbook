@@ -122,7 +122,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(unlock);
 		return result;
 	},
-	/* The booklet is drawn for play, after creation: what is chosen once (influence options, backstory and relationship prompts) is not drawn. */
+	/* The booklet is drawn for play, after creation: what is chosen once (influence options) is not drawn. */
 	"masks-influence-options": () => null,
 	"masks-advances": (doc, id, data) => {
 		const advances = data.advancement ?? [];
@@ -172,8 +172,18 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(dl);
 		return result;
 	},
-	"masks-backstory": () => null,
-	"masks-relationships": () => null,
+	"masks-backstory": (doc, id, data) => {
+		if (!data.backstory?.length) return null;
+		const result = section(doc, id, regionOf(id).label);
+		for (const paragraph of data.backstory) result.appendChild(el(doc, "p", paragraph));
+		return result;
+	},
+	"masks-relationships": (doc, id, data) => {
+		if (!data.relationships?.length) return null;
+		const result = section(doc, id, regionOf(id).label);
+		result.appendChild(plainList(doc, data.relationships));
+		return result;
+	},
 	"masks-influence": (doc, id, data) => {
 		if (!data.influence?.length) return null;
 		const result = section(doc, id, regionOf(id).label);

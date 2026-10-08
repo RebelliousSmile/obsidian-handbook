@@ -187,7 +187,8 @@ assert.ok(bookRegions(book).every((node) => node.dataset.region !== "masks-illus
 
 /* The booklet is drawn for play: what is chosen at creation is not drawn, whatever the document carries. */
 const completeIds = bookRegions(book).map((node) => node.dataset.region);
-for (const id of ["masks-influence-options", "masks-backstory", "masks-relationships"]) assert.ok(completeIds.indexOf(id) < 0, `${id} is a creation choice and is not drawn`);
+assert.ok(completeIds.indexOf("masks-influence-options") < 0, "the influence options are a creation choice and are not drawn");
+for (const id of ["masks-backstory", "masks-relationships"]) assert.ok(completeIds.indexOf(id) >= 0, `${id} is drawn when filled`);
 const drivesNode = bookRegions(book).find((node) => node.dataset.region === "masks-drives");
 assert.ok(drivesNode, "the chosen Drive is drawn");
 assert.equal(drivesNode.walk().filter((node) => node.tag === "li").length, (sheet.drives?.options ?? []).filter((entry) => entry.checked).length, "only the chosen Drives");
