@@ -104,6 +104,18 @@ journey
 2. Documenter dans `doc/supervisor.fr.md` la composition de la clé, ce qui invalide une preuve, et `--fresh` ; ajouter `--fresh` à `references/supervisor.md` de la skill `ship-train` et, en une ligne, à `CLAUDE.md`.
 3. Passer `rtk proxy pnpm build`, les deux portées de lint et `pnpm check`.
 
+## Relevé de la tâche 1 (2026-10-08) : phase en attente
+
+Source : `urban-shadows-2e-contract.durations.jsonl`, train Urban Shadows 2E livré le 2026-10-08. **Ce train a tourné avec le superviseur de la phase 1 seule** (worktree arrêté avant la phase 2) : son enregistrement ne porte ni `packed` ni `linkedProviders`, et aucune étape de build ou d'empaquetage du fournisseur n'y est mesurée. La condition « un train réel livré après les phases 1 et 2 » n'est donc pas remplie ; les tâches 3 et suivantes ne sont pas commencées.
+
+| Présentation (UTC) | Ce qui avait changé | schema-pbta | lantern | Handbook | Étape | Aurait été repris |
+| --- | --- | --- | --- | --- | --- | --- |
+| 06:18, rouge | train commité dans Handbook | `npm run check` 82,7 s | 7 validations, 35,6 s | `pnpm check` rouge en 40,0 s | 176,9 s | rien : la présentation d'avant, interrompue, n'a rien enregistré |
+| 06:22, verte | aucun commit, dans aucun dépôt | 63,8 s | 28,1 s | 828,2 s, rejoué de droit (rouge juste avant) | 936,8 s | 91,9 s, soit 9,8 % |
+| 06:46, verte | un commit de `schema-pbta`, deux workflows hors paquet | 61,5 s, rejoué de droit (arbre changé) | 24,7 s | 0,7 s (tampon `full`) | 102,9 s | 24,7 s, soit 24 %, si l'empreinte empaquetée n'a pas bougé (non mesurée par ce train) |
+
+Lecture : sur ce train, la reprise aurait épargné environ deux minutes sur un cycle de trente-cinq. Le poste lourd, `pnpm check` de Handbook, est soit rejoué de droit, soit déjà repris par le tampon `full`. Une des deux re-présentations passe le seuil du dixième, l'autre le manque de peu : le relevé ne tranche pas, et il lui manque ce que la phase 2 a ajouté (build et empaquetage du fournisseur, validations contre l'archive liée). À refaire sur le premier train mené par le superviseur d'après la phase 2.
+
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |

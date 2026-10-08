@@ -1997,6 +1997,9 @@ scenario("the supervisor neither runs nor lands a change to its own code", (worl
 		const text = `${result.stdout}${result.stderr}`;
 		assert.equal(result.status, 1, `${what}: ${text}`);
 		assert.match(text, /the supervisor's own code differs from origin\/main/, what);
+		// The refusal says what is missing, not who has to do it.
+		assert.match(text, /commit and push it to origin\/main first/, what);
+		assert.doesNotMatch(text, /\bperson\b/, what);
 		return text;
 	};
 
@@ -2007,12 +2010,12 @@ scenario("the supervisor neither runs nor lands a change to its own code", (worl
 	assert.equal(originMain(world, "obsidian-handbook"), before, "the supervisor pushed its own change");
 	ok(world.supervise(["status"], { topology }), "status");
 
-	// Committed in the checkout but not published: still not the code a person pushed.
+	// Committed in the checkout but not published: still not the code on origin/main.
 	world.commit("obsidian-handbook", {}, "chore: widen the supervisor");
 	assert.match(refused(["commit", "obsidian-handbook", "--only"], "commit --only, unpublished"), /tools\/supervisor\/commit\.mjs \(committed, not on origin\/main\)/);
 	assert.equal(originMain(world, "obsidian-handbook"), before, "the supervisor pushed its own commit");
 
-	// Pushed by a person: the supervisor acts again. The train records never count as its code.
+	// Pushed: the supervisor acts again. The train records never count as its code.
 	git(world.dir("obsidian-handbook"), "push", "--quiet", "origin", "HEAD:main");
 	world.write("obsidian-handbook", { "supervisor/trains/draft.json": "{}\n", "src/pj.ts": "export {};\n" });
 	ok(world.supervise(["commit", "obsidian-handbook", "--only", "--message", "feat(adrenaline-pj): print the Malus column"], { topology }), "commit --only");

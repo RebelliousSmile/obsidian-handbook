@@ -1,11 +1,11 @@
 /**
- * The supervisor only acts as the code a person published.
+ * The supervisor only acts as the code published on `origin/main`.
  *
  * It commits and pushes in every repository of the train, so a change to its
  * own code is a change to what it may do. Before any command but `status`,
  * its code in the checkout must be the one on `origin/main`: an edit that
- * was not committed and pushed by a person can neither run a write nor land
- * itself through `commit`.
+ * was not committed and pushed first can neither run a write nor land itself
+ * through `commit`.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -76,7 +76,7 @@ export function assertSelfPublished(root, topology) {
 	}
 	if (problems.length === 0) return;
 	throw new SupervisorError(
-		`the supervisor's own code differs from origin/main\n  ${problems.join("\n  ")}\n  a person commits and pushes it first: the supervisor neither runs nor lands a change to itself`,
+		`the supervisor's own code differs from origin/main\n  ${problems.join("\n  ")}\n  commit and push it to origin/main first: the supervisor neither runs nor lands a change to itself`,
 		1,
 	);
 }

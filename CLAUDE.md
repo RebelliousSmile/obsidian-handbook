@@ -60,6 +60,8 @@ Pas de vitest/jest et pas question d'en ajouter : les preuves sont des harnais `
 - **Flux inter-dépôts** (`.codex/rules/00-architecture/0-cross-repo-contract-flow.md`) : contrat et sémantique de présentation vivent dans les paquets `schema-*` ; étendre le schéma **avant** le travail consommateur et le **publier avant** de l'adopter ; menus pilotés par les métadonnées publiées ; aucun repli sémantique local.
 - **Tolérance asymétrique** envers l'amont : un ajout amont non encore branché est un constat (build vert) ; une régression de ce que Handbook *déclare*, ou une incohérence interne d'un tarball épinglé, est un échec dur. Les compteurs sur les déclarations de Handbook restent des égalités, ceux sur les corpus amont des planchers.
 - Une exigence qui porte sur un checkout propre (CI) s'affirme par un `assert:*` : les workflows ne tournent jamais en local.
+- **Une garde affirme un rôle, jamais un chiffre** : une validation lit la version, l'épingle ou le tag dans la source qui les déclare ; `pnpm assert:guards-by-role` refuse le littéral (`doc/supervisor.fr.md`, « Ce qu'une garde peut attendre d'un train »).
+- **Un échec du superviseur se lit dans le journal complet** que nomme la ligne `Whole output:` (`<git-dir>/supervisor-logs/<train>/`), jamais dans la fin de sortie reprise par le rapport.
 - Vérifier une phase terminée, c'est croiser son fichier **et** le tableau Decisions du `plan.md`.
 
 ## Nommage : ne pas renommer

@@ -112,6 +112,26 @@ journey
 2. Comparer au dernier train PbtA et écrire le résultat dans le tableau Decisions du plan.
 3. Si un cycle a encore été perdu, nommer sa cause et l'ouvrir comme constat, sans rouvrir ce plan.
 
+## Relevé (2026-10-08) : tâches 1 à 4 faites, tâche 5 en attente
+
+| Tâche | État | Où |
+| ----- | ---- | -- |
+| 1 | faite | `references/failures.md` de la skill ; message et en-tête de `tools/supervisor/self.mjs` ; le scénario « the supervisor neither runs nor lands a change to its own code » affirme le nouveau message et l'absence du mot « person » |
+| 2 | faite | `references/bounds.md` : sections « Validation scripts » et « Supervisor code », limites de boucle inchangées |
+| 3 | faite | `actions/05-ship.md`, `actions/06-repair.md`, `references/supervisor.md`, `SKILL.md`, `evals/ship-train-scenarios.md` (S5 réécrit, S18 à S23 ajoutés) |
+| 4 | faite | `doc/supervisor.fr.md` (cinq passages), `CLAUDE.md` (deux règles), `ci-and-release.md`, `supervisor-windows.md` |
+| 5 | en attente | un train réel livré après ces phases |
+
+Écarts et constats :
+
+- Les cas d'évaluation de la skill sont écrits, pas joués : le critère « tous les cas passent » de la tâche 3 reste à prouver par une passe d'évaluation.
+- `--fresh` n'est pas décrit dans la skill : la phase 6 n'a rien livré.
+- `doc/supervisor.en.md` n'a aucune des sections des phases 1 à 5 et dit encore « by a person » ; le plan ne nomme que la version française, elle n'a pas été touchée.
+- La skill vit hors de tout dépôt (`~/.claude/skills/ship-train/`) : ses changements ne sont dans aucun commit.
+- Le harnais du superviseur compare l'état du checkout avant et après son passage : éditer un fichier suivi pendant `pnpm check` le fait rougir sur « the harness left files in the Handbook checkout ».
+
+Le `status` reste `pending` jusqu'à la tâche 5.
+
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |

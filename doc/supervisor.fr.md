@@ -85,7 +85,7 @@ pnpm supervise commit schema-pbta --root ../train
 
 `worktree <dir>` crée un worktree lié par dépôt sous `<dir>/<path>`, détaché sur `origin/main` (git ne garde `main` que dans un seul checkout), puis lance l'installation gelée de chacun, nécessaire aux validations (`--no-install` la saute). Tout refus arrive avant la première création : un dépôt absent, un `fetch` en échec, un dossier cible déjà là. Ensuite, toute commande prend `--root <dir>` et travaille là, sans toucher aux checkouts habituels ni à leur travail non commité. Le travail du train se prépare dans ces worktrees. Dans un worktree lié, `commit` et les écritures du superviseur acceptent une branche autre que `main` ou une tête détachée, et poussent `HEAD:main` ; ils exigent toujours d'être au niveau de `origin/main`. Le superviseur ne supprime jamais un worktree : `git worktree remove <dir>` reste un geste humain.
 
-**Le superviseur ne se modifie pas lui-même.** Toute commande sauf `status` refuse de tourner si son propre code diffère de `origin/main` : `tools/supervise.mjs`, `tools/supervisor/`, ses harnais (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` hors dossiers de train, et le script `supervise` de `package.json`. Un changement du superviseur est commité et poussé à la main, par une personne, avant que le superviseur n'agisse de nouveau.
+**Le superviseur ne se modifie pas lui-même.** Toute commande sauf `status` refuse de tourner si son propre code diffère de `origin/main` : `tools/supervise.mjs`, `tools/supervisor/`, ses harnais (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` hors dossiers de train, et le script `supervise` de `package.json`. Un changement du superviseur se répare comme tout autre code, se prouve par `pnpm assert:supervisor`, puis est commité et poussé sur `origin/main` avant que le superviseur n'agisse de nouveau : le superviseur ne le pose jamais lui-même, ni par `commit` ni par `ship`.
 
 ### 4. `ship` : valider, et tout publier
 
@@ -220,7 +220,8 @@ Le dossier de train, lui, ne porte aucun de ces chemins : il est commité, et il
 | | Ce qui est concerné |
 | --- | --- |
 | **Automatique** | observation des dépôts et des pins (`status`, `next`) ; validations et vérifications derrière le garde (`present`, `converge`) ; une fois `ship --run` lancé, tout le traitement du train : commit et push du changement préparé, présentation, dispatchs, promotions locales, adoption de la candidate puis de la finale par Handbook et Lantern, manifestes et records de train, tag final de `schema-adrenaline`, registre de fournisseurs de Lantern, fichier de convergence de `schema-in-the-mist`, convergence ; tag et release de Lantern puis de Handbook ; commentaires et fermeture des issues |
-| **Humain** | les corrections, avec la version et le `CHANGELOG` des consommateurs ; la validation, qui consiste à lancer `ship` ; le code du superviseur, commité et poussé à la main ; toute suppression (branches, tags, fichiers) |
+| **Humain** | les corrections, avec la version et le `CHANGELOG` des consommateurs ; la validation, qui consiste à lancer `ship` ; toute suppression (branches, tags, fichiers) |
+| **Hors du superviseur** | son propre code : corrigé, prouvé par `pnpm assert:supervisor`, commité et poussé sur `origin/main` avant qu'il ne tourne de nouveau |
 | **Jamais dans une validation** | toute release, tout dispatch de workflow, tout `git push` et tout `git tag`, toute écriture via `gh api`. Les validations de `present` et les vérifications de `converge` passent sous le garde, et chaque maillon revérifie la présentation avant chaque pas |
 
 Un arrêt de la chaîne n'est pas un geste prévu : c'est un échec nommé (checkout sale ou divergent, run rouge, run réussi sans résultat), à corriger avant de relancer `ship --run`.
@@ -229,9 +230,9 @@ Un arrêt de la chaîne n'est pas un geste prévu : c'est un échec nommé (chec
 
 La validation porte sur **le rendu et le comportement** : la fiche ou la fonctionnalité est-elle celle qui était voulue ? Elle se juge avant `ship`, dans le coffre et dans chaque consommateur (`preview`). Elle ne porte pas sur la mécanique de contrôle.
 
-Tout ce qui est technique avance sans demander : cohérence des packs et des versions, épingles et SRI, protocoles de release-train, validations de `pnpm check` / `npm run check`, CI des fournisseurs. Une validation rouge se corrige, dans le code ou dans la validation elle-même quand c'est elle qui est fausse, puis `ship --run` se relance. Elle ne se contourne jamais : pas de validation désactivée, pas de garde écarté. Le compte rendu vient après coup, dans le rapport de `present`.
+Tout ce qui est technique avance sans demander : cohérence des packs et des versions, épingles et SRI, protocoles de release-train, validations de `pnpm check` / `npm run check`, CI des fournisseurs. Une validation rouge se corrige dans le code. Elle se corrige dans la validation elle-même dans un seul cas : elle compare à un chiffre une valeur que le train déplace, et ce chiffre est remplacé par la lecture de la source qui la déclare (voir [Ce qu'une garde peut attendre d'un train](#ce-quune-garde-peut-attendre-dun-train)). Puis `ship --run` se relance. Une validation ne se contourne jamais : pas de validation désactivée, pas d'affirmation retirée, pas de comparateur ni de seuil changé, pas de garde écarté. Un défaut du superviseur se corrige de même, preuve à l'appui (`pnpm assert:supervisor`), et son code est poussé avant la relance. Le compte rendu vient après coup, dans le rapport de `present`.
 
-Restent à l'humain : les corrections, la validation elle-même, le code du superviseur, et toute suppression (branches, traces, fichiers).
+Restent à l'humain : les corrections, la validation elle-même, et toute suppression (branches, traces, fichiers). La garde de publication et les workflows ne se modifient pas pour faire passer un train.
 
 ## Ce qu'une garde peut attendre d'un train
 
@@ -260,6 +261,9 @@ Si l'empreinte a changé, ou si le commit présenté ne descend pas de celui de 
 ## En cas de problème
 
 - **« the repositories are not ready »** : un checkout n'est pas propre ou pas sur `origin/main`. La commande à lancer est affichée.
+- **« the supervisor's own code differs from origin/main »** : le code du superviseur a un changement non commité, ou un commit non poussé. Passer `pnpm assert:supervisor`, commiter, pousser, puis relancer.
+- **Validation `not run`** : elle n'a pas été lancée, et la raison nomme l'échec en amont (construction ou empaquetage d'un fournisseur). C'est lui qui se corrige.
+- **Un rouge dont le rapport ne montre que la fin** : ouvrir le fichier de la ligne `Whole output:` (voir [Lire un échec](#lire-un-échec-journaux-et-durées)).
 - **« supervisor guard: … is refused »** : une validation tente de publier. C'est la validation qu'il faut corriger, pas le garde.
 - **Présentation dépassée** (« presentation of train … does not hold ») : un commit hors `trainFiles`, ou une URL de release inconnue du train, est arrivé sur un dépôt. Relancer `ship --run`, qui présente à nouveau.
 - **Run retenu par des relecteurs** (« run … is waiting ») : l'environnement `release` du dépôt a encore des relecteurs requis. Les retirer dans les réglages GitHub du dépôt, puis relancer `ship --run`.
