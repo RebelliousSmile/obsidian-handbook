@@ -35,13 +35,6 @@ function checkbox(doc: Document, checked: boolean, label: string): HTMLInputElem
 	return input;
 }
 
-/** A blank to fill in at the table: room to write, no choices. */
-function fill(doc: Document): HTMLElement {
-	const result = el(doc, "span");
-	result.classList.add("handbook-masks-fill");
-	return result;
-}
-
 function signed(value: number): string {
 	return value > 0 ? `+${value}` : String(value);
 }
@@ -129,12 +122,8 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		result.appendChild(unlock);
 		return result;
 	},
-	"masks-influence-options": (doc, id, data) => {
-		if (!data.influenceOptions?.length) return null;
-		const result = section(doc, id, regionOf(id).label);
-		result.appendChild(plainList(doc, data.influenceOptions));
-		return result;
-	},
+	/* The booklet is drawn for play, after creation: what is chosen once (influence options, backstory and relationship prompts) is not drawn. */
+	"masks-influence-options": () => null,
 	"masks-advances": (doc, id, data) => {
 		const advances = data.advancement ?? [];
 		if (advances.length === 0 && data.potentialMax === undefined) return null;
@@ -157,45 +146,34 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		return result;
 	},
 	"masks-drives": (doc, id, data) => {
-		if (!data.drives) return null;
+		const chosen = (data.drives?.options ?? []).filter((entry) => entry.checked === true);
+		if (chosen.length === 0) return null;
 		const result = section(doc, id, regionOf(id).label);
-		for (const paragraph of data.drives.intro ?? []) result.appendChild(el(doc, "p", paragraph));
-		result.appendChild(checks(doc, data.drives.options.map((entry) => ({ label: entry.label, checked: entry.checked === true }))));
+		result.appendChild(checks(doc, chosen.map((entry) => ({ label: entry.label, checked: true }))));
 		return result;
 	},
 	"masks-identity": (doc, id, data) => {
-		const result = section(doc, id, regionOf(id).label);
-		const dl = el(doc, "dl");
 		const lines: Array<[string, string | undefined]> = [
 			["Nom réel", data.realName],
 			["Capacités", data.abilities],
 			["Attitude", data.demeanor],
 		];
-		for (const [label, value] of lines) {
+		const filled = lines.filter((line) => line[1]);
+		if (filled.length === 0) return null;
+		const result = section(doc, id, regionOf(id).label);
+		const dl = el(doc, "dl");
+		for (const [label, value] of filled) {
 			const row = el(doc, "div");
 			row.classList.add("handbook-masks-row");
 			row.appendChild(el(doc, "dt", label));
-			const cell = el(doc, "dd");
-			if (value) cell.textContent = value;
-			else cell.appendChild(fill(doc));
-			row.appendChild(cell);
+			row.appendChild(el(doc, "dd", value));
 			dl.appendChild(row);
 		}
 		result.appendChild(dl);
 		return result;
 	},
-	"masks-backstory": (doc, id, data) => {
-		if (!data.backstory?.length) return null;
-		const result = section(doc, id, regionOf(id).label);
-		for (const paragraph of data.backstory) result.appendChild(el(doc, "p", paragraph));
-		return result;
-	},
-	"masks-relationships": (doc, id, data) => {
-		if (!data.relationships?.length) return null;
-		const result = section(doc, id, regionOf(id).label);
-		result.appendChild(plainList(doc, data.relationships));
-		return result;
-	},
+	"masks-backstory": () => null,
+	"masks-relationships": () => null,
 	"masks-influence": (doc, id, data) => {
 		if (!data.influence?.length) return null;
 		const result = section(doc, id, regionOf(id).label);
@@ -228,9 +206,6 @@ export function renderMasksLayout(data: MasksPlaybook, doc: Document, resolveIma
 		faceNode.dataset.face = face.id;
 		const header = (RENDERERS as Partial<Record<string, Renderer>>)[face.header]?.(doc, face.header, data, resolveImage);
 		if (header) faceNode.appendChild(header);
-		const layoutRow = el(doc, "div");
-		layoutRow.classList.add("handbook-masks-layout-row");
-		layoutRow.dataset.row = "1";
 		for (const [columnIndex, ids] of face.columns.entries()) {
 			const column = el(doc, "div");
 			column.classList.add("handbook-masks-column");
@@ -240,9 +215,8 @@ export function renderMasksLayout(data: MasksPlaybook, doc: Document, resolveIma
 				const region = renderer?.(doc, id, data, resolveImage);
 				if (region) column.appendChild(region);
 			}
-			layoutRow.appendChild(column);
+			faceNode.appendChild(column);
 		}
-		faceNode.appendChild(layoutRow);
 		root.appendChild(faceNode);
 	}
 	return root;

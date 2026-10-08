@@ -155,7 +155,7 @@ for (const node of bookRegions(book)) {
 	const region = playbookContract.regions.find((entry) => entry.id === node.dataset.region);
 	assert.ok(region, `region ${node.dataset.region} is published`);
 	assert.equal(node.dataset.primitive, region.primitive, `data-primitive of ${region.id}`);
-	if (["boxes", "list", "key-value"].indexOf(region.primitive) >= 0 || region.id === "masks-labels" || region.id === "masks-moment-of-truth" || region.id === "masks-backstory") {
+	if (["boxes", "list", "key-value"].indexOf(region.primitive) >= 0 || region.id === "masks-labels" || region.id === "masks-moment-of-truth") {
 		assert.equal(node.children[0]?.textContent, region.label, `label of ${region.id}`);
 	}
 }
@@ -185,14 +185,19 @@ assert.equal(unlock?.walk().filter((node) => node.tag === "input")[0].checked, s
 /* No illustration in the document: the column is empty and nothing throws. */
 assert.ok(bookRegions(book).every((node) => node.dataset.region !== "masks-illustration"), "no illustration without playbookImage");
 
-/* Blank booklet: boxes empty, three identity lines to fill, no region without data. */
+/* The booklet is drawn for play: what is chosen at creation is not drawn, whatever the document carries. */
+const completeIds = bookRegions(book).map((node) => node.dataset.region);
+for (const id of ["masks-influence-options", "masks-backstory", "masks-relationships"]) assert.ok(completeIds.indexOf(id) < 0, `${id} is a creation choice and is not drawn`);
+const drivesNode = bookRegions(book).find((node) => node.dataset.region === "masks-drives");
+assert.ok(drivesNode, "the chosen Drive is drawn");
+assert.equal(drivesNode.walk().filter((node) => node.tag === "li").length, (sheet.drives?.options ?? []).filter((entry) => entry.checked).length, "only the chosen Drives");
+const identityDrawn = bookRegions(book).find((node) => node.dataset.region === "masks-identity");
+assert.equal(identityDrawn?.walk().filter((node) => node.tag === "dt").length, 3, "the filled identity lines are drawn");
+
+/* Blank booklet: boxes empty, no region without data, no line to fill. */
 const blankBook = rendered("masks-playbook-blank", "masks");
 const blankBookIds = bookRegions(blankBook).map((node) => node.dataset.region);
-const identityNode = bookRegions(blankBook).find((node) => node.dataset.region === "masks-identity");
-assert.ok(identityNode, "identity is always emitted");
-assert.equal(identityNode.walk().filter((node) => node.tag === "dt").length, 3, "three identity lines");
-assert.equal(identityNode.walk().filter((node) => node.classes.has("handbook-masks-fill")).length, 3, "three lines to fill");
-for (const id of ["masks-conditions", "masks-backstory", "masks-moves", "masks-drives"]) assert.ok(blankBookIds.indexOf(id) < 0, `${id} is not emitted empty`);
+for (const id of ["masks-conditions", "masks-backstory", "masks-moves", "masks-drives", "masks-identity"]) assert.ok(blankBookIds.indexOf(id) < 0, `${id} is not emitted empty`);
 assert.equal(blankBook.walk().filter((node) => node.dataset.marked === "true").length, 0, "a sheet without ranges marks no notch");
 assert.equal(blankBook.walk().filter((node) => node.tag === "input" && node.checked).length, 0, "a blank sheet has no filled box");
 
