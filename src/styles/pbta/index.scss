@@ -100,11 +100,17 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.brumes--urban-shadows :is(.handbook-urban-shadows-checks, .handbook-urban-shadows-lozenges) {
+/* The lozenge list keeps the pack's own marker; a check list has none, its box is the marker. */
+.brumes--urban-shadows .handbook-urban-shadows-checks {
 	list-style: none;
 
 	li { list-style: none; }
 	li::marker { content: none; }
+}
+
+.brumes--urban-shadows :is(.handbook-urban-shadows-checks, .handbook-urban-shadows-lozenges) li::before {
+	content: none;
+	display: none;
 }
 
 .brumes--urban-shadows .handbook-urban-shadows-move {
