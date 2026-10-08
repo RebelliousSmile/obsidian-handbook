@@ -257,7 +257,17 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		if (!circles.length && !first.length && !later.length) return null;
 		const result = section(doc, id, regionLabel(id));
 		paragraphs(doc, result, data.editorial.progression.paragraphs);
-		if (circles.length) result.appendChild(marks(doc, "ring", circles.map((key) => ({ key, value: data.stats[key] ?? 0 }))));
+		if (circles.length) {
+			const grid = el(doc, "div");
+			grid.classList.add("handbook-urban-shadows-circle-marks");
+			for (const key of circles) {
+				const cell = el(doc, "label");
+				cell.appendChild(el(doc, "span", statLabel(key)));
+				cell.appendChild(checkbox(doc, false, statLabel(key)));
+				grid.appendChild(cell);
+			}
+			result.appendChild(grid);
+		}
 		if (first.length) result.appendChild(checks(doc, first.map((entry) => ({ label: entry.label, checked: entry.checked === true }))));
 		if (later.length) {
 			const block = el(doc, "div");
