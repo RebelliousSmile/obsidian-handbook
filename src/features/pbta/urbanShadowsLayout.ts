@@ -298,10 +298,17 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		const attributes = Object.keys(data.attributes ?? {});
 		if (!questions.length && !profiles.length && !sets.length && !attributes.length) return null;
 		const result = section(doc, id, regionLabel(id));
-		for (const question of questions) {
-			result.appendChild(el(doc, "h4", question.label));
+		if (questions.length) {
 			const list = el(doc, "ul");
-			for (const option of question.options) list.appendChild(el(doc, "li", typeof option === "string" ? option : option.label));
+			list.classList.add("handbook-urban-shadows-creation-list");
+			for (const question of questions) {
+				const item = el(doc, "li");
+				item.appendChild(el(doc, "strong", question.label)).classList.add("handbook-urban-shadows-name");
+				const options = question.options.map((option) => typeof option === "string" ? option : option.label);
+				if (options.length) item.appendChild(el(doc, "span", options.join(" · "))).classList.add("handbook-urban-shadows-property");
+				item.appendChild(el(doc, "span")).classList.add("handbook-urban-shadows-fill");
+				list.appendChild(item);
+			}
 			result.appendChild(list);
 		}
 		for (const profile of profiles) {
