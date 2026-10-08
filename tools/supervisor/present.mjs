@@ -15,6 +15,11 @@
  * files its package publishes are what its consumers are validated against
  * (`providerLinks.mjs`), and their fingerprint is written beside its commit.
  *
+ * A checkout is clean when the validations start, and must be clean when they
+ * end: a validation or a packaging that rewrites a tracked file (a generator
+ * that overwrites a committed output) leaves a commit that does not hold what
+ * the package publishes, so the train is not presentable.
+ *
  * The whole output of each command is kept beside the train (`logs.mjs`), and
  * the report names it for every failure. The record keeps the duration of a
  * validation, never the path of its log: a record is committed, a log is local.
@@ -42,6 +47,31 @@ function checkPreconditions(root, topology, train, repos) {
 	return checkCheckouts(root, repos, "present");
 }
 
+/** What differs in the checkout from its commit, as `git status --porcelain` lines. The coordinator's train records are not a change. */
+function changedFiles(dir, repo) {
+	const pathspec = repo.role === "coordinator" ? ["--", ".", `:(exclude)${TRAINS_PATH}`] : [];
+	return gitOut(dir, ["status", "--porcelain", ...pathspec]).split(/\r?\n/).filter((line) => line.trim());
+}
+
+/** Per repository, the files the packaging and the validations changed in a checkout they found clean. */
+function leftChanged(root, repos) {
+	const reasons = [];
+	for (const repo of repos) {
+		const dir = repoDir(root, repo);
+		// By content, not by `status`: with `autocrlf` a generator that rewrites a file with the same content
+		// in another line ending leaves it listed as modified, and it is not a change.
+		const pathspec = repo.role === "coordinator" ? ["--", ".", `:(exclude)${TRAINS_PATH}`] : [];
+		const changed = [
+			...gitOut(dir, ["diff", "--name-only", "HEAD", ...pathspec]).split(/\r?\n/),
+			...gitOut(dir, ["ls-files", "--others", "--exclude-standard", ...pathspec]).split(/\r?\n/),
+		].filter((file) => file.trim());
+		if (changed.length === 0) continue;
+		const shown = changed.slice(0, 8).join(", ") + (changed.length > 8 ? `, and ${changed.length - 8} more` : "");
+		reasons.push(`${repo.id}: its packaging or its validations changed ${changed.length} file(s) of the checkout: ${shown}; a generator that overwrites a committed file means the commit does not hold what is published: commit what it generates, then present again`);
+	}
+	return reasons;
+}
+
 /**
  * Every checkout clean and at origin/main, after a fetch: the SHAs a command
  * reports are then the ones GitHub has. The coordinator's train records are
@@ -59,8 +89,7 @@ export function checkCheckouts(root, repos, label) {
 		fetchOrigin(dir);
 		const head = revParse(dir, "HEAD");
 		const originMain = revParse(dir, "origin/main");
-		const pathspec = repo.role === "coordinator" ? ["--", ".", `:(exclude)${TRAINS_PATH}`] : [];
-		const dirty = gitOut(dir, ["status", "--porcelain", ...pathspec]);
+		const dirty = changedFiles(dir, repo).join(" ");
 		if (dirty) problems.push(`${repo.id}: uncommitted changes in ${dir}; commit or stash them`);
 		if (!originMain) problems.push(`${repo.id}: origin/main is unknown in ${dir}`);
 		else if (head !== originMain) {
@@ -189,6 +218,7 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 		return entry;
 	});
 	const reasons = [...buildFailures];
+	reasons.push(...leftChanged(root, repos));
 	for (const entry of entries) {
 		if (entry.validations.length === 0) reasons.push(`${entry.repo}: no local validation is configured in the topology`);
 		for (const validation of entry.validations.filter((result) => result.status !== 0)) {

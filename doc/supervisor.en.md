@@ -85,7 +85,7 @@ pnpm supervise commit schema-pbta --root ../train
 
 `worktree <dir>` creates one linked worktree per repository under `<dir>/<path>`, detached at `origin/main` (git keeps `main` in a single checkout), then runs each one's frozen install, which the validations need (`--no-install` skips it). Every refusal comes before the first creation: a missing repository, a failed `fetch`, a target directory that already exists. After that, any command takes `--root <dir>` and works there, leaving the usual checkouts and their uncommitted work alone. The work of the train is prepared in those worktrees. In a linked worktree, `commit` and the supervisor's own writes accept a branch other than `main` or a detached head, and push `HEAD:main`; they still require being level with `origin/main`. The supervisor never removes a worktree: `git worktree remove <dir>` stays a human act.
 
-**The supervisor does not change itself.** Every command but `status` refuses to run when its own code differs from `origin/main`: `tools/supervise.mjs`, `tools/supervisor/`, its harnesses (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` outside the train records, and the `supervise` script of `package.json`. A change to the supervisor is committed and pushed by hand, by a person, before the supervisor acts again.
+**The supervisor does not change itself.** Every command but `status` refuses to run when its own code differs from `origin/main`: `tools/supervise.mjs`, `tools/supervisor/`, its harnesses (`tools/assert-supervisor.mjs`, `tools/supervisor*.harness.mts`, `tools/fixtures/supervisor/`), `supervisor/` outside the train records, and the `supervise` script of `package.json`. A change to the supervisor is repaired like any other code, proven by `pnpm assert:supervisor`, then committed and pushed to `origin/main` before the supervisor acts again: the supervisor never lands it itself, neither through `commit` nor through `ship`.
 
 ### 4. `ship`: validate, and publish everything
 
@@ -108,6 +108,8 @@ Before the first commit, `ship` refuses a closed train, a repository engaged by 
 
 Without `--run`, `ship` prints the commit plan and the steps that follow, and writes nothing: no commit, no train record, no dispatch.
 
+With `--run`, each step that runs announces when it starts (`ship: publish started at 14:03:27`) then how long it took (`ship: publish took 3 min 12 s`, or `ship: present stopped (exit 1) after 41.0 s`), and the cycle ends with its total duration, green or red. A step skipped on a resume announces nothing. These measures join the summary of durations of the train (see [Reading a failure](#reading-a-failure-logs-and-durations)).
+
 ### 5. `present`: the evidence, publishing nothing
 
 ```bash
@@ -124,6 +126,22 @@ The guard has a single rule table (`tools/supervisor/guard/rules.cjs`) and two i
 - a **`NODE_OPTIONS=--require` hook** (`hook.cjs`), inherited by every Node process: it stops a Node tool that starts `gh` or `git` without a shell, which on Windows finds `gh.exe` directly and skips the shims.
 
 The guard fails closed: a refused call exits 97, a missing real binary exits 127, and neither reaches the binary.
+
+Each validation is reported with its duration. A red validation keeps its last lines in the report and names the file that holds its whole output (`Whole output: …`). Three states are kept apart:
+
+- **`passed`** / **`failed (exit N)`**: the command ran;
+- **`not run`**: the command was not started, and the reason follows. This is the case of a consumer's validations when the `build` or the packaging of a provider of the train is red (`the build of <provider> failed`, `the packaging of <provider> failed`): measuring the consumer on a provider that does not build, or whose package cannot be listed, would say nothing. A validation that was not run makes the train unpresentable, just like a red one;
+- **`skipped`** (in the output of `pnpm check`): a gate set aside by its name (`HANDBOOK_CHECK_SKIP`) or whose content already passed. It is not a failure.
+
+Under `present`, `pnpm check` runs in **collect mode**: instead of stopping at the first red gate, it runs them all and ends with a summary (`check: 3 gate(s) failed: …`), so a single pass names everything there is to fix. The supervisor harness, the longest, then goes last and is not started when a gate before it is red (`not run`). The supervisor sets `SUPERVISOR_PRESENT=1` for that; by hand, `HANDBOOK_CHECK_COLLECT=1 pnpm check` does the same. Without these variables, `pnpm check` keeps stopping at the first red.
+
+**A checkout left changed.** Each repository is clean when the validations start; `present` checks it still is when they end, packaging included. A rewritten tracked file, or a new file that is not ignored, makes the train not presentable and the report names the files: this is the sign of a generator that overwrites a committed output (a hand edit of the generated file is erased, the validation stays green, and the commit no longer holds what the package publishes). The fix is to change the generator's source, then commit what it produces. The check compares content (`git diff HEAD`), not `git status`: with `autocrlf`, a file rewritten with the same content in the other line ending is not a change.
+
+**Validating against the train**: `present` does not measure a consumer on its pin when the train changes the provider, nor on the provider's checkout: it measures it on **what the package publishes**. Each provider the train changes is packed dry, once however many consumers it has, by `npm pack --dry-run --json` behind the publication guard: the command runs `prepack` like the real packaging, lists the files of the archive, writes no archive and publishes nothing. A provider whose `prepack` does not already run its `build` is built just before. For the time of a consumer's validations, its `node_modules/<package>` link is replaced by a copy of those files only, then put back whatever happens, and `node_modules/.train-providers` is removed. A breaking contract therefore goes through the consumer's type check and harnesses before `publish`, and a consumer that reads a file the provider leaves out of its package is red as soon as `present`, before any candidate, with the path of the file in the output. Only a link is replaced (pnpm layout): a real directory is refused, not moved. Nothing tracked is written.
+
+The **fingerprint** of a package is a `sha256` over the sorted list of its files, each with the `sha256` of its bytes. The report prints it under the provider (`Package: <n> file(s), fingerprint …`) and under each linked consumer (`Validated against the package of <provider>, fingerprint …`); the train record carries it in the provider's presentation entry (`packed`), and the consumer's entry names its linked providers (`linkedProviders`). Both fields are optional: a record written before them still reads. Same published content, same fingerprint; one byte of a published file changes it, a file outside the package does not. It is local to the machine (it follows the line endings of the checkout): it compares between two presentations, never to the `sha256` of an archive.
+
+The validations of a linked consumer receive `SUPERVISOR_LINKED_PROVIDERS=<provider>@<fingerprint>,…`. `pnpm check` mixes that value into its content stamp: the linked provider lives under `node_modules`, outside the hashed content, and without it a green proven on the pin would have stood for a provider never met.
 
 **Try it before validating**: `pnpm supervise preview --vault <vault>` runs the train's code in Obsidian and in each consumer. The command first requires what `present` requires: every concerned repository must be on `origin/main` and clean. The change is therefore landed by `commit` before `preview`; `ship` then has nothing left to commit. It also warns about a SHA that moved since the presentation. Then:
 
@@ -151,6 +169,8 @@ A step is one of these kinds:
 - **wait**: a run in progress, which `--run` follows to its end.
 
 Adopting the candidate in Handbook and Lantern is automated. The supervisor rewrites `package.json` and every lockfile to the candidate URL and its SRI, then runs the frozen install (`pnpm install --frozen-lockfile`, or `npm ci`) and the consumer's validations, behind the guard. It then commits (`chore(deps): adopt <pkg> <tag>`) and pushes. A consumer that fails is named with the failing command: its pins are restored, and nothing of it is committed.
+
+**Local rehearsal of the train manifest.** A provider may declare a `rehearsal` in the topology: the static proofs of its train workflow, as commands where `{manifest}` stands for the path of the manifest. Today only `schema-pbta` declares one (`npm run validate:release-train -- {manifest}`), the one `release-train.yml` runs at its "Validate immutable release-train input" step. With `--run`, `publish` plays it behind the guard, in the provider's checkout, at two moments: **before landing the train manifest** and **before dispatching `release-train.yml`**. It also checks, like the workflow, that `origin/main` descends from the commit passed as `provider_commit`. Before the first of these two steps the manifest is not committed yet: it is written in the checkout for the time of the commands then removed, whatever they did, and the step writes it again itself. A red rehearsal, or a green one that leaves the checkout changed, stops `publish`: nothing is landed or dispatched, and the message names the command, its exit code and the file of its whole output. Without `--run`, nothing is rehearsed: the step only prints the command that will come before it (`rehearsed first: $ …`). The rehearsal needs the provider's installed dependencies (`node_modules`), like its `present` validations. **What stays in CI** is what a host proves: `release-train.yml` then loads the plugin in Obsidian under `xvfb`, which cannot be replayed locally. A provider without a `rehearsal` is published as before.
 
 ### 7. `converge`: every consumer on every final
 
@@ -184,14 +204,26 @@ pnpm supervise close           # shows what would be closed
 pnpm supervise close --run     # closes
 ```
 
-Requires a `passed` convergence, a presentation that holds, `origin/main` heads that **descend** from the convergence SHAs (the consumers' release commits land after it), no pin gap, and the Lantern and Handbook releases described above. Anything missing is named, and nothing is closed. With `--run`, `close` records `consumerReleases`, comments on or closes each issue, closes the coordination issue **last**, then marks the train `closed`.
+Requires a `passed` convergence, a presentation that holds, `origin/main` heads that **descend** from the convergence SHAs (the consumers' release commits land after it), no pin gap, and the Lantern and Handbook releases described above. Anything missing is named, and nothing is closed. With `--run`, `close` records `consumerReleases`, comments on or closes each issue, closes the coordination issue **last**, then marks the train `closed`. It also removes the logs of the train; the summary of durations stays.
+
+## Reading a failure: logs and durations
+
+Every command the supervisor runs behind the guard (builds and validations of `present`, rehearsal of a train manifest, install and validations of an adoption, checks of `converge`) leaves **its whole output** in a file, and its duration in a summary. Both live in the git directory of the coordinator (`git rev-parse --absolute-git-dir` in Handbook: `.git/`, or `.git/worktrees/<name>/` from a supervisor worktree), so outside the checkout and never committed:
+
+- `supervisor-logs/<train>/<repo>-<rank>-<step>.log`: the output of one command. `<rank>` is its rank in the step for that repository, starting at 1; `<step>` is `present`, `build` or `pack` (dry build and packaging, filed under the provider), `rehearse` (rehearsal of the train manifest, filed under the provider), `converge`, or `publish-<provider>` / `converge-<provider>` for an adoption. A new run overwrites the file;
+- `supervisor-logs/<train>.durations.jsonl`: one JSON line per command (`kind: "command"`, repository, step, command, exit code, `durationMs`), per step of `ship` (`kind: "step"`) and per `ship` cycle (`kind: "cycle"`), each dated.
+
+Facing a red, the report or the error message names the file: that is the one to open, not the end of output the report repeats. The `present` report recalls the directory on its last line. `close --run` removes the logs and keeps the summary of durations, which tells afterwards where the time of a train went.
+
+The train record carries none of these paths: it is committed, and they are local. It keeps for each validation its duration (`durationMs`) and, when it applies, the reason it was not run (`notRun`).
 
 ## Automated, human, never inside a validation
 
 | | What it covers |
 | --- | --- |
 | **Automated** | observing repositories and pins (`status`, `next`); validations and checks behind the guard (`present`, `converge`); once `ship --run` is started, all the train work: commit and push of the prepared change, presentation, dispatches, local promotions, Handbook and Lantern adopting the candidate then the final, train manifests and records, the final tag of `schema-adrenaline`, Lantern's provider registry, the convergence file of `schema-in-the-mist`, convergence; tag and release of Lantern then of Handbook; commenting on and closing issues |
-| **Human** | the corrections, with the version and the `CHANGELOG` of the consumers; the validation, which is running `ship`; the supervisor's code, committed and pushed by hand; any deletion (branches, tags, files) |
+| **Human** | the corrections, with the version and the `CHANGELOG` of the consumers; the validation, which is running `ship`; any deletion (branches, tags, files) |
+| **Outside the supervisor** | its own code: fixed, proven by `pnpm assert:supervisor`, committed and pushed to `origin/main` before it runs again |
 | **Never inside a validation** | any release, workflow dispatch, `git push` or `git tag`, any write through `gh api`. The validations of `present` and the checks of `converge` run behind the guard, and each link checks the presentation again before every step |
 
 A stop of the chain is not a planned gesture: it is a named failure (dirty or diverged checkout, red run, successful run without a result), to fix before running `ship --run` again.
@@ -200,9 +232,15 @@ A stop of the chain is not a planned gesture: it is a named failure (dirty or di
 
 The validation covers **rendering and behaviour**: is the sheet or feature the one that was wanted? It is judged before `ship`, in the vault and in each consumer (`preview`). It does not cover the control machinery.
 
-Everything technical moves on without asking: pack and version consistency, pins and SRI, release-train protocols, `pnpm check` / `npm run check` validations, provider CI. A red validation gets fixed, in the code or in the validation itself when the validation is what is wrong, then `ship --run` is run again. It is never bypassed: no validation disabled, no guard set aside. It is reported afterwards, in the `present` report.
+Everything technical moves on without asking: pack and version consistency, pins and SRI, release-train protocols, `pnpm check` / `npm run check` validations, provider CI. A red validation gets fixed in the code. It gets fixed in the validation itself in one case only: it compares to a figure a value the train moves, and that figure is replaced by a read of the source that declares it (see [What a guard may expect from a train](#what-a-guard-may-expect-from-a-train)). Then `ship --run` is run again. A validation is never bypassed: no validation disabled, no assertion removed, no comparator or threshold changed, no guard set aside. A defect of the supervisor gets fixed the same way, with its proof (`pnpm assert:supervisor`), and its code is pushed before the next run. It is reported afterwards, in the `present` report.
 
-What stays human: the corrections, the validation itself, the supervisor's code, and any deletion (branches, traces, files).
+What stays human: the corrections, the validation itself, and any deletion (branches, traces, files). The publication guard and the workflows are not changed to let a train through.
+
+## What a guard may expect from a train
+
+A train moves the version of a provider, the pin of each consumer and the tags that go with them. A validation or a convergence check therefore never compares one of these values to a figure written in its script: it reads the source that declares it (`package.json`, the lockfile, the manifest or the train record) and asserts that the role is held — the pin is a final release of the provider, the installed version is the one of the pin, the published bytes are those the lockfile records. What a guard cannot read reaches it through an argument of its command in the topology, like `--final`; none guesses the step of the cycle from the environment.
+
+In Handbook, `pnpm assert:guards-by-role` (in `pnpm check`) refuses a version number, a tag or an archive URL written in figures in a guard of that family. A closed test datum keeps its literal and carries `guard-fixture: <reason>` on its line.
 
 ## The three providers
 
@@ -210,13 +248,24 @@ What stays human: the corrections, the validation itself, the supervisor's code,
 | --- | --- | --- | --- |
 | Candidate | `release.yml` with `mode=digest` (packs and computes the digest, no release), then `mode=stage` (publishes the candidate named by the manifest) | `publish-candidate.yml` | `release-candidate.yml` |
 | Train manifest | `release-train/candidates/<pkg>-<tag>.json` then `release-train/<pkg>-<tag>.json`, landed by the supervisor | `release-train/<pkg>-<tag>.json`, landed by the supervisor | `release-trains/<tag>.json`, status `pending`, landed by the supervisor |
-| Proof | `release-train.yml` | `release-train.yml` | `npm run release-train:assert` locally, which writes a provenance file |
+| Proof | local rehearsal of the static validation (`rehearsal` in the topology), then `release-train.yml` | `release-train.yml` | `npm run release-train:assert` locally, which writes a provenance file |
 | Final | `release.yml` with `mode=promote`, same bytes as the candidate | final tag pushed by the supervisor (`git push origin origin/main:refs/tags/<tag>`), which starts `release.yml` | `npm run release-train:promote` locally, in the provider's checkout, clean and at `origin/main` |
 | Convergence | no tool of its own: the final pins of both consumers are the proof, and the report says so | `release-train/<pkg>-vX-final.json` landed by the supervisor, then `npm run release-train:verify-final` | manifest set to `completed` with its `final` block and the convergence file of `release-train:converge`, both landed by the supervisor, then `release-train:validate -- --require-complete <tag>` |
+
+### A candidate recognised after a new presentation
+
+A candidate is packed from a commit, and its manifests, its receipt and its runs name that commit. The train records it with the candidate, along with the fingerprint of the files published at that commit (`publication.<provider>.candidate.commit` and `.packed`).
+
+If the provider then receives a commit and the train is presented again, `publish` keeps the candidate when the presented commit **descends** from the candidate's **and** publishes the same files (same fingerprint). For `schema-pbta`, the dispatches, the manifests and the receipt then go on naming the candidate's commit: no green run is started again, no manifest is landed a second time. A tooling commit outside the package no longer costs a cycle.
+
+If the fingerprint changed, or if the presented commit does not descend from the candidate's, nothing changes from before: the steps are recomputed on the presented commit, and the description of the step says why, naming both commits or both fingerprints. A candidate recorded before these two fields is held to the presented commit. Final bytes that differ from the candidate's still stop the publication.
 
 ## Troubleshooting
 
 - **"the repositories are not ready"**: a checkout is not clean or not at `origin/main`. The command to run is printed.
+- **"the supervisor's own code differs from origin/main"**: the supervisor's code has an uncommitted change, or an unpushed commit. Run `pnpm assert:supervisor`, commit, push, then run again.
+- **Validation `not run`**: it was not started, and the reason names the failure upstream (build or packaging of a provider). That one is what gets fixed.
+- **A red whose report only shows the end**: open the file of the `Whole output:` line (see [Reading a failure](#reading-a-failure-logs-and-durations)).
 - **"supervisor guard: … is refused"**: a validation tries to publish. Fix the validation, not the guard.
 - **Presentation outdated** ("presentation of train … does not hold"): a commit outside `trainFiles`, or a release URL the train does not know, landed on a repository. Run `ship --run` again, which presents anew.
 - **Run held by reviewers** ("run … is waiting"): the `release` environment of the repository still has required reviewers. Remove them in the repository's GitHub settings, then run `ship --run` again.

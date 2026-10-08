@@ -504,6 +504,26 @@ scenario("a failing validation makes the train not presentable and publish --run
 	assert.deepEqual(publishCalls(world), []);
 });
 
+scenario("a validation that rewrites a tracked file makes the train not presentable, and names the file", (world) => {
+	// A generator that overwrites a committed output: the check stays green, the commit no longer holds what is published.
+	const rewrite = nodeCommand("require('node:fs').appendFileSync('package.json', ' ')");
+	const topology = testTopology(world, { "schema-in-the-mist": [rewrite] });
+	doneTrain(world);
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stdout, /\*\*Not presentable\*\*/);
+	assert.match(result.stdout, /schema-in-the-mist: its packaging or its validations changed 1 file\(s\) of the checkout: package\.json/, result.stdout);
+	assert.ok(result.stdout.includes(`passed: \`${rewrite.join(" ")}\``), "the validation itself was green: only the checkout it left is at fault");
+	const refused = world.supervise(["publish", "--run"], { topology });
+	assert.equal(refused.status, 1, refused.stdout);
+	assert.deepEqual(dispatches(world), []);
+
+	// The same validation that leaves the checkout alone is presentable.
+	git(world.dir("schema-in-the-mist"), "checkout", "--", "package.json");
+	const clean = testTopology(world, { "schema-in-the-mist": [nodeCommand("console.log('read only')")] }, {}, "clean-topology.json");
+	ok(world.supervise(["present"], { topology: clean }), "present");
+});
+
 /** A shell validation: `cmd /d /s /c` on Windows, `sh -c` elsewhere. Lines joined by the shell's own separator. */
 function shellCommand(lines: string[]): string[] {
 	return process.platform === "win32" ? ["cmd", "/d", "/s", "/c", lines.join(" & ")] : ["sh", "-c", lines.join("; ")];
