@@ -108,7 +108,8 @@
 	li::marker { content: none; }
 }
 
-.brumes--urban-shadows :is(.handbook-urban-shadows-checks, .handbook-urban-shadows-lozenges) li::before {
+/* The pack draws a lozenge on every plain list item of a note (page.css, specificity 0,3,3): outrank it. */
+body.brumes--urban-shadows .markdown-rendered :is(.handbook-urban-shadows-checks, .handbook-urban-shadows-lozenges, .handbook-urban-shadows-frame ul) > li:not(.task-list-item)::before {
 	content: none;
 	display: none;
 }
