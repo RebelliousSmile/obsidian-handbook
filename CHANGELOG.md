@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The PbtA playbook block chooses its pack layout from a table of (pack, document type) instead of a pack test in the renderer.
+- Urban Shadows booklet: name, demeanor and look sit under the title, one per column; the progression text is fixed and centred; corruption shows its trigger, its advances and its actions as boxes; mortal relationships are a compact list without boxes; Circles stay on one row and scars no longer wrap.
+- Urban Shadows and Monsterhearts playbooks: every box is centred on the first line of its row instead of hanging from the baseline.
+- The Urban Shadows booklet is laid out in the rows of the pack's contract (schema-pbta), regions balanced across the three columns.
 
 ## [2.37.0] - 2026-10-07
 

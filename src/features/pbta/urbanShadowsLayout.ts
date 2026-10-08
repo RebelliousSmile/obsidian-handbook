@@ -184,6 +184,15 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"game-identity": (doc, id, data, resolveImage) => {
 		const result = section(doc, id, data.name, "h2");
 		result.appendChild(el(doc, "p", data.description));
+		const bar = el(doc, "div");
+		bar.classList.add("handbook-urban-shadows-identity-bar");
+		for (const label of ["Name (pronouns)", "Demeanor", "Look"]) {
+			const field = el(doc, "p");
+			field.appendChild(el(doc, "span", `${t(label)} :`)).classList.add("handbook-urban-shadows-label");
+			field.appendChild(fill(doc));
+			bar.appendChild(field);
+		}
+		result.appendChild(bar);
 		const image = data.playbookImage?.trim();
 		const source = image ? resolveImage?.(image) ?? (/^https:\/\//i.test(image) ? image : null) : null;
 		if (source) {
@@ -256,7 +265,10 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		const later = data.laterAdvancement ?? [];
 		if (!circles.length && !first.length && !later.length) return null;
 		const result = section(doc, id, regionLabel(id));
-		paragraphs(doc, result, data.editorial.progression.paragraphs);
+		const intro = el(doc, "div");
+		intro.classList.add("handbook-urban-shadows-progression-intro");
+		intro.appendChild(el(doc, "p", t("Erase 4 checked boxes to advance.")));
+		result.appendChild(intro);
 		if (circles.length) {
 			const grid = el(doc, "div");
 			grid.classList.add("handbook-urban-shadows-circle-marks");
@@ -337,11 +349,16 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"urban-shadows-mortal-relationships": (doc, id, data) => {
 		if (!data.mortalRelationships?.length) return null;
 		const result = section(doc, id, regionLabel(id));
-		result.appendChild(checks(doc, data.mortalRelationships.map((relation) => ({
-			label: relation.label,
-			checked: false,
-			note: relation.description,
-		}))));
+		// Chosen at creation, so nothing to tick: a plain list.
+		const list = el(doc, "ul");
+		list.classList.add("handbook-urban-shadows-relations");
+		for (const relation of data.mortalRelationships) {
+			const item = el(doc, "li");
+			item.appendChild(el(doc, "strong", relation.label));
+			if (relation.description) item.appendChild(el(doc, "p", relation.description));
+			list.appendChild(item);
+		}
+		result.appendChild(list);
 		return result;
 	},
 	"urban-shadows-extras": (doc, id, data) => {
@@ -379,12 +396,14 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"urban-shadows-corruption": (doc, id, data) => {
 		const result = section(doc, id, regionLabel(id));
 		if (data.corruption.track) result.appendChild(boxes(doc, data.corruption.track, "Corruption"));
-		result.appendChild(el(doc, "p", data.corruption.trigger));
+		const trigger = el(doc, "p");
+		trigger.appendChild(el(doc, "strong", `${t("Trigger")} : `));
+		trigger.appendChild(el(doc, "span", data.corruption.trigger));
+		result.appendChild(trigger);
 		result.appendChild(checks(doc, data.corruption.advances.map((entry) => ({ label: entry.label, checked: entry.checked === true }))));
 		if (data.corruption.moves?.length) {
-			const list = el(doc, "ul");
-			for (const move of data.corruption.moves) list.appendChild(el(doc, "li", move));
-			result.appendChild(list);
+			result.appendChild(el(doc, "h4", t("Corruption actions")));
+			result.appendChild(checks(doc, data.corruption.moves.map((label) => ({ label, checked: false }))));
 		}
 		return result;
 	},

@@ -117,7 +117,7 @@ body.brumes--urban-shadows .markdown-rendered :is(.handbook-urban-shadows-checks
 .brumes--urban-shadows .handbook-urban-shadows-move {
 	h4 {
 		display: flex;
-		align-items: baseline;
+		align-items: flex-start;
 		gap: 0.4rem;
 		margin: 0.6rem 0 0.1rem;
 		font-family: var(--urban-shadows-title-font, var(--font-header-theme));
@@ -169,10 +169,24 @@ body.brumes--urban-shadows .markdown-rendered :is(.handbook-urban-shadows-checks
 /* Scars: two columns of ticked lines, as printed. */
 .brumes--urban-shadows [data-region="urban-shadows-scars"] .handbook-urban-shadows-checks {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	// As many columns as keep a line whole: a scar and its modifier never wrap.
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr));
 	gap: 0.1rem 0.8rem;
 	padding-inline-start: 0;
 	font-size: 0.85em;
+
+	li { white-space: nowrap; }
+}
+
+/* The four Circles stay on one row, whatever the column width. */
+body.brumes--urban-shadows .handbook-urban-shadows-region[data-primitive="circle-status"] .handbook-urban-shadows-marks {
+	flex-wrap: nowrap;
+	gap: 0.3rem;
+
+	.handbook-urban-shadows-mark {
+		min-width: 0;
+		font-size: 0.85em;
+	}
 }
 
 /* Advancement: the four Circles as ticks in a square, two per row, names on the outside. */
@@ -195,4 +209,73 @@ body.brumes--urban-shadows .markdown-rendered :is(.handbook-urban-shadows-checks
 
 	label:nth-child(n + 3) { flex-direction: row-reverse; justify-content: flex-end; }
 	label:nth-child(-n + 2) { justify-content: flex-end; }
+}
+
+/* Name, demeanor and look sit under the booklet title, one per column. */
+body.brumes--urban-shadows .handbook-urban-shadows-identity-bar {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0 var(--pbta-column-gap, 2rem);
+	margin-top: 0.75rem;
+
+	p {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin: 0;
+	}
+
+	.handbook-urban-shadows-fill {
+		flex: 1;
+		width: auto;
+	}
+}
+
+body.brumes--urban-shadows .handbook-urban-shadows-progression-intro {
+	text-align: center;
+}
+
+/* Corruption: body text at the size of a move's text, and its sub-heading in the title face. */
+.brumes--urban-shadows [data-region="urban-shadows-corruption"] {
+	p,
+	.handbook-urban-shadows-checks {
+		font-size: 0.85em;
+		line-height: 1.35;
+	}
+
+	h4 {
+		margin: 0.6rem 0 0.1rem;
+		font-family: var(--urban-shadows-title-font, var(--font-header-theme));
+		font-size: 1.15em;
+		font-weight: 400;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+	}
+}
+
+/* League Gothic has a single weight: a bold heading is a smeared synthetic one. */
+body.brumes--urban-shadows .handbook-urban-shadows-frame h4 {
+	font-weight: 400;
+	letter-spacing: 0.03em;
+}
+
+/* Mortal relationships: a compact list, the name run into its description. */
+.brumes--urban-shadows [data-region="urban-shadows-mortal-relationships"] .handbook-urban-shadows-relations {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	li {
+		padding: 0.1rem 0;
+		font-size: 0.85em;
+		line-height: 1.3;
+	}
+
+	p {
+		display: inline;
+		margin: 0;
+		font-style: italic;
+
+		&::before { content: " – "; font-style: normal; }
+	}
 }
