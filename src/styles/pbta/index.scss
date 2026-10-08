@@ -116,3 +116,10 @@
 		border-bottom: 1px solid var(--background-modifier-border);
 	}
 }
+
+.brumes--urban-shadows :is(.handbook-urban-shadows-checks, .handbook-urban-shadows-lozenges) {
+	list-style: none;
+
+	li { list-style: none; }
+	li::marker { content: none; }
+}
