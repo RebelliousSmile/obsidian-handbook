@@ -39,3 +39,15 @@ const server = await vite.createServer({
 });
 await server.listen();
 server.printUrls();
+
+// The command that started this server is its owner: once it is gone, nothing would stop the server.
+const parent = process.ppid;
+setInterval(() => {
+	try {
+		process.kill(parent, 0);
+	} catch (error) {
+		if (error?.code === "ESRCH") {
+			void server.close().finally(() => process.exit(0));
+		}
+	}
+}, 2000).unref();

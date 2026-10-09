@@ -21,6 +21,10 @@ Ce qui a changé :
 
 Même principe pour le contrat Adrenaline : `assertAdrenalineContractVersion` figeait `"1.0.0"` ; elle exige maintenant un **major de contrat** (`/^1\.\d+\.\d+$/`). Un minor ou un patch amont est adopté sans toucher au code, `2.0.0` est refusé — c'est là que se situe la vraie rupture. Les versions d'**enveloppe** (`manifestVersion`, `tomlVersion`) restent des égalités : elles décrivent le format du fichier lu, pas la cadence du producteur.
 
+## Épingle de producteur en retard : refusée avant `present` (2026-10-09)
+
+Monster of the Week puis The Sprawl ont perdu un cycle entier : `ci.yml`/`release.yml` de `schema-pbta` épinglaient un Handbook qui ne connaissait pas une capacité exigée par un `pack.json` (`unknown Handbook capabilities`). `present` lit maintenant (`tools/supervisor/producerPin.mjs`) le `ref` épinglé, les `requires` des packs et les capacités de `src/games/capabilities.ts` à ce `ref`, et refuse en nommant le candidat (tête de `main`). Il ne corrige pas le workflow. `supervise preview` arrête en outre l'arbre de ses serveurs à toute sortie (`processTree.mjs`).
+
 ## La version se tient à une seule valeur, et le tag la prouve (corrigé le 2026-09-20)
 
 `manifest.json`, `package.json` et `versions.json` sont restés à **2.15.3** pendant que les tags allaient jusqu'à `v2.19.1`. Obsidian lit le **manifeste**, pas le tag : chacune de ces releases annonçait donc `2.15.3` à un coffre déjà installé, aucune mise à jour n'a jamais été proposée. Rien ne pouvait le remarquer — les trois fichiers étaient d'accord **entre eux**, et ne divergeaient que du tag et du changelog.

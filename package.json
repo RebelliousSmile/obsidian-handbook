@@ -76,7 +76,9 @@
 		"assert:contextual-pack-blocks": "node tools/assert-contextual-pack-blocks.mjs",
 		"supervise": "node tools/supervise.mjs",
 		"assert:guards-by-role": "node tools/assert-guards-by-role.mjs",
-		"assert:supervisor": "node tools/assert-supervisor.mjs"
+		"assert:supervisor": "node tools/assert-supervisor.mjs",
+		"assert:producer-pin": "node tools/assert-producer-pin.mjs",
+		"assert:process-tree": "node tools/assert-process-tree.mjs"
 	},
 	"keywords": [
 		"city of mist",

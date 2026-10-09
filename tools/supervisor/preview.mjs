@@ -22,7 +22,8 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { concernedRepos } from "./digest.mjs";
-import { revParse } from "./git.mjs";
+import { gitOut, revParse } from "./git.mjs";
+import { clearServers, reapServers, recordServers, stopTree } from "./processTree.mjs";
 import { coordinatorOf, repoDir, SupervisorError } from "./topology.mjs";
 import { GUARD_DIR, guardedEnv } from "./guarded.mjs";
 import { spawnCommand } from "./spawn.mjs";
@@ -348,18 +349,48 @@ export async function runPreview(plan, { serve = true, open = true, port } = {})
 		if (open) for (const target of plan.handbook.vaults) openExternal(`obsidian://open?path=${encodeURIComponent(target.vault)}`);
 	}
 	if (!serve || plan.consumers.length === 0) return 0;
+	// A server an interrupted preview left behind is ended before this one starts.
+	const registries = plan.consumers.map((consumer) => serverRegistry(consumer.dir));
+	for (const registry of new Set(registries)) {
+		for (const pid of reapServers(registry, PREVIEW_SERVER)) process.stderr.write(`preview: stopped the dev server ${pid} of a previous preview
+`);
+	}
 	const children = plan.consumers.map((consumer, index) => {
 		const settings = { ...consumer, open, port: port === undefined ? undefined : port + index };
-		process.stderr.write(`preview: vite dev server of ${consumer.repo} on ${consumer.packages.join(", ") || "its published pins"}\n`);
-		return spawn(process.execPath, [PREVIEW_SERVER], { cwd: consumer.dir, env: { ...env, SUPERVISOR_PREVIEW_SERVER: JSON.stringify(settings) }, stdio: "inherit" });
+		process.stderr.write(`preview: vite dev server of ${consumer.repo} on ${consumer.packages.join(", ") || "its published pins"}
+`);
+		// Detached on POSIX: its own process group, so the whole tree can be signalled.
+		return spawn(process.execPath, [PREVIEW_SERVER], { cwd: consumer.dir, env: { ...env, SUPERVISOR_PREVIEW_SERVER: JSON.stringify(settings) }, stdio: "inherit", detached: process.platform !== "win32" });
 	});
+	for (const [index, registry] of registries.entries()) recordServers(registry, [children[index].pid].filter(Boolean));
+	// Whatever ends the preview (a signal, an error, a normal exit) ends every server with its processes.
 	const stop = () => {
-		for (const child of children) child.kill();
+		for (const child of children) if (child.pid && child.exitCode === null && child.signalCode === null) stopTree(child.pid);
+		for (const registry of new Set(registries)) clearServers(registry);
 	};
-	process.once("SIGINT", stop);
-	process.once("SIGTERM", stop);
-	const codes = await Promise.all(children.map((child) => new Promise((done) => child.once("exit", (code) => done(code ?? 0)))));
+	process.on("exit", stop);
+	for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+		process.once(signal, () => {
+			stop();
+			process.exit(130);
+		});
+	}
+	let codes;
+	try {
+		codes = await Promise.all(children.map((child) => new Promise((done) => child.once("exit", (code) => done(code ?? 0)))));
+	} finally {
+		stop();
+	}
 	return codes.every((code) => code === 0) ? 0 : 1;
+}
+
+/** Where the pids of a consumer's dev servers are recorded: its git directory, never committed. */
+function serverRegistry(dir) {
+	try {
+		return resolve(dir, gitOut(dir, ["rev-parse", "--git-path", "supervisor-preview-servers.json"]));
+	} catch {
+		return join(tmpdir(), `supervisor-preview-servers-${Buffer.from(resolve(dir)).toString("hex").slice(-40)}.json`);
+	}
 }
 
 /** Say whether the preview shows what the last presentation showed. */

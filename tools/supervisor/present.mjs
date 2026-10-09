@@ -32,6 +32,7 @@ import { evidenceKey, isGreen, reusableValidations } from "./evidence.mjs";
 import { LINKED_PROVIDERS } from "./guarded.mjs";
 import { formatDuration, trainLogs } from "./logs.mjs";
 import { packedFiles } from "./packedFiles.mjs";
+import { checkProducerPins } from "./producerPin.mjs";
 import { packageManager, packageJson } from "./preview.mjs";
 import { planProviderLinks, withProviderLinks } from "./providerLinks.mjs";
 import { releaseExists } from "./gh.mjs";
@@ -188,6 +189,7 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 	if (train.status !== "open") throw new SupervisorError(`present: train "${train.id}" is closed`);
 	const repos = concernedRepos(topology, train);
 	const heads = checkPreconditions(root, topology, train, repos);
+	checkProducerPins(root, topology, repos);
 	const buildFailures = [];
 	const packed = packProviders(root, topology, train, repos, logs, buildFailures);
 	const entries = repos.map((repo) => {
