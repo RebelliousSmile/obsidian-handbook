@@ -1,0 +1,114 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "mode-section-columns-band",
+	"title": "Mode sections end at their marker in column notes",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 84,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/84"
+	},
+	"items": [
+		{
+			"repo": "obsidian-handbook",
+			"issue": 85,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/85",
+			"title": "Mode sections: the band must end at the closing marker in column notes",
+			"baseSha": "385c0835e8dd750833c4f1f4e8776f29c4b8fa88",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {},
+	"presentation": {
+		"presentedAt": "2026-10-07T08:12:00.469Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:fdc3b149a4ea31216430f3fa74a0bdb6a418f1f4d1112fabb46fe4dd9c2d1fdb",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "8beb79bcc75867e0070da8dba2c307f8f8c808c8",
+				"baseSha": "385c0835e8dd750833c4f1f4e8776f29c4b8fa88",
+				"commits": [
+					{
+						"sha": "8beb79bcc75867e0070da8dba2c307f8f8c808c8",
+						"subject": "fix(modes): widen column section blocks by half a gap so the band reads as one"
+					},
+					{
+						"sha": "d8f80044030d472c597989c6a56a1131a9cdbe47",
+						"subject": "docs(readme): add alpha status, next step and settings previews"
+					},
+					{
+						"sha": "1393e0a19ac8bc506bc30dc2713203dcd2894e2f",
+						"subject": "fix(modes): end a mode section at its closing marker in column notes"
+					}
+				],
+				"diffstat": "CHANGELOG.md                               |  12 ++++\n README.md                                  |  98 +++++++++++++++++++++++------\n doc/img/options-adrenaline.png             | Bin 0 -> 108079 bytes\n doc/img/options-city-of-mist.png           | Bin 0 -> 103659 bytes\n doc/img/options-legend-in-the-mist.png     | Bin 0 -> 127788 bytes\n doc/img/options-monsterhearts.png          | Bin 0 -> 107316 bytes\n manifest.json                              |   2 +-\n package.json                               |   2 +-\n src/features/modeSections/postProcessor.ts |  14 ++---\n src/styles/_mode-sections.scss             |  20 ++++--\n versions.json                              |   4 +-\n 11 files changed, 114 insertions(+), 38 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "\n> obsidian-handbook@2.35.2 assert:starter-kits C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-starter-kits.mjs\n\nstarter kits: green\n\n> check: assert:style-scope\n\n> obsidian-handbook@2.35.2 assert:style-scope C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-style-scope.mjs\n\ngame styles stay inside notes and rendered block scopes\n\n> check: assert:supervisor skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.35.2 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-nt63ZW\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-nt63ZW\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-nt63ZW\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-nt63ZW\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-nt63ZW\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-nt63ZW\\harness.cjs:306:5)"
+					}
+				]
+			}
+		],
+		"trainFiles": {
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-07T08:12:07.402Z",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"sha": "8beb79bcc75867e0070da8dba2c307f8f8c808c8"
+			}
+		],
+		"checks": [
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.35.2",
+			"tag": "v2.35.2",
+			"sha": "8beb79bcc75867e0070da8dba2c307f8f8c808c8",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.35.2"
+		}
+	],
+	"closedAt": "2026-10-07T08:13:48.364Z"
+}

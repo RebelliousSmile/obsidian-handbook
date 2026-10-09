@@ -1,10 +1,12 @@
 ---
-status: pending
+status: done
 ---
 
-# Instruction: Handbook — layout du livret Masks
+# Instruction: Handbook — bloc PNJ
 
-Même élément de train que la phase 4. Le modèle est `monsterheartsLayout.ts` : rendu par région, d'après `canonicalOrder` et `rows` du contrat publié. Le rendu générique du playbook reste valide sans `packId`.
+> Exécution dans les worktrees du superviseur (`plan.md`, ligne Exécution) : chemins sous `<W>/<dépôt>`, commandes `pnpm supervise` lancées depuis `<W>/obsidian-handbook` avec `--root <W>`.
+
+Phase d'écriture, **sans train ouvert ni commit** (`plan.md`, ligne Ordre) : ce travail deviendra l'élément `obsidian-handbook` (#87) du train `masks-2e`. Handbook épingle le **tarball local** de `schema-pbta` posé en phase 4 (tâche 2) : le code importe le contrat neuf directement. Tant que cette épingle est là, `pnpm check` s'arrête sur les harnais d'épingle, rouges par construction : la preuve de chaque étape est `rtk proxy pnpm build`, les deux lints et les `assert:*` concernés lancés un par un ; `pnpm check` en entier est joué par `present`, sur l'archive du fournisseur (phase 8, tâche 2). La règle d'appartenance `<pack.id>-<type>` est déjà écrite (phase 4, tâche 1). Les gardes que cette phase ajoute lisent un rôle, jamais un chiffre (`pnpm assert:guards-by-role`) ; une donnée de test fermée porte `guard-fixture: <raison>`. Les quatre obligations d'un format de bloc s'appliquent (`aidd_docs/guidelines/schema-design.md`).
 
 ## Architecture projection
 
@@ -12,25 +14,38 @@ Même élément de train que la phase 4. Le modèle est `monsterheartsLayout.ts`
 
 ```txt
 .
-├── src/features/pbta/masksLayout.ts               ✅ recto et verso, régions du contrat
-├── src/features/pbta/block.ts                     ✏️ branchement par pack et par cible
-├── src/features/pbta/renderer.ts                  ✏️ PBTA_SPECIALIZED_FIELDS pour les champs neufs
-├── src/features/pbta/shape.ts                     ✏️ zones nommées du livret
-├── src/styles/pbta/_masks.scss                    ✏️ piste de Labels, cases, grille recto/verso
-├── tools/assertMasksLayout.harness.mts            ✏️ volet livret
-├── tools/pbtaSpecializedProjection.harness.mts    ✏️ champs mécaniques neufs, par cible
-└── tools/assert-pbta-theme.mjs                    ✏️ `_masks.scss` soumis à l'interdit des couleurs en dur
+├── src/features/pbta/npc.ts                       ✅ lecture tolérante `masks-npc` puis `npc`, rendu générique sobre
+├── src/features/pbta/masksNpc.ts                  ✅ layout de la carte, régions de `packs/masks/npc-presentation-contract.json`
+├── src/features/pbta/block.ts                     ✏️ bloc `pbta-npc`, gabarit
+├── src/features/pbta/shape.ts                     ✏️ zones nommées de la carte
+├── src/features/pbta/coverage.ts                  ✏️ `masks-npc` passe de non résolu à projeté
+├── src/features/pbta/specializedPlaybooks.ts      ✏️ typage des cibles projetées
+├── src/features/blocks/registry.ts                ✏️ entrée dans BRUMES_BLOCKS
+├── src/features/blocks/tomlExports.ts             ✏️ « copier comme TOML »
+├── src/games/capabilities.ts                      ✏️ `block:pbta-npc`
+├── src/settings/types.ts                          ✏️ réutilise `pbtaParser`, aucune clé renommée
+├── tools/pbtaPackCoverage.harness.mts             ✏️ `block:pbta-npc` déclaré, `masks-npc` projeté
+├── tools/pbtaContractCorpus.mts                   ✏️ cible `masks-npc`
+├── tools/assert-pbta-contract.mjs                 ✏️ liste épinglée sur la mesure (rouge sur le tarball local pour son contrôle d'épingle : se vérifie en phase 8, tâche 2)
+├── tools/customPacks.harness.mts                  ✏️ bloc neuf
+├── tools/contextualPackBlocks.harness.mts         ✏️ bloc neuf
+├── tools/assert-masks-layout.mjs                  ✅
+├── tools/assertMasksLayout.harness.mts            ✅ faux DOM avec setAttribute et dataset
+├── package.json                                   ✏️ script `assert:masks-layout`
+├── aidd_docs/guidelines/schema-design.md          ✏️ bloc `pbta-npc`
+├── <W>/schema-pbta/handbook/masks/assets/styles/layout.css  ✏️ géométrie de la carte, réglée au coffre (phase 3, tâche 4)
+└── aidd_docs/memory/internal/pbta-coverage.md     ✏️ `masks-npc` projeté
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Bloc pbta-playbook, cible masks-playbook] --> B{Pack masks actif ?}
-  B -->|oui| C[renderMasksLayout]
-  B -->|non| D[renderPbtaPlaybook générique]
-  C --> E[Recto : Labels, conditions, moves, drives]
-  C --> F[Verso : identité, passé, relations]
+  A[Bloc pbta-npc dans une note] --> B{Cible reconnue ?}
+  B -->|masks-npc, pack masks actif| C[Carte Masks, régions du contrat]
+  B -->|npc générique| D[Rendu sobre]
+  B -->|TOML illisible| E[null, message du bloc]
+  C --> F[Copier comme TOML]
 ```
 
 ## Test Scope
@@ -41,107 +56,88 @@ title: Test scope
 ---
 journey
   section Setup
-    charger le témoin étendu masks-playbook => données parsées: 5: system
+    tarball local du contrat neuf épinglé => témoins masks-npc et contrat de présentation dans node_modules: 5: system
   section Happy path
-    rendre avec packId masks => régions du recto puis du verso dans l'ordre du contrat: 5: system
-    rendre danger égal 1 => piste de six crans de -2 à +3, cran +1 marqué: 5: system
-    rendre une condition cochée => case pleine et malus affiché: 5: system
-    rendre le Moment de vérité débloqué => case débloqué pleine: 5: system
-  section Edge case - sans pack
-    rendre sans packId => rendu générique inchangé: 5: system
-  section Edge case - livret minimal
-    rendre le témoin sans champ optionnel => aucune région vide, aucun jet d'erreur: 5: system
+    rendre le témoin masks-npc avec packId masks => régions dans l'ordre du contrat avec leurs libellés: 5: system
+    rendre une piste Self de -2 à +1 => quatre crans, valeur marquée: 5: system
+    rendre résistance 5 et trois conditions => chiffre cerclé et liste de trois noms: 5: system
+  section Edge case - carte minimale
+    rendre un masks-npc réduit à ses champs requis => en-tête, piste et contexte seuls: 5: system
+    exporter le bloc en TOML => document accepté par le codec masks-npc: 5: system
+    pnpm assert pbta-pack-coverage => vert, masks-npc projeté et block pbta-npc déclaré: 5: system
+  section Edge case - npc générique
+    rendre le témoin npc => rendu sobre, aucune région Masks: 5: system
+  section Edge case - TOML invalide
+    lire un bloc tronqué => null, aucun jet d'erreur: 1: system
 ```
 
 ## Wireframe
 
 ```txt
-RECTO
-┌──────────────────────────────────────────────────────────┐
-│ (1) NOM DU LIVRET                        · nom de héros   │
-├────────────────────────────┬─────────────────────────────┤
-│ (2) Labels                  │ (5) Moves du livret          │
-│  DANGER   -2 -1 0 +1 +2 +3  │  ☐ move · texte              │
-│  FREAK    -2 -1 0 +1 +2 +3  │  ☑ move · texte              │
-│  ...                        │  ☐ move · texte              │
-├────────────────────────────┤                              │
-│ (3) Conditions              │                              │
-│  ☐ Afraid   malus           │                              │
-│  ☐ Angry    malus  ...      │                              │
-├────────────────────────────┼─────────────────────────────┤
-│ (4) Moment de vérité        │ (6) Drives                   │
-│     ☐ débloqué              │  intro · ☐ ☐ ☐ ☐ options     │
-├────────────────────────────┼─────────────────────────────┤
-│ (7) Influence               │ (8) Progressions             │
-│     options                 │  ☐ avancée ...  Potentiel ☐☐☐│
-└────────────────────────────┴─────────────────────────────┘
-
-VERSO
-┌──────────────────────────────────────────────────────────┐
-│ (9) Identité : nom réel · apparence                       │
-├────────────────────────────┬─────────────────────────────┤
-│ (10) Capacités              │ (11) Attitude                │
-├────────────────────────────┴─────────────────────────────┤
-│ (12) Passé : questions du livret                          │
-├────────────────────────────┬─────────────────────────────┤
-│ (13) Relations              │ (14) Influence               │
-└────────────────────────────┴─────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│ (1) NOM DU PNJ                 · génération   │
+├──────────────────────────────────────────────┤
+│ (2) Nom réel   ...                            │
+│     Drive      ...                            │
+│     Capacités  ...                            │
+├──────────────────────────────────────────────┤
+│ (3) Résistance (5)   Conditions : a, b, c     │
+├──────────────────────────────────────────────┤
+│ (4) Self      -2   -1   [0]   +1              │
+├───────────────────────┬──────────────────────┤
+│ (5) Pire soi           │ (6) Meilleur soi      │
+├───────────────────────┴──────────────────────┤
+│ (7) Moves                                     │
+│     ★ ligne de texte                          │
+│     ★ ligne de texte                          │
+└──────────────────────────────────────────────┘
+  (8) Contexte : prose sous la carte
 ```
 
-1. Bandeau : nom du livret en capitales condensées, nom de héros.
-2. Labels : une piste par Label, bornes publiées (−2…+3), valeur du document marquée.
-3. Conditions : cinq cases et leur malus.
-4. Moment de vérité : texte et case « débloqué ».
-5. Moves : liste cochable, la plus haute région du recto.
-6. Drives : texte d'introduction et options à cocher.
-7. Influence : options de départ.
-8. Progressions : avancées cochables et cases de Potentiel.
-9. Identité : invites du livret vierge.
-10. Capacités : options ou texte.
-11. Attitude : options ou texte.
-12. Passé : questions.
-13. Relations : invites vers les coéquipiers.
-14. Influence : à qui le personnage en accorde.
+L'illustration du PNJ est au-dessus de la carte : c'est une image de la note, hors du bloc.
 
-Les positions exactes suivent `livret1.png` et `livret2.png` par les `rows` du contrat ; ce croquis ne fixe que les régions à faire valider.
+1. En-tête : nom en capitales condensées, génération à droite.
+2. Identité : nom réel, drive et capacités, une ligne clé-valeur chacun.
+3. Résistance : nombre dans un cercle ; conditions : liste de noms, pas des cases.
+4. Piste Self : pleine largeur, crans de `min` à `max` propres à chaque PNJ, valeur marquée.
+5. Pire soi : comportement à l'extrémité basse de la piste.
+6. Meilleur soi : comportement à l'extrémité haute.
+7. Moves : lignes de texte à puce étoile.
+8. Contexte : `description`, en prose, hors du cadre de la carte.
+
+L'ordre et les libellés viennent du contrat publié ; ce croquis ne fixe que la structure à faire valider.
 
 ## Tasks to do
 
-### `1)` Brancher le layout
+### `1)` Projeter `masks-npc`
 
-> Un pack, une cible, un layout ; plus de condition en ligne par jeu.
+> La cible était un constat depuis la phase 4 ; elle devient une déclaration de Handbook.
 
-1. Remplacer le ternaire de `block.ts` par une table `pack + cible → layout` (monsterhearts, masks)
-2. `masksLayout.ts` importe le contrat de présentation Masks et rend région par région ; une région sans donnée n'est pas émise
+1. `coverage.ts`, `specializedPlaybooks.ts` et `pbtaContractCorpus.mts` : `masks-npc` rejoint les cibles projetées, associée au bloc `pbta-npc`
+2. `PBTA_PROJECTED_TARGETS` et son type s'ouvrent à une cible qui n'est pas un playbook ; `pbtaPackCoverage.harness.mts` mesure alors `masks-npc` comme projetée, et tout compte en dur portant sur une déclaration de Handbook reste une égalité, mise à jour ici
 
-### `2)` Régions mécaniques
+### `2)` Bloc `pbta-npc`
 
-> Tout ce qui se coche est lu dans le TOML.
+> Les quatre obligations d'un format de bloc.
 
-1. Piste de Labels : crans de la plage publiée, libellés des Labels lus dans les données (définition de jeu ou `statsDetail`), jamais en dur
-2. Conditions avec malus, moves cochables, Drives, Progressions, cases de Potentiel, Influence, verrou du Moment de vérité
-3. `PBTA_SPECIALIZED_FIELDS["masks-playbook"]` étendu : le rendu générique imprime aussi les champs neufs
+1. Lecture tolérante : `masks-npc` d'abord, puis `npc` ; `null` sinon
+2. Rendu : `masksNpc.ts` quand `packId` vaut `masks` et la cible `masks-npc`, régions, `rows` et `outsideCard` du contrat de présentation, une région sans donnée n'est pas émise ; rendu sobre sinon (nom, description, drive, moves, attributs), y compris pour un `masks-npc` lu sans le pack masks : ses moves sont alors des lignes de texte, ceux du `npc` des entrées de move
+3. Zones nommées dans `shape.ts` ; commande « copier comme TOML » ; gabarit de bloc
+4. Capacité `block:pbta-npc` dans `capabilities.ts` ; drapeau `pbtaParser` réutilisé
+5. Aucun SCSS dans Handbook pour la carte (`plan.md`, Decisions) : `masksNpc.ts` pose sur chaque région `data-region` (id du contrat) et `data-primitive`, sur chaque rangée `data-row` et sur chaque colonne `data-column`, comme `monsterheartsLayout.ts` ; la géométrie est celle de `layout.css` du pack, dans `<W>/schema-pbta`. Sans cette feuille les régions s'empilent dans le flux et restent lisibles
 
-### `3)` Verso
+### `3)` Harnais
 
-> Livret vierge : des invites, pas des valeurs.
+> `dump:dom` et `assert:corpus` rendent sans `packId` : ce chemin a besoin du sien.
 
-1. Identité, Capacités, Attitude, Passé, Relations, Influence
-2. Saut de page entre recto et verso à l'impression ; papier blanc par défaut (`printerFriendly`)
-
-### `4)` Style et harnais
-
-> Géométrie partagée par `@mixin` avec la carte de PNJ.
-
-1. `_masks.scss` : piste, cases, grille ; uniquement des jetons du pack
-2. `assert:masks-layout`, volet livret : régions, ordre, libellés, crans, cases, absence de région vide
-3. `assert:pbta-specialized-projection` : chaque champ mécanique neuf ne s'affiche que s'il est déclaré, et au moins un témoin par cible l'affiche
+1. `assert:masks-layout`, volet PNJ : régions, ordre, libellés, crans de la piste, résistance chiffrée, contexte hors du cadre ; chaque région émise porte `data-region` et `data-primitive` aux valeurs du contrat (c'est ce contrat qui lie le rendu à la feuille du pack). Ordre et libellés attendus sont lus dans le contrat publié, jamais recopiés en littéral : une release corrective du contrat ne rougit pas le harnais
+2. `masks-npc` ajouté aux corpus des harnais de contrat, de packs contextuels et de packs personnalisés
+3. Mémoire et guide à jour
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | ---- | ------------------- |
-| 1 | Un `masks-playbook` rend le layout Masks quand le pack est actif, le rendu générique sinon ; le livret monsterhearts est inchangé (`pnpm dump:dom` sans diff hors Masks) |
-| 2 | `danger = 1` rend six crans dont `+1` marqué ; une condition cochée rend une case pleine ; aucun libellé de Label n'est une chaîne du layout |
-| 3 | Le verso suit le recto ; l'export PDF est sur fond blanc |
-| 4 | Le harnais échoue si une région ou un cran est retiré ; `assert:pbta-theme` ne trouve aucune couleur en dur dans `_masks.scss` |
+| 1 | `assert:pbta-pack-coverage` ne liste plus `masks-npc` comme non résolu et ne signale plus `block:pbta-npc` comme capacité offerte non déclarée |
+| 2 | Un bloc `pbta-npc` Masks rend la carte, un `npc` générique rend la version sobre, un TOML tronqué ne rend rien et ne lève pas ; l'export TOML repasse le codec |
+| 3 | Le harnais échoue si une région, un libellé, un cran de piste ou un attribut d'accroche est retiré ; aucun fichier de `src/styles/` n'a changé ; build, deux lints et chaque `assert:*` touché par la phase sont verts un par un, seuls les harnais d'épingle restant rouges ; rien n'est commité |

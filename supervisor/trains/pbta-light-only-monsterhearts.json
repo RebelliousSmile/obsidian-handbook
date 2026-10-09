@@ -1,0 +1,54 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "pbta-light-only-monsterhearts",
+	"title": "PbtA en clair seul, Monsterhearts v9",
+	"status": "open",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 88,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/88"
+	},
+	"items": [
+		{
+			"repo": "schema-pbta",
+			"issue": 42,
+			"url": "https://github.com/RebelliousSmile/schema-pbta/issues/42",
+			"title": "Monsterhearts v9 : packs en clair seul, régions fusionnées, editorial.play, polices",
+			"baseSha": "79882eeb1f99075da8018c6cc673421b905eee3e",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 86,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/86",
+			"title": "PbtA : clair seul, callouts de pack et conformité du livret monsterhearts",
+			"baseSha": "8beb79bcc75867e0070da8dba2c307f8f8c808c8",
+			"dependsOn": [
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		},
+		{
+			"repo": "lantern",
+			"issue": 53,
+			"url": "https://github.com/RebelliousSmile/lantern/issues/53",
+			"title": "PbtA : clair seul, retrait de Drowned Lake et section « Jouer la X » (Monsterhearts)",
+			"baseSha": "95b244e23fa44a445db1fac654fd283b063e9245",
+			"dependsOn": [
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {}
+}
