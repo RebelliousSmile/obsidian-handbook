@@ -73,3 +73,38 @@ export const pbtaMoveShape: BlockShape = {
 		{ name: "tags", holds: "canonical tags", optional: true },
 	],
 };
+
+export const pbtaSprawlMatrixShape: BlockShape = {
+	block: "sprawl-matrix",
+	root: "handbook-sprawl-matrix",
+	zones: [
+		{ name: "identity", holds: "avatar name" },
+		{ name: "avatar", holds: "avatar description and image", optional: true },
+		{ name: "console", holds: "resistance, firewall, stealth and processor", optional: true },
+		{ name: "holds", holds: "holds kept", optional: true },
+		{ name: "programs", holds: "programs to tick", optional: true },
+	],
+};
+
+export const pbtaSprawlMissionShape: BlockShape = {
+	block: "sprawl-mission",
+	root: "handbook-sprawl-mission",
+	zones: [
+		{ name: "identity", holds: "mission name and how the crew gets the job" },
+		{ name: "countdowns", holds: "investigation and action hour tracks with their steps", optional: true },
+		{ name: "situation", holds: "involved parties, security, what is going on and the twist", optional: true },
+		{ name: "directives", holds: "mission directives", optional: true },
+		{ name: "pay", holds: "how the crew gets paid, written under the sheet", optional: true },
+	],
+};
+
+export const pbtaSprawlCardShape: BlockShape = {
+	block: "sprawl-card",
+	root: "handbook-sprawl-card",
+	zones: [
+		{ name: "identity", holds: "card name and, for a threat, its type" },
+		{ name: "body", holds: "objective, expertise, custom moves or skills", optional: true },
+		{ name: "clock", holds: "hour track of a threat or a corporation", optional: true },
+		{ name: "context", holds: "description written under the card", optional: true },
+	],
+};

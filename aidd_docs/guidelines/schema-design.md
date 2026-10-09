@@ -234,6 +234,8 @@ les hooks `data-region`, `data-primitive`, `data-row`, `data-column`,
 `data-face`. Le layout d'un pack (`masksNpc.ts`, `masksLayout.ts`) n'est
 appliqué que sous ce pack ; sans lui, le rendu sobre sert.
 
+The Sprawl en est l'exemple le plus large : trois blocs (`sprawl-matrix`, `sprawl-mission`, `sprawl-card`) partagent le drapeau `pbtaParser` et le squelette de carte du schéma, le livret a ses propres faces. Les primitives hexagone et piste d'heures sont des éléments neutres (`ul`/`ol`), la forme venant du `layout.css` du pack.
+
 Deux règles de compatibilité qui ne souffrent pas d'exception :
 
 - renommer un bloc = garder l'ancien id dans `aliases` (le registre logue la

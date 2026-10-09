@@ -157,7 +157,7 @@ export const PBTA_SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["targe
 	"monster-of-the-week-playbook": ["improvements", "luck", "ratings", "heroName", "luckMax", "luckMarked", "harmMax", "harmMarked", "unstable", "experienceMax", "experienceMarked", "specialWeapon", "statChoices", "look", "introductions", "history", "advancements", "notes"],
 	"monsterhearts-playbook": ["strings", "ascendants", "conditions", "advances"],
 	"urban-shadows-playbook": ["corruption", "endMove", "statuses", "harm", "scars", "advancementCircles", "laterAdvancement", "letItOut", "intimacy", "debts", "extras"],
-	"the-sprawl-playbook": ["directives", "missionGear", "cred"],
+	"the-sprawl-playbook": ["directives", "directiveChoices", "missionGear", "cred", "characterName", "look", "cyberware", "xp", "xpMax", "links", "contacts", "hoursMarked"],
 };
 
 function renderMechanics(target: ResolvedPbtaPlaybook["target"], data: Record<string, unknown>, doc: Document): HTMLElement | null {

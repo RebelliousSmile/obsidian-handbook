@@ -3,12 +3,14 @@ import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../../games/capabilities";
 import { PBTA_PROJECTED_TARGETS } from "./specializedPlaybooks";
 import { PBTA_NPC_PROJECTED_TARGETS } from "./npc";
 import { PBTA_MOTW_PROJECTED_TARGETS } from "./motwBlocks";
+import { PBTA_SPRAWL_PROJECTED_TARGETS } from "./sprawlBlocks";
 
-/** Every specialised target Handbook resolves from a document alone: playbooks, non-player characters, teams, monsters and threats. */
+/** Every specialised target Handbook resolves from a document alone: playbooks, non-player characters, teams, monsters, threats and the Sprawl sheets. */
 export const PBTA_ALL_PROJECTED_TARGETS: readonly string[] = [
 	...PBTA_PROJECTED_TARGETS,
 	...PBTA_NPC_PROJECTED_TARGETS,
 	...PBTA_MOTW_PROJECTED_TARGETS,
+	...PBTA_SPRAWL_PROJECTED_TARGETS,
 ];
 
 /**

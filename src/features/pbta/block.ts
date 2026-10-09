@@ -5,6 +5,7 @@ import {
 	type MonsterheartsPlaybook,
 	type MonsterOfTheWeekPlaybook,
 	type Move,
+	type TheSprawlPlaybook,
 	type UrbanShadowsPlaybook,
 } from "schema-pbta";
 import type { BrumesBlock } from "../blocks/types";
@@ -12,6 +13,7 @@ import { renderPbtaMove, renderPbtaPlaybook } from "./renderer";
 import { renderMasksLayout } from "./masksLayout";
 import { renderMotwLayout } from "./motwLayout";
 import { renderMonsterheartsLayout } from "./monsterheartsLayout";
+import { renderSprawlLayout } from "./sprawlLayout";
 import { renderUrbanShadowsLayout } from "./urbanShadowsLayout";
 import { pbtaMoveShape, pbtaPlaybookShape } from "./shape";
 import { parsePbtaPlaybookToml, stringifyPbtaPlaybookToml, type ResolvedPbtaPlaybook } from "./specializedPlaybooks";
@@ -28,6 +30,9 @@ const PLAYBOOK_LAYOUTS: Record<string, Record<string, PlaybookLayout>> = {
 	},
 	"monsterhearts": {
 		"monsterhearts-playbook": (resolved, doc, resolveImage) => renderMonsterheartsLayout(resolved.data as MonsterheartsPlaybook, doc, resolveImage),
+	},
+	"the-sprawl": {
+		"the-sprawl-playbook": (resolved, doc) => renderSprawlLayout(resolved.data as TheSprawlPlaybook, doc),
 	},
 	"urban-shadows": {
 		"urban-shadows-playbook": (resolved, doc, resolveImage) => renderUrbanShadowsLayout(resolved.data as UrbanShadowsPlaybook, doc, resolveImage),

@@ -49,6 +49,14 @@ import {
 	pbtaThreatBlock,
 	pbtaThreatToToml,
 } from "../pbta/motwBlocks";
+import {
+	sprawlCardBlock,
+	sprawlCardToToml,
+	sprawlMatrixBlock,
+	sprawlMatrixToToml,
+	sprawlMissionBlock,
+	sprawlMissionToToml,
+} from "../pbta/sprawlBlocks";
 
 /**
  * Every block that can leave the note as a schema document. The list holds all
@@ -248,6 +256,30 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: pbtaThreatToToml,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta threat contract"),
+	},
+	{
+		block: sprawlMatrixBlock,
+		commandId: "copy-sprawl-matrix-as-toml",
+		noun: "Sprawl matrix sheet",
+		toToml: sprawlMatrixToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta Sprawl matrix contract"),
+	},
+	{
+		block: sprawlMissionBlock,
+		commandId: "copy-sprawl-mission-as-toml",
+		noun: "Sprawl mission",
+		toToml: sprawlMissionToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta Sprawl mission contract"),
+	},
+	{
+		block: sprawlCardBlock,
+		commandId: "copy-sprawl-card-as-toml",
+		noun: "Sprawl MC card",
+		toToml: sprawlCardToToml,
+		describeFailure: (source) =>
+			describeMissingPart(source, "it must match the canonical schema-pbta Sprawl card contract"),
 	},
 ];
 

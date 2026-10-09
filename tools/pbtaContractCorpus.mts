@@ -15,6 +15,11 @@ export const PBTA_TARGET_TO_BLOCK = {
 	"monster-of-the-week-team": "pbta-team",
 	"monster-of-the-week-monster": "pbta-monster",
 	"monster-of-the-week-threat": "pbta-threat",
+	"the-sprawl-matrix": "sprawl-matrix",
+	"the-sprawl-mission": "sprawl-mission",
+	"the-sprawl-threat": "sprawl-card",
+	"the-sprawl-corporation": "sprawl-card",
+	"the-sprawl-resource": "sprawl-card",
 } as const;
 
 export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
@@ -27,11 +32,16 @@ export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
 
 export const PBTA_SPECIALIZED_NPC_TARGETS = ["masks-npc"] as const;
 
-/** Documents of their own, one block each: a team, a monster and a threat. */
+/** Documents of their own, one block each: a team, a monster and a threat, then the Sprawl matrix, mission and cards. */
 export const PBTA_SPECIALIZED_CARD_TARGETS = [
 	"monster-of-the-week-team",
 	"monster-of-the-week-monster",
 	"monster-of-the-week-threat",
+	"the-sprawl-matrix",
+	"the-sprawl-mission",
+	"the-sprawl-threat",
+	"the-sprawl-corporation",
+	"the-sprawl-resource",
 ] as const;
 
 export type PbtaRenderTarget = keyof typeof PBTA_TARGET_TO_BLOCK;

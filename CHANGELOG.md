@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.41.0] - 2026-10-09
+
+### Added
+
+- The Sprawl character booklet: under the `the-sprawl` pack, a `pbta-playbook` is drawn as a two-face sheet (recto, then verso) whose regions, order and headings come from the pack's published presentation contract. Stats, links and Cred are values, the XP track and the six-segment harm track are boxes, moves, cyberware, directives and advancement are checklists, and regions without data are left out.
+- `sprawl-matrix`, `sprawl-mission` and `sprawl-card` blocks: the player matrix, the mission sheet, and the MC threat, corporation and resource cards, laid out as their published contracts say; each has a copy-as-TOML command. Other packs get none of them.
+
 ## [2.40.0] - 2026-10-08
 
 ### Added
