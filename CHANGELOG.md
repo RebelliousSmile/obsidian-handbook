@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.42.0] - 2026-10-09
+
+### Changed
+
+- The compact PNJ and creature cards take their text colour from the pack token `--adrenaline-card-ink` (dark red in light, pale red in dark) instead of the note text colour.
+- Creature states stack in a single column, one card under the other, separated by a rule.
+- The creature malus before HS prints as one empty circle per malus as entered, then `HS`; the count is never derived.
+
 ## [2.41.0] - 2026-10-09
 
 ### Added

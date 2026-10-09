@@ -183,7 +183,10 @@ for (const card of zy2Cards) assert.match(textOf(card), /Insensible/, "the perma
 assert.match(textOf(zy2Actions[0]), /Étourdissante/, "damage properties print with their action");
 assert.match(textOf(zy2Actions[0]), /Localisée \(Peur\)/, "a parameterised property keeps its parameter");
 assert.match(textOf(zy2Actions[0]), /Fatale 9\+/, "a numbered property keeps its threshold");
-assert.match(textOf(zy2Cards[0]), /Malus avant HS/, "the stimulated state prints the malus ahead of HS");
+const malusRow = only(zy2Cards[0], `${CARD}__form-malus-circles`, "one malus row on the stimulated card");
+assert.equal(findAll(malusRow, `${CARD}__circle-mark`).length, 3, "the circles are the entered malus, never derived");
+assert.match(textOf(malusRow), /^Malus\s*HS$/, "the malus circles end on HS");
+assert.equal(findAll(zy2Cards[1], `${CARD}__form-malus-circles`).length, 0, "the base state enters no malus, so no row");
 
 for (const callout of [
 	"info",
@@ -231,6 +234,8 @@ const scss = readdirSync(join("src", "styles", "adrenaline"))
 	.map((file) => readFileSync(join("src", "styles", "adrenaline", file), "utf8"))
 	.join("\n");
 assert.match(scss, /@media \(max-width: 520px\)/);
+assert.match(scss, /color: var\(--adrenaline-card-ink/, "the card text takes its colour from the pack token");
+assert.doesNotMatch(readFileSync(join("src", "styles", "adrenaline", "_monstre.scss"), "utf8"), /grid-template-columns: minmax\(0, 3fr\)/, "the state cards stack");
 assert.match(scss, /brumes-adrenaline-pj__columns-3[^}]*grid-template-columns:\s*repeat\(3/);
 assert.match(scss, /@container \(max-width: 420px\)[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
 assert.match(scss, /\.brumes-adrenaline-pnj[,\s][^{]*\{[^}]*max-width:\s*36rem/);

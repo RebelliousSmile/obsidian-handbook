@@ -282,6 +282,17 @@ function renderTracks(doc: Document, box: HTMLElement, block: AdrenalinePresenta
 	}
 }
 
+/** One empty circle per entered malus, then `HS`: the count is read as entered, never derived. */
+function renderMalusCircles(doc: Document, box: HTMLElement, found: unknown): void {
+	const count = Number(text(found));
+	if (!Number.isInteger(count) || count < 0) { line(doc, box, "Malus", text(found)); return; }
+	const row = add(box, doc, "div", "track");
+	add(row, doc, "b", "line-label", "Malus");
+	const circles = add(row, doc, "span", "circles");
+	for (let index = 0; index < count; index += 1) add(circles, doc, "i", "circle").classList.add(`${CARD}__circle-mark`);
+	add(row, doc, "b", "hs", "HS");
+}
+
 function renderInlineList(doc: Document, box: HTMLElement, found: unknown): void {
 	const record = asRecord(found);
 	const items = record
@@ -354,6 +365,7 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, source: 
 		case "threshold-rows": renderThresholds(doc, box, values[0]); break;
 		case "protection-lines": renderProtections(doc, box, values[0]); break;
 		case "malus-tracks": renderTracks(doc, box, block, values[0]); break;
+		case "malus-circles": renderMalusCircles(doc, box, values[0]); break;
 		case "status-frames": renderStatus(doc, box, values[0]); break;
 		case "skill-lines": for (const skill of records(values[0])) skillLine(doc, box, skill); break;
 		case "inline-list": renderInlineList(doc, box, values[0]); break;

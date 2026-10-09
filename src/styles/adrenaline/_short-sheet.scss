@@ -16,7 +16,7 @@
 		border: 1px solid var(--adrenaline-rule);
 		font-size: 0.84em;
 		line-height: 1.25;
-		color: var(--text-normal);
+		color: var(--adrenaline-card-ink, var(--text-normal));
 		background: var(--background-primary);
 	}
 	.brumes-adrenaline-card--banner-blue { --adrenaline-banner: var(--adrenaline-banner-blue); }
@@ -82,6 +82,7 @@
 	.brumes-adrenaline-card__track { display: flex; flex-wrap: wrap; gap: 0 0.5rem; align-items: center; }
 	.brumes-adrenaline-card__track .brumes-adrenaline-card__line-label { min-width: 8.5rem; }
 	.brumes-adrenaline-card__circles { display: inline-flex; gap: 0.18rem; }
+	.brumes-adrenaline-card__form-malus-circles .brumes-adrenaline-card__track .brumes-adrenaline-card__line-label { min-width: 0; }
 	.brumes-adrenaline-card__circle-mark {
 		display: inline-block;
 		width: 0.62rem;
