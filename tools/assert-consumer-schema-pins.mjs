@@ -3,12 +3,14 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { assertSiblingsFresh } from "./siblingFreshness.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const arguments_ = process.argv.slice(2).filter((argument) => argument !== "--");
 const requireFinal = arguments_.includes("--final");
 const positional = arguments_.filter((argument) => argument !== "--final");
 assert.ok(positional.length <= 1 && arguments_.length === positional.length + Number(requireFinal), "usage: assert-consumer-schema-pins [lantern-package.json] [--final]");
+if (positional.length === 0) assertSiblingsFresh(["lantern"], root);
 const lanternPackage = positional[0] ?? resolve(root, "../lantern/package.json");
 const handbook = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
 const lantern = JSON.parse(readFileSync(lanternPackage, "utf8"));

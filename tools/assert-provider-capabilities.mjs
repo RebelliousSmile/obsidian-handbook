@@ -3,11 +3,13 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildSync } from "esbuild";
+import { assertSiblingsFresh } from "./siblingFreshness.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const built = buildSync({ entryPoints: [resolve(root, "src/games/capabilities.ts")], bundle: true, platform: "node", format: "esm", write: false });
 const support = await import(`data:text/javascript;base64,${Buffer.from(built.outputFiles[0].contents).toString("base64")}`);
 const portable = [...support.PORTABLE_GAME_PLUGIN_SUPPORT.blocks, ...support.PORTABLE_GAME_PLUGIN_SUPPORT.styles, ...support.PORTABLE_GAME_PLUGIN_SUPPORT.presentations];
+assertSiblingsFresh(["schema-pbta", "schema-in-the-mist", "schema-adrenaline"], root);
 const expected = {
 	"schema-pbta": portable,
 	"schema-in-the-mist": ["render:mist"],

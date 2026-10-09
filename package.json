@@ -24,6 +24,7 @@
 		"assert:custom-packs": "node tools/assert-custom-packs.mjs",
 		"assert:mist-font-packs": "node tools/assert-mist-font-packs.mjs",
 		"assert:repository-manifest": "node tools/assert-repository-manifest.mjs",
+		"assert:sibling-freshness": "node tools/assert-sibling-freshness.mjs",
 		"assert:source-installer": "node tools/assert-source-installer.mjs",
 		"assert:schema-catalog": "node tools/assert-schema-catalog.mjs",
 		"e2e:request-url": "bash tools/e2e/request-url-journey.sh",
