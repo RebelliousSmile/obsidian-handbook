@@ -125,7 +125,7 @@ export function writeTypecheckConfig(coordinatorDir, paths) {
 	const dir = mkdtempSync(join(tmpdir(), "handbook-preview-"));
 	const root = slash(resolve(coordinatorDir));
 	const file = join(dir, "tsconfig.json");
-	const config = { extends: `${root}/tsconfig.json`, compilerOptions: { noEmit: true, skipLibCheck: true, paths }, include: [`${root}/**/*.ts`], exclude: [`${root}/node_modules`, `${root}/dist`] };
+	const config = { extends: `${root}/tsconfig.json`, compilerOptions: { noEmit: true, skipLibCheck: true, paths }, include: [`${root}/**/*.ts`], exclude: [`${root}/node_modules`, `${root}/dist`, `${root}/demo`] };
 	writeFileSync(file, JSON.stringify(config, null, "	"));
 	return file;
 }
