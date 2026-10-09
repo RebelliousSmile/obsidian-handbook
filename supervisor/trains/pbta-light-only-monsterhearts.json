@@ -2,7 +2,8 @@
 	"$schema": "../train.schema.json",
 	"id": "pbta-light-only-monsterhearts",
 	"title": "PbtA en clair seul, Monsterhearts v9",
-	"status": "open",
+	"status": "closed",
+	"closedAt": "2026-10-09T13:00:00.000Z",
 	"coordinationIssue": {
 		"repo": "obsidian-handbook",
 		"number": 88,
