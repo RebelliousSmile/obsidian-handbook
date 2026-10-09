@@ -177,6 +177,13 @@ assert.equal(findAll(zy2Actions[0], `${CARD}__trigger`)[0]?.textContent, "Attaqu
 assert.match(textOf(zy2Actions[0]), /Art martial \(Zombie\) 10 % \+ FOR = 40 %/);
 assert.equal(findAll(zy2Cards[1], `${CARD}__action`).length, 0, "the base state has no action of its own");
 assert.match(textOf(zy2Cards[1]), /Vêtements déchirés/, "equipment sits on the secondary card");
+// Roles the plan of schema-adrenaline#42 names as unproven: the permanent
+// state, the damage properties on their action, the malus ahead of HS.
+for (const card of zy2Cards) assert.match(textOf(card), /Insensible/, "the permanent state prints in Santé on each card");
+assert.match(textOf(zy2Actions[0]), /Étourdissante/, "damage properties print with their action");
+assert.match(textOf(zy2Actions[0]), /Localisée \(Peur\)/, "a parameterised property keeps its parameter");
+assert.match(textOf(zy2Actions[0]), /Fatale 9\+/, "a numbered property keeps its threshold");
+assert.match(textOf(zy2Cards[0]), /Malus avant HS/, "the stimulated state prints the malus ahead of HS");
 
 for (const callout of [
 	"info",

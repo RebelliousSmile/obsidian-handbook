@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { adrenalinePnjBlock } from "../src/features/adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../src/features/adrenalineMonstre/block";
+import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
 import { loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 
 // 1. The content partial exists and is wired into the Adrenaline index.
@@ -85,6 +86,9 @@ assert.match(content, /--adrenaline-emphasis-color/, "italics must read the emph
 assert.match(content, /:is\(em, i, \.cm-em\)/, "italics must apply in both reading view and Live Preview");
 assert.match(content, /--adrenaline-list-marker-glyph/, "lists must read the marker glyph token");
 assert.match(content, /--list-marker-color/, "lists must read the marker colour token");
+// The glyph replaces bullets only: an ordered list keeps its numbers.
+assert.doesNotMatch(content, /(?:^|[\s,>+~])ol\b[^{]*::marker/, "ordered lists must keep their native numbers");
+assert.doesNotMatch(content, /list-style(?:-type)?:\s*none/, "no list may lose its marker outright");
 assert.match(content, /--adrenaline-table-border/, "tables must read the border token");
 assert.match(content, /--adrenaline-table-header-bg/, "tables must read the header band token");
 assert.match(content, /--adrenaline-table-stripe/, "tables must read the row stripe token");
@@ -116,6 +120,13 @@ assert.match(
 	/\[data-brumes-callout-style="adrenaline-mention"\][^{]*\{[^}]*--callout-icon:\s*var\(--adrenaline-mention-icon/s,
 	"mention must take its icon from the pack",
 );
+// Every callout the pack publishes must be styled by the host.
+for (const entry of ADRENALINE_VISUAL_CALLOUTS) {
+	assert.ok(
+		callouts.includes(`[data-callout="${entry.id}"]`) || callouts.includes(`[data-brumes-callout-style="${entry.id}"]`),
+		`the published callout ${entry.id} must have a rule in the host`,
+	);
+}
 assert.match(callouts, /\[data-callout-metadata~="fond"\]/, "formation must honour the fond modifier");
 assert.match(
 	callouts,
