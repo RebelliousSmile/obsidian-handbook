@@ -25,7 +25,7 @@
 		"assert:mist-font-packs": "node tools/assert-mist-font-packs.mjs",
 		"assert:repository-manifest": "node tools/assert-repository-manifest.mjs",
 		"assert:source-installer": "node tools/assert-source-installer.mjs",
-		"assert:starter-kits": "node tools/assert-starter-kits.mjs",
+		"assert:schema-catalog": "node tools/assert-schema-catalog.mjs",
 		"e2e:request-url": "bash tools/e2e/request-url-journey.sh",
 		"e2e:layout-regions": "powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1",
 		"e2e:roller": "powershell -ExecutionPolicy Bypass -File tools/e2e/roller-journey.ps1",

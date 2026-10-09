@@ -2,10 +2,19 @@ import { Notice, SettingGroup } from "obsidian";
 import { log } from "../utils/logger";
 import { t } from "../utils/i18n";
 import { SchemaSourceModal, SchemaSourceRemovalModal } from "./sourceModal";
+import { SchemaCatalogModal } from "./schemaCatalogModal";
 import type { SettingsHost } from "./sectionHelpers";
 
 export function renderSchemaSources(host: SettingsHost, section: SettingGroup) {
 	const sources = host.plugin.settings.schemaSources;
+	section.addSetting((setting) => {
+		setting
+			.setName(t("Available packs"))
+			.setDesc(t("Choose a schema to install its game packs. Each schema can be installed independently."))
+			.addButton((button) => button.setButtonText(t("Install game packs")).onClick(() => {
+				new SchemaCatalogModal(host.app, host.plugin, () => host.redisplay()).open();
+			}));
+	});
 	section.addSetting((setting) => {
 		setting
 			.setName(t("Repositories"))

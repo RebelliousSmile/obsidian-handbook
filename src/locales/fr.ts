@@ -2,6 +2,11 @@ import type { Translations } from "./types";
 
 /** French. Keys are the English texts; see `src/utils/i18n.ts` for how a language is added. */
 export const fr: Translations = {
+	"Install game packs": "Installer des packs de jeu",
+	"Available packs": "Packs disponibles",
+	"Choose a schema to install its game packs. Each schema can be installed independently.": "Choisissez un schéma pour installer ses packs de jeu. Chaque schéma peut être installé séparément.",
+	"No installable pack catalogue is available in this release.": "Aucun catalogue de packs installables n'est disponible dans cette version.",
+	"Installing {label}…": "Installation de {label}…",
 	// Menus
 	"Tag, status or limit": "Tag, statut ou limite",
 	"Multi-column region": "Région multicolonne",
@@ -306,11 +311,7 @@ export const fr: Translations = {
 	"PbtA coverage: {readable}, 1 finding.": "Couverture PbtA : {readable}, 1 constat.",
 	"PbtA coverage: {readable}, {count} findings.": "Couverture PbtA : {readable}, {count} constats.",
 
-	// Settings: starter kits
-	"Choose a starter kit": "Choisir un kit de démarrage",
-	"Handbook has no game installed yet. Choose a starter kit to install its schema source and make the plugin useful immediately.":
-		"Aucun jeu n'est encore installé dans Handbook. Choisissez un kit de démarrage pour installer sa source de schéma et rendre le plugin utile tout de suite.",
-	"No starter kit catalogue is available in this release.": "Aucun catalogue de kits de démarrage n'est disponible dans cette version.",
+	// Settings: pack installation
 	"Install": "Installer",
 	"Installing…": "Installation…",
 	"{label} is ready.": "{label} est prêt.",

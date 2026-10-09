@@ -1,0 +1,20 @@
+{
+  "manifestVersion": 1,
+  "sources": [
+    {
+      "label": "Mist Engine",
+      "repository": "RebelliousSmile/schema-in-the-mist",
+      "reference": { "kind": "latest" }
+    },
+    {
+      "label": "Adrenaline System",
+      "repository": "RebelliousSmile/schema-adrenaline",
+      "reference": { "kind": "latest" }
+    },
+    {
+      "label": "PbtA",
+      "repository": "RebelliousSmile/schema-pbta",
+      "reference": { "kind": "latest" }
+    }
+  ]
+}

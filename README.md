@@ -40,7 +40,7 @@ Pertinent si tu écris tes notes de campagne dans Obsidian pour l'un de ces jeux
 
 1. Active les plugins communautaires d'Obsidian et installe BRAT.
 2. Dans BRAT, ajoute `RebelliousSmile/obsidian-handbook`, puis active **Handbook**.
-3. Choisis un jeu au premier démarrage. Pour en ajouter un, ouvre **Réglages → Handbook → Schema sources → Add source**.
+3. Au premier démarrage, choisis un schéma dans la liste des packs installables : Mist Engine, Adrenaline System ou PbtA. Pour en ajouter un, ouvre **Réglages → Handbook → Sources de schémas → Installer des packs de jeu**. Chaque schéma installe ses propres packs, séparément.
 
 Le [guide d'installation](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Getting-Started-FR) détaille les sources, les réglages, les illustrations et les personnalisations locales.
 
@@ -103,7 +103,7 @@ Relevant if you write campaign notes in Obsidian for one of these games. Probabl
 
 1. Enable Obsidian Community plugins and install BRAT.
 2. Add `RebelliousSmile/obsidian-handbook` in BRAT, then enable **Handbook**.
-3. Choose a game on first launch. To add another, open **Settings → Handbook → Schema sources → Add source**.
+3. On first launch, choose a schema from the installable packs: Mist Engine, Adrenaline System or PbtA. To add another, open **Settings → Handbook → Schema sources → Install game packs**. Each schema installs its own packs independently.
 
 The [getting started guide](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Getting-Started-EN) covers sources, settings, illustrations and local customization. The [documentation table](#documentation) links every guide in both languages, including the schema release train for PbtA, Adrenaline and Mist.
 

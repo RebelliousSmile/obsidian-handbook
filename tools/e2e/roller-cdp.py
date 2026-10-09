@@ -164,7 +164,7 @@ wait_for("Boolean(globalThis.app?.vault && globalThis.app?.workspace)")
 wait_for("Boolean(app.vault.getAbstractFileByPath('roller.md'))")
 wait_for("""(() => { const modal = document.querySelector('.mod-trust-folder'); const button = [...(modal?.querySelectorAll('button') || [])].pop(); button?.click(); return app.plugins.isEnabled() && !document.querySelector('.mod-trust-folder'); })()""")
 wait_for("Boolean(app.plugins.plugins['obsidian-handbook'] && app.plugins.plugins['obsidian-dice-roller'])")
-# A fresh vault can show Handbook's starter-kit prompt. It swallows editor
+# A fresh vault can show Handbook's pack catalogue. It swallows editor
 # commands, so dismiss it before deliberately entering reading mode.
 time.sleep(2)
 wait_for("(() => { document.querySelectorAll('.modal-container .modal-header-button, .modal-container .modal-close-button').forEach(button => button.click()); return !document.querySelector('.modal-container'); })()")

@@ -108,7 +108,7 @@ restore() {
   if [[ "$status" -ne 0 && "$CURRENT_STEP" =~ ^[1-5]$ ]]; then
     for step in $(seq "$((LAST_COMPLETED + 1))" 5); do
       case "$step" in
-        1) action="Open a clean plugin install"; expected="Starter-kit modal offers Mist Engine" ;;
+        1) action="Open a clean plugin install"; expected="Pack catalogue offers Mist Engine" ;;
         2) action="Install Mist Engine"; expected="Success notice, City of Mist, and exact text/binary files" ;;
         3) action="Check schema-in-the-mist"; expected="Source editor opens" ;;
         4) action="Save and check tag v1.0.0"; expected="Modal closes, tag revision and files match, no requestUrl errors" ;;
@@ -194,15 +194,15 @@ APP_PID=$!
 
 CURRENT_STEP="1"
 python3 "$REPO_ROOT/tools/e2e/request-url-cdp.py" ready
-record "1" "Open a clean plugin install" "Starter-kit modal offers Mist Engine" "Modal and action are present" "PASS" "$OUTPUT_DIR/01-starter-kit.png"
+record "1" "Open a clean plugin install" "Pack catalogue offers Mist Engine" "Modal and action are present" "PASS" "$OUTPUT_DIR/01-pack-catalogue.png"
 LAST_COMPLETED=1
 
 CURRENT_STEP="2"
 python3 "$REPO_ROOT/tools/e2e/request-url-cdp.py" install
 for _ in $(seq 1 120); do [[ -f "$SOURCE_JSON" ]] && break; sleep 0.25; done
 [[ -f "$SOURCE_JSON" ]] || fail "Mist Engine source metadata was not created"
-[[ "$(jq -r '.reference.kind' "$SOURCE_JSON")" == "branch" ]]
-[[ "$(jq -r '.reference.value' "$SOURCE_JSON")" == "main" ]]
+[[ "$(jq -r '.reference.kind' "$SOURCE_JSON")" == "latest" ]]
+[[ "$(jq -r '.releaseTag' "$SOURCE_JSON")" != "null" ]]
 [[ "$(jq -r '.mode' "$DATA_JSON")" == "city-of-mist" ]]
 MAIN_REVISION="$(jq -r .revision "$SOURCE_JSON")"
 [[ "$(curl -fsSL "https://api.github.com/repos/RebelliousSmile/schema-in-the-mist/commits/$MAIN_REVISION" | jq -r .sha)" == "$MAIN_REVISION" ]]

@@ -38,7 +38,6 @@ import {
 import { resolveGithubSource } from "./games/githubSources";
 import { installResolvedSchemaSource } from "./games/sourceInstaller";
 import { InstalledSchemaSource, SchemaSource } from "./games/sources";
-import { installStarterKitSources, type StarterKit } from "./games/starterKits";
 import {
 	EMPTY_OVERRIDE,
 	GameOverride,
@@ -69,7 +68,7 @@ import { loadCalloutAliasFeature } from "./features/callouts/aliasSupport";
 import { buildCalloutStyleCss } from "./features/callouts/styleWriter";
 import { cleanUndeclaredCalloutsWithNotice } from "./features/callouts/contextMenu";
 import { clearCalloutCommands, syncCalloutCommands } from "./features/callouts/commands";
-import { StarterKitModal } from "./settings/starterKitModal";
+import { SchemaCatalogModal } from "./settings/schemaCatalogModal";
 import {
 	clearNoteBackground,
 	refreshNoteBackground,
@@ -93,7 +92,7 @@ export default class BrumesPlugin extends Plugin {
 	private assets: GameAssetState = emptyAssetState("");
 	private assetRefreshSequence = 0;
 	private pendingFontPackId: string | null = null;
-	private starterKitPrompted = false;
+	private schemaCatalogPrompted = false;
 
 	async onload() {
 		await prepareGameStorage(this);
@@ -111,6 +110,11 @@ export default class BrumesPlugin extends Plugin {
 		);
 
 		this.addSettingTab(new BrumesSettingTab(this.app, this));
+		this.addCommand({
+			id: "install-game-packs",
+			name: t("Install game packs"),
+			callback: () => new SchemaCatalogModal(this.app, this).open(),
+		});
 
 		loadTagFeature(this);
 		loadLayoutRegions(this);
@@ -174,7 +178,7 @@ export default class BrumesPlugin extends Plugin {
 			// The vault does not watch Handbook's config data, so overrides and
 			// illustrations are read once here and on demand afterwards.
 			void this.reloadStyleSources();
-			void this.promptForStarterKit();
+			this.promptForSchema();
 		});
 	}
 
@@ -257,6 +261,8 @@ export default class BrumesPlugin extends Plugin {
 		this.settings.schemaSources = sources;
 		await this.saveData(this.settings);
 		await this.refreshGameRegistry();
+		// Persist the initial game selected from the newly installed metadata.
+		await this.saveData(this.settings);
 	}
 
 	async removeSchemaSource(source: SchemaSource) {
@@ -269,19 +275,10 @@ export default class BrumesPlugin extends Plugin {
 	}
 
 
-	async installStarterKit(starterKit: StarterKit) {
-		await installStarterKitSources(starterKit, (source) => this.saveSchemaSource(source, null));
-		if (resolveGamePack(starterKit.initialMode).id === starterKit.initialMode) {
-			this.settings.mode = starterKit.initialMode;
-			await this.saveData(this.settings);
-			this.applySettings({ refreshMarkdown: true });
-		}
-	}
-
-	private async promptForStarterKit() {
-		if (this.starterKitPrompted || GAME_PACKS.length > 0) return;
-		this.starterKitPrompted = true;
-		new StarterKitModal(this.app, this).open();
+	private promptForSchema() {
+		if (this.schemaCatalogPrompted || GAME_PACKS.length > 0) return;
+		this.schemaCatalogPrompted = true;
+		new SchemaCatalogModal(this.app, this).open();
 	}
 
 	private applySettings(options: ApplySettingsOptions = {}) {

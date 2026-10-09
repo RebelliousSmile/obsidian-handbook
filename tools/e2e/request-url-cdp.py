@@ -120,11 +120,11 @@ elif action == "ready":
       if (trust) [...trust.querySelectorAll('button')].pop()?.click();
     })()""")
     wait_for(
-        "document.body.innerText.includes('Choose a starter kit') && "
+        "document.body.innerText.includes('Install game packs') && "
         "document.body.innerText.includes('Mist Engine')"
     )
-    screenshot("01-starter-kit.png")
-    print("starter_kit=ready")
+    screenshot("01-pack-catalogue.png")
+    print("pack_catalogue=ready")
 elif action == "install":
     transient_errors = ("ERR_NETWORK_CHANGED", "ERR_TIMED_OUT", "ERR_CONNECTION_RESET")
     for attempt in range(1, 4):
@@ -132,7 +132,7 @@ elif action == "install":
             """
             (() => {
               const modal = [...document.querySelectorAll('.modal')]
-                .find(node => node.innerText.includes('Choose a starter kit'));
+                .find(node => node.innerText.includes('Install game packs'));
               const button = modal && [...modal.querySelectorAll('button')]
                 .find(node => node.innerText.trim() === 'Install');
               if (!button) return null;
@@ -175,6 +175,7 @@ elif action == "install":
     else:
         raise RuntimeError("transient network failures exhausted three install attempts")
 elif action == "open-source":
+    evaluate("document.querySelector('.modal-close-button')?.click()")
     original_target_id = target["id"]
     opened = evaluate(
         "Boolean(globalThis.app?.setting && (app.setting.open(), true))"
