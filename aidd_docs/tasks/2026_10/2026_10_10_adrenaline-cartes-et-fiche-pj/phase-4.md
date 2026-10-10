@@ -145,6 +145,16 @@ journey
 4. `pnpm supervise ship --message "<message>" --run` ; verdict de rendu contre `monstre.jpg` et `pnj.jpg` ; puis constat d'arrivée.
 5. Cocher #101 §2 : en-tête d'état, « Insensible », détection et déplacement.
 
+### `4)` Coffre Zombiology : repasser sur les blocs et les modèles
+
+> Le TOML change avec le contrat : les notes écrites avant ne sont plus à jour. Ce passage suit l'arrivée du train, il n'en fait pas partie.
+
+1. Déployer le plugin publié dans le coffre (`C:/Users/fxgui/Documents/Perso/RPG/zombiology`), sans toucher à son `data.json`.
+2. Relever chaque bloc `adrenaline-monstre` et `adrenaline-pnj` du coffre par recherche, modèles compris (`template_pnj.md`, `Handbook - Test cartes compactes.md`, `Test Handbook — Adrenaline.md` à la racine) ; laisser `aidd_docs/` du coffre, qui garde des copies d'archive.
+3. Appliquer les ruptures de v<N+1> : `armesMentales` devient `armesPsychologiques` dans les blocs créature ; LOG, VOL, CHA et `armesMentales` ne restent dans aucun bloc où le contrat les refuse ; détection et déplacement gardent leurs valeurs saisies.
+4. Régénérer les modèles de bloc depuis le modèle Lantern publié plutôt que les retoucher à la main, pour qu'ils portent la forme courante du TOML.
+5. Recharger le plugin et ouvrir chaque note touchée : aucun bloc refusé, aucun avertissement de clé inconnue.
+
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
@@ -155,4 +165,5 @@ journey
 | 1 | « État Insensible » s'affiche sur la ligne des seuils ; les cercles de Malus et « HS » restent inchangés. |
 | 1 | `pnpm assert:style-scope` et `pnpm assert:adrenaline-theme` sont verts ; à l'export PDF clair la carte reste lisible. |
 | 2 | La garde de couverture de Lantern est verte ; l'aperçu Lantern et le rendu Handbook de l'exemple Zy-2 montrent les mêmes régions dans le même ordre. |
+| 4 | Dans le coffre Zombiology, chaque bloc créature et PNJ hors `aidd_docs/` se rend sans refus, et `template_pnj.md` produit un bloc valide en v<N+1>. |
 | 3 | `present` est vert, l'utilisateur valide le rendu, le train se clôt, et aucun `package.json` ne garde un chemin d'archive locale. |

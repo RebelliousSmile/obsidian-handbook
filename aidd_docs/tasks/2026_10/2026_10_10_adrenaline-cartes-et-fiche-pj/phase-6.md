@@ -144,7 +144,6 @@ journey
 
 1. `PresentationBlocks.tsx` et `presentationSheet.css` : mêmes formes ; la garde de couverture l'exige.
 2. `descriptor.ts`, `toml.ts`, `sample.ts` : scénario, contraintes, historique, personnalité ; aller-retour TOML sans perte.
-3. Coffre Zombiology : lister à l'utilisateur les valeurs `armesMentales` des douze blocs PJ (`07-pretires-2.md`, `PAJ1.md`) avant de les retirer ; ce sont ses notes, il dit où va chaque valeur.
 3. Régler le nombre de lignes des possessions et des armes physiques sur l'alignement avec la table des armes sociales, et le reporter dans la présentation avant le départ du train.
 4. `sections.ts` : identité en dernier ; libellés i18n, français d'abord.
 
@@ -158,13 +157,24 @@ journey
 4. `pnpm supervise ship --message "<message>" --run` ; verdict de rendu contre la feuille de PJ du PDF des prétirés et la capture #74 ; puis constat d'arrivée.
 5. Refaire les deux captures de `schema-adrenaline/docs/images/` ; mettre à jour la note mémoire sur la référence PJ ; cocher #101 §3.
 
+### `4)` Coffre Zombiology : repasser sur les blocs et les modèles
+
+> Le TOML change avec le contrat : les notes écrites avant ne sont plus à jour. Ce passage suit l'arrivée du train, il n'en fait pas partie.
+
+1. Déployer le plugin publié dans le coffre (`C:/Users/fxgui/Documents/Perso/RPG/zombiology`), sans toucher à son `data.json`.
+2. Relever chaque bloc `adrenaline-pj` du coffre par recherche, modèles compris (`template_pnj.md`, `Handbook - Test cartes compactes.md`, `Test Handbook — Adrenaline.md` à la racine) ; laisser `aidd_docs/` du coffre, qui garde des copies d'archive.
+3. Appliquer les ruptures de v<N+2> : lister à l'utilisateur les valeurs `armesMentales` des douze blocs PJ (`07-pretires-2.md`, `PAJ1.md`) avant de les retirer — ce sont ses notes, il dit où va chaque valeur ; ajouter les champs nouveaux seulement là où il les saisit.
+4. Régénérer les modèles de bloc depuis le modèle Lantern publié plutôt que les retoucher à la main, pour qu'ils portent la forme courante du TOML.
+5. Recharger le plugin et ouvrir chaque note touchée : aucun bloc refusé, aucun avertissement de clé inconnue.
+
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | ---- | ------------------- |
 | 1 | Sur l'exemple complet, la fiche Handbook affiche l'identité en dernière section, repliable, contenant les contraintes, l'historique et la personnalité ; plus aucun tableau d'identité en haut. |
 | 1 | La table des armes sociales affiche la note, trois colonnes, sept lignes et la légende ; les dés sont surlignés en jaune ou en rouge selon la nature publiée ; aucune de ces lignes n'est écrite dans le code de Handbook. |
-| 1 | Un bloc PJ antérieur à v<N+2> s'affiche sans erreur ni avertissement ; un figurant sans identité n'imprime pas de section Identité. |
+| 1 | Un bloc PJ antérieur à v<N+2> qui ne saisit pas `armesMentales` s'affiche sans erreur ni avertissement ; un figurant sans identité n'imprime pas de section Identité. |
 | 1 | À l'export PDF clair, la section Identité est imprimée dépliée et `pnpm assert:style-scope` est vert. |
 | 2 | La garde de couverture de Lantern est verte ; un PJ saisi dans Lantern avec les champs ajoutés ressort en TOML puis se relit à l'identique. |
+| 4 | Dans le coffre Zombiology, chaque bloc PJ hors `aidd_docs/` se rend sans refus, et aucun ne porte `armesMentales`. |
 | 3 | `present` est vert, l'utilisateur valide le rendu contre la fiche à jour, le train se clôt, et aucun `package.json` ne garde un chemin d'archive locale. |
