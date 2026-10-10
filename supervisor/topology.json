@@ -99,6 +99,11 @@
 				[
 					"npm",
 					"run",
+					"assert:adrenaline-coverage"
+				],
+				[
+					"npm",
+					"run",
 					"assert:presentation-coverage"
 				]
 			],
@@ -124,6 +129,11 @@
 					"npm",
 					"run",
 					"assert:adrenaline-examples"
+				],
+				[
+					"npm",
+					"run",
+					"assert:adrenaline-coverage"
 				],
 				[
 					"npm",
