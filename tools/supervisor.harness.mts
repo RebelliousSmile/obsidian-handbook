@@ -834,7 +834,7 @@ function drivePbta(world: World, topology: string) {
 	return { pbta, sha, candidate, candidatePath: `release-train/candidates/schema-pbta-v${NEXT}-rc.1.json`, trainPath: `release-train/schema-pbta-v${NEXT}.json`, result };
 }
 
-scenario("publish --run takes schema-pbta through digest, stage, release-train and promote, landing its manifests and the adoption itself", (world) => {
+scenario("publish --run takes schema-pbta through digest, stage and promote, landing its manifests and the adoption itself", (world) => {
 	const topology = presentedTrain(world, ["schema-pbta"]);
 	const { pbta, sha, candidate, candidatePath, trainPath, result } = drivePbta(world, topology);
 	const output = ok(result, "publish --run");
@@ -845,7 +845,6 @@ scenario("publish --run takes schema-pbta through digest, stage, release-train a
 	assert.deepEqual(dispatches(world), [
 		["workflow", "run", "release.yml", ...head, "-f", "mode=digest", "-f", `provider_commit=${sha}`],
 		["workflow", "run", "release.yml", ...head, "-f", "mode=stage", "-f", `provider_commit=${sha}`, "-f", `config=${candidatePath}`],
-		["workflow", "run", "release-train.yml", ...head, "-f", `provider_commit=${sha}`, "-f", `config=${trainPath}`],
 		["workflow", "run", "release.yml", ...head, "-f", "mode=promote", "-f", `provider_commit=${sha}`, "-f", `config=${trainPath}`],
 	]);
 	const candidateManifest = JSON.parse(originFile(world, "schema-pbta", candidatePath));
@@ -863,7 +862,7 @@ scenario("publish --run takes schema-pbta through digest, stage, release-train a
 	const record = readRecord(world).publication["schema-pbta"];
 	assert.equal(record.final.tag, `v${NEXT}`);
 	assert.equal(record.final.sha256, record.candidate.sha256);
-	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "release-train success", "promote success"]);
+	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "promote success"]);
 	assert.match(ok(publish(world, false), "the presentation still holds after the publication"), /Every provider of train couleur-otherscape is published/);
 });
 
@@ -902,7 +901,7 @@ function stagedPbta(world: World) {
 	const result = publish(world, true, topology);
 	assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
 	assert.match(result.stderr, /release\.yml run \S+ concluded failure/);
-	assert.deepEqual(readRecord(world).publication["schema-pbta"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "release-train success", "promote failure"]);
+	assert.deepEqual(readRecord(world).publication["schema-pbta"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["digest success", "stage success", "promote failure"]);
 	return {
 		pbta,
 		sha,
@@ -979,7 +978,7 @@ scenario("a candidate recorded without its commit and its fingerprint is held to
 	assert.ok(!shown.includes("was packed from"), shown);
 	assert.ok(!("commit" in readRecord(world).publication["schema-pbta"].candidate), "an older record was given a commit it never observed");
 
-	// What the presented commit costs such a record: both manifests landed again, the proof and the promotion dispatched on it.
+	// What the presented commit costs such a record: both manifests landed again, the promotion dispatched on it.
 	const presented = boundTo(world, "schema-pbta");
 	const before = dispatches(world).length;
 	const landed = head();
@@ -988,7 +987,6 @@ scenario("a candidate recorded without its commit and its fingerprint is held to
 	});
 	assert.match(ok(publish(world, true, topology), "publish --run on an older record"), /Every provider of train couleur-otherscape is published/);
 	assert.deepEqual(dispatches(world).slice(before).map((args) => `${args[2]} ${args.slice(7).join(" ")}`), [
-		`release-train.yml -f provider_commit=${presented} -f config=${manifestPath}`,
 		`release.yml -f mode=promote -f provider_commit=${presented} -f config=${manifestPath}`,
 	]);
 	assert.deepEqual(git(world.dir("schema-pbta"), "log", "--format=%s", `${landed}..origin/main`).split("\n").reverse(), [
@@ -1045,25 +1043,25 @@ function rehearsed(world: World): Array<[string, number]> {
 	return durations(world).filter((entry) => entry.step === "rehearse").map((entry): [string, number] => [entry.repo, entry.status]);
 }
 
-scenario("publish --run rehearses the train manifest of schema-pbta before it lands it, and again before it dispatches release-train.yml", (world) => {
+scenario("publish --run rehearses the train manifest of schema-pbta before it lands it, and dispatches no release-train.yml", (world) => {
 	const topology = presentedTrain(world, ["schema-pbta"]);
 	const shown = ok(publish(world, false, topology), "publish");
 	assert.ok(!shown.includes("rehearsed"), "a step no rehearsal comes before announces one");
 	const { trainPath, result } = drivePbta(world, topology);
 	const output = ok(result, "publish --run");
-	// The stand-in validation is red on a manifest it cannot read: both times the file was in the checkout.
+	// The stand-in validation is red on a manifest it cannot read: the file was in the checkout.
 	const call = `schema-pbta run ${REHEARSAL} -- ${trainPath}`;
-	assert.deepEqual(rehearsals(world), [call, call]);
-	assert.deepEqual(rehearsed(world), [["schema-pbta", 0], ["schema-pbta", 0]]);
+	assert.deepEqual(rehearsals(world), [call]);
+	assert.deepEqual(rehearsed(world), [["schema-pbta", 0]]);
 	assert.ok(output.includes(`  rehearsed first: $ npm run ${REHEARSAL} -- ${trainPath} (in ${world.dir("schema-pbta")})`), output);
 	assert.ok(output.includes(`schema-pbta: rehearsed ${trainPath}: 1 command(s) green in `), output);
-	assert.equal(dispatches(world, "release-train.yml").length, 1);
+	assert.deepEqual(dispatches(world, "release-train.yml"), []);
 	assert.equal(git(world.dir("schema-pbta"), "status", "--porcelain"), "", "the rehearsal left the checkout changed");
 });
 
-scenario("a red rehearsal stops publish --run before the manifest is landed, then before release-train.yml is dispatched, and its whole output is kept", (world) => {
+scenario("a red rehearsal stops publish --run before the manifest is landed, and its whole output is kept", (world) => {
 	const topology = presentedTrain(world, ["schema-pbta"]);
-	world.updateState((state) => { state.localEffects = { ...state.localEffects, [`schema-pbta ${REHEARSAL}`]: [{ status: 7 }, {}, { status: 8 }] }; });
+	world.updateState((state) => { state.localEffects = { ...state.localEffects, [`schema-pbta ${REHEARSAL}`]: [{ status: 7 }] }; });
 	const { trainPath, result } = drivePbta(world, topology);
 	const dir = world.dir("schema-pbta");
 	const log = resolve(logsDir(world), "schema-pbta-1-rehearse.log");
@@ -1079,19 +1077,13 @@ scenario("a red rehearsal stops publish --run before the manifest is landed, the
 	assert.ok(!existsSync(resolve(dir, trainPath)), "the rehearsed manifest was left in the checkout");
 	assert.equal(git(dir, "status", "--porcelain"), "");
 
-	// Landed once its rehearsal is green; red again before the dispatch.
-	const second = publish(world, true, topology);
-	assert.equal(second.status, 1, second.stdout);
-	assert.match(second.stderr, /exited 8; nothing was landed or dispatched/);
+	// Landed once its rehearsal is green, and nothing is rehearsed after it.
+	const second = ok(publish(world, true, topology), "publish --run, the rehearsal green");
+	assert.match(second, /Every provider of train couleur-otherscape is published/);
 	assert.ok(onOrigin(), "the manifest was not landed behind its green rehearsal");
-	assert.deepEqual(dispatches(world, "release-train.yml"), [], "release-train.yml was dispatched behind a red rehearsal");
 	assert.equal(git(dir, "status", "--porcelain"), "");
-
-	const third = ok(publish(world, true, topology), "publish --run, the rehearsal green");
-	assert.match(third, /Every provider of train couleur-otherscape is published/);
-	assert.equal(dispatches(world, "release-train.yml").length, 1, "release-train.yml was dispatched more than once");
-	assert.equal(rehearsals(world).length, 4);
-	assert.deepEqual(rehearsed(world).map((entry) => entry[1]), [7, 0, 8, 0]);
+	assert.equal(rehearsals(world).length, 2);
+	assert.deepEqual(rehearsed(world).map((entry) => entry[1]), [7, 0]);
 });
 
 scenario("a rehearsal refuses a commit origin/main does not descend from, before any command", (world) => {
@@ -1131,7 +1123,6 @@ scenario("a provider that declares no rehearsal is published as before, and noth
 	assert.ok(!output.includes("rehearsed"), output);
 	assert.deepEqual(rehearsals(world), []);
 	assert.deepEqual(rehearsed(world), []);
-	assert.equal(dispatches(world, "release-train.yml").length, 1);
 });
 
 scenario("a rehearsal that is not a list of commands, that does not name the manifest, or that a consumer declares, is refused before any git command", (world) => {
@@ -1216,34 +1207,33 @@ scenario("a consumer that fails with the candidate stops publish --run by name, 
 	assert.deepEqual(publishCalls(world, world.dir("schema-in-the-mist")), [], "the provider went on without its consumer");
 });
 
-scenario("after a failed release-train, publish resumes at the proof, pushes the final tag and follows the release it starts", (world) => {
+scenario("after a failed candidate run, publish dispatches it again, lands the manifest, pushes the final tag and follows the release it starts", (world) => {
 	const topology = presentedTrain(world, ["schema-adrenaline"]);
 	const adrenaline = REPOSITORY["schema-adrenaline"];
 	world.updateState((state) => {
-		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
-		state.workflowEffects[`${adrenaline} release-train.yml`] = [{ conclusion: "failure" }, {}];
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ conclusion: "failure" }, { createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
 		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ repository: adrenaline, workflow: "release.yml", createRelease: world.release("schema-adrenaline", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-adrenaline")) }];
 	});
 	const failed = publish(world, true, topology);
 	assert.equal(failed.status, 1, failed.stdout);
-	assert.match(failed.stderr, /release-train\.yml run https:\/\/github\.com\/RebelliousSmile\/schema-adrenaline\/actions\/runs\/\d+ concluded failure/);
-	for (const id of ["obsidian-handbook", "lantern"]) assert.equal(lastSubject(world, id), `chore(deps): adopt schema-adrenaline v${NEXT}-rc.1`);
+	assert.match(failed.stderr, /publish-candidate\.yml run https:\/\/github\.com\/RebelliousSmile\/schema-adrenaline\/actions\/runs\/\d+ concluded failure/);
+
+	const shown = ok(publish(world, false, topology), "publish after the failure");
+	assert.ok(shown.includes(`$ gh workflow run publish-candidate.yml -R ${adrenaline} --ref main -f tag=v${NEXT}-rc.1`), shown);
+	const output = ok(publish(world, true, topology), "publish --run again");
 	const trainPath = `release-train/schema-adrenaline-v${NEXT}.json`;
 	const manifest = JSON.parse(originFile(world, "schema-adrenaline", trainPath));
 	assert.deepEqual(Object.keys(manifest).sort(), ["candidate", "consumers", "protocol"]);
 	assert.deepEqual(Object.keys(manifest.candidate).sort(), ["finalTag", "integrity", "provider", "providerCommit", "releaseUrl", "sha256", "stagingTag", "version"]);
 	assert.deepEqual(manifest.consumers.map((consumer: any) => Object.keys(consumer).sort().join(" ")), ["ref repository role", "ref repository role"]);
 
-	const shown = ok(publish(world, false, topology), "publish after the failure");
-	assert.ok(shown.includes(`$ gh workflow run release-train.yml -R ${adrenaline} --ref main -f manifest=${trainPath}`), shown);
-	const output = ok(publish(world, true, topology), "publish --run again");
 	assert.ok(output.includes(`$ git push origin origin/main:refs/tags/v${NEXT}`), output);
 	assert.match(output, /Every provider of train couleur-otherscape is published/);
 	assert.notEqual(sh(world.dir("schema-adrenaline"), "git", ["ls-remote", "--exit-code", "--tags", "origin", `refs/tags/v${NEXT}`]).status, 2, "the final tag was not pushed");
 
-	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml", "release-train.yml"], "release.yml was dispatched on top of the run of the tag");
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "publish-candidate.yml"], "release.yml was dispatched on top of the run of the tag");
 	const record = readRecord(world).publication["schema-adrenaline"];
-	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate success", "release-train failure", "release-train success"]);
+	assert.deepEqual(record.runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate failure", "candidate success"]);
 	assert.equal(record.final.sha256, record.candidate.sha256);
 
 	const final = JSON.parse(originFile(world, "schema-adrenaline", `release-train/schema-adrenaline-v${NEXT}-final.json`));
@@ -1265,16 +1255,17 @@ scenario("a dispatched run held by reviewers stops publish at once; run again, t
 	assert.match(held.stderr, /run https:\/\/github\.com\/RebelliousSmile\/schema-adrenaline\/actions\/runs\/\d+ is waiting: the release environment still has required reviewers; remove them, then run the command again: pnpm supervise publish --run/);
 	assert.deepEqual(readRecord(world).publication["schema-adrenaline"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate null"]);
 
-	// The reviewers are gone: the held run completes, and the run after it stays open for one look before it fails.
+	// The reviewers are gone: the held run completes; the release of the tag fails, and the one dispatched after it stays open for one look before it fails.
 	world.updateState((state) => {
 		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
-		state.workflowEffects[`${adrenaline} release-train.yml`] = [{ status: "in_progress" }, { conclusion: "failure" }];
+		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ repository: adrenaline, workflow: "release.yml", conclusion: "failure" }];
+		state.workflowEffects[`${adrenaline} release.yml`] = [{ status: "in_progress" }, { conclusion: "failure" }];
 	});
 	const failed = publish(world, true, topology);
 	assert.equal(failed.status, 1, failed.stdout);
-	assert.match(failed.stderr, /release-train\.yml run \S+ concluded failure/);
-	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml"], "a run was dispatched a second time");
-	assert.deepEqual(readRecord(world).publication["schema-adrenaline"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate success", "release-train failure"]);
+	assert.match(failed.stderr, /release\.yml run \S+ concluded failure/);
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release.yml"], "a run was dispatched a second time");
+	assert.deepEqual(readRecord(world).publication["schema-adrenaline"].runs.map((entry: any) => `${entry.step} ${entry.conclusion}`), ["candidate success", "promote failure"]);
 });
 
 scenario("the release run of the final tag held by reviewers stops publish at once; once it completes, publish observes the final without dispatching release.yml", (world) => {
@@ -1295,10 +1286,39 @@ scenario("the release run of the final tag held by reviewers stops publish at on
 	});
 	const output = ok(publish(world, true, topology), "publish --run once the run is released");
 	assert.match(output, /Every provider of train couleur-otherscape is published/);
-	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml"], "release.yml was dispatched on top of the run of the tag");
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml"], "release.yml was dispatched on top of the run of the tag");
 	assert.equal(git(world.dir("schema-adrenaline"), "ls-remote", "--tags", "origin", `refs/tags/v${NEXT}`).split("\n").length, 1);
 	const record = readRecord(world).publication["schema-adrenaline"];
 	assert.equal(record.final.sha256, record.candidate.sha256);
+});
+
+scenario("a final the release run already made the consumers adopt is observed before the presentation is checked", (world) => {
+	const topology = presentedTrain(world, ["schema-adrenaline"]);
+	const adrenaline = REPOSITORY["schema-adrenaline"];
+	world.updateState((state) => {
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
+		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ repository: adrenaline, workflow: "release.yml", status: "waiting" }];
+	});
+	assert.equal(publish(world, true, topology).status, 1);
+	assert.equal(readRecord(world).publication["schema-adrenaline"].final, undefined);
+
+	// The release run publishes the final and has both consumers pin it before the supervisor looks again.
+	world.updateState((state) => {
+		for (const run of state.runs[adrenaline]) {
+			if (run.status === "completed") continue;
+			run.status = "completed";
+			run.conclusion = "success";
+			delete run.effects;
+		}
+		state.releases[adrenaline] = [world.release("schema-adrenaline", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-adrenaline")), ...(state.releases[adrenaline] ?? [])];
+	});
+	const candidate = world.archive("schema-adrenaline", `v${NEXT}-rc.1`);
+	const final = world.archive("schema-adrenaline", `v${NEXT}`);
+	adopt(world, "schema-adrenaline", { ...final, tag: `v${NEXT}` }, candidate);
+	const output = ok(publish(world, true, topology), "publish --run over consumers that already pin the final");
+	assert.match(output, /Every provider of train couleur-otherscape is published/);
+	assert.equal(readRecord(world).publication["schema-adrenaline"].final.url, final.url);
+	for (const id of ["obsidian-handbook", "lantern"]) assert.ok(originFile(world, id, "package.json").includes(final.url), `${id} does not pin the final`);
 });
 
 scenario("a run that never completes stops its watch at the limit, naming its last status, its URL and the command that follows it again", (world) => {
@@ -1460,7 +1480,7 @@ scenario("publish --run converges by itself: each consumer adopts the final, eve
 	assert.deepEqual(convergence.repos.map((entry: any) => entry.repo).sort(), ["lantern", "obsidian-handbook", "schema-pbta"]);
 	for (const entry of convergence.repos) assert.equal(entry.sha, git(world.dir(entry.repo), "rev-parse", "origin/main"));
 	assert.ok(convergence.notes.some((note: string) => note.startsWith("schema-pbta: no convergence tool of its own")), convergence.notes.join("\n"));
-	assert.equal(dispatches(world).length, 4, "converge dispatched a workflow");
+	assert.equal(dispatches(world).length, 3, "converge dispatched a workflow");
 	assert.match(ok(publish(world, false), "adopting the final keeps the presentation"), /Every provider of train couleur-otherscape is published/);
 });
 
@@ -2121,11 +2141,10 @@ function shippable(world: World, validations: Record<string, string[][]> = {}): 
 }
 
 /** What GitHub will do from the candidate of schema-adrenaline to the releases of both consumers. */
-function shipEffects(world: World, trainRuns: Array<Record<string, unknown>> = [{}]): void {
+function shipEffects(world: World, candidateRuns: Array<Record<string, unknown>> = []): void {
 	const adrenaline = REPOSITORY["schema-adrenaline"];
 	world.updateState((state) => {
-		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [{ createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
-		state.workflowEffects[`${adrenaline} release-train.yml`] = trainRuns;
+		state.workflowEffects[`${adrenaline} publish-candidate.yml`] = [...candidateRuns, { createRelease: world.release("schema-adrenaline", `v${NEXT}-rc.1`, "2026-09-29T10:00:00Z", bytesOf("schema-adrenaline")) }];
 		state.tagEffects[`schema-adrenaline v${NEXT}`] = [{ repository: adrenaline, workflow: "release.yml", createRelease: world.release("schema-adrenaline", `v${NEXT}`, "2026-09-29T11:00:00Z", bytesOf("schema-adrenaline")) }];
 	});
 	consumerEffects(world);
@@ -2228,10 +2247,10 @@ scenario("a red validation stops ship --run after present: the commits are lande
 
 scenario("ship --run again after an interrupted publication resumes at the missing step, without a second commit or presentation", (world) => {
 	const topology = shippable(world);
-	shipEffects(world, [{ conclusion: "failure" }, {}]);
+	shipEffects(world, [{ conclusion: "failure" }]);
 	const red = ship(world, topology, SHIP);
 	assert.equal(red.status, 1, red.text);
-	assert.match(red.stderr, /release-train\.yml run \S+ concluded failure/);
+	assert.match(red.stderr, /publish-candidate\.yml run \S+ concluded failure/);
 	const presentedAt = readRecord(world).presentation.presentedAt;
 	assert.equal(readRecord(world).status, "open");
 
@@ -2242,7 +2261,7 @@ scenario("ship --run again after an interrupted publication resumes at the missi
 	for (const id of SHIP_REPOS) assert.equal(shipped(world, id), 1, `${id} was committed again`);
 	const record = readRecord(world);
 	assert.equal(record.presentation.presentedAt, presentedAt, "the train was presented again");
-	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "release-train.yml", "release-train.yml", "release.yml"]);
+	assert.deepEqual(dispatches(world).map((args) => args[2]), ["publish-candidate.yml", "publish-candidate.yml", "release.yml"]);
 	assert.equal(record.status, "closed");
 	assert.deepEqual(durations(world).filter((entry) => entry.kind === "cycle").map((entry) => entry.status), [1, 0], "one entry per ship cycle, red then green");
 	assert.doesNotMatch(again.stdout, /^ship: (commit|present) started/m);

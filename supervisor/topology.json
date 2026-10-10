@@ -124,21 +124,6 @@
 					"npm",
 					"run",
 					"assert:release-train-matrix"
-				],
-				[
-					"npm",
-					"run",
-					"assert:adrenaline-examples"
-				],
-				[
-					"npm",
-					"run",
-					"assert:adrenaline-coverage"
-				],
-				[
-					"npm",
-					"run",
-					"assert:presentation-coverage"
 				]
 			]
 		},

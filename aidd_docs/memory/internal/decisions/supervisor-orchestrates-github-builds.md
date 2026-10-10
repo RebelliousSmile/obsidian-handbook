@@ -31,7 +31,7 @@ GitHub sans en supprimer.
 | Release des consommateurs (Lantern, puis Handbook) | superviseur, qui déclenche le `release.yml` du consommateur et suit son run |
 | Version et `CHANGELOG` d'un consommateur | une personne, avec le changement |
 | Archive, somme et GitHub Release | GitHub (`publish-candidate.yml`, `release.yml`) |
-| Preuve inter-dépôts sur un checkout propre | GitHub (`release-train.yml`, `final-convergence.yml`, CI de chaque dépôt) |
+| Preuve inter-dépôts sur un checkout propre | GitHub (`final-convergence.yml`, CI de chaque dépôt) ; `release-train.yml` a été retiré des fournisseurs le 2026-10-10 |
 | Code du superviseur | une personne, commit et push à la main (`self.mjs`) |
 
 GitHub ne garde que ce qu'un poste ne peut pas garantir : des archives

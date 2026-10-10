@@ -44,9 +44,9 @@ Cinq tags n'avaient aucune release, pour cinq pannes distinctes : `v2.10.0` (`EN
 Un rouge découvert en CI coûte un cycle `ship` entier. Trois preuves ont donc été ramenées avant le premier dispatch ; le détail est dans `doc/supervisor.fr.md`, ne pas le redire ici.
 
 - **Le paquet, pas le checkout.** `present` empaquette à blanc chaque fournisseur du train (`npm pack --dry-run --json`, derrière la garde de publication) et valide chaque consommateur contre ces seuls fichiers. Un fichier lu par un consommateur mais laissé hors du paquet est rouge dès `present`, plus après la candidate.
-- **Le manifeste de train.** Un fournisseur qui déclare une `rehearsal` dans la topologie (aujourd'hui `schema-pbta` seul) voit ses preuves statiques jouées avant de poser le manifeste et avant de dispatcher `release-train.yml`.
+- **Le manifeste de train.** Un fournisseur qui déclare une `rehearsal` dans la topologie (aujourd'hui `schema-pbta` seul) voit ses preuves statiques jouées avant de poser le manifeste. `release-train.yml` n'existe plus côté fournisseur (retiré le 2026-10-10) : rien ne se prouve après le départ du train.
 - **Les gardes par rôle.** `pnpm assert:guards-by-role` refuse un numéro de version, un tag ou une URL d'archive écrits en chiffres dans une garde que le train déplace : c'est ce littéral qui faisait rougir une CI au commit d'adoption.
 
-**Reste en CI**, et ne se rejoue pas en local : ce qu'un hôte prouve (chargement du plugin dans Obsidian sous `xvfb` par `release-train.yml`), l'empaquetage réel et la publication des candidates et des finales, les releases des consommateurs. Les workflows restent hors de portée du superviseur et de la skill `ship-train`.
+**Reste en CI**, et ne se rejoue pas en local : ce qu'un hôte prouve (chargement du plugin dans Obsidian sous `xvfb`, par le `release.yml` de `schema-pbta` en `mode=promote` et par les CI des consommateurs), l'empaquetage réel et la publication des candidates et des finales, les releases des consommateurs. Les workflows restent hors de portée du superviseur et de la skill `ship-train`.
 
 Un commit d'outillage posé dans un fournisseur après sa candidate ne relance plus de run quand il publie les mêmes fichiers (empreinte du paquet identique, commit descendant de celui de la candidate).

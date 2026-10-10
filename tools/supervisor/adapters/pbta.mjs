@@ -4,20 +4,19 @@
  * `mode=digest` packs the presented commit and hands back a receipt (an
  * artifact, no release); the candidate manifest is landed; `mode=stage`
  * publishes the candidate from that manifest; the consumers adopt it; the
- * train manifest is landed; `release-train.yml` proves it; `mode=promote`
- * publishes the final with the same bytes. `publish-candidate.yml` is not
+ * train manifest is landed; `mode=promote` publishes the final with the same
+ * bytes. `publish-candidate.yml` is not
  * used: its candidate is named by no manifest, so the train could not tie it
  * to the presentation.
  *
- * The two steps of the train manifest (landing it, dispatching
- * `release-train.yml` on it) carry `rehearse`: `publish` plays the rehearsal
- * the topology declares before either of them (`rehearse.mjs`).
+ * The step that lands the train manifest carries `rehearse`: `publish` plays
+ * the rehearsal the topology declares before it (`rehearse.mjs`).
  *
  * The candidate is recorded in the train as soon as the receipt is read,
  * before its manifest is committed: the presentation admits a commit only when
  * every release URL and SRI it introduces is already known to the train.
  *
- * Everything that names the commit of the candidate (the inputs of the four
+ * Everything that names the commit of the candidate (the inputs of the three
  * dispatches, the candidate manifests, the receipt, both manifests) reads
  * `ctx.candidateSha`: the presented commit, or the commit a recorded candidate
  * was packed from when the presented one publishes the same files
@@ -87,10 +86,8 @@ export function observe(given, givenBase) {
 	const candidatePath = entry?.path ?? (candidate ? `${CANDIDATES}/${repo.package}-${candidate.tag}.json` : null);
 	const trainPath = trainManifest(repo, finalTag);
 	inputs.stage = { mode: "stage", provider_commit: sha, config: candidatePath };
-	inputs.train = { provider_commit: sha, config: trainPath };
 	inputs.promote = { mode: "promote", provider_commit: sha, config: trainPath };
 	runs.stage = lastRun(record, "stage", inputs.stage);
-	runs.train = lastRun(record, "release-train", inputs.train);
 	runs.promote = lastRun(record, "promote", inputs.promote);
 	return {
 		...base,
@@ -128,14 +125,12 @@ function stepFor(o) {
 	}
 	const adoption = adoptStep(o);
 	if (adoption) return adoption;
-	// What `release-train.yml` is given: the manifest it validates, and the commit origin/main must descend from.
-	const rehearse = { path: o.trainPath, commit: o.sha };
 	if (o.trainProblem) {
+		// What the rehearsal is given: the manifest it validates, and the commit origin/main must descend from.
+		const rehearse = { path: o.trainPath, commit: o.sha };
 		const consumers = o.consumers.map((entry) => ({ ...entry, path: entry.role, proof: { ...PROOF } }));
 		return { ...landStep(repo, "manifest", o.trainPath, json({ protocol: 1, candidate: fields, consumers }), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`), rehearse };
 	}
-	if (pending(o.runs.train)) return wait(o.runs.train);
-	if (!succeeded(o.runs.train)) return { ...workflowStep(repo, "release-train", "release-train.yml", o.inputs.train, `prove ${o.trainPath} against the consumers`), rehearse };
 	if (pending(o.runs.promote)) return wait(o.runs.promote);
 	if (succeeded(o.runs.promote)) return inspect(repo.id, o.runs.promote, `release ${o.finalTag} is not published`);
 	return workflowStep(repo, "promote", "release.yml", o.inputs.promote, `publish ${o.finalTag} with the bytes of ${o.candidate.tag}`);

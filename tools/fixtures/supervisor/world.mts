@@ -296,12 +296,10 @@ function workflow(name: string, triggers: string[], inputs: Record<string, boole
 export const WORKFLOWS: Record<string, Record<string, string>> = {
 	pbta: {
 		".github/workflows/release.yml": workflow("Release", [], { mode: true, provider_commit: true, config: false }, "RELEASE_TOKEN"),
-		".github/workflows/release-train.yml": workflow("Release train", [], { provider_commit: true, config: true }),
 		".github/workflows/publish-candidate.yml": workflow("Publish candidate", [], { tag: true, commit: true }),
 	},
 	adrenaline: {
 		".github/workflows/publish-candidate.yml": workflow("Publish candidate", [], { tag: true }),
-		".github/workflows/release-train.yml": workflow("Release train", [], { manifest: true }),
 		".github/workflows/release.yml": workflow("Release", ["  push:", "    tags:", "      - 'v*.*.*'"], { tag: true }),
 		".github/workflows/final-convergence.yml": workflow("Final convergence", [], { record: true }),
 	},

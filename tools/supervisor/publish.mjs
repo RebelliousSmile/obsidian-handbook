@@ -292,17 +292,32 @@ export function publishTrain(context, file, { run = false } = {}) {
 	for (;;) {
 		const train = readTrain(file, context.topology);
 		if (train.status !== "open") throw new SupervisorError(`publish: train "${train.id}" is closed`);
-		assertBinding(context.root, context.topology, train);
-		let next = null;
-		for (const repo of providerOrder(context.topology, train)) {
-			const current = readTrain(file, context.topology);
-			const found = stepOf(context, current, file, repo);
-			if (found.step.kind !== "done") {
-				next = found;
-				break;
-			}
-			console.log(`${repo.id}: final ${current.publication[repo.id]?.final?.tag ?? ""} published, same bytes as its candidate.`);
+		// A release run may have the consumers pin a final the record does not hold yet:
+		// a presentation that does not hold is checked again once the providers are observed.
+		let unbound = null;
+		try {
+			assertBinding(context.root, context.topology, train);
+		} catch (error) {
+			if (!(error instanceof SupervisorError)) throw error;
+			unbound = error;
 		}
+		let next = null;
+		const finals = [];
+		try {
+			for (const repo of providerOrder(context.topology, train)) {
+				const found = stepOf(context, readTrain(file, context.topology), file, repo);
+				if (found.step.kind !== "done") {
+					next = found;
+					break;
+				}
+				finals.push(repo);
+			}
+		} catch (error) {
+			throw unbound ?? error;
+		}
+		const observed = readTrain(file, context.topology);
+		if (unbound) assertBinding(context.root, context.topology, observed);
+		for (const repo of finals) console.log(`${repo.id}: final ${observed.publication[repo.id]?.final?.tag ?? ""} published, same bytes as its candidate.`);
 		if (!next) {
 			console.log(`Every provider of train ${train.id} is published.`);
 			return { code: 0, published: true };

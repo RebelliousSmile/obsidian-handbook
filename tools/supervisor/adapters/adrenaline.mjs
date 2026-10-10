@@ -1,11 +1,11 @@
 /**
- * schema-adrenaline: `publish-candidate.yml`, then `release-train.yml`, then
- * `release.yml` on the final tag.
+ * schema-adrenaline: `publish-candidate.yml`, then `release.yml` on the final
+ * tag.
  *
  * The consumers adopt the candidate, the manifest and the final record are
  * landed on main, all by the supervisor. `release.yml` runs on the push of a
  * `v*.*.*` tag, or by dispatch for a tag that already exists: the supervisor
- * pushes the final tag once the train is proven, follows the run that push
+ * pushes the final tag once the manifest is on main, follows the run that push
  * started, and dispatches it again only when the last one failed.
  */
 import { ghJson } from "../gh.mjs";
@@ -38,8 +38,7 @@ export function observe(ctx, base) {
 	const tag = record.candidate?.tag ?? candidateRun?.inputs?.tag ?? nextCandidateTag(tags, version);
 	const seen = observeCandidate(ctx, base, tag);
 	const trainPath = trainManifest(repo, finalTag);
-	const inputs = { candidate: { tag }, train: { manifest: trainPath }, promote: { tag: finalTag } };
-	runs.train = lastRun(record, "release-train", inputs.train);
+	const inputs = { candidate: { tag }, promote: { tag: finalTag } };
 	const tagPushed = seen.adopted ? tagExists(dir, finalTag) : false;
 	runs.promote = tagPushed ? releaseRun(repo, record, finalTag) : null;
 	return {
@@ -67,8 +66,6 @@ export function nextStep(o) {
 		const manifest = { protocol: 1, candidate: { provider: repo.package, ...candidateFields(o) }, consumers: o.consumers };
 		return landStep(repo, "manifest", o.trainPath, json(manifest), `chore(release-train): add the ${o.finalTag} manifest`, `land ${o.trainPath} (it ${o.trainProblem})`);
 	}
-	if (pending(o.runs.train)) return wait(o.runs.train);
-	if (!succeeded(o.runs.train)) return workflowStep(repo, "release-train", "release-train.yml", o.inputs.train, `prove ${o.trainPath} against the consumers`);
 	if (!o.tagPushed) return tagStep(repo, o.finalTag, "release.yml", `tag origin/main (it carries ${o.trainPath}) as ${o.finalTag}; the push starts release.yml, which publishes the final`);
 	if (pending(o.runs.promote)) return wait(o.runs.promote);
 	if (succeeded(o.runs.promote)) return inspect(repo.id, o.runs.promote, `release ${o.finalTag} is not published`);
