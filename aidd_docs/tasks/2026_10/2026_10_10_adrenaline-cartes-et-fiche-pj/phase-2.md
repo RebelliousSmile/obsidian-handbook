@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
@@ -23,10 +23,11 @@ Aucun fichier de code n'est écrit dans cette phase : le superviseur exécute.
 
 ```mermaid
 flowchart TD
-  A[Superviseur identique à origin/main, phase 1 commitée] --> B[pnpm supervise ship --run]
-  B --> C[present : toutes les validations, puis aperçu]
-  C --> D[Verdict de rendu de l'utilisateur]
-  D --> E[publish, converge, release, close sans autre contrôle]
+  A[Superviseur identique à origin/main, phase 1 commitée] --> P[pnpm supervise preview --vault : aperçu]
+  P --> D[Verdict de rendu de l'utilisateur]
+  D --> B[pnpm supervise ship --run]
+  B --> C[present : toutes les validations]
+  C --> E[publish, converge, release, close sans autre contrôle]
   E --> F[Lantern et Handbook publiés sur le contrat v N, issues fermées]
 ```
 
@@ -61,9 +62,9 @@ journey
 
 > Un seul arrêt humain : le rendu.
 
-1. Lancer `pnpm supervise ship --run` ; laisser `present` rejouer ce qui doit l'être.
+1. Poser le travail (`pnpm supervise commit`), puis ouvrir l'aperçu : `pnpm supervise preview --vault <coffre>`. `ship --run` ne lit aucune saisie : le lancer, c'est valider.
 2. À l'aperçu, comparer aux références de rendu du plan ; seul l'utilisateur donne le verdict.
-3. Après le verdict, ne rien contrôler en route ; sur un arrêt, lire le journal complet nommé par `Whole output:`.
+3. Après le verdict, lancer `pnpm supervise ship --run` et ne rien contrôler en route ; sur un arrêt, lire le journal complet nommé par `Whole output:`.
 
 ### `3)` Constat d'arrivée
 
@@ -78,5 +79,5 @@ journey
 | Task | Acceptance criteria |
 | ---- | ------------------- |
 | 1 | `pnpm supervise ship` sans `--run` annonce le parcours restant sans refus lié au code du superviseur ni à un dépôt sale. |
-| 2 | `present` se termine vert et l'aperçu est montré ; le verdict de rendu est le seul arrêt demandé à l'utilisateur. |
+| 2 | L'aperçu est montré et le verdict de rendu est le seul arrêt demandé à l'utilisateur ; `present` se termine ensuite vert. |
 | 3 | Le dossier du train est à l'état clos ; Lantern et Handbook ont chacun une release dont la version est celle de leur `package.json` ; les quatre issues sont fermées. |

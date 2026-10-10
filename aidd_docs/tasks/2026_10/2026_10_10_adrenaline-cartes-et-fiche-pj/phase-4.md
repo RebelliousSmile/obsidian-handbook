@@ -126,6 +126,7 @@ journey
 4. Ligne « SP » + « État » : la carte compacte apprend à lire `placement` (seule la fiche PJ le lit aujourd'hui, `adrenalinePj/renderer.ts`) et pose les deux blocs sur la rangée publiée ; valeurs telles que saisies.
 5. SCSS : grille partagée par `@mixin` entre les rangées ; couleur de pastille par le jeton du pack ; toute règle sombre derrière `.theme-dark` ou `.brumes--colour-dark` (`pnpm assert:style-scope`).
 6. Harnais : affirmer sur l'exemple Zy-2 l'ordre de la deuxième rangée, une case sur la grande carte et aucune sur la petite, la ligne « État », la section « Comportement et santé » de la petite carte.
+7. Ligne « N actions par round » : elle est un `<p>` (`renderCombat`, `compactCard.ts`) et prend les marges de paragraphe d'Obsidian, d'où un vide au-dessus et au-dessous (constaté à l'aperçu du 2026-10-11) ; la rendre comme les autres lignes de la carte.
 
 ### `2)` Lantern : mêmes écarts
 
