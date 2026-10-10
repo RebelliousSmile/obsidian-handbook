@@ -50,8 +50,8 @@ export function nextCandidateTag(tags, version) {
 	return `v${version}-rc.${Math.max(0, ...used) + 1}`;
 }
 
-/** Download the release asset of `tag` and hash it. */
-export function observeArchive(repo, tag, version) {
+/** The bytes of the release asset of `tag`, downloaded. */
+export function archiveBytes(repo, tag, version) {
 	const name = archiveName(repo, version);
 	const directory = mkdtempSync(join(tmpdir(), "supervisor-archive-"));
 	try {
@@ -59,10 +59,15 @@ export function observeArchive(repo, tag, version) {
 		if (result.status !== 0 || !existsSync(join(directory, name))) {
 			throw new SupervisorError(`${repo.id}: release ${tag} has no downloadable asset ${name} (${result.stderr.trim() || "missing"})`, 1);
 		}
-		return { tag, url: releaseUrl(repo, tag, version), ...hashBytes(readFileSync(join(directory, name))) };
+		return readFileSync(join(directory, name));
 	} finally {
 		rmSync(directory, { recursive: true, force: true });
 	}
+}
+
+/** Download the release asset of `tag` and hash it. */
+export function observeArchive(repo, tag, version) {
+	return { tag, url: releaseUrl(repo, tag, version), ...hashBytes(archiveBytes(repo, tag, version)) };
 }
 
 /** A JSON file of a workflow run artifact, or null when the run has no such artifact. */
@@ -177,7 +182,7 @@ export function json(value) {
 	return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-/** The consumers that do not pin the candidate yet adopt it, each behind its frozen install and validations; null when all do. */
+/** The consumers that do not pin the candidate yet adopt it, once the archive is held to the presented package, each behind its frozen install; null when all do. */
 export function adoptStep(observation) {
 	const missing = observation.adoption.filter((entry) => !entry.adopted).map((entry) => entry.repo);
 	if (missing.length === 0) return null;
@@ -189,8 +194,8 @@ export function adoptStep(observation) {
 		repo: repo.id,
 		consumers: missing,
 		archive: candidate,
-		validate: true,
-		description: `adopt the candidate ${candidate.tag} of ${repo.id} in ${missing.join(" and ")}: pins rewritten, frozen install and validations, then committed and pushed`,
+		presented: true,
+		description: `adopt the candidate ${candidate.tag} of ${repo.id} in ${missing.join(" and ")}: the archive held to the presented package, pins rewritten, frozen install, then committed and pushed`,
 		command: ["supervise", "adopt", repo.id, candidate.tag, ...missing],
 	};
 }

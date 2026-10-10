@@ -4,7 +4,7 @@
  * Once each provider of the train has its final, the consumers must pin it,
  * in package.json and in every lockfile, on origin/main. With `--run`, a
  * consumer still on a candidate adopts the final itself: the same bytes as
- * the candidate it already validated, so only its frozen install runs before
+ * the candidate, itself held to the presented package, so only its frozen install runs before
  * the commit; the convergence commands prove the rest. Without `--run` it is
  * named with the URL it pins and the one it should. Then the consumers' own
  * convergence commands run, and each provider's convergence tool, behind the
@@ -84,7 +84,7 @@ function adoptFinals(root, topology, gaps, train) {
 		byProvider.set(gap.provider, entry);
 	}
 	for (const [provider, { final, consumers }] of byProvider) {
-		adoptArchive(root, topology, repoById(topology, provider), final, consumers, { validate: false, label: "converge", train });
+		adoptArchive(root, topology, repoById(topology, provider), final, consumers, { label: "converge", train });
 	}
 }
 

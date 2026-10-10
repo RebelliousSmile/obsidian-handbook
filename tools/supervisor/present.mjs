@@ -165,7 +165,7 @@ function packProviders(root, topology, train, repos, logs, failures) {
 			packed.set(repo.id, { failed: "packaging" });
 			continue;
 		}
-		packed.set(repo.id, { files: pack.files, sha256: pack.sha256 });
+		packed.set(repo.id, { files: pack.files, sha256: pack.sha256, contents: pack.contents });
 	}
 	return packed;
 }
@@ -205,7 +205,7 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 		const diffstat = baseKnown ? gitOut(dir, ["diff", "--stat", base, sha]) : "";
 		const entry = { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat };
 		const own = packed.get(repo.id);
-		if (own?.sha256) entry.packed = { sha256: own.sha256, files: own.files.length };
+		if (own?.sha256) entry.packed = { sha256: own.sha256, files: own.files.length, contents: own.contents };
 		const links = repo.role === "provider" ? [] : planProviderLinks(root, topology, train, repo);
 		const broken = brokenProviders(links, packed);
 		// Behind a provider that does not build or pack, a consumer's validations cannot pass: they are not started.

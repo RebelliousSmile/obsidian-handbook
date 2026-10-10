@@ -17,6 +17,11 @@
  * files (`candidateIdentity.mjs`): the adapter is then told that commit, so
  * its manifests, its receipt and its runs are found again.
  *
+ * A consumer adopts the candidate without being validated again: `present`
+ * proved it against the package of the provider, and the archive is held to
+ * that package, file by file, before the first pin is rewritten
+ * (`archiveFiles.mjs`).
+ *
  * A step a provider rehearses (`rehearse.mjs`) is run only once its rehearsal
  * is green: a manifest its own workflow would refuse is neither landed nor
  * dispatched.
@@ -27,11 +32,13 @@ import { gh, ghJson } from "./gh.mjs";
 import { isAncestor, showFile } from "./git.mjs";
 import { assertBinding, boundSha } from "./binding.mjs";
 import { candidateIdentity, stampCandidate } from "./candidateIdentity.mjs";
-import { dispatchInputs, listReleases, observeArchive, workflowSecrets } from "./adapters/common.mjs";
+import { archiveContents, archiveDrift, describeDrift } from "./archiveFiles.mjs";
+import { archiveBytes, dispatchInputs, hashBytes, listReleases, observeArchive, workflowSecrets } from "./adapters/common.mjs";
 import * as pbta from "./adapters/pbta.mjs";
 import * as adrenaline from "./adapters/adrenaline.mjs";
 import * as mist from "./adapters/mist.mjs";
 import { adoptArchive, landFiles, pushTag, readyCheckout } from "./land.mjs";
+import { parsePinUrl } from "./pins.mjs";
 import { rehearsalCommands, rehearse } from "./rehearse.mjs";
 import { readTrain, trainsDir, writeTrain } from "./train.mjs";
 import { repoById, repoDir, SupervisorError } from "./topology.mjs";
@@ -275,12 +282,38 @@ function stepKey(step) {
 	return JSON.stringify([step.repo, step.type, step.step, step.command, step.inputs ?? null]);
 }
 
+/**
+ * The candidate archive is the package that was presented: same files, same
+ * content, line endings aside. Not a validation played again: the consumers
+ * were proved against that package, and this sees an archive packed from
+ * something else before anyone pins it.
+ */
+function assertPresentedArchive(train, repo, archive) {
+	const presented = (train.presentation?.repos ?? []).find((entry) => entry.repo === repo.id)?.packed?.contents;
+	if (!presented) throw new SupervisorError(`publish: the presentation of train "${train.id}" does not hold the contents of the package of ${repo.id}; run supervise present again`, 1);
+	const bytes = archiveBytes(repo, archive.tag, parsePinUrl(archive.url)?.version);
+	const { sha256 } = hashBytes(bytes);
+	if (sha256 !== archive.sha256) throw new SupervisorError(`publish: the candidate ${archive.tag} of ${repo.id} now has sha256 ${sha256}, the train observed ${archive.sha256}; nothing was adopted`, 1);
+	let drift;
+	try {
+		drift = archiveDrift(presented, archiveContents(bytes));
+	} catch (error) {
+		throw new SupervisorError(`publish: the candidate ${archive.tag} of ${repo.id} cannot be read as an archive (${error.message}); nothing was adopted`, 1);
+	}
+	if (drift) throw new SupervisorError(`publish: the candidate ${archive.tag} of ${repo.id} is not the package that was presented: ${describeDrift(drift)}; nothing was adopted`, 1);
+	console.log(`${repo.id}: the candidate ${archive.tag} holds the ${Object.keys(presented).length} file(s) that were presented`);
+}
+
 function execute(context, file, next) {
 	const { repo, dir, evidenceDir, step } = next;
 	const { topology } = context;
 	if (step.type === "workflow") dispatch(file, topology, repo, step);
 	else if (step.type === "local") runLocal(file, topology, repo, dir, evidenceDir, step);
-	else if (step.type === "adopt") adoptArchive(context.root, topology, repo, step.archive, step.consumers, { validate: step.validate, label: "publish", train: readTrain(file, topology).id });
+	else if (step.type === "adopt") {
+		const train = readTrain(file, topology);
+		if (step.presented) assertPresentedArchive(train, repo, step.archive);
+		adoptArchive(context.root, topology, repo, step.archive, step.consumers, { label: "publish", train: train.id });
+	}
 	else if (step.type === "land") landFiles(context.root, topology, step, "publish");
 	else if (step.type === "tag") tag(context, repo, step);
 	else throw new SupervisorError(`publish: unknown step type ${step.type}`);

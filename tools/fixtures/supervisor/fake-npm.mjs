@@ -21,23 +21,9 @@
  * given, as the validation of a provider does: a green one that finds no
  * readable JSON at that path of the working directory exits 93.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-
-/** The files under `path` (relative to the working directory), a file or a directory. */
-function walk(path, found = []) {
-	const full = join(process.cwd(), path);
-	if (!existsSync(full)) return found;
-	if (!statSync(full).isDirectory()) {
-		found.push(path.split("\\").join("/"));
-		return found;
-	}
-	for (const entry of readdirSync(full)) {
-		if (entry === ".git" || entry === "node_modules") continue;
-		walk(path === "." ? entry : join(path, entry), found);
-	}
-	return found;
-}
+import { packageFiles } from "./package-files.mjs";
 
 const statePath = process.env.FAKE_GH_STATE;
 if (!statePath) {
@@ -57,8 +43,7 @@ if (args[0] === "pack" && args.includes("--dry-run") && args.includes("--json"))
 		process.exit(status);
 	}
 	const manifest = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8"));
-	const entries = Array.isArray(manifest.files) ? ["package.json", ...manifest.files] : ["."];
-	const files = [...new Set(entries.reduce((found, entry) => walk(entry, found), []))];
+	const files = packageFiles(process.cwd());
 	process.stdout.write("fake npm: prepack wrote its files\n[not the listing]\n");
 	process.stdout.write(`${JSON.stringify([{ name: manifest.name, version: manifest.version, files: files.map((path) => ({ path })) }], null, 2)}\n`);
 	process.exit(0);

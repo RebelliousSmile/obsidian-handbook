@@ -11,6 +11,10 @@
  * of its bytes in the checkout. Same commit, same checkout, same fingerprint.
  * It is local: a checkout with other line endings gives another one, so it is
  * compared between two presentations of one machine, never with an archive.
+ *
+ * The contents are what an archive is held to (`archiveFiles.mjs`): for each
+ * file, the sha256 of its bytes with CRLF read as LF, the same in a checkout
+ * on Windows and in the archive a runner packed.
  */
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -51,12 +55,24 @@ export function fingerprint(dir, files) {
 	return hash.digest("hex");
 }
 
+/** sha256 of `bytes` with CRLF read as LF. */
+export function contentHash(bytes) {
+	return createHash("sha256").update(Buffer.from(bytes.toString("latin1").replace(/\r\n/g, "\n"), "latin1")).digest("hex");
+}
+
+/** Each file with the sha256 of its content, line endings aside. Throws when a file cannot be read. */
+export function contents(dir, files) {
+	const found = {};
+	for (const file of files) found[file] = contentHash(readFileSync(join(dir, file)));
+	return found;
+}
+
 /**
  * Pack the checkout `dir` for nothing, behind the publication guard, and read
  * what would be published. `run` starts the command and gives its guarded
  * result; the caller passes its own to keep the whole output (`logs.mjs`).
  *
- * @returns {{ result: object, files: string[], sha256: string } | { result: object, error: string }}
+ * @returns {{ result: object, files: string[], sha256: string, contents: Record<string, string> } | { result: object, error: string }}
  */
 export function packedFiles(dir, run = (command) => runGuarded(dir, command, "present")) {
 	const result = run(PACK_COMMAND);
@@ -65,7 +81,7 @@ export function packedFiles(dir, run = (command) => runGuarded(dir, command, "pr
 	if (!listing) return { result, error: `${PACK_COMMAND.join(" ")} did not list the files of the package` };
 	const files = listing.files.map((file) => String(file.path).split("\\").join("/")).sort();
 	try {
-		return { result, files, sha256: fingerprint(dir, files) };
+		return { result, files, sha256: fingerprint(dir, files), contents: contents(dir, files) };
 	} catch (error) {
 		return { result, error: `${PACK_COMMAND.join(" ")} lists a file that cannot be read: ${error.message}` };
 	}

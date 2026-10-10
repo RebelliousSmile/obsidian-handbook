@@ -431,6 +431,14 @@
 									"files": {
 										"type": "integer",
 										"minimum": 1
+									},
+									"contents": {
+										"description": "Each published file with the sha256 of its content, CRLF read as LF: what the candidate archive is held to before a consumer adopts it. A presentation written before this field has none.",
+										"type": "object",
+										"additionalProperties": {
+											"type": "string",
+											"pattern": "^[0-9a-f]{64}$"
+										}
 									}
 								}
 							},

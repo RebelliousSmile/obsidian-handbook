@@ -135,15 +135,17 @@ export function installCommand(dir) {
 }
 
 /**
- * Each consumer of `ids` adopts `archive` of `provider`: pins rewritten, the
- * frozen install, then with `validate` the consumer's validations, all behind
- * the publication guard. A failure restores the pins and names the consumer,
- * the command and its output; nothing of that consumer is committed. The
+ * Each consumer of `ids` adopts `archive` of `provider`: pins rewritten, then
+ * the frozen install behind the publication guard. No validation runs here:
+ * `present` proved the consumer against the package, and `publish` holds the
+ * candidate archive to that package before it calls this (`archiveFiles.mjs`).
+ * A failure restores the pins and names the consumer, the command and its
+ * output; nothing of that consumer is committed. The
  * consumers before it keep their adoption, the next run resumes after them.
  * With `train` (its id), the whole output of each command is kept beside the
  * train and the error names the file.
  */
-export function adoptArchive(root, topology, provider, archive, ids, { validate, label, train = null }) {
+export function adoptArchive(root, topology, provider, archive, ids, { label, train = null }) {
 	const logs = train ? trainLogs(root, topology, train) : null;
 	const step = `${label}-${provider.id}`;
 	for (const id of ids) {
@@ -153,8 +155,7 @@ export function adoptArchive(root, topology, provider, archive, ids, { validate,
 		console.log(`${id}: adopt ${provider.package} ${archive.tag}`);
 		const files = rewritePins(dir, provider.package, archive);
 		const install = installCommand(dir);
-		const commands = [...(install ? [install] : []), ...(validate ? repo.validations ?? [] : [])];
-		for (const command of commands) {
+		for (const command of install ? [install] : []) {
 			const result = logs ? logs.run(id, step, dir, command, label) : runGuarded(dir, command, label);
 			if (result.status === 0) continue;
 			run(dir, ["checkout", "HEAD", "--", ...files], label);

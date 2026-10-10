@@ -92,8 +92,8 @@ export class World {
 		return join(this.root, id);
 	}
 
-	/** A deterministic archive whose bytes name the provider and tag. */
-	archive(provider: string, tag: string, bytes = `archive ${provider} ${tag}\n`): Archive {
+	/** A deterministic archive: the bytes it is given, or ones that name the provider and tag. */
+	archive(provider: string, tag: string, bytes: string | Buffer = `archive ${provider} ${tag}\n`): Archive {
 		const key = `${provider}@${tag}`;
 		if (!this.archives.has(key)) {
 			const version = tag.replace(/^v/, "").replace(/-rc\.\d+$/, "");
@@ -112,7 +112,7 @@ export class World {
 		return this.archives.get(key)!;
 	}
 
-	release(provider: string, tag: string, publishedAt: string, bytes?: string): any {
+	release(provider: string, tag: string, publishedAt: string, bytes?: string | Buffer): any {
 		const archive = this.archive(provider, tag, bytes);
 		return {
 			tagName: tag,
