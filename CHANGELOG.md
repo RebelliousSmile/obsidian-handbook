@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.42.0] - 2026-10-09
 
+### Added
+
+- `pnpm assert:adrenaline-theme` fails when a form that `schema-adrenaline` publishes for the PJ, PNJ or creature sheet has no dedicated rendering, naming the sheet, the form and the block (a block drawn by the fallback now carries the class `__block--plain`, which the guard reads); published forms that no published example fills are listed as findings. A real creature block (« Rôdeur accordé ») is kept as a witness: its large card prints the Agir section with each entered action, its small card none.
+
 ### Changed
 
 - The compact PNJ and creature cards take their text colour from the pack token `--adrenaline-card-ink` (dark red in light, pale red in dark) instead of the note text colour.

@@ -368,6 +368,8 @@ function renderMalusScale(doc: Document, box: HTMLElement, block: AdrenalinePres
 
 function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const form = block.form ?? "(none)";
+	// The fallback marks its box: the warning below is given once per form, the mark on every block.
+	box.classList.add(`${ROOT}__block--plain`);
 	if (!reportedForms.has(form)) {
 		reportedForms.add(form);
 		log.warn(`PJ block form "${form}" has no dedicated rendering; block "${block.id}" is shown as plain lines.`);

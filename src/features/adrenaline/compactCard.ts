@@ -373,6 +373,8 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, source: 
 		case "action-lines": for (const action of records(values[0])) renderAction(doc, box, action, false); break;
 		default: {
 			const form = block.form ?? "(none)";
+			// The fallback marks its box: the warning below is given once per form, the mark on every block.
+			box.classList.add(`${CARD}__block--plain`);
 			if (!reportedForms.has(form)) {
 				reportedForms.add(form);
 				log.warn(`Compact card form "${form}" has no dedicated rendering; block "${block.id}" is shown as plain lines.`);

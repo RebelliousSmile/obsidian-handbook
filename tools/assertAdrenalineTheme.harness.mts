@@ -188,6 +188,117 @@ assert.equal(findAll(malusRow, `${CARD}__circle-mark`).length, 3, "the circles a
 assert.match(textOf(malusRow), /^Malus\s*HS$/, "the malus circles end on HS");
 assert.equal(findAll(zy2Cards[1], `${CARD}__form-malus-circles`).length, 0, "the base state enters no malus, so no row");
 
+// Every form the published presentation names must be drawn by the renderer of its sheet. The list comes
+// from the installed presentation, never from this file; the fallback is read on the rendered tree (the mark it
+// leaves on each block), never on its warning, which a renderer gives once per form and per process.
+type PublishedBlock = { id: string; form?: string };
+interface SheetUnderGuard {
+	sheet: string;
+	presentation: { sections: ReadonlyArray<{ blocks: ReadonlyArray<PublishedBlock> }> };
+	block: { parse: (source: string) => unknown; render: (data: never, doc: Document) => unknown };
+	formClass: string;
+	blockClass: string;
+	plainClass: string;
+}
+
+function publishedBlocks(presentation: SheetUnderGuard["presentation"]): PublishedBlock[] {
+	return presentation.sections.reduce<PublishedBlock[]>((all, section) => all.concat(section.blocks.filter((published) => published.form)), []);
+}
+
+function publishedForms(presentation: SheetUnderGuard["presentation"]): string[] {
+	const forms: string[] = [];
+	for (const published of publishedBlocks(presentation)) {
+		if (published.form && forms.indexOf(published.form) < 0) forms.push(published.form);
+	}
+	return forms;
+}
+
+/** Renders the published examples of a sheet; returns the failures, the blocks an example fills and the forms none fills. */
+function checkFormCoverage(guard: SheetUnderGuard, examples: ReadonlyArray<{ name: string; source: string }>): { problems: string[]; filledBlocks: string[]; unfilled: string[] } {
+	const problems: string[] = [];
+	const filledBlocks: string[] = [];
+	const met = new Set<string>();
+	for (const example of examples) {
+		const data = guard.block.parse(example.source);
+		if (!data) { problems.push(`${guard.sheet}: example ${example.name} does not parse`); continue; }
+		const rendered = guard.block.render(data as never, doc) as El;
+		for (const published of publishedBlocks(guard.presentation)) {
+			const drawn = findAll(rendered, `${guard.blockClass}${published.id}`).filter((box) => box.classes.includes(`${guard.formClass}${published.form}`));
+			if (drawn.length === 0) continue;
+			met.add(published.form as string);
+			if (filledBlocks.indexOf(published.id) < 0) filledBlocks.push(published.id);
+			if (drawn.some((box) => box.classes.includes(guard.plainClass))) {
+				problems.push(`${guard.sheet}: form "${published.form}" (block "${published.id}", met in ${example.name}) is published but has no dedicated rendering`);
+			}
+		}
+	}
+	return { problems, filledBlocks, unfilled: publishedForms(guard.presentation).filter((form) => !met.has(form)) };
+}
+
+function publishedExamples(directory: string): Array<{ name: string; source: string }> {
+	const folder = join(sourceRoot as string, "examples", "adrenaline", directory);
+	return readdirSync(folder).filter((file) => file.endsWith(".toml")).map((file) => ({ name: `${directory}/${file}`, source: readFileSync(join(folder, file), "utf8") }));
+}
+
+const PJ_ROOT = "brumes-adrenaline-pj";
+const guards: Array<{ guard: SheetUnderGuard; directory: string }> = [
+	{ guard: { sheet: "pj", presentation: PJ_PRESENTATION, block: adrenalinePjBlock as SheetUnderGuard["block"], formClass: `${PJ_ROOT}__form-`, blockClass: `${PJ_ROOT}__`, plainClass: `${PJ_ROOT}__block--plain` }, directory: "pj" },
+	{ guard: { sheet: "pnj", presentation: PNJ_PRESENTATION, block: adrenalinePnjBlock as SheetUnderGuard["block"], formClass: `${CARD}__form-`, blockClass: `${CARD}__block-`, plainClass: `${CARD}__block--plain` }, directory: "pnj" },
+	{ guard: { sheet: "monstre", presentation: MONSTRE_PRESENTATION, block: adrenalineMonsterBlock as SheetUnderGuard["block"], formClass: `${CARD}__form-`, blockClass: `${CARD}__block-`, plainClass: `${CARD}__block--plain` }, directory: "monstre" },
+];
+const coverageProblems: string[] = [];
+const filledBySheet = new Map<string, string[]>();
+for (const { guard, directory } of guards) {
+	const examples = publishedExamples(directory);
+	assert.ok(examples.length > 0, `${guard.sheet}: no published example to render`);
+	const { problems, filledBlocks, unfilled } = checkFormCoverage(guard, examples);
+	coverageProblems.push(...problems);
+	filledBySheet.set(guard.sheet, filledBlocks);
+	console.log(`${guard.sheet}: ${publishedForms(guard.presentation).length} published forms, ${examples.length} examples rendered`);
+	for (const form of unfilled) console.log(`finding: ${guard.sheet}: published form "${form}" is filled by no published example (not proven)`);
+}
+assert.deepEqual(coverageProblems, [], "every published form must have a dedicated rendering");
+
+// Negative proof, on the real case: each published block an example fills is given in turn a form its renderer
+// does not know, as a later tarball would; the guard must fail every time, naming sheet, form and block. The
+// renders above have already met every real form, so a guard relying on a once-only signal would pass here.
+for (const { guard, directory } of guards) {
+	const filledBlocks = filledBySheet.get(guard.sheet) ?? [];
+	assert.ok(filledBlocks.length > 0, `${guard.sheet}: no published block is filled, the guard proves nothing`);
+	const unknown = "form-published-later";
+	for (const probe of publishedBlocks(guard.presentation)) {
+		if (filledBlocks.indexOf(probe.id) < 0) continue;
+		const real = probe.form;
+		probe.form = unknown;
+		try {
+			const { problems } = checkFormCoverage(guard, publishedExamples(directory));
+			assert.ok(
+				problems.some((problem) => problem.startsWith(`${guard.sheet}: form "${unknown}" (block "${probe.id}"`)),
+				`${guard.sheet}: block "${probe.id}" published with a form without rendering must fail the guard, naming the sheet, the form and the block (got ${JSON.stringify(problems)})`,
+			);
+		} finally {
+			probe.form = real;
+		}
+	}
+	console.log(`negative proof: ${guard.sheet}: ${filledBlocks.length} filled blocks, each fails the guard under an unknown form`);
+}
+
+// A real creature block of the Zombiology vault (actions entered in the base, a state without etatPrincipal):
+// the large card prints "Agir" with each entered action, the small one prints nothing of it.
+const rodeurSource = readFileSync(join("tools", "fixtures", "adrenaline-monstre-rodeur-accorde.md"), "utf8").match(/```adrenaline-monstre\r?\n([\s\S]*?)\r?\n```/)?.[1];
+assert.ok(rodeurSource, "the real creature witness must be available");
+const rodeur = adrenalineMonsterBlock.parse(rodeurSource);
+assert.ok(rodeur, "the real creature witness must parse");
+const rodeurCards = findAll(adrenalineMonsterBlock.render(rodeur, doc) as unknown as El, `${CARD}__state-card`);
+assert.equal(rodeurCards.length, 2, "the real creature prints its principal and its secondary card");
+const rodeurAgir = only(rodeurCards[0], `${CARD}__section-agir`, "the principal card prints one Agir section");
+assert.match(textOf(rodeurAgir), /^Agir/, "the section is titled Agir");
+const rodeurActions = findAll(rodeurAgir, `${CARD}__action`);
+assert.equal(rodeurActions.length, 2, "Agir lists each entered action");
+assert.match(textOf(rodeurActions[0]), /Dégoût zombie/);
+assert.match(textOf(rodeurActions[1]), /Morsure/);
+assert.equal(findAll(rodeurCards[1], `${CARD}__section-agir`).length, 0, "the small card prints no Agir section");
+
 for (const callout of [
 	"info",
 	"success",
