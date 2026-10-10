@@ -128,7 +128,8 @@ journey
 4. Retirer les blocs séparés `detection` et `deplacement` de la section ; libellés publiés « Zone de détection » et « Dépl. ».
 5. PNJ : la présentation ne change pas sur ce point ; sa carte garde huit caractéristiques sur deux lignes, sans détection ni déplacement.
 6. Armes : scinder `Equipement` (`src/zod/common/equipement.ts`) par fiche. La créature remplace `armesMentales` par `armesPsychologiques`, même forme de ligne ; le PNJ perd le champ ; le PJ garde `armesMentales` jusqu'à v<N+2>. Présentations créature et PNJ, exemples et schémas JSON régénérés suivent ; la rupture va au `CHANGELOG` avec celle des caractéristiques.
-6. Étendre `validate-presentation.ts` : chaque pointeur d'une rangée descend d'un chemin du bloc et existe au contrat ; aucun pointeur n'est placé deux fois ; une rangée tient dans les colonnes du bloc.
+7. États : fermer la liste. Une créature déclare au plus un état en plus de sa base (`etats` d'un élément au plus, la forme héritée `etatAlternatif` comptant pour cet état) ; zéro état reste valide, c'est la créature à carte unique. Un document qui en déclare davantage est refusé en nommant `etats` : aujourd'hui les états au-delà du premier sont acceptés puis jamais imprimés. Schéma JSON régénéré, un refus au corpus, la rupture au `CHANGELOG` avec les deux autres.
+8. Étendre `validate-presentation.ts` : chaque pointeur d'une rangée descend d'un chemin du bloc et existe au contrat ; aucun pointeur n'est placé deux fois ; une rangée tient dans les colonnes du bloc.
 
 ### `2)` En-tête d'état
 
@@ -159,7 +160,7 @@ journey
 
 > Le contrat v<N+1> est prêt à être présenté.
 
-1. Préparer la version par l'outil du dépôt (`npm run release:prepare`, soit `tools/prepare-release.ts`), jamais à la main ; section v<N+1> du `CHANGELOG`.
+1. Monter la version comme le prescrit le `CONTRIBUTING` du dépôt : il n'a pas d'outil de montée (`npm run release:prepare` empaquette et calcule l'empreinte, rien d'autre) ; la cohérence des emplacements est tenue par `validate:version` et `validate:package`. Section v<N+1> du `CHANGELOG`.
 2. Jouer la suite complète du dépôt (présentation, exemples, pack, paquet, versionnage).
 3. Empaqueter localement pour la phase 4 ; ne rien publier ici : la candidate sort par le train.
 4. Si la phase 1 a consigné une clé de bloc réel refusée par le contrat (issue (c)), trancher ici : l'ajouter au contrat ou la laisser refusée, et l'écrire au tableau Decisions.
@@ -175,4 +176,5 @@ journey
 | 3 | Dans la section santé de la créature, les blocs des seuils et des états permanents ont le même numéro de rangée, et le second est libellé « État ». |
 | 4 | La section santé déclare sa jonction à la section comportement sur la carte secondaire, sous le titre « Comportement et santé » ; aucun identifiant de bloc ni chemin n'est publié deux fois ; une jonction vers une section absente fait échouer la validation. |
 | 1 | Une créature qui saisit `armesPsychologiques` est valide ; une créature ou un PNJ qui saisit `armesMentales` est refusé en nommant la clé ; un PJ qui la saisit reste valide. |
-| 5 | Tout document valide en v<N> reste valide en v<N+1>, sauf une créature qui saisit LOG, VOL ou CHA et une créature ou un PNJ qui saisit `armesMentales` ; la suite complète du dépôt est verte ; l'archive locale porte la version v<N+1> lue dans `package.json`. |
+| 1 | Une créature sans état, ou avec un seul état, est valide ; une créature qui déclare deux états ou plus est refusée en nommant `etats`. |
+| 5 | Tout document valide en v<N> reste valide en v<N+1>, sauf une créature qui saisit LOG, VOL ou CHA, une créature qui déclare plus d'un état et une créature ou un PNJ qui saisit `armesMentales` ; la suite complète du dépôt est verte ; l'archive locale porte la version v<N+1> lue dans `package.json`. |
