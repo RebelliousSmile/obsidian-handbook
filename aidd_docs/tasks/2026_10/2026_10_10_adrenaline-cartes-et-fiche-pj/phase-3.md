@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
@@ -152,9 +152,10 @@ journey
 > La petite carte regroupe ce que la grande sépare, par publication.
 
 1. Lire comment `sante` et `comportement` déclarent aujourd'hui leurs cartes (`cards` principal et secondaire) dans `src/presentation.ts`.
-2. Ne pas dupliquer de section : `validate-presentation.ts` exige des identifiants de bloc et des chemins uniques par fiche. Ajouter au type de section une propriété de jonction : sur la carte nommée, la section s'imprime à la suite d'une autre sous un titre publié. `sante` la porte pour la carte secondaire, jointe à `comportement`, titre « Comportement et santé » ; la carte principale garde ses deux sections.
+2. Ne pas dupliquer de section : `validate-presentation.ts` exige des identifiants de bloc et des chemins uniques par fiche. Ajouter au type de section une propriété de jonction : sur la carte nommée, la section s'imprime à la suite d'une autre sous un titre publié. `comportement` la porte pour la carte secondaire, jointe à `sante` qui s'imprime d'abord (SP et État, puis Actions et Défense, comme le livre), titre « Comportement et santé » ; la carte principale garde ses deux sections.
 3. Le bloc `malus` n'est publié que pour la carte principale : la petite carte de la maquette ne l'imprime pas.
-4. Étendre `validate-presentation.ts` : la jonction nomme une section existante, imprimée sur la même carte, et un titre non vide.
+4. Étendre `validate-presentation.ts` : la jonction nomme une section existante, imprimée sur la même carte et placée avant la section jointe, et un titre non vide.
+5. Créature à carte unique : la présentation déclare ses cartes et ce qui fait exister la carte secondaire (un état saisi en plus de la base) ; la section d'équipement, imprimée sur la seule carte secondaire, déclare la carte de repli où elle s'imprime quand celle-ci n'existe pas. Rien de cela ne se lit dans un commentaire.
 
 ### `5)` Version et preuves du fournisseur
 
@@ -174,7 +175,8 @@ journey
 | 1 | Une rangée citant un pointeur absent du contrat, ou deux fois le même, fait échouer la validation de présentation avec le nom du bloc et du pointeur. |
 | 2 | Le bloc d'en-tête d'état déclare par sa décoration le marqueur de déclencheur, et la case de l'état actuel pour la carte principale seulement ; le pack publie un jeton de carte pour la pastille dans chaque polarité déclarée. |
 | 3 | Dans la section santé de la créature, les blocs des seuils et des états permanents ont le même numéro de rangée, et le second est libellé « État ». |
-| 4 | La section santé déclare sa jonction à la section comportement sur la carte secondaire, sous le titre « Comportement et santé » ; aucun identifiant de bloc ni chemin n'est publié deux fois ; une jonction vers une section absente fait échouer la validation. |
+| 4 | La section comportement déclare sa jonction à la section santé sur la carte secondaire, sous le titre « Comportement et santé », la santé imprimée d'abord ; aucun identifiant de bloc ni chemin n'est publié deux fois ; une jonction vers une section absente fait échouer la validation. |
+| 4 | La présentation créature publie quand la carte secondaire existe ; une section imprimée sur la seule carte secondaire déclare une carte de repli, et son absence fait échouer la validation. |
 | 1 | Une créature qui saisit `armesPsychologiques` est valide ; une créature ou un PNJ qui saisit `armesMentales` est refusé en nommant la clé ; un PJ qui la saisit reste valide. |
 | 1 | Une créature sans état, ou avec un seul état, est valide ; une créature qui déclare deux états ou plus est refusée en nommant `etats`. |
 | 5 | Tout document valide en v<N> reste valide en v<N+1>, sauf une créature qui saisit LOG, VOL ou CHA, une créature qui déclare plus d'un état et une créature ou un PNJ qui saisit `armesMentales` ; la suite complète du dépôt est verte ; l'archive locale porte la version v<N+1> lue dans `package.json`. |
