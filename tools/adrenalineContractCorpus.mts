@@ -15,13 +15,24 @@ export interface AdrenalineContractCase {
 
 const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
 
+/** The contract major the project declares: read from its own dependency, never written down here. */
+export function declaredContractMajor(manifest: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> }): number {
+	const spec = manifest.dependencies?.["schema-adrenaline"] ?? manifest.devDependencies?.["schema-adrenaline"];
+	const found = typeof spec === "string" ? /(\d+)\.\d+\.\d+(?:[-+][^/]*)?(?:\.tgz)?$/.exec(spec) : null;
+	if (!found) throw new Error(`schema-adrenaline is not declared with a readable version: ${String(spec)}`);
+	return Number(found[1]);
+}
+
 /**
  * The contract major is the compatibility axis; the producer's patch and minor are its own business.
- * Freezing the full version made every upstream release a red build here, with nothing broken.
+ * An installed major below the declared one is a regression and fails. One above it is the train ahead
+ * of the pin (`present` links the provider without rewriting `package.json`): the corpus it publishes
+ * is the contract being proven, so it is accepted.
  */
-export function assertAdrenalineContractVersion(version: unknown): asserts version is string {
-	if (typeof version !== "string" || !/^3\.\d+\.\d+$/.test(version)) {
-		throw new Error(`schema-adrenaline package must be a 3.x contract, received ${String(version)}`);
+export function assertAdrenalineContractVersion(version: unknown, major: number): asserts version is string {
+	const found = typeof version === "string" ? /^(\d+)\.\d+\.\d+/.exec(version) : null;
+	if (!found || Number(found[1]) < major) {
+		throw new Error(`schema-adrenaline package must be a contract of major ${major} or later, received ${String(version)}`);
 	}
 }
 
@@ -30,7 +41,8 @@ export function loadAdrenalineContractCases(): AdrenalineContractCase[] {
 	const manifestPath = requireFromProject.resolve("schema-adrenaline/corpus/cases.json");
 	const root = dirname(dirname(manifestPath));
 	const packageJson = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as { version?: unknown };
-	assertAdrenalineContractVersion(packageJson.version);
+	const project = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf8")) as Parameters<typeof declaredContractMajor>[0];
+	assertAdrenalineContractVersion(packageJson.version, declaredContractMajor(project));
 	const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
 		manifestVersion?: unknown;
 		tomlVersion?: unknown;

@@ -41,6 +41,7 @@ class El {
 		this.tagName = tagName;
 	}
 
+	setAttribute(name: string, value: string): void { this.dataset[`attr-${name}`] = value; }
 	appendChild(child: El): El {
 		this.children.push(child);
 		return child;

@@ -1,7 +1,11 @@
-import { MONSTRE_PRESENTATION, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
+import { MONSTRE_PRESENTATION } from "schema-adrenaline/presentation";
+import type { PublishedSection } from "../adrenaline/publishedPresentation";
 import { BlockShape, BlockZone } from "../blocks/shape";
 
-const sections: readonly AdrenalinePresentationSection[] = MONSTRE_PRESENTATION.sections;
+const sections: readonly PublishedSection[] = MONSTRE_PRESENTATION.sections;
+
+/** Every published section, cards or not. */
+export const MONSTER_SECTIONS = sections;
 
 /** The sections printed on the state cards, in the descriptor's order. */
 export const MONSTER_CARD_SECTIONS = sections.filter((section) => section.cards !== undefined);

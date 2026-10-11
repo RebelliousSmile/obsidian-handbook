@@ -1,6 +1,8 @@
 // The compact card of the PNJ and creature sheets (`surface: "compact-card"`):
 // a banner coloured by category, then the published sections. Layout only;
 // every colour is a token of the pack. Each sheet partial keeps what sets it apart.
+@use "./placement";
+
 @mixin sheet {
 	.brumes-adrenaline-pnj,
 	.brumes-adrenaline-monstre {
@@ -60,7 +62,8 @@
 	.brumes-adrenaline-card__block { padding: 0.2rem 0.5rem; }
 	.brumes-adrenaline-card__paragraph { margin: 0; }
 	.brumes-adrenaline-card__list { margin-block: 0.15rem 0; padding-inline-start: 1.1rem; }
-	.brumes-adrenaline-card__line { display: flex; flex-wrap: wrap; gap: 0 0.35rem; }
+	.brumes-adrenaline-card__line,
+	.brumes-adrenaline-card__block-etats-permanents { display: flex; flex-wrap: wrap; gap: 0 0.35rem; }
 	// A figure (percentage, total, solidity) sits where the published
 	// `values.align` puts it; prose values always follow their label.
 	.brumes-adrenaline-card--values-end .brumes-adrenaline-card__figure {
@@ -68,12 +71,33 @@
 		text-align: end;
 		white-space: nowrap;
 	}
+	// A row of cells: the block's published column count (`__grid--columns-N`);
+	// four is the default, so only 1 to 3 need a rule.
 	.brumes-adrenaline-card__grid {
+		--adrenaline-grid-columns: 4;
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-columns: repeat(var(--adrenaline-grid-columns), minmax(0, 1fr));
 		gap: 0.12rem 0.5rem;
 	}
+	@for $i from 1 through 3 {
+		.brumes-adrenaline-card__grid--columns-#{$i} { --adrenaline-grid-columns: #{$i}; }
+	}
 	.brumes-adrenaline-card__cell { display: flex; gap: 0.3rem; }
+	// Pointer rows and the section grid share the published `placement` geometry:
+	// a cell sits on the column of its published position (`__col-N`).
+	@include placement.placement("brumes-adrenaline-card", 4, 2, 3, 0);
+	// Health: the thresholds and the permanent states on one row, the malus and
+	// the protections under them, over the width of the section.
+	.brumes-adrenaline-card__placed {
+		display: grid;
+		grid-template-columns: repeat(var(--adrenaline-placed-columns, 2), minmax(0, 1fr));
+		gap: 0.1rem 0.6rem;
+	}
+	.brumes-adrenaline-card__placed--columns-1 { --adrenaline-placed-columns: 1; }
+	.brumes-adrenaline-card__placed > * { min-width: 0; }
+	// A block is named on its row by its label ("SP", "État"): the value follows it.
+	// The actions per round read like the other lines: no paragraph margins.
+	.brumes-adrenaline-card__combat-actions { margin: 0; }
 	.brumes-adrenaline-card__thresholds {
 		display: grid;
 		grid-template-columns: 2.2rem repeat(4, minmax(0, 1fr));
@@ -131,10 +155,30 @@
 		background: var(--adrenaline-trigger-bg);
 	}
 
+	// A current-state case and a marker before each trigger: the pack's badge colour, never a colour of ours.
+	.brumes-adrenaline-card__state-check,
+	.brumes-adrenaline-card__trigger-marker {
+		display: inline-block;
+		flex: none;
+		align-self: center;
+		width: 0.7em;
+		height: 0.7em;
+	}
+	.brumes-adrenaline-card__state-check {
+		margin-inline-end: 0.35rem;
+		border: 1.5px solid var(--adrenaline-card-badge);
+		border-radius: 0.15em;
+	}
+	.brumes-adrenaline-card__state-check--checked,
+	.brumes-adrenaline-card__trigger-marker { background: var(--adrenaline-card-badge); }
+	.brumes-adrenaline-card__trigger-marker { border-radius: 50%; }
+	.brumes-adrenaline-card__trigger-row { display: inline-flex; gap: 0.3rem; align-items: baseline; }
+
 	@media (max-width: 520px) {
 		.brumes-adrenaline-pnj,
 		.brumes-adrenaline-monstre { max-width: 100%; }
-		.brumes-adrenaline-card__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		.brumes-adrenaline-card__grid { --adrenaline-grid-columns: 2; }
+		.brumes-adrenaline-card__grid > .brumes-adrenaline-card__cell { grid-column: auto; grid-row: auto; }
 		.brumes-adrenaline-card__thresholds { grid-template-columns: 2.2rem repeat(2, minmax(0, 1fr)); }
 	}
 }

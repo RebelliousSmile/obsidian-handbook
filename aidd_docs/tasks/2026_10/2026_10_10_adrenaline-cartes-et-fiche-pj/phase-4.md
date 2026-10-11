@@ -122,7 +122,7 @@ journey
 
 1. `renderCompactRows` lit les rangées publiées ; plus de bloc `detection` ni `deplacement` attendu ; cellule sans valeur non imprimée ; aucun traitement local de LOG, VOL, CHA pour une créature ; `compactCard.ts` et `document.ts` lisent `armesPsychologiques` pour la créature et plus rien de mental pour le PNJ, sans alias de l'ancienne clé.
 2. `renderStateHeader` : pastille devant chaque déclencheur ; sur la carte que la décoration publiée désigne, case à cocher (non interactive, reflète `etatActif`) à la place du texte « État actuel », libellé accessible conservé ; aucune case ailleurs.
-3. Petite carte : la jonction publiée imprime santé à la suite de comportement sous le titre « Comportement et santé », sans la ligne de Malus que la présentation réserve à la grande carte ; aucun regroupement décidé dans Handbook.
+3. Petite carte : la jonction publiée (portée par la section comportement, vers la section santé) imprime la santé d'abord puis le comportement sous le titre « Comportement et santé », sans la ligne de Malus ni les protections que la présentation réserve à la grande carte ; aucun regroupement décidé dans Handbook. La petite carte n'existe que si la déclaration de cartes publiée le dit (un état saisi en plus de la base) ; sinon la créature n'a qu'une carte et la section d'équipement s'y imprime, à son rang, par la carte de repli publiée. Aucune de ces règles n'est recopiée en dur : elles se lisent dans la présentation installée.
 4. Ligne « SP » + « État » : la carte compacte apprend à lire `placement` (seule la fiche PJ le lit aujourd'hui, `adrenalinePj/renderer.ts`) et pose les deux blocs sur la rangée publiée ; valeurs telles que saisies.
 5. SCSS : grille partagée par `@mixin` entre les rangées ; couleur de pastille par le jeton du pack ; toute règle sombre derrière `.theme-dark` ou `.brumes--colour-dark` (`pnpm assert:style-scope`).
 6. Harnais : affirmer sur l'exemple Zy-2 l'ordre de la deuxième rangée, une case sur la grande carte et aucune sur la petite, la ligne « État », la section « Comportement et santé » de la petite carte.
@@ -132,7 +132,7 @@ journey
 
 > Lantern et Handbook dessinent la même carte.
 
-1. `CompactCard.tsx` et `compactCard.css` : mêmes quatre écarts, dont la lecture de `placement` que seul `PresentationBlocks.tsx` fait aujourd'hui ; le formulaire créature ne propose plus LOG, VOL ni CHA ; `AdrenalineFields.tsx`, `legacyRanges.ts` et `CompactCard.tsx` passent à `armesPsychologiques` pour la créature et retirent le champ du PNJ ; le jeton de pastille est lu par `var(...)`, ce que la garde de couverture exige.
+1. `CompactCard.tsx` et `compactCard.css` : mêmes quatre écarts, la petite carte et la carte unique lues dans la présentation comme dans Handbook (tâche 1, item 3), dont la lecture de `placement` que seul `PresentationBlocks.tsx` fait aujourd'hui ; le formulaire créature ne propose plus LOG, VOL ni CHA ; `AdrenalineFields.tsx`, `legacyRanges.ts` et `CompactCard.tsx` passent à `armesPsychologiques` pour la créature et retirent le champ du PNJ ; le jeton de pastille est lu par `var(...)`, ce que la garde de couverture exige.
 2. Libellés par i18n, français d'abord, anglais ensuite.
 3. « Partir de l'exemple » charge toujours l'exemple publié.
 
@@ -148,7 +148,7 @@ journey
 
 ### `4)` Coffre Zombiology : repasser sur les blocs et les modèles
 
-> Le TOML change avec le contrat : les notes écrites avant ne sont plus à jour. Ce passage suit l'arrivée du train, il n'en fait pas partie.
+> Le TOML change avec le contrat : les notes écrites avant ne sont plus à jour. Décidé le 2026-10-11 : la mise en place générale passe d'abord ; le TOML de chaque coffre se reprend ensuite au cas par cas, après l'arrivée du train. `terre-contre-fer` est une adaptation : elle suivra une variante de pack et n'est pas ressaisie au gabarit du livre de base (sa note a été remise dans son état d'origine).
 
 1. Déployer le plugin publié dans le coffre (`C:/Users/fxgui/Documents/Perso/RPG/zombiology`), sans toucher à son `data.json`.
 2. Relever chaque bloc `adrenaline-monstre` et `adrenaline-pnj` du coffre par recherche, modèles compris (`template_pnj.md`, `Handbook - Test cartes compactes.md`, `Test Handbook — Adrenaline.md` à la racine) ; laisser `aidd_docs/` du coffre, qui garde des copies d'archive.
@@ -164,6 +164,7 @@ journey
 | 1 | Sur l'exemple Zy-2, la grande carte affiche « Zone de détection », PER et « Dépl. » sur la deuxième rangée dans cet ordre, alignés sur la grille des quatre caractéristiques. |
 | 1 | La grande carte porte une case d'état, cochée quand `etatActif` désigne son état ; la petite n'en porte pas ; chaque déclencheur est précédé d'une pastille dont la couleur vient du jeton du pack. |
 | 1 | La petite carte affiche une section « Comportement et santé » puis « Équipement », sans section « Santé » ni « Comportement » séparée. |
+| 1 | Une créature sans état en plus de sa base se rend en une seule carte, qui porte son équipement ; sur la petite carte la santé précède le comportement et ni Malus ni protections n'y figurent. |
 | 1 | « État Insensible » s'affiche sur la ligne des seuils ; les cercles de Malus et « HS » restent inchangés. |
 | 1 | `pnpm assert:style-scope` et `pnpm assert:adrenaline-theme` sont verts ; à l'export PDF clair la carte reste lisible. |
 | 2 | La garde de couverture de Lantern est verte ; l'aperçu Lantern et le rendu Handbook de l'exemple Zy-2 montrent les mêmes régions dans le même ordre. |

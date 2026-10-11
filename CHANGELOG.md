@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.43.0] - 2026-10-11
+
+### Changed
+
+- The creature sheet follows the cards contract that `schema-adrenaline` publishes. The characteristics print on two rows: FOR, CON, DEX and RAP, then the detection zone, PER and the movement. The large card carries a box of the current state before the state name (ticked when `etatActif` names that state, never interactive), SP and « État » on one row, then the malus and the protections. The small card, printed only when a state besides the base is entered, joins health and behaviour under « Comportement et santé » and carries the equipment; a creature with no other state prints a single card, equipment included.
+- A creature prints its psychological weapons (`equipement.armesPsychologiques`).
+- An `etatActif` that names no entered state ticks nothing and is reported with its value in the log, at the warning level.
+- The contract guard accepts an installed `schema-adrenaline` whose major is at least the one `package.json` declares, instead of one exact version.
+
+### Removed
+
+- A block that enters what the installed contract publishes for another sheet only is refused as an invalid block, and the log names the key at the warning level: `log`, `vol` or `cha` among the characteristics of a creature or of one of its states, `equipement.armesMentales` at the root of a creature or a PNJ, `equipement.armesPsychologiques` at the root of a PJ or a PNJ. A creature that enters more states than the contract allows is refused the same way. Which of these are refused depends on the installed contract: the lists are read from its published JSON Schemas, which the plugin now embeds.
+
 ## [2.42.0] - 2026-10-09
 
 ### Added

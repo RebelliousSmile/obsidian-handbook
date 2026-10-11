@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { buildSync } from "esbuild";
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 
 /* Read the pin, do not restate it: the lockfiles are checked against package.json, not against a literal. */
@@ -25,10 +26,15 @@ const redirectEntry = content.slice(
 assert.ok(content.includes(url), `${lock} must retain the public URL`);
 assert.match(content, /integrity:?[\s\S]{0,120}sha512-|sha512-[A-Za-z0-9+/=]+/, `${lock} must retain SRI`);
 assert.equal(redirectEntry.includes("release-assets.githubusercontent.com"), false, `${lock} must not persist signed redirects for schema-adrenaline`);
+/* The published JSON Schemas the plugin reads are bundled with it: left external, Node would load them without a JSON import attribute. */
+const requireFromProject = createRequire(resolve("package.json"));
+const publishedSchemas = Object.fromEntries(
+	["monstre", "pnj", "pj"].map((sheet) => [`schema-adrenaline/schemas/${sheet}.schema.json`, requireFromProject.resolve(`schema-adrenaline/schemas/${sheet}.schema.json`)]),
+);
 const bundle = "tools/.assert-adrenaline-contract.mjs";
 const stub = "tools/.obsidian-stub.mjs";
 try {
 	writeFileSync(stub, "export class Notice {} export class Menu {} export class MenuItem {} export class Editor {} export class Plugin {} export class PluginSettingTab {} export class Setting {} export class Modal {} export class ItemView {} export class TFile {} export function setIcon() {} export function getLanguage() { return \"en\"; }\n");
-	buildSync({ entryPoints: ["tools/assertAdrenalineContract.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["schema-adrenaline", "postcss", "postcss-selector-parser"], alias: { obsidian: resolve(stub) }, logLevel: "warning" });
+	buildSync({ entryPoints: ["tools/assertAdrenalineContract.harness.mts"], outfile: bundle, bundle: true, platform: "node", format: "esm", target: "node16", external: ["schema-adrenaline", "postcss", "postcss-selector-parser"], alias: { obsidian: resolve(stub), ...publishedSchemas }, logLevel: "warning" });
 	process.exitCode = spawnSync(process.execPath, [bundle], { stdio: "inherit" }).status ?? 1;
 } finally { rmSync(bundle, { force: true }); rmSync(stub, { force: true }); }

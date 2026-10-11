@@ -58,7 +58,7 @@ assert.equal(Object.keys(characteristics ?? {}).length, 8);
 assert.equal(readIdentity(document.identite)?.age, 34);
 assert.equal(readHealth(document.sante)?.physique?.superficiel?.couvert, 9);
 assert.equal(readProtections(document.protections)?.mentales?.solidite, 5);
-assert.deepEqual(readEquipment(document.equipement)?.possessions, ["Radio"]);
+assert.deepEqual(readEquipment(document.equipement, "pnj")?.possessions, ["Radio"]);
 const competence = readCompetences(document.competences)[0];
 assert.equal(competence.total, 99);
 assert.equal(displayedCompetenceTotal(competence, characteristics), 80);

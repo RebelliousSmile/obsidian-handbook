@@ -7,6 +7,7 @@ import {
 	looksLikeToml,
 } from "../blocks/schemaValues";
 import { logScope } from "../../utils/logger";
+import { publishedCharacteristicKeys, publishedEquipmentKeys, type AdrenalineSheet } from "./publishedContract";
 
 export const CHARACTERISTIC_KEYS = [
 	"for",
@@ -19,6 +20,10 @@ export const CHARACTERISTIC_KEYS = [
 	"cha",
 ] as const;
 export type CharacteristicKey = (typeof CHARACTERISTIC_KEYS)[number];
+/** The characteristics the creature sheet publishes (the installed contract decides which). */
+export const MONSTER_CHARACTERISTIC_KEYS: readonly CharacteristicKey[] = CHARACTERISTIC_KEYS.filter(
+	(key) => publishedCharacteristicKeys("monstre").indexOf(key) >= 0,
+);
 export type AdrenalineDocument = Record<string, unknown>;
 export type Characteristics = Partial<Record<CharacteristicKey, number>>;
 
@@ -80,8 +85,14 @@ export interface Equipment {
 	possessions?: string[];
 	equipementFavori?: string;
 	armesPhysiques?: EquipmentWeapon[];
+	/** The PJ's mental weapons; the creature and the PNJ do not have them. */
 	armesMentales?: EquipmentWeapon[];
+	/** The creature's psychological weapons. */
+	armesPsychologiques?: EquipmentWeapon[];
 }
+
+/** The sheet an equipment belongs to: each one publishes its own weapon lists, with no alias between them. */
+export type EquipmentKind = AdrenalineSheet;
 
 export interface AdrenalineMeta {
 	typeDePublication?: "officiel" | "tiers" | "communautaire" | "maison";
@@ -173,12 +184,12 @@ export function stringifyAdrenalineDocument(value: AdrenalineDocument): string {
 	return `${stringifyToml(value).replace(/\s+$/, "")}\n`;
 }
 
-export function readCharacteristics(value: unknown): Characteristics | undefined {
+export function readCharacteristics(value: unknown, keys: readonly CharacteristicKey[] = CHARACTERISTIC_KEYS): Characteristics | undefined {
 	const record = asRecord(value);
 	if (!record) return undefined;
-	warnUnknownKeys(record, [...CHARACTERISTIC_KEYS], "caracteristiques");
+	warnUnknownKeys(record, [...keys], "caracteristiques");
 	const result: Characteristics = {};
-	for (const key of CHARACTERISTIC_KEYS) {
+	for (const key of keys) {
 		const score = readCurrentValue(record[key], 0, 200);
 		if (score !== undefined) result[key] = score;
 	}
@@ -349,19 +360,22 @@ function readWeapons(value: unknown): EquipmentWeapon[] {
 	return result;
 }
 
-export function readEquipment(value: unknown): Equipment | undefined {
+export function readEquipment(value: unknown, kind: EquipmentKind): Equipment | undefined {
 	const record = asRecord(value);
 	if (!record) return undefined;
-	warnUnknownKeys(record, ["possessions", "equipementFavori", "armesPhysiques", "armesMentales"], "equipement");
+	const published = publishedEquipmentKeys(kind);
+	warnUnknownKeys(record, published, "equipement");
 	const equipment: Equipment = {};
 	const possessions = asStringList(record.possessions);
 	const favorite = asString(record.equipementFavori);
 	const physical = readWeapons(record.armesPhysiques);
-	const mental = readWeapons(record.armesMentales);
+	const mental = published.indexOf("armesMentales") >= 0 ? readWeapons(record.armesMentales) : [];
+	const psychological = published.indexOf("armesPsychologiques") >= 0 ? readWeapons(record.armesPsychologiques) : [];
 	if (possessions.length > 0) equipment.possessions = possessions;
 	if (favorite) equipment.equipementFavori = favorite;
 	if (physical.length > 0) equipment.armesPhysiques = physical;
 	if (mental.length > 0) equipment.armesMentales = mental;
+	if (psychological.length > 0) equipment.armesPsychologiques = psychological;
 	return Object.keys(equipment).length > 0 ? equipment : undefined;
 }
 

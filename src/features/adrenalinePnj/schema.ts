@@ -17,11 +17,13 @@ import {
 	stringifyAdrenalineDocument,
 	warnUnknownKeys,
 } from "../adrenaline/document";
+import { contractRefusal } from "../adrenaline/publishedContract";
 import { AdrenalinePnjData } from "./parser";
 
 export function documentToPnj(value: unknown): AdrenalinePnjData | null {
 	const document = asRecord(value);
 	if (!document) return null;
+	if (contractRefusal("pnj", document)) return null;
 	warnUnknownKeys(
 		document,
 		["nom", "categorie", "niveauDeDanger", "niveauDeDangerAlternatif", "niveauDeDangerNote", "description", "identite", "caracteristiques", "sante", "protections", "formations", "competences", "equipement", "pistes", "etatDePartie", "narratif", "meta"],
@@ -38,7 +40,7 @@ export function documentToPnj(value: unknown): AdrenalinePnjData | null {
 	const protections = readProtections(document.protections);
 	const formations = readFormations(document.formations);
 	const competences = readCompetences(document.competences);
-	const equipement = readEquipment(document.equipement);
+	const equipement = readEquipment(document.equipement, "pnj");
 	const narratif = readNarrative(document.narratif);
 	const meta = readAdrenalineMeta(document.meta);
 	if (danger !== undefined) data.niveauDeDanger = danger;

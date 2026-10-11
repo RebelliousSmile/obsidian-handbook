@@ -16,6 +16,7 @@ import {
 	stringifyAdrenalineDocument,
 	warnUnknownKeys,
 } from "../adrenaline/document";
+import { contractRefusal } from "../adrenaline/publishedContract";
 import { AdrenalinePjData, GameParameters } from "./parser";
 
 const THRESHOLDS = ["superficiel", "leger", "grave", "profond"] as const;
@@ -51,6 +52,7 @@ function readGameParameters(value: unknown): GameParameters | undefined {
 export function documentToPj(value: unknown): AdrenalinePjData | null {
 	const document = asRecord(value);
 	if (!document) return null;
+	if (contractRefusal("pj", document)) return null;
 	warnUnknownKeys(
 		document,
 		["nom", "identite", "caracteristiques", "sante", "protections", "formations", "equipement", "parametresDuJeu", "etatDePartie", "meta"],
@@ -75,7 +77,7 @@ export function documentToPj(value: unknown): AdrenalinePjData | null {
 	const data: AdrenalinePjData = { nom, caracteristiques, sante: sante!, protections };
 	const identite = readIdentity(document.identite);
 	const formations = readFormations(document.formations);
-	const equipement = readEquipment(document.equipement);
+	const equipement = readEquipment(document.equipement, "pj");
 	const parameters = readGameParameters(document.parametresDuJeu);
 	const meta = readAdrenalineMeta(document.meta);
 	if (identite) data.identite = identite;

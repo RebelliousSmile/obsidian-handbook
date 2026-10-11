@@ -7,7 +7,11 @@ niveauDeDanger = 6
 zoneDeDetection = "2 m"
 deplacement = "4 m"
 actionsParRound = 2
-traitsSpeciaux = [ "État Insensible." ]
+traitsSpeciaux = [
+  "État Insensible.",
+  "Figé : quatre minutes après la fin de la diffusion, 0 action par round. Au silence prolongé, il redevient un Zy ordinaire.",
+  "Au froid : sous zéro, hors accord, déplacement 3 m. 1 malus à ses tests. La nuit, il ne voit pas au-delà de dix mètres.",
+]
 
 [caracteristiques]
 for = { minimum = 0, current = 30, maximum = 30 }
@@ -55,29 +59,15 @@ pourcentage = { minimum = 0, current = 10, maximum = 10 }
 caracteristique = "per"
 total = { minimum = 0, current = 40, maximum = 40 }
 
+[etatDeBase]
+nom = "Non stimulé"
+
 [[etats]]
-id = "accorde"
-nom = "Accordé"
+id = "stimule"
+nom = "Stimulé"
 declencheurs = [ "Une diffusion en cours, ou qui vient de s'achever." ]
 
 [etats.delta]
 deplacement = "4 m par round, en ligne droite vers le point annoncé"
 comportement = [ "Ne dérive pas.", "Ignore tout ce qui n'est pas sur son chemin.", "Ne s'arrête pas au contact d'une proie tant qu'il n'a pas atteint le point." ]
-
-[[etats]]
-id = "fige"
-nom = "Figé"
-declencheurs = [ "Quatre minutes après la fin de la diffusion.", "Au silence prolongé, il redevient un Zy ordinaire." ]
-
-[etats.delta]
-actionsParRound = 0
-
-[[etats]]
-id = "froid"
-nom = "Au froid"
-declencheurs = [ "Sous zéro, hors accord." ]
-
-[etats.delta]
-deplacement = "3 m"
-notes = "1 malus à ses tests. La nuit, il ne voit pas au-delà de dix mètres."
 ```

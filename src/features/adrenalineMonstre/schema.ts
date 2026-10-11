@@ -4,6 +4,7 @@ import {
 	asRecord,
 	parseAdrenalineDocument,
 	readAdrenalineMeta,
+	MONSTER_CHARACTERISTIC_KEYS,
 	readCharacteristics,
 	readCompetences,
 	readEquipment,
@@ -16,6 +17,7 @@ import {
 	warnMentalHealthWithoutCharacteristics,
 	warnUnknownKeys,
 } from "../adrenaline/document";
+import { contractRefusal } from "../adrenaline/publishedContract";
 import {
 	AdrenalineMonsterData,
 	AlternateState,
@@ -31,7 +33,7 @@ function readAlternateState(value: unknown): AlternateState | undefined {
 	if (!nom) return undefined;
 	const state: AlternateState = { nom };
 	const triggers = asStringList(record.declencheurs);
-	const characteristics = readCharacteristics(record.caracteristiques);
+	const characteristics = readCharacteristics(record.caracteristiques, MONSTER_CHARACTERISTIC_KEYS);
 	const detection = asString(record.zoneDeDetection);
 	const movement = asString(record.deplacement);
 	const actions = asInteger(record.actionsParRound, 0, 100);
@@ -95,13 +97,14 @@ function readContagion(value: unknown): Contagion | undefined {
 export function documentToMonster(value: unknown): AdrenalineMonsterData | null {
 	const document = asRecord(value);
 	if (!document) return null;
+	if (contractRefusal("monstre", document)) return null;
 	warnUnknownKeys(
 		document,
 		["nom", "categorie", "typeDeCorps", "instinct", "typeInfecte", "description", "niveauDeDanger", "niveauDeDangerAlternatif", "niveauDeDangerNote", "caracteristiques", "sante", "etatsPermanents", "malusAvantHs", "protections", "zoneDeDetection", "deplacement", "actionsParRound", "defense", "actions", "etatDeBase", "etatPrincipal", "etats", "etatActif", "etatDePartie", "etatAlternatif", "comportement", "traitsSpeciaux", "competences", "equipement", "contagion", "narratif", "meta"],
 		"monstre",
 	);
 	const nom = asString(document.nom);
-	const characteristics = readCharacteristics(document.caracteristiques);
+	const characteristics = readCharacteristics(document.caracteristiques, MONSTER_CHARACTERISTIC_KEYS);
 	const requiredPhysicalCharacteristics = ["for", "con", "dex", "rap"] as const;
 	if (!nom || !characteristics || requiredPhysicalCharacteristics.some((key) => characteristics[key] === undefined)) return null;
 	const data: AdrenalineMonsterData = { nom, caracteristiques: characteristics };
@@ -117,7 +120,7 @@ export function documentToMonster(value: unknown): AdrenalineMonsterData | null 
 	const behaviour = asStringList(document.comportement);
 	const traits = asStringList(document.traitsSpeciaux);
 	const competences = readCompetences(document.competences);
-	const equipment = readEquipment(document.equipement);
+	const equipment = readEquipment(document.equipement, "monstre");
 	const contagion = readContagion(document.contagion);
 	const narrative = readNarrative(document.narratif);
 	const meta = readAdrenalineMeta(document.meta);

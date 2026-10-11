@@ -1,9 +1,5 @@
 import { setIcon } from "obsidian";
-import type {
-	AdrenalinePresentation,
-	AdrenalinePresentationBlock,
-	AdrenalinePresentationSection,
-} from "schema-adrenaline/presentation";
+import type { PublishedBlock, PublishedPresentation, PublishedSection } from "./publishedPresentation";
 import { logScope } from "../../utils/logger";
 import { asRecord, readCurrentValue, type AdrenalineDocument } from "./document";
 
@@ -20,8 +16,8 @@ const reportedForms = new Set<string>();
 
 /* Labels the published presentation leaves to the consumer: field names and enum values. */
 const FIELD_LABELS: Record<string, string> = {
-	zoneDeDetection: "Détection", deplacement: "Déplacement", malusAvantHs: "Malus avant HS",
-	possessions: "Possessions", equipementFavori: "Équipement favori", armesPhysiques: "Armes physiques", armesMentales: "Armes mentales",
+	zoneDeDetection: "Zone de détection", deplacement: "Dépl.", malusAvantHs: "Malus avant HS",
+	possessions: "Possessions", equipementFavori: "Équipement favori", armesPhysiques: "Armes physiques", armesMentales: "Armes mentales", armesPsychologiques: "Armes psychologiques",
 	role: "Rôle", attitude: "Attitude", personnalite: "Personnalité", historique: "Historique", evolutionPossible: "Évolution possible",
 	interpretation: "Interprétation", repliques: "Répliques", notesMj: "Notes du meneur",
 	agent: "Agent", vecteurs: "Vecteurs", delaiAvantEffet: "Délai avant effet", issue: "Issue", modulations: "Modulations",
@@ -34,11 +30,21 @@ const DEFENSE_LEVELS: Record<string, string> = { oui: "Oui", expose: "Exposé", 
 
 /** The creature state a card prints, named and triggered as entered. */
 export interface CompactCardState {
+	/** The card this state is printed on (`principal`, `secondaire`), as the presentation names it. */
+	card: string;
 	name: string;
 	triggers: string[];
 	/** True on the card of the state the creature is in (`etatActif`). */
 	active: boolean;
 	note?: string;
+}
+
+/** What the section of a card is printed with: the card, and the section joined behind it. */
+export interface CompactSectionContext {
+	state?: CompactCardState;
+	card?: string;
+	/** A section printed right after this one, under one title (`joinedTo`). */
+	join?: { section: PublishedSection; title: string };
 }
 
 function node(doc: Document, tag: string, className: string, text?: string): HTMLElement {
@@ -84,7 +90,7 @@ function records(found: unknown): AdrenalineDocument[] {
 	return Array.isArray(found) ? found.map(asRecord).filter((item): item is AdrenalineDocument => item !== undefined) : [];
 }
 
-function isEmpty(found: unknown): boolean {
+export function isEmpty(found: unknown): boolean {
 	if (found === undefined || found === null || found === "") return true;
 	if (Array.isArray(found)) return found.length === 0;
 	const record = asRecord(found);
@@ -153,7 +159,7 @@ function skillLine(doc: Document, parent: HTMLElement, skill: AdrenalineDocument
 	return row;
 }
 
-function renderNameCard(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument, presentation: AdrenalinePresentation): void {
+function renderNameCard(doc: Document, box: HTMLElement, block: PublishedBlock, source: AdrenalineDocument, presentation: PublishedPresentation): void {
 	const categories = presentation.categories;
 	const category = text(at(source, categories?.path ?? "/categorie"));
 	const shown = category || categories?.fallbackLabel || block.label;
@@ -198,6 +204,22 @@ function summary(record: AdrenalineDocument): string {
 		const item = record[key];
 		return Array.isArray(item) ? strings(item).join(", ") : text(item, key === "probabilite" ? " %" : "");
 	}));
+}
+
+/** The rows the presentation publishes: a cell is printed only when its value is entered. */
+function renderPointerRows(doc: Document, box: HTMLElement, rows: NonNullable<PublishedBlock["pointerRows"]>, source: AdrenalineDocument, columns = 1): void {
+	const grid = add(box, doc, "div", "grid");
+	grid.classList.add(`${CARD}__grid--columns-${columns}`);
+	rows.forEach((row, rowIndex) => {
+		row.forEach((entry, columnIndex) => {
+			const found = at(source, entry.path);
+			if (isEmpty(found)) return;
+			const cell = add(grid, doc, "div", "cell");
+			cell.classList.add(`${CARD}__row-${rowIndex + 1}`, `${CARD}__col-${columnIndex + 1}`);
+			add(cell, doc, "b", "line-label", entry.label ?? lastSegment(entry.path).toUpperCase());
+			add(cell, doc, "span", "value", text(found, entry.path.indexOf("/caracteristiques/") === 0 ? " %" : ""));
+		});
+	});
 }
 
 function renderCompactRows(doc: Document, box: HTMLElement, pointer: string, found: unknown): void {
@@ -268,8 +290,9 @@ function renderProtections(doc: Document, box: HTMLElement, found: unknown): voi
 }
 
 /** Ten circles per track, the entered count bold; stress shows the published default when absent. */
-function renderTracks(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, found: unknown): void {
-	const decoration = block.decoration?.kind === "malus-tracks" ? block.decoration : { length: 10, stressDefault: 2 };
+function renderTracks(doc: Document, box: HTMLElement, block: PublishedBlock, found: unknown): void {
+	const published = block.decoration?.kind === "malus-tracks" ? block.decoration : undefined;
+	const decoration = { length: published?.length ?? 10, stressDefault: published?.stressDefault ?? 2 };
 	const tracks = asRecord(found) ?? {};
 	for (const [key, name, modifier] of TRACKS) {
 		const entered = readCurrentValue(tracks[key]);
@@ -293,7 +316,8 @@ function renderMalusCircles(doc: Document, box: HTMLElement, found: unknown): vo
 	add(row, doc, "b", "hs", "HS");
 }
 
-function renderInlineList(doc: Document, box: HTMLElement, found: unknown): void {
+/** `name` puts the block's label before its items, for a list that stands on a row of its own ("État"). */
+function renderInlineList(doc: Document, box: HTMLElement, found: unknown, name?: string): void {
 	const record = asRecord(found);
 	const items = record
 		? Object.keys(record).reduce<string[]>((all, key) => {
@@ -302,12 +326,16 @@ function renderInlineList(doc: Document, box: HTMLElement, found: unknown): void
 			return all.concat(strings(item), records(item).map((weapon) => joined([text(weapon.nom), text(weapon.type), text(weapon.pourcentage, " %"), text(weapon.notes)], " ")));
 		}, [])
 		: strings(found);
+	if (name) {
+		line(doc, box, name, items.join(" · "));
+		return;
+	}
 	add(box, doc, "p", "inline-list", items.join(" · "));
 }
 
 function renderCombat(doc: Document, box: HTMLElement, source: AdrenalineDocument): void {
 	const actions = text(at(source, "/actionsParRound"));
-	if (actions) add(box, doc, "p", "combat-actions", `${actions} action${actions === "1" ? "" : "s"} par round`);
+	if (actions) add(box, doc, "div", "combat-actions", `${actions} action${actions === "1" ? "" : "s"} par round`);
 	const defense = asRecord(at(source, "/defense"));
 	if (!defense) return;
 	const level = text(defense.niveau);
@@ -336,20 +364,47 @@ function renderStatus(doc: Document, box: HTMLElement, found: unknown): void {
 	renderNarrative(doc, box, found);
 }
 
-function renderStateHeader(doc: Document, box: HTMLElement, state: CompactCardState): void {
+/**
+ * The head of a state: its name, then the box of the current state when the
+ * published decoration puts one on this card (never interactive: the sheet
+ * records `etatActif`, the card does not change it), then each trigger behind
+ * its marker.
+ */
+function renderStateHeader(doc: Document, box: HTMLElement, state: CompactCardState, block: PublishedBlock): void {
+	const badge = block.decoration?.kind === "state-badge" ? block.decoration : undefined;
 	const head = add(box, doc, "div", "state-name");
+	if ((badge?.current?.cards ?? []).indexOf(state.card) >= 0) {
+		const check = add(head, doc, "span", "state-check");
+		check.setAttribute("role", "checkbox");
+		check.setAttribute("aria-label", "État actuel");
+		check.setAttribute("aria-checked", state.active ? "true" : "false");
+		check.setAttribute("aria-disabled", "true");
+		if (state.active) check.classList.add(`${CARD}__state-check--checked`);
+	}
 	add(head, doc, "strong", "state-label", state.name);
-	if (state.active) add(head, doc, "span", "state-active", "État actuel");
-	for (const trigger of state.triggers) add(box, doc, "span", "trigger", trigger);
+	for (const trigger of state.triggers) {
+		const row = add(box, doc, "span", "trigger-row");
+		if (badge?.triggerMarker) add(row, doc, "i", "trigger-marker");
+		add(row, doc, "span", "trigger", trigger);
+	}
 	if (state.note) add(box, doc, "span", "note", state.note);
 }
 
-function renderBlock(doc: Document, block: AdrenalinePresentationBlock, source: AdrenalineDocument, presentation: AdrenalinePresentation, state?: CompactCardState): HTMLElement | null {
+/** The cell a block takes in its section's grid, as published (`placement`), read like the PJ sheet reads it. */
+function placeBlock(box: HTMLElement, block: PublishedBlock): void {
+	const place = block.placement;
+	if (!place) return;
+	box.classList.add(`${CARD}__col-${place.column}`, `${CARD}__row-${place.row}`);
+	if (place.rowSpan) box.classList.add(`${CARD}__row-span-${place.rowSpan}`);
+	if (place.columnSpan) box.classList.add(`${CARD}__col-span-${place.columnSpan}`);
+}
+
+function renderBlock(doc: Document, block: PublishedBlock, source: AdrenalineDocument, presentation: PublishedPresentation, state?: CompactCardState): HTMLElement | null {
 	if (block.form === "state-header") {
 		if (!state) return null;
 		const header = node(doc, "div", "block");
 		header.classList.add(`${CARD}__form-state-header`, `${CARD}__block-${block.id}`);
-		renderStateHeader(doc, header, state);
+		renderStateHeader(doc, header, state, block);
 		return header;
 	}
 	const values = block.paths.map((pointer) => at(source, pointer));
@@ -357,18 +412,22 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, source: 
 	if (!always && values.every(isEmpty)) return null;
 	const box = node(doc, "div", "block");
 	box.classList.add(`${CARD}__form-${block.form ?? "none"}`, `${CARD}__block-${block.id}`);
+	placeBlock(box, block);
 	const [pointer] = block.paths;
 	switch (block.form) {
 		case "name-card": renderNameCard(doc, box, block, source, presentation); break;
 		case "narrative": renderNarrative(doc, box, values[0]); break;
-		case "compact-rows": renderCompactRows(doc, box, pointer, values[0]); break;
+		case "compact-rows":
+			if (block.pointerRows) renderPointerRows(doc, box, block.pointerRows, source, block.columns);
+			else renderCompactRows(doc, box, pointer, values[0]);
+			break;
 		case "threshold-rows": renderThresholds(doc, box, values[0]); break;
 		case "protection-lines": renderProtections(doc, box, values[0]); break;
 		case "malus-tracks": renderTracks(doc, box, block, values[0]); break;
 		case "malus-circles": renderMalusCircles(doc, box, values[0]); break;
 		case "status-frames": renderStatus(doc, box, values[0]); break;
 		case "skill-lines": for (const skill of records(values[0])) skillLine(doc, box, skill); break;
-		case "inline-list": renderInlineList(doc, box, values[0]); break;
+		case "inline-list": renderInlineList(doc, box, values[0], block.placement ? block.label : undefined); break;
 		case "combat": renderCombat(doc, box, source); break;
 		case "action-lines": for (const action of records(values[0])) renderAction(doc, box, action, false); break;
 		default: {
@@ -386,27 +445,52 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, source: 
 }
 
 /** A section's printed title: its label, then the value named by `labelFrom` — `Corps (Corps faible)`. */
-function sectionTitle(section: AdrenalinePresentationSection, source: AdrenalineDocument): string {
+function sectionTitle(section: PublishedSection, source: AdrenalineDocument): string {
 	const from = section.labelFrom ? text(at(source, section.labelFrom)) : "";
 	return from ? `${section.label} (${from})` : section.label;
 }
 
-/** One published section, or null when none of its blocks has a value to print. */
-export function renderCompactSection(doc: Document, section: AdrenalinePresentationSection, source: AdrenalineDocument, presentation: AdrenalinePresentation, state?: CompactCardState): HTMLElement | null {
-	const blocks = [...section.blocks].sort((a, b) => a.order - b.order)
-		.map((block) => renderBlock(doc, block, source, presentation, state))
+/** The blocks of a section that print on `card` (a block with no `cards` prints on every card of its section). */
+function renderSectionBlocks(doc: Document, section: PublishedSection, source: AdrenalineDocument, presentation: PublishedPresentation, context: CompactSectionContext): HTMLElement[] {
+	return [...section.blocks].sort((a, b) => a.order - b.order)
+		.filter((block) => !block.cards || context.card === undefined || block.cards.indexOf(context.card) >= 0)
+		.map((block) => renderBlock(doc, block, source, presentation, context.state))
 		.filter((box): box is HTMLElement => box !== null);
-	if (blocks.length === 0) return null;
+}
+
+/**
+ * The blocks of a section, in a body of their own when the section places them
+ * on a grid: a joined section's blocks then keep the flow of the card.
+ */
+function appendBlocks(doc: Document, container: HTMLElement, section: PublishedSection, blocks: HTMLElement[]): void {
+	const placed = section.layout === "grid" && section.blocks.some((block) => block.placement !== undefined);
+	const body = placed ? add(container, doc, "div", "placed") : container;
+	if (placed) body.classList.add(`${CARD}__placed--columns-${section.columns ?? 1}`);
+	for (const box of blocks) body.appendChild(box);
+}
+
+/**
+ * One published section, or null when none of its blocks has a value to print.
+ * `context.card` keeps the blocks that card prints; `context.join` is the
+ * section printed right after this one under the title `joinedTo` gives.
+ */
+export function renderCompactSection(doc: Document, section: PublishedSection, source: AdrenalineDocument, presentation: PublishedPresentation, context: CompactSectionContext = {}): HTMLElement | null {
+	const blocks = renderSectionBlocks(doc, section, source, presentation, context);
+	const joinedBlocks = context.join ? renderSectionBlocks(doc, context.join.section, source, presentation, context) : [];
+	if (blocks.length === 0 && joinedBlocks.length === 0) return null;
 	const container = node(doc, section.collapsible ? "details" : "section", "section");
 	container.classList.add(`${CARD}__section-${section.id}`, `${CARD}__layout-${section.layout}`);
-	if (section.collapsible) add(container, doc, "summary", "section-title", sectionTitle(section, source));
-	else if (section.showTitle !== false && section.layout !== "banner") add(container, doc, "div", "section-title", sectionTitle(section, source));
-	for (const box of blocks) container.appendChild(box);
+	if (context.join) container.classList.add(`${CARD}__section-${context.join.section.id}`, `${CARD}__section--joined`);
+	const title = context.join ? context.join.title : sectionTitle(section, source);
+	if (section.collapsible) add(container, doc, "summary", "section-title", title);
+	else if (section.showTitle !== false && section.layout !== "banner") add(container, doc, "div", "section-title", title);
+	appendBlocks(doc, container, section, blocks);
+	if (context.join) appendBlocks(doc, container, context.join.section, joinedBlocks);
 	return container;
 }
 
 /** The article every compact card hangs from: the sheet root, the shared card class, the banner variant. */
-export function compactCardRoot(doc: Document, root: string, presentation: AdrenalinePresentation, source: AdrenalineDocument): HTMLElement {
+export function compactCardRoot(doc: Document, root: string, presentation: PublishedPresentation, source: AdrenalineDocument): HTMLElement {
 	const article = doc.createElement("article");
 	article.classList.add(root, CARD, `${CARD}--${presentation.appearance.surface}`, `${CARD}--values-${presentation.appearance.values.align}`);
 	const categories = presentation.categories;

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { ADRENALINE_DOCUMENT_CODECS } from "schema-adrenaline";
 import { PJ_PRESENTATION } from "schema-adrenaline/presentation";
 import { readFileSync } from "node:fs";
-import { assertAdrenalineContractVersion, loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
+import { assertAdrenalineContractVersion, declaredContractMajor, loadAdrenalineContractCases } from "./adrenalineContractCorpus.mts";
 import { BRUMES_BLOCKS } from "../src/features/blocks/registry";
 import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
 
@@ -13,17 +13,22 @@ class El {
 	classes: string[] = [];
 	classList = { add: (...names: string[]) => this.classes.push(...names) };
 	constructor(public tagName: string) {}
+	setAttribute(name: string, value: string): void { this.dataset[`attr-${name}`] = value; }
 	appendChild(child: El): El { this.children.push(child); return child; }
 }
 const doc = { createElement: (tag: string) => new El(tag) };
 const text = (element: El): string => element.textContent + element.children.map(text).join("");
 const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre" } as const;
 
-assertAdrenalineContractVersion("3.0.0");
-/* An upstream minor or patch is adopted without a code change; the next contract major is not. */
-assertAdrenalineContractVersion("3.4.2");
-assert.throws(() => assertAdrenalineContractVersion("2.6.0"), /must be a 3.x contract/);
-assert.throws(() => assertAdrenalineContractVersion(undefined), /must be a 3.x contract/);
+/* The major is read from the dependency the project declares; an upstream minor or patch is adopted without a code change, a lower major is refused, and a higher one is a train ahead of the pin. */
+const declared = declaredContractMajor({ dependencies: { "schema-adrenaline": "https://example.test/releases/download/v7.1.0/schema-adrenaline-7.1.0.tgz" } });
+assert.equal(declared, 7);
+assertAdrenalineContractVersion("7.0.0", declared);
+assertAdrenalineContractVersion("7.4.2", declared);
+assertAdrenalineContractVersion("8.0.0", declared);
+assert.throws(() => assertAdrenalineContractVersion("6.9.0", declared), /major 7 or later/);
+assert.throws(() => assertAdrenalineContractVersion(undefined, declared), /major 7 or later/);
+assert.throws(() => declaredContractMajor({}), /not declared/);
 const cases = loadAdrenalineContractCases();
 assert.ok(cases.length > 0, "the published Adrenaline contract corpus must not be empty");
 assert.ok(cases.some((entry) => entry.expect === "accept"), "the published corpus must include accepted documents");

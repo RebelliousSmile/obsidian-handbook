@@ -2,6 +2,8 @@
 // Toutes les couleurs sont des jetons du pack : aucune valeur en dur ici.
 
 
+@use "./placement";
+
 @mixin display($size, $weight: 800) {
 	font-family: var(--font-header-theme);
 	font-size: $size;
@@ -98,12 +100,7 @@
 		gap: 4px;
 		min-width: 0;
 	}
-	@for $i from 1 through 3 {
-		.brumes-adrenaline-pj__col-#{$i} { grid-column: #{$i}; }
-		.brumes-adrenaline-pj__row-#{$i} { grid-row: #{$i}; }
-		.brumes-adrenaline-pj__col-span-#{$i} { grid-column-end: span #{$i}; }
-		.brumes-adrenaline-pj__row-span-#{$i} { grid-row-end: span #{$i}; }
-	}
+	@include placement.placement("brumes-adrenaline-pj", 3);
 
 	// Sous-titre de bloc : bordeaux, filet.
 	.brumes-adrenaline-pj h5.brumes-adrenaline-pj__block-title {
