@@ -26,7 +26,9 @@
 
 	// A section is its title band, then its padded blocks: no rule between sections.
 	.brumes-adrenaline-card__section { min-width: 0; }
-	.brumes-adrenaline-card__section-title {
+	// The title of a state is a band of the same kind, its current-state case at the published end.
+	.brumes-adrenaline-card__section-title,
+	.brumes-adrenaline-card__state-name {
 		padding: 0.1rem 0.5rem;
 		font-weight: 700;
 		color: var(--adrenaline-section-band-ink);
@@ -53,7 +55,9 @@
 	}
 	.brumes-adrenaline-card__banner-icon { display: inline-flex; }
 	.brumes-adrenaline-card__banner-icon svg { width: 1.3em; height: 1.3em; }
-	.brumes-adrenaline-card__banner-name { flex: 1 1 auto; font-size: 1.2em; text-transform: uppercase; }
+	.brumes-adrenaline-card__banner-heading { flex: 1 1 auto; min-width: 0; }
+	.brumes-adrenaline-card__banner-name { font-size: 1.2em; text-transform: uppercase; }
+	.brumes-adrenaline-card__banner-subtitle { font-size: 0.85em; }
 	.brumes-adrenaline-card__banner-danger { font-weight: 700; }
 	.brumes-adrenaline-card__banner-note { display: block; padding: 0.1rem 0.5rem; font-size: 0.85em; }
 
@@ -82,7 +86,10 @@
 	@for $i from 1 through 3 {
 		.brumes-adrenaline-card__grid--columns-#{$i} { --adrenaline-grid-columns: #{$i}; }
 	}
-	.brumes-adrenaline-card__cell { display: flex; gap: 0.3rem; }
+	// A label is never broken, nor a value between its number and its unit: a value too long for its cell goes under the label.
+	.brumes-adrenaline-card__cell { display: flex; flex-wrap: wrap; gap: 0 0.3rem; }
+	.brumes-adrenaline-card__cell > :first-child { flex: none; }
+	.brumes-adrenaline-card__cell > .brumes-adrenaline-card__value { white-space: nowrap; }
 	// Pointer rows and the section grid share the published `placement` geometry:
 	// a cell sits on the column of its published position (`__col-N`).
 	@include placement.placement("brumes-adrenaline-card", 4, 2, 3, 0);
@@ -95,14 +102,9 @@
 	}
 	.brumes-adrenaline-card__placed--columns-1 { --adrenaline-placed-columns: 1; }
 	.brumes-adrenaline-card__placed > * { min-width: 0; }
-	// A block is named on its row by its label ("SP", "État"): the value follows it.
-	// The actions per round read like the other lines: no paragraph margins.
-	.brumes-adrenaline-card__combat-actions { margin: 0; }
-	.brumes-adrenaline-card__thresholds {
-		display: grid;
-		grid-template-columns: 2.2rem repeat(4, minmax(0, 1fr));
-		gap: 0.4rem;
-	}
+	// `SP 7 / 14 / 19 / 24` on one line; each number is kept whole, the line wraps between them.
+	.brumes-adrenaline-card__thresholds { display: flex; flex-wrap: wrap; gap: 0 0.3rem; }
+	.brumes-adrenaline-card__threshold { white-space: nowrap; }
 	.brumes-adrenaline-card__track { display: flex; flex-wrap: wrap; gap: 0 0.5rem; align-items: center; }
 	.brumes-adrenaline-card__track .brumes-adrenaline-card__line-label { min-width: 8.5rem; }
 	.brumes-adrenaline-card__circles { display: inline-flex; gap: 0.18rem; }
@@ -155,30 +157,39 @@
 		background: var(--adrenaline-trigger-bg);
 	}
 
-	// A current-state case and a marker before each trigger: the pack's badge colour, never a colour of ours.
-	.brumes-adrenaline-card__state-check,
-	.brumes-adrenaline-card__trigger-marker {
-		display: inline-block;
+	// The state band: name, then the current-state case flush right; each trigger is a round arrow
+	// in the pack's badge colour followed by its bare text. The arrow is drawn here, no image.
+	.brumes-adrenaline-card__form-state-header { padding: 0; }
+	.brumes-adrenaline-card__state-name { display: flex; gap: 0.5rem; align-items: center; }
+	.brumes-adrenaline-card__state-label { flex: 1 1 auto; }
+	.brumes-adrenaline-card__state-check {
 		flex: none;
-		align-self: center;
 		width: 0.7em;
 		height: 0.7em;
-	}
-	.brumes-adrenaline-card__state-check {
-		margin-inline-end: 0.35rem;
 		border: 1.5px solid var(--adrenaline-card-badge);
 		border-radius: 0.15em;
 	}
-	.brumes-adrenaline-card__state-check--checked,
-	.brumes-adrenaline-card__trigger-marker { background: var(--adrenaline-card-badge); }
-	.brumes-adrenaline-card__trigger-marker { border-radius: 50%; }
-	.brumes-adrenaline-card__trigger-row { display: inline-flex; gap: 0.3rem; align-items: baseline; }
+	.brumes-adrenaline-card__state-check--checked { background: var(--adrenaline-card-badge); }
+	.brumes-adrenaline-card__trigger-row { display: flex; gap: 0.3rem; align-items: center; padding: 0.1rem 0.5rem 0; }
+	.brumes-adrenaline-card__trigger-marker {
+		display: inline-grid;
+		flex: none;
+		place-items: center;
+		width: 1.2em;
+		height: 1.2em;
+		border-radius: 50%;
+		font-size: 0.8em;
+		font-style: normal;
+		line-height: 1;
+		color: var(--background-primary);
+		background: var(--adrenaline-card-badge);
+	}
+	.brumes-adrenaline-card__trigger-marker::before { content: "\2192"; }
 
 	@media (max-width: 520px) {
 		.brumes-adrenaline-pnj,
 		.brumes-adrenaline-monstre { max-width: 100%; }
 		.brumes-adrenaline-card__grid { --adrenaline-grid-columns: 2; }
 		.brumes-adrenaline-card__grid > .brumes-adrenaline-card__cell { grid-column: auto; grid-row: auto; }
-		.brumes-adrenaline-card__thresholds { grid-template-columns: 2.2rem repeat(2, minmax(0, 1fr)); }
 	}
 }

@@ -124,7 +124,7 @@ journey
 1. En-tête : le scénario après le format, sur la ligne centrale.
 2. Armes sociales : table très compacte, dés surlignés selon leur nature, légende en pied.
 3. Blessures : une colonne par durée, puis choc, divers et total saisi.
-4. Identité : élément repliable en fin de fiche, fermé par défaut, comme « meneur » sur la carte PNJ.
+4. Identité : élément repliable en fin de fiche, fermé par défaut (seule section repliable du pack depuis le retrait de « meneur » sur la créature et le PNJ).
 
 ## Tasks to do
 

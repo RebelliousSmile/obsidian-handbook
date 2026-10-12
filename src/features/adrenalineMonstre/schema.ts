@@ -3,6 +3,7 @@ import {
 	AdrenalineDocument,
 	asRecord,
 	parseAdrenalineDocument,
+	readCurrentValue,
 	readAdrenalineMeta,
 	MONSTER_CHARACTERISTIC_KEYS,
 	readCharacteristics,
@@ -53,7 +54,7 @@ function readVectors(value: unknown): ContagionVector[] {
 		const nom = asString(record.nom);
 		if (!nom) continue;
 		const vector: ContagionVector = { nom };
-		const probability = asInteger(record.probabilite, 0, 100);
+		const probability = readCurrentValue(record.probabilite, 0, 100);
 		const notes = asString(record.notes);
 		if (probability !== undefined) vector.probabilite = probability;
 		if (notes) vector.notes = notes;

@@ -190,10 +190,15 @@ assert.deepEqual(
 const groupedMonster = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\ntraitsSpeciaux = ["Traque"]\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`);
 assert.ok(groupedMonster, "a grouped monster must parse");
 const groupedRendered = adrenalineMonsterBlock.render(groupedMonster, doc) as unknown as El;
-const meneur = groupedRendered.children.filter((child) => child.classes.includes("brumes-adrenaline-monstre--meneur"));
-assert.equal(meneur.length, 1, "a monster's traits must render in the game-master section");
-assert.equal(meneur[0]!.tagName, "details", "the game-master section folds");
-assert.equal(meneur[0]!.children[0]!.textContent, "Meneur", "the folded section must be labelled");
-assert.match(JSON.stringify(meneur[0]), /Traque/);
+assert.equal(
+	groupedRendered.children.filter((child) => child.classes.includes("brumes-adrenaline-monstre--meneur")).length,
+	0,
+	"the monster publishes no game-master section",
+);
+const groupedBehaviour = JSON.stringify(groupedRendered);
+assert.match(groupedBehaviour, /brumes-adrenaline-card__section-comportement/, "the behaviour section is printed on the card");
+assert.match(groupedBehaviour, /Traits spéciaux/, "a monster's traits must render openly under their own title on its card");
+assert.match(groupedBehaviour, /Traque/, "a monster's entered traits must be printed on the card");
+assert.equal(JSON.stringify(groupedRendered).includes('"tagName":"details"'), false, "the monster prints no folded section");
 
 console.log("Adrenaline Zombiology style assertions passed.");

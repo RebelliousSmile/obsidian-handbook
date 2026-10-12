@@ -118,6 +118,8 @@ function stateCards(source: AdrenalineDocument): StateCard[] {
 	const baseState = asRecord(source.etatDeBase);
 	const resolve = (card: CardId, id: string): StateCard => {
 		const state = states.filter((candidate) => candidate.id === id)[0];
+		// The published state enters its note in its delta; the legacy form entered it beside.
+		const note = text(state?.notes) || text(state?.delta.notes);
 		return {
 			card,
 			source: state ? { ...base, ...state.delta } : base,
@@ -126,7 +128,7 @@ function stateCards(source: AdrenalineDocument): StateCard[] {
 				name: state ? state.nom : text(baseState?.nom) || "État de base",
 				triggers: state ? state.declencheurs : strings(baseState?.declencheurs),
 				active: current === id,
-				...(state?.notes ? { note: state.notes } : {}),
+				...(note ? { note } : {}),
 			},
 		};
 	};
@@ -168,18 +170,19 @@ function renderStateCard(doc: Document, card: StateCard, existing: readonly Card
 export function renderAdrenalineMonster(data: AdrenalineMonsterData, doc: Document): HTMLElement {
 	const source = adrenalineSourceDocument(data) ?? monsterToDocument(data);
 	const root = compactCardRoot(doc, adrenalineMonsterShape.root, MONSTRE_PRESENTATION, source);
-	const base = baseOf(source);
+	const cards = stateCards(source);
+	// Outside the cards the sheet has one source: what the principal card prints (base plus its state's delta).
+	const sheetSource = cards.filter((card) => card.card === "principal")[0]?.source ?? baseOf(source);
 	const builders: Record<string, ZoneBuilder> = {
 		cards: () => {
 			const frame = compactCardElement(doc, "div", "cards");
-			const cards = stateCards(source);
 			const existing = cards.map((card) => card.card);
 			for (const card of cards) frame.appendChild(renderStateCard(doc, card, existing));
 			return frame;
 		},
 	};
 	for (const section of MONSTRE_PRESENTATION.sections) {
-		if (!("cards" in section)) builders[section.id] = () => renderCompactSection(doc, section, base, MONSTRE_PRESENTATION);
+		if (!("cards" in section)) builders[section.id] = () => renderCompactSection(doc, section, sheetSource, MONSTRE_PRESENTATION);
 	}
 	renderZones(root, adrenalineMonsterShape, builders);
 	return root;

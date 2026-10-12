@@ -42,6 +42,11 @@ export function publishedEquipmentKeys(sheet: AdrenalineSheet): string[] {
 	return propertyKeys(SCHEMAS[sheet].properties?.equipement);
 }
 
+/** The equipment keys the state of a creature may overlay. */
+function publishedStateEquipmentKeys(): string[] {
+	return propertyKeys(SCHEMAS.monstre.properties?.etats?.items?.properties?.delta?.properties?.equipement);
+}
+
 /** How many states besides its base a creature may enter, when the contract bounds it. */
 export function publishedMaximumStates(): number | undefined {
 	return SCHEMAS.monstre.properties?.etats?.maxItems;
@@ -77,8 +82,19 @@ function refusalOf(sheet: AdrenalineSheet, document: Record<string, unknown>): s
 		const foreign = foreignKeys(record, characteristics, knownCharacteristics);
 		if (foreign.length > 0) return `"${path}.${foreign[0]}" is not a ${sheet} key.`;
 	}
-	const foreignEquipment = foreignKeys(document.equipement, publishedEquipmentKeys(sheet), union(publishedEquipmentKeys));
-	if (foreignEquipment.length > 0) return `"equipement.${foreignEquipment[0]}" is not a ${sheet} key.`;
+	const knownEquipment = union(publishedEquipmentKeys);
+	const equipment: [string, unknown, string[]][] = [["equipement", document.equipement, publishedEquipmentKeys(sheet)]];
+	if (sheet === "monstre" && Array.isArray(document.etats)) {
+		const stateEquipment = publishedStateEquipmentKeys();
+		document.etats.forEach((state: unknown, index: number) => {
+			const delta = isRecord(state) ? state.delta : undefined;
+			equipment.push([`etats[${index}].delta.equipement`, isRecord(delta) ? delta.equipement : undefined, stateEquipment]);
+		});
+	}
+	for (const [path, record, sheetKeys] of equipment) {
+		const foreign = foreignKeys(record, sheetKeys, knownEquipment);
+		if (foreign.length > 0) return `"${path}.${foreign[0]}" is not a ${sheet} key.`;
+	}
 	const maximum = publishedMaximumStates();
 	if (sheet === "monstre" && maximum !== undefined && Array.isArray(document.etats) && document.etats.length > maximum) {
 		return `"etats" holds ${document.etats.length} entries, the contract allows ${maximum}.`;

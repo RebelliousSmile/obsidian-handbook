@@ -17,7 +17,7 @@ export interface PublishedDecoration {
 	length?: number;
 	stressDefault?: number;
 	triggerMarker?: boolean;
-	current?: { path?: string; cards?: readonly string[] };
+	current?: { path?: string; cards?: readonly string[]; position?: string };
 }
 
 export interface PublishedBlock {
@@ -27,6 +27,8 @@ export interface PublishedBlock {
 	columns?: number;
 	form?: string;
 	placement?: PublishedPlacement;
+	subtitlePaths?: readonly string[];
+	rowLabels?: readonly string[];
 	pointerRows?: readonly (readonly { path: string; label?: string }[])[];
 	cards?: readonly string[];
 	decoration?: PublishedDecoration;

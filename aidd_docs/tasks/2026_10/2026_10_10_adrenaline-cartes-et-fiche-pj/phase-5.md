@@ -116,7 +116,7 @@ journey
 9. Armes sociales : table de règles publiée ; #101 la met à la place des lignes libres « Armes mentales » que la feuille montre encore ; le champ `armesMentales` sort du contrat PJ.
 10. Protections : inchangées ; « Avantages et immunités » reste à sa place.
 11. Santé : recopie de la feuille — deux cadres de blessures (physiques, mentales), chacun en deux colonnes de quatre cercles heure, jour, semaine, mois ; choc en cinq cercles « round » ; divers en quatre cercles ; total de 1 à 9 puis « HS ».
-12. Identité : section finale escamotable, fermée par défaut, sur le modèle de « meneur ».
+12. Identité : section finale escamotable, fermée par défaut (« meneur », son ancien modèle, n'est plus repliée sur la créature et le PNJ ; l'identité du PJ le reste).
 
 La place exacte de (4) à (6) et de (11) se cale sur la feuille du PDF : compétences avant caractéristiques, dés de stress à droite des caractéristiques, localisations et caractère sous les protections de l'équipement. Ce croquis ne fixe que ce que #101 ajoute.
 

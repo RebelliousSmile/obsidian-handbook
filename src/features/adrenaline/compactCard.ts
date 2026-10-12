@@ -171,12 +171,18 @@ function renderNameCard(doc: Document, box: HTMLElement, block: PublishedBlock, 
 		mark.dataset.icon = icon;
 		setIcon(mark, icon);
 	}
-	add(identity, doc, "strong", "banner-name", text(at(source, "/nom")));
+	const heading = add(identity, doc, "div", "banner-heading");
+	add(heading, doc, "strong", "banner-name", text(at(source, "/nom")));
+	const subtitle = (block.subtitlePaths ?? []).map((pointer) => text(at(source, pointer))).filter(Boolean).join(" ");
+	if (subtitle) add(heading, doc, "div", "banner-subtitle", subtitle);
 	const danger = text(at(source, "/niveauDeDanger"));
 	const alternate = text(at(source, "/niveauDeDangerAlternatif"));
-	if (danger || alternate) add(identity, doc, "span", "banner-danger", `ND ${joined([danger, alternate], " / ")}`);
 	const note = text(at(source, "/niveauDeDangerNote"));
-	if (note) add(box, doc, "span", "banner-note", note);
+	// The note is called by an asterisk on the first level printed, as the contract describes it.
+	const call = note ? "*" : "";
+	const levels = danger ? [danger + call, alternate] : [danger, alternate ? alternate + call : alternate];
+	if (danger || alternate) add(identity, doc, "span", "banner-danger", `ND ${joined(levels, " / ")}`);
+	if (note) add(box, doc, "span", "banner-note", `* ${note}`);
 }
 
 function renderNarrative(doc: Document, box: HTMLElement, found: unknown): void {
@@ -216,7 +222,9 @@ function renderPointerRows(doc: Document, box: HTMLElement, rows: NonNullable<Pu
 			if (isEmpty(found)) return;
 			const cell = add(grid, doc, "div", "cell");
 			cell.classList.add(`${CARD}__row-${rowIndex + 1}`, `${CARD}__col-${columnIndex + 1}`);
-			add(cell, doc, "b", "line-label", entry.label ?? lastSegment(entry.path).toUpperCase());
+			// Only the sigle of a characteristic (no published label) is bold.
+			if (entry.label === undefined) add(cell, doc, "b", "line-label", lastSegment(entry.path).toUpperCase());
+			else add(cell, doc, "span", "line-label", entry.label);
 			add(cell, doc, "span", "value", text(found, entry.path.indexOf("/caracteristiques/") === 0 ? " %" : ""));
 		});
 	});
@@ -249,10 +257,15 @@ function renderThresholds(doc: Document, box: HTMLElement, found: unknown): void
 		if (!thresholds) continue;
 		const row = add(box, doc, "div", "thresholds");
 		add(row, doc, "b", "line-label", short);
+		let printed = 0;
 		for (const [key, name] of THRESHOLDS) {
 			const threshold = asRecord(thresholds[key]);
 			const base = text(threshold?.base);
+			if (!base) continue;
 			const covered = text(threshold?.couvert);
+			// `SP 7 / 14 / 19 / 24`: the numbers as entered, a slash between them, each kept whole.
+			if (printed > 0) add(row, doc, "span", "threshold-separator", "/");
+			printed += 1;
 			const cell = add(row, doc, "span", "threshold", covered ? `${base} (${covered})` : base);
 			cell.classList.add(`${CARD}__value`);
 			cell.dataset.threshold = name;
@@ -333,15 +346,28 @@ function renderInlineList(doc: Document, box: HTMLElement, found: unknown, name?
 	add(box, doc, "p", "inline-list", items.join(" · "));
 }
 
-function renderCombat(doc: Document, box: HTMLElement, source: AdrenalineDocument): void {
-	const actions = text(at(source, "/actionsParRound"));
-	if (actions) add(box, doc, "div", "combat-actions", `${actions} action${actions === "1" ? "" : "s"} par round`);
+/** The combat row: `<n>/round` and `<niveau> (<bonus> bonus)`, each behind the published label of its path. */
+function renderCombat(doc: Document, box: HTMLElement, block: PublishedBlock, source: AdrenalineDocument): void {
 	const defense = asRecord(at(source, "/defense"));
-	if (!defense) return;
-	const level = text(defense.niveau);
-	const legacy = typeof defense.active === "boolean" ? (defense.active ? "oui" : "non") : "";
-	const bonus = text(defense.bonus);
-	line(doc, box, "Défense", joined([DEFENSE_LEVELS[level || legacy] ?? level, bonus && `+${bonus}`, text(defense.notes)], " "));
+	const level = text(defense?.niveau);
+	const legacy = typeof defense?.active === "boolean" ? (defense.active ? "oui" : "non") : "";
+	const bonus = text(defense?.bonus);
+	const actions = text(at(source, "/actionsParRound"));
+	const values: Record<string, string> = {
+		"/actionsParRound": actions && `${actions}/round`,
+		"/defense": joined([DEFENSE_LEVELS[level || legacy] ?? level, bonus && `(${bonus} bonus)`], " "),
+	};
+	// A declared field is never hidden: the free note follows the published form, free to wrap.
+	const notes: Record<string, string> = { "/defense": text(defense?.notes) };
+	const grid = add(box, doc, "div", "grid");
+	grid.classList.add(`${CARD}__grid--columns-${block.columns ?? 1}`);
+	block.paths.forEach((pointer, index) => {
+		if (!values[pointer] && !notes[pointer]) return;
+		const cell = add(grid, doc, "div", "cell");
+		add(cell, doc, "b", "line-label", block.rowLabels?.[index] ?? humanize(lastSegment(pointer)));
+		if (values[pointer]) add(cell, doc, "span", "value", values[pointer]);
+		if (notes[pointer]) add(cell, doc, "span", "note", notes[pointer]);
+	});
 }
 
 function renderAction(doc: Document, parent: HTMLElement, action: AdrenalineDocument, follow: boolean): void {
@@ -365,27 +391,31 @@ function renderStatus(doc: Document, box: HTMLElement, found: unknown): void {
 }
 
 /**
- * The head of a state: its name, then the box of the current state when the
- * published decoration puts one on this card (never interactive: the sheet
- * records `etatActif`, the card does not change it), then each trigger behind
- * its marker.
+ * The head of a state: its name on a title band, the box of the current state at
+ * the side of the band the published decoration names (`current.position`; never
+ * interactive: the sheet records `etatActif`, the card does not change it), then
+ * each trigger behind its marker, bare.
  */
 function renderStateHeader(doc: Document, box: HTMLElement, state: CompactCardState, block: PublishedBlock): void {
 	const badge = block.decoration?.kind === "state-badge" ? block.decoration : undefined;
 	const head = add(box, doc, "div", "state-name");
-	if ((badge?.current?.cards ?? []).indexOf(state.card) >= 0) {
-		const check = add(head, doc, "span", "state-check");
+	const hasCheck = (badge?.current?.cards ?? []).indexOf(state.card) >= 0;
+	const check = node(doc, "span", "state-check");
+	if (hasCheck) {
 		check.setAttribute("role", "checkbox");
 		check.setAttribute("aria-label", "État actuel");
 		check.setAttribute("aria-checked", state.active ? "true" : "false");
 		check.setAttribute("aria-disabled", "true");
 		if (state.active) check.classList.add(`${CARD}__state-check--checked`);
 	}
+	const atEnd = badge?.current?.position === "end";
+	if (hasCheck && !atEnd) head.appendChild(check);
 	add(head, doc, "strong", "state-label", state.name);
+	if (hasCheck && atEnd) head.appendChild(check);
 	for (const trigger of state.triggers) {
 		const row = add(box, doc, "span", "trigger-row");
 		if (badge?.triggerMarker) add(row, doc, "i", "trigger-marker");
-		add(row, doc, "span", "trigger", trigger);
+		add(row, doc, "span", "state-trigger", trigger);
 	}
 	if (state.note) add(box, doc, "span", "note", state.note);
 }
@@ -399,7 +429,7 @@ function placeBlock(box: HTMLElement, block: PublishedBlock): void {
 	if (place.columnSpan) box.classList.add(`${CARD}__col-span-${place.columnSpan}`);
 }
 
-function renderBlock(doc: Document, block: PublishedBlock, source: AdrenalineDocument, presentation: PublishedPresentation, state?: CompactCardState): HTMLElement | null {
+function renderBlock(doc: Document, block: PublishedBlock, source: AdrenalineDocument, presentation: PublishedPresentation, state?: CompactCardState, section?: PublishedSection): HTMLElement | null {
 	if (block.form === "state-header") {
 		if (!state) return null;
 		const header = node(doc, "div", "block");
@@ -416,7 +446,11 @@ function renderBlock(doc: Document, block: PublishedBlock, source: AdrenalineDoc
 	const [pointer] = block.paths;
 	switch (block.form) {
 		case "name-card": renderNameCard(doc, box, block, source, presentation); break;
-		case "narrative": renderNarrative(doc, box, values[0]); break;
+		case "narrative":
+			// A narrative block that does not carry its section's title says what it holds ("Traits spéciaux").
+			if (section && block.label.trim().toLowerCase() !== section.label.trim().toLowerCase()) add(box, doc, "b", "line-label", block.label);
+			renderNarrative(doc, box, values[0]);
+			break;
 		case "compact-rows":
 			if (block.pointerRows) renderPointerRows(doc, box, block.pointerRows, source, block.columns);
 			else renderCompactRows(doc, box, pointer, values[0]);
@@ -428,7 +462,7 @@ function renderBlock(doc: Document, block: PublishedBlock, source: AdrenalineDoc
 		case "status-frames": renderStatus(doc, box, values[0]); break;
 		case "skill-lines": for (const skill of records(values[0])) skillLine(doc, box, skill); break;
 		case "inline-list": renderInlineList(doc, box, values[0], block.placement ? block.label : undefined); break;
-		case "combat": renderCombat(doc, box, source); break;
+		case "combat": renderCombat(doc, box, block, source); break;
 		case "action-lines": for (const action of records(values[0])) renderAction(doc, box, action, false); break;
 		default: {
 			const form = block.form ?? "(none)";
@@ -454,7 +488,7 @@ function sectionTitle(section: PublishedSection, source: AdrenalineDocument): st
 function renderSectionBlocks(doc: Document, section: PublishedSection, source: AdrenalineDocument, presentation: PublishedPresentation, context: CompactSectionContext): HTMLElement[] {
 	return [...section.blocks].sort((a, b) => a.order - b.order)
 		.filter((block) => !block.cards || context.card === undefined || block.cards.indexOf(context.card) >= 0)
-		.map((block) => renderBlock(doc, block, source, presentation, context.state))
+		.map((block) => renderBlock(doc, block, source, presentation, context.state, section))
 		.filter((box): box is HTMLElement => box !== null);
 }
 
