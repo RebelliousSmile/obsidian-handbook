@@ -121,24 +121,27 @@
 			box-decoration-break: clone;
 			border: none;
 		}
+	}
 
-		&--tags {
-			list-style: none;
+	// A theme card and a kit list their tags the same way. One rule serves both:
+	// the kit's weakness line comes later and keeps its own top margin.
+	.brumes-story-theme--tags,
+	.brumes-theme-kit--tags {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25em;
+		text-align: center;
+
+		& > li {
+			margin-inline-start: 0 !important;
+			// A tag span trims its own box, so the line still needs a
+			// height of its own or two tags overlap.
+			line-height: 1.35;
 			padding: 0;
-			margin: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 0.25em;
-			text-align: center;
-
-			& > li {
-				margin-inline-start: 0 !important;
-				// A tag span trims its own box, so the line still needs a
-				// height of its own or two tags overlap.
-				line-height: 1.35;
-				padding: 0;
-			}
 		}
 	}
 

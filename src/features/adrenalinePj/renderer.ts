@@ -1,5 +1,6 @@
 import { PJ_PRESENTATION, type AdrenalinePresentationBlock, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
 import { adrenalineSourceDocument, asRecord, readCurrentValue, type AdrenalineDocument, type Competence, type EquipmentWeapon, type Formation } from "../adrenaline/document";
+import { publishedAsList } from "../adrenaline/publishedContract";
 import { renderZones } from "../blocks/shape";
 import { logScope } from "../../utils/logger";
 import { AdrenalinePjData } from "./parser";
@@ -11,17 +12,15 @@ const log = logScope("adrenaline-pj");
 const reportedForms = new Set<string>();
 
 /* Labels the published presentation leaves to the consumer: field names and enum values. */
-const PARAMETER_LABELS: Record<string, string> = { joueur: "Joueur", typeDeCreation: "Création", typeDeScenario: "Scénario", declinaisonDeCampagne: "Campagne" };
 const PARAMETER_VALUES: Record<string, string> = { equitable: "Équitable", aleatoire: "Aléatoire", "one-shot": "One-shot", campagne: "Campagne", "bac-a-sable": "Bac à sable", storyline: "Storyline" };
 const FIELD_LABELS: Record<string, string> = { equipementFavori: "Équipement favori", possessions: "Possessions" };
 const IDENTITY_LABELS: Record<string, string> = {
 	nationalite: "Nationalité", genre: "Genre", cheveux: "Cheveux", age: "Âge", yeux: "Yeux",
 	taille: "Taille", peau: "Peau", poids: "Poids", signesParticuliers: "Signes particuliers",
 };
-const RANGE_HEADS = { minimum: "Création", current: "Actuel" } as const;
-const THRESHOLDS: readonly (readonly [string, string])[] = [["superficiel", "Superficiel"], ["leger", "Léger"], ["grave", "Grave"], ["profond", "Profond"]];
+/* The unit the thresholds count their malus in; the presentation publishes the count, the word is the sheet's own ("1 malus = -10 %"). */
+const MALUS = "malus";
 const STRESS: readonly (readonly [string, string, "favorable" | "defavorable", string])[] = [["adrenaline", "Adrénaline", "favorable", "Favorable"], ["panique", "Panique", "defavorable", "Défavorable"]];
-const MALUS: readonly (readonly [string, string])[] = [["physique", "Physique"], ["mental", "Mental"]];
 
 function node(doc: Document, tag: string, className: string, text?: string): HTMLElement {
 	const result = doc.createElement(tag);
@@ -56,10 +55,18 @@ function humanize(value: string): string {
 	return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-/** A scalar characteristic is its creation value: both columns print it. */
-function rangePart(value: unknown, part: "minimum" | "current"): number | undefined {
+/** The current value of a characteristic; a scalar is its own current value. */
+function currentPart(value: unknown): number | undefined {
 	const record = asRecord(value);
-	return readCurrentValue(record ? record[part] : value);
+	return readCurrentValue(record ? record.current : value);
+}
+
+/** True when the document enters nothing at this place. */
+function isBlank(found: unknown): boolean {
+	if (found === undefined || found === null || found === "") return true;
+	if (Array.isArray(found)) return found.length === 0;
+	const record = asRecord(found);
+	return record ? Object.keys(record).length === 0 : false;
 }
 
 function capitalize(value: string): string {
@@ -90,10 +97,11 @@ function writeLine(doc: Document, parent: HTMLElement, label: string, content: s
 }
 
 /** A name, a bordered handwritten value. */
-function metric(doc: Document, parent: HTMLElement, name: string, values: readonly string[]): HTMLElement {
+function metric(doc: Document, parent: HTMLElement, name: string, values: readonly string[], hint?: string): HTMLElement {
 	const line = add(parent, doc, "div", "metric");
 	line.classList.add(`${ROOT}__metric-${values.length}`);
-	add(line, doc, "span", "metric-name", name);
+	const label = add(line, doc, "span", "metric-name", name);
+	if (hint) add(label, doc, "small", "threshold-malus", hint);
 	for (const item of values) line.appendChild(value(doc, item, "metric-value"));
 	return line;
 }
@@ -111,25 +119,17 @@ function renderNameCard(doc: Document, box: HTMLElement, block: AdrenalinePresen
 function renderGameParameters(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	add(box, doc, "span", "card-label", block.label);
 	const fields = add(box, doc, "div", "card-fields");
-	for (const pointer of block.paths) {
-		const key = lastSegment(pointer);
+	block.paths.forEach((pointer, index) => {
+		// A pointer the block prints as a subtitle (under the sheet label) is not a row.
+		if ((block.subtitlePaths ?? []).indexOf(pointer) >= 0) return;
 		const raw = text(at(source, pointer));
-		writeLine(doc, fields, PARAMETER_LABELS[key] ?? humanize(key), PARAMETER_VALUES[raw] ?? raw);
-	}
+		writeLine(doc, fields, block.rowLabels?.[index] ?? humanize(lastSegment(pointer)), PARAMETER_VALUES[raw] ?? raw);
+	});
 }
 
-/**
- * The printed fields of a competence. schema-adrenaline 2.7.0 adds `caracteristique`; read by
- * cast so an older installed contract keeps printing the name and speciality alone.
- */
-function competenceFields(block: AdrenalinePresentationBlock): readonly string[] {
-	const fields = (block as { formationFields?: { competence?: unknown } }).formationFields?.competence;
-	return Array.isArray(fields) ? fields.filter((field): field is string => typeof field === "string") : ["nom", "specialite", "pourcentage"];
-}
-
-function competenceName(competence: Competence, fields: readonly string[]): string {
-	const name = competence.specialite && fields.indexOf("specialite") >= 0 ? `${competence.nom} · ${competence.specialite}` : competence.nom;
-	return competence.caracteristique && fields.indexOf("caracteristique") >= 0 ? `${name} (${competence.caracteristique.toUpperCase()})` : name;
+/** The sheet prints a competence as `Name (Speciality)`: the game master picks the characteristic at the table. */
+function competenceName(competence: Competence): string {
+	return competence.specialite ? `${competence.nom} (${competence.specialite})` : competence.nom;
 }
 
 /**
@@ -152,7 +152,6 @@ function formationColumns(block: AdrenalinePresentationBlock, formations: readon
 
 function renderFormationColumns(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, data: AdrenalinePjData): void {
 	const suffix = block.valueSuffix ?? "";
-	const fields = competenceFields(block);
 	for (const formation of formationColumns(block, data.formations ?? [])) {
 		const column = add(box, doc, "div", "formation");
 		subhead(doc, column, "Formation", [suffix]);
@@ -165,10 +164,7 @@ function renderFormationColumns(doc: Document, box: HTMLElement, block: Adrenali
 		subhead(doc, column, "Compétences", [suffix]);
 		const list = add(column, doc, "div", "metric-list");
 		for (const competence of formation.competences ?? []) {
-			/* The published fields print the skill alone; the noted characteristic is added at the roll. */
-			metric(doc, list, competenceName(competence, fields), [text(competence.pourcentage)]);
-			if (competence.avantages?.length) add(list, doc, "p", "note", `Avantage : ${competence.avantages.join(", ")}`);
-			if (competence.notes) add(list, doc, "p", "note", competence.notes);
+			metric(doc, list, competenceName(competence), [text(competence.pourcentage)]);
 		}
 	}
 }
@@ -196,29 +192,28 @@ function renderIdentityFields(doc: Document, box: HTMLElement, block: Adrenaline
 }
 
 function renderCharacteristicRows(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const parts = block.rangeDisplay ?? ["current"];
 	const suffix = block.valueSuffix ? ` ${block.valueSuffix}` : "";
-	const heads = add(box, doc, "div", "metric-heads");
-	heads.classList.add(`${ROOT}__metric-${parts.length}`);
-	add(heads, doc, "span", "metric-name");
-	for (const part of parts) add(heads, doc, "span", "metric-head", RANGE_HEADS[part]);
 	const list = add(box, doc, "div", "metric-list");
 	block.paths.forEach((pointer, index) => {
-		const row = metric(doc, list, block.rowLabels?.[index] ?? humanize(lastSegment(pointer)), parts.map((part) => {
-			const found = rangePart(at(source, pointer), part);
-			return found === undefined ? "" : `${found}${suffix}`;
-		}));
+		const found = currentPart(at(source, pointer));
+		const row = metric(doc, list, block.rowLabels?.[index] ?? humanize(lastSegment(pointer)), [found === undefined ? "" : `${found}${suffix}`]);
 		row.classList.add(`${ROOT}__characteristic`);
 	});
 }
 
+/**
+ * A list of ruled lines, at least the `minimumRows` the presentation publishes. A path the contract
+ * publishes as a list draws its lines whether the list is entered or not; any other path is a field.
+ */
 function renderRuledList(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const printed = block.minimumRows ?? 0;
 	for (const pointer of block.paths) {
 		const found = at(source, pointer);
-		if (Array.isArray(found)) {
+		if (Array.isArray(found) || publishedAsList("pj", pointer)) {
+			const entries = Array.isArray(found) ? found : [];
 			const list = add(box, doc, "div", "ruled-list");
-			for (const item of found) add(list, doc, "div", "ruled-line", text(item)).classList.add(`${ROOT}__value`);
-			for (let index = found.length; index < 3; index += 1) add(list, doc, "div", "ruled-line");
+			for (const item of entries) add(list, doc, "div", "ruled-line", text(item)).classList.add(`${ROOT}__value`);
+			for (let index = entries.length; index < printed; index += 1) add(list, doc, "div", "ruled-line");
 		} else {
 			const key = lastSegment(pointer);
 			writeLine(doc, box, FIELD_LABELS[key] ?? humanize(key), text(found));
@@ -226,42 +221,60 @@ function renderRuledList(doc: Document, box: HTMLElement, block: AdrenalinePrese
 	}
 }
 
+/** The weapon lines carry no label of their own: the block already says what they are. */
 function renderWeaponLines(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const die = block.decoration?.kind === "weapon-die" ? block.decoration.label : "";
 	const found = at(source, block.paths[0]);
 	const weapons = (Array.isArray(found) ? found : []) as EquipmentWeapon[];
-	for (const weapon of weapons.length ? weapons : [undefined]) {
+	const printed = Math.max(weapons.length, block.minimumRows ?? 0);
+	for (let index = 0; index < printed; index += 1) {
+		const weapon = weapons[index];
 		const line = add(box, doc, "div", "weapon-line");
-		add(line, doc, "b", "write-label", "Arme");
-		line.appendChild(value(doc, weapon ? `${weapon.nom}${weapon.type ? ` (${weapon.type})` : ""}` : "", "write-field"));
+		line.appendChild(value(doc, weapon ? weapon.nom : "", "write-field"));
 		line.appendChild(value(doc, weapon ? text(weapon.pourcentage, " %") : "", "weapon-score"));
-		line.appendChild(value(doc, weapon?.desDeDegats !== undefined ? `${weapon.desDeDegats} ${die}`.trim() : die, "weapon-damage"));
-		if (weapon?.notes) add(box, doc, "p", "note", weapon.notes);
+		// A blank line prints no die: the label only follows an entered number.
+		const damage = value(doc, weapon?.desDeDegats !== undefined ? `${weapon.desDeDegats}${die}` : "", "weapon-damage");
+		if (weapon?.nature === "choquante" || weapon?.nature === "blessante") damage.classList.add(`${ROOT}__dice--${weapon.nature}`);
+		line.appendChild(damage);
 	}
 }
 
-function unitLine(doc: Document, parent: HTMLElement, label: string, field: string, amount: string, unit: string): void {
+/** The protection line: its label, its detail and its points; the unit (PP, PM) is no longer printed on the paper sheet. */
+function unitLine(doc: Document, parent: HTMLElement, label: string, field: string, amount: string): void {
 	const line = add(parent, doc, "div", "unit-line");
 	add(line, doc, "b", "write-label", label);
 	line.appendChild(value(doc, field, "write-field"));
 	line.appendChild(value(doc, amount, "unit-value"));
-	add(line, doc, "span", "unit", unit);
 }
 
-function renderProtectionLines(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const pointer = block.paths[0];
-	const physical = lastSegment(pointer) === "physiques";
-	const units = block.decoration?.kind === "protection-units" ? block.decoration : { physical: "PP", mental: "PM" };
-	const unit = physical ? units.physical : units.mental;
-	const side = asRecord(at(source, pointer)) ?? {};
-	unitLine(doc, box, "Solidité", "", text(side.solidite), unit);
+function strings(found: unknown): string[] {
+	return Array.isArray(found) ? found.filter((item): item is string => typeof item === "string" && item !== "") : [];
+}
+
+/**
+ * The protections of one side: solidity, armour (or character) and shield as entered, then the six
+ * published locations with three boxes each. A location the cover lists ticks the first box; the
+ * other two stay empty.
+ */
+function renderLocationGrid(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const grid = block.decoration?.kind === "location-grid" ? block.decoration : undefined;
+	if (!grid) { renderUnknown(doc, box, block, source); return; }
+	const physical = grid.side === "physical";
+	const side = asRecord(at(source, block.paths[0])) ?? {};
 	const cover = asRecord(physical ? side.armure : side.caractere);
-	const places = Array.isArray(cover?.localisations) ? cover.localisations.filter((item): item is string => typeof item === "string").map((item) => item.replace(/-/g, " ")).join(", ") : "";
-	const coverName = text(physical ? cover?.nom : cover?.trait);
-	unitLine(doc, box, physical ? "Armure" : "Caractère", [coverName, places].filter(Boolean).join(" · "), text(cover?.points), unit);
-	const shield = asRecord(side.bouclier);
-	const properties = Array.isArray(shield?.proprietes) ? shield.proprietes.filter((item): item is string => typeof item === "string").join(", ") : "";
-	writeLine(doc, box, "Bouclier", [text(shield?.nom), properties].filter(Boolean).join(" · "));
+	const covered = strings(cover?.localisations);
+	const detail = [text(physical ? cover?.nom : cover?.trait), text(cover?.couverture), text(cover?.des).replace("-", "−"), strings(cover?.emotions).join(", "), strings(cover?.proprietes).join(", ")].filter(Boolean).join(" · ");
+	unitLine(doc, box, physical ? "Armure" : "Caractère", detail, text(cover?.points));
+	const places = add(box, doc, "div", "locations");
+	for (const place of grid.locations) {
+		const row = add(places, doc, "div", "location");
+		add(row, doc, "span", "location-range", place.range);
+		add(row, doc, "span", "location-label", place.label);
+		const boxes = add(row, doc, "span", "location-boxes");
+		for (let index = 0; index < grid.boxes; index += 1) {
+			add(boxes, doc, "i", index === 0 && covered.indexOf(place.id) >= 0 ? "box-ticked" : "box").classList.add(`${ROOT}__box-mark`);
+		}
+	}
 }
 
 function renderStressDice(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
@@ -274,96 +287,143 @@ function renderStressDice(doc: Document, box: HTMLElement, block: AdrenalinePres
 		const count = Number(scalar(stress[key])) || 0;
 		(dice?.[side] ?? []).forEach((die, index) => {
 			const roll = add(card, doc, "div", "stress-roll");
-			circles(doc, roll, 1, count > index ? 1 : 0);
+			// Each circle is a rank: the counter ticks the circle of its own rank only.
+			circles(doc, roll, 1, count === index + 1 ? 1 : 0);
 			add(roll, doc, "strong", "stress-die", die.replace("-", "−"));
 			add(roll, doc, "small", "stress-side", sideLabel);
 		});
 	}
 }
 
+/** One value per level, under the label and the malus count the presentation publishes for it; the covered value is not printed. */
 function renderThresholdRows(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const pointer = block.paths[0];
-	const side = asRecord(at(source, pointer)) ?? {};
-	const heads = add(box, doc, "div", "metric-heads");
-	heads.classList.add(`${ROOT}__metric-2`);
-	add(heads, doc, "span", "metric-name");
-	add(heads, doc, "span", "metric-head", "Base");
-	add(heads, doc, "span", "metric-head", lastSegment(pointer) === "mental" ? "+ Caractère" : "+ Armure");
+	const side = asRecord(at(source, block.paths[0])) ?? {};
 	const list = add(box, doc, "div", "metric-list");
-	for (const [key, label] of THRESHOLDS) {
-		const threshold = asRecord(side[key]);
-		metric(doc, list, label, [text(threshold?.base), text(threshold?.couvert)]);
+	for (const level of block.thresholdLevels ?? []) {
+		metric(doc, list, level.label, [text(asRecord(side[level.key])?.base)], ` ${level.malus} ${MALUS}`);
 	}
 }
 
-function track(doc: Document, parent: HTMLElement, label: string, modifier?: string): HTMLElement {
+/** A banner over a column of circles, and beside them a vertical strip to write on (rotated a quarter turn), as on the paper sheet. */
+function track(doc: Document, parent: HTMLElement, label: string, modifier?: string, written = ""): HTMLElement {
 	const frame = add(parent, doc, "div", "track");
 	if (modifier) frame.classList.add(`${ROOT}__track--${modifier}`);
 	add(frame, doc, "span", "track-label", label);
-	return add(frame, doc, "div", "track-body");
+	const body = add(frame, doc, "div", "track-body");
+	frame.appendChild(value(doc, written, "track-text"));
+	return body;
 }
 
-function renderConditionCards(doc: Document, box: HTMLElement, states: unknown): void {
-	const stack = add(box, doc, "div", "condition-stack");
-	const list = Array.isArray(states) ? states.map(asRecord).filter((state): state is Record<string, unknown> => state !== undefined) : [];
-	for (const state of list.length ? list : [undefined]) {
-		const card = add(stack, doc, "div", "condition-card");
-		add(card, doc, "span", "condition-label", text(state?.nom) || "État");
-		const body = add(card, doc, "div", "condition-body");
-		const place = [text(state?.versant), text(state?.localisation).replace(/-/g, " ")].filter(Boolean).join(" · ");
-		writeLine(doc, body, "Localisation", place);
-		writeLine(doc, body, "Durée", text(state?.duree));
-		if (state?.notes) add(body, doc, "p", "note", text(state.notes));
-	}
-}
-
+/** États: a free zone, as on the paper sheet. The player sheet writes its text as entered; a list (creature, NPC) is written one line per state. */
 function renderStatusFrames(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const pointer = block.paths[0];
-	const found = at(source, pointer);
-	if (Array.isArray(found) || lastSegment(pointer) === "etats") {
-		renderConditionCards(doc, box, found);
+	const states = at(source, block.paths[0]);
+	const zone = add(box, doc, "div", "states-zone");
+	if (typeof states === "string") {
+		for (const line of states.split(/\r?\n/)) if (line.trim()) add(zone, doc, "p", "states-line", line.trim()).classList.add(`${ROOT}__value`);
 		return;
 	}
-	const tracks = add(box, doc, "div", "tracks");
-	const malus = asRecord(found);
-	if (!malus) {
-		// A free-text frame of the Malus block, such as Divers.
-		const body = track(doc, tracks, block.label, "frame");
-		body.appendChild(value(doc, text(found), "track-text"));
-		return;
-	}
-	// schema-adrenaline 2.6.0 still publishes the two counts physique and mental.
-	for (const [key, label] of MALUS) {
-		const body = track(doc, tracks, label);
-		add(body, doc, "span", "track-line");
-		body.appendChild(value(doc, text(malus[key]), "track-value"));
+	for (const state of Array.isArray(states) ? states.map(asRecord) : []) {
+		if (!state) continue;
+		const place = [text(state.versant), text(state.localisation).replace(/-/g, " ")].filter(Boolean).join(" · ");
+		const line = [text(state.nom), place, text(state.duree), text(state.notes)].filter(Boolean).join(" — ");
+		if (line) add(zone, doc, "p", "states-line", line).classList.add(`${ROOT}__value`);
 	}
 }
 
-/** The yellow Choc box: five round circles, then five hour circles (published as `fatigue-circles` up to 2.6.0). */
+/** The yellow Choc box: the published circle groups, each ticked as many times as entered. */
 function renderShockCircles(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const shock = asRecord(at(source, block.paths[0])) ?? {};
-	const body = track(doc, add(box, doc, "div", "tracks"), block.label, "choc");
+	const written = block.paths[1] ? text(at(source, block.paths[1])) : "";
+	const body = track(doc, add(box, doc, "div", "tracks"), block.label, "choc", written);
 	if (block.decoration?.kind !== "circle-groups") return;
 	block.decoration.groups.forEach((group, index) => {
 		if (index > 0) add(body, doc, "span", "track-line");
-		add(body, doc, "span", "track-period", capitalize(group.label));
-		circles(doc, body, group.count, Math.min(group.count, Math.max(0, Number(scalar(shock[group.label])) || 0)));
+		add(body, doc, "span", "track-period", group.label);
+		circles(doc, body, group.count, Math.min(group.count, Math.max(0, Number(scalar(shock[group.key])) || 0)));
 	});
 }
 
-/** Total des malus: the printed scale, the current total circled. */
+/** Divers: the published number of circles ticked by the counter, then the free text as entered. */
+function renderCircleRow(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const count = block.decoration?.kind === "circle-row" ? block.decoration.count : 0;
+	let ticked = 0;
+	let free = "";
+	for (const pointer of block.paths) {
+		const found = at(source, pointer);
+		if (typeof found === "string") free = found;
+		else ticked = Math.max(0, Number(scalar(found)) || 0);
+	}
+	const body = track(doc, add(box, doc, "div", "tracks"), block.label, "frame", free);
+	circles(doc, body, count, Math.min(count, ticked));
+}
+
+/**
+ * Wounds, as on the paper sheet: one panel per published column, separated by a dotted
+ * divider; in each, one line per published duration with its circle on the left of the label, one of them ticked,
+ * then the writing area where the wound is written.
+ */
+function renderWoundCircles(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const wounds = block.decoration?.kind === "wound-circles" ? block.decoration : undefined;
+	if (!wounds) { renderUnknown(doc, box, block, source); return; }
+	const side = asRecord(at(source, block.paths[0])) ?? {};
+	const table = add(box, doc, "div", "wounds");
+	for (const column of wounds.columns) {
+		const entered = asRecord(side[column.key]) ?? {};
+		const wound = add(table, doc, "div", "wound");
+		for (const duration of wounds.durations) {
+			const line = add(wound, doc, "div", "wound-line");
+			circles(doc, line, wounds.circles, entered[duration] === true ? wounds.circles : 0);
+			add(line, doc, "span", "wound-head", capitalize(duration));
+		}
+		add(wound, doc, "p", "wound-write", text(entered.notes)).classList.add(`${ROOT}__value`);
+	}
+}
+
+/** Total des malus: the printed scale up to `to`, then the closing step; the current total is circled. */
 function renderMalusScale(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const decoration = (block as { decoration?: { kind?: unknown; from?: unknown; to?: unknown } }).decoration;
-	const from = decoration?.kind === "scale" && typeof decoration.from === "number" ? decoration.from : 1;
-	const to = decoration?.kind === "scale" && typeof decoration.to === "number" ? decoration.to : 10;
+	const scale = block.decoration?.kind === "scale" ? block.decoration : undefined;
+	if (!scale) { renderUnknown(doc, box, block, source); return; }
 	const total = Number(scalar(at(source, block.paths[0]))) || 0;
 	const frame = add(box, doc, "div", "scale");
 	add(frame, doc, "span", "scale-label", block.label);
-	for (let step = from; step <= to; step += 1) {
-		const mark = add(frame, doc, "span", "scale-step", String(step));
+	const grid = add(frame, doc, "span", "scale-grid");
+	for (let step = scale.from; step <= scale.to; step += 1) {
+		const mark = add(grid, doc, "span", "scale-step", String(step));
 		if (step === total) mark.classList.add(`${ROOT}__scale-step--current`);
 	}
+	const last = add(frame, doc, "span", "scale-step", scale.last);
+	if (total > scale.to) last.classList.add(`${ROOT}__scale-step--current`);
+}
+
+/** A fixed table, printed as the presentation words it: the lines under the block title, nothing else. Plain blocks, so no table frame of the page leaks in. */
+function renderReferenceTable(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const reference = block.referenceTable;
+	if (!reference) return;
+	const table = add(box, doc, "div", "ref-table");
+	const body = add(table, doc, "div", "ref-body");
+	// The weapons the character does not use stay on their line, struck out by typography alone: nothing is added to the line.
+	const struck = strings(at(source, block.paths[0]));
+	for (const line of reference.lines) {
+		const row = add(body, doc, "div", "ref-row");
+		if (struck.indexOf(line.name) >= 0) row.classList.add(`${ROOT}__ref-row--struck`);
+		add(row, doc, "div", "ref-name", line.name);
+		add(row, doc, "div", "ref-properties", line.properties);
+	}
+}
+
+/** The rows of a pointer grid, a cell only when the document enters its value. */
+function renderPointerRows(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	for (const row of block.pointerRows ?? []) {
+		for (const cell of row) {
+			const found = at(source, cell.path);
+			if (isBlank(found)) continue;
+			writeLine(doc, box, cell.label ?? humanize(lastSegment(cell.path)), text(found));
+		}
+	}
+}
+
+function renderNarrative(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	for (const pointer of block.paths) add(box, doc, "p", "narrative", text(at(source, pointer))).classList.add(`${ROOT}__value`);
 }
 
 function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
@@ -379,16 +439,14 @@ function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresent
 
 /* The cartouche prints its own banner label; formation columns print one subhead per column. */
 // The Malus column prints its labels on the band of each frame, as the paper sheet does.
-const TITLED_ELSEWHERE = new Set(["name-card", "game-parameters", "formation-columns", "fatigue-circles", "shock-circles", "malus-scale"]);
+// The reference table prints its own first column head, which carries the block label.
+const TITLED_ELSEWHERE = new Set(["name-card", "game-parameters", "formation-columns", "shock-circles", "circle-row", "malus-scale"]);
 
-function titledElsewhere(block: AdrenalinePresentationBlock, source: AdrenalineDocument): boolean {
-	if (TITLED_ELSEWHERE.has(block.form ?? "")) return true;
-	if (block.form !== "status-frames" || lastSegment(block.paths[0]) === "etats") return false;
-	const found = at(source, block.paths[0]);
-	return !Array.isArray(found) && !asRecord(found);
+function titledElsewhere(block: AdrenalinePresentationBlock, sectionLabel: string): boolean {
+	return TITLED_ELSEWHERE.has(block.form ?? "") || block.label === sectionLabel;
 }
 
-function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: AdrenalinePjData, source: AdrenalineDocument): HTMLElement {
+function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionLabel: string, data: AdrenalinePjData, source: AdrenalineDocument, withNotes = true): HTMLElement {
 	const box = node(doc, "div", block.id);
 	box.classList.add(`${ROOT}__block`, `${ROOT}__form-${block.form ?? "none"}`, `${ROOT}__layout-${block.layout}`);
 	if (block.columns) box.classList.add(`${ROOT}__block-columns-${block.columns}`);
@@ -397,10 +455,9 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: Ad
 		if (block.placement.rowSpan) box.classList.add(`${ROOT}__row-span-${block.placement.rowSpan}`);
 		if (block.placement.columnSpan) box.classList.add(`${ROOT}__col-span-${block.placement.columnSpan}`);
 	}
-	if (!titledElsewhere(block, source)) subhead(doc, box, block.label);
+	if (!titledElsewhere(block, sectionLabel)) subhead(doc, box, block.label);
 	const body = block.form === "formation-columns" ? add(box, doc, "div", "block-grid") : block.form === "identity-fields" ? add(box, doc, "div", "field-rows") : box;
-	// Forms published after the pinned schema-adrenaline (shock-circles, malus-scale) are read as plain strings.
-	switch (block.form as string | undefined) {
+	switch (block.form) {
 		case "name-card": renderNameCard(doc, box, block, source); break;
 		case "game-parameters": renderGameParameters(doc, box, block, source); break;
 		case "formation-columns": renderFormationColumns(doc, body, block, data); break;
@@ -408,38 +465,71 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, data: Ad
 		case "characteristic-rows": renderCharacteristicRows(doc, box, block, source); break;
 		case "ruled-list": renderRuledList(doc, box, block, source); break;
 		case "weapon-lines": renderWeaponLines(doc, box, block, source); break;
-		case "protection-lines": renderProtectionLines(doc, box, block, source); break;
+		case "location-grid": renderLocationGrid(doc, box, block, source); break;
 		case "stress-dice": renderStressDice(doc, box, block, source); break;
 		case "threshold-rows": renderThresholdRows(doc, box, block, source); break;
 		case "status-frames": renderStatusFrames(doc, box, block, source); break;
-		case "fatigue-circles":
 		case "shock-circles": renderShockCircles(doc, box, block, source); break;
+		case "circle-row": renderCircleRow(doc, box, block, source); break;
+		case "wound-circles": renderWoundCircles(doc, box, block, source); break;
 		case "malus-scale": renderMalusScale(doc, box, block, source); break;
+		case "reference-table": renderReferenceTable(doc, box, block, source); break;
+		case "compact-rows": renderPointerRows(doc, box, block, source); break;
+		case "narrative": renderNarrative(doc, box, block, source); break;
 		default: renderUnknown(doc, box, block, source);
 	}
+	if (withNotes) for (const note of block.notes ?? []) add(box, doc, "p", "block-note", note);
 	return box;
 }
 
 /** The ☣ mark between the name and the game parameters, read from the published variant and sheet label. */
-function renderBrand(doc: Document): HTMLElement {
+function renderBrand(doc: Document, subtitle: string): HTMLElement {
 	const brand = node(doc, "div", "brand");
 	add(brand, doc, "strong", "brand-name", `☣ ${capitalize(PJ_PRESENTATION.appearance.variant)}`);
 	add(brand, doc, "span", "brand-sheet", PJ_PRESENTATION.sheet.label);
+	if (subtitle) add(brand, doc, "span", "brand-subtitle", subtitle);
 	return brand;
 }
 
-function renderSection(doc: Document, section: AdrenalinePresentationSection, data: AdrenalinePjData, source: AdrenalineDocument): HTMLElement {
-	const container = node(doc, "section", "section");
+/** Whether the document enters anything for a block; fixed-text blocks (the reference table) always count. */
+function entered(block: AdrenalinePresentationBlock, source: AdrenalineDocument): boolean {
+	if (block.referenceTable) return true;
+	// The identity table prints its own fields only: what the other blocks of the section enter does not fill it.
+	if (block.form === "identity-fields") {
+		const identity = asRecord(at(source, block.paths[0])) ?? {};
+		return fieldRows(block).some((row) => row.some((key) => !isBlank(identity[key])));
+	}
+	const pointers = block.pointerRows ? block.pointerRows.reduce<string[]>((all, row) => all.concat(row.map((cell) => cell.path)), []) : block.paths;
+	return pointers.some((pointer) => !isBlank(at(source, pointer)));
+}
+
+/** Dans une section à plusieurs colonnes, la note d'un bloc court sur toutes les colonnes. */
+function liftsNotes(section: AdrenalinePresentationSection, block: AdrenalinePresentationBlock): boolean {
+	const columns = section.columns ?? 1;
+	return section.layout === "columns" && columns > 1 && block.placement !== undefined && (block.placement.columnSpan ?? 1) < columns;
+}
+
+function renderSection(doc: Document, section: AdrenalinePresentationSection, data: AdrenalinePjData, source: AdrenalineDocument): HTMLElement | null {
+	const blocks = [...section.blocks].sort((a, b) => a.order - b.order).filter((block) => !section.collapsible || entered(block, source));
+	// A collapsible section prints nothing when nothing is entered in it.
+	if (section.collapsible && blocks.length === 0) return null;
+	const container = node(doc, section.collapsible ? "details" : "section", "section");
 	/* Neighbouring sections of one published row share it, in thirds of the sheet (schema-adrenaline 2.7.0). */
 	const span = (section as { row?: { span?: unknown } }).row?.span;
 	container.classList.add(`${ROOT}__span-${span === 1 || span === 2 ? span : 3}`);
-	if (section.showTitle !== false) add(container, doc, "h4", "section-title", section.label);
+	if (section.collapsible) container.classList.add(`${ROOT}__section--collapsible`);
+	if (section.showTitle !== false) add(container, doc, section.collapsible ? "summary" : "h4", "section-title", section.label);
 	const body = add(container, doc, "div", "section-body");
 	body.classList.add(`${ROOT}__columns-${section.columns ?? 1}`, `${ROOT}__layout-${section.layout}`);
-	for (const block of [...section.blocks].sort((a, b) => a.order - b.order)) {
-		if (block.form === "game-parameters") body.appendChild(renderBrand(doc));
-		body.appendChild(renderBlock(doc, block, data, source));
+	for (const block of blocks) {
+		if (block.form === "game-parameters") {
+			const subtitle = (block.subtitlePaths ?? []).map((pointer) => { const raw = text(at(source, pointer)); return PARAMETER_VALUES[raw] ?? raw; }).filter(Boolean).join(" · ");
+			body.appendChild(renderBrand(doc, subtitle));
+		}
+		body.appendChild(renderBlock(doc, block, section.label, data, source, !liftsNotes(section, block)));
 	}
+	// Dans une section à colonnes, la note d'un bloc court sur toute la largeur de la section, centrée.
+	for (const block of blocks) if (liftsNotes(section, block)) for (const note of block.notes ?? []) add(body, doc, "p", "block-note", note);
 	return container;
 }
 
@@ -457,7 +547,7 @@ export function renderAdrenalinePj(data: AdrenalinePjData, doc: Document): HTMLE
 	);
 	if (appearance.outerRule) root.classList.add(`${ROOT}--outer-rule`);
 	const source = adrenalineSourceDocument(data) ?? pjToDocument(data);
-	const builders: Record<string, () => HTMLElement> = {};
+	const builders: Record<string, () => HTMLElement | null> = {};
 	for (const section of PJ_PRESENTATION.sections) builders[section.id] = () => renderSection(doc, section, data, source);
 	renderZones(root, adrenalinePjShape, builders);
 	return root;

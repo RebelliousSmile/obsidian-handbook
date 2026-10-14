@@ -1,18 +1,20 @@
 // Where a block sits on its section's grid, as the presentation publishes it
 // (`placement`): one set of classes per sheet, `<root>__col-N`, `__row-N`,
 // `__col-span-N`, `__row-span-N`. Geometry only; the sheets share it by mixin.
-// `$rows` and `$row-span-max` bound what a sheet publishes: a rule no published
-// block can reach is not emitted (the compact card publishes no row span).
-@mixin placement($root, $max: 4, $span-max: $max, $rows: $max, $row-span-max: $max) {
-	@for $i from 1 through $max {
+// The four lists bound what a sheet publishes (columns, column spans, rows, row
+// spans): a rule no published block can reach is not emitted.
+@use "sass:list";
+
+@mixin placement($root, $columns, $column-spans, $rows, $row-spans) {
+	@each $i in $columns {
 		.#{$root}__col-#{$i} { grid-column: #{$i}; }
-		@if $i > 1 and $i <= $span-max {
+		@if list.index($column-spans, $i) {
 			.#{$root}__col-span-#{$i} { grid-column-end: span #{$i}; }
 		}
 	}
-	@for $i from 1 through $rows {
+	@each $i in $rows {
 		.#{$root}__row-#{$i} { grid-row: #{$i}; }
-		@if $i > 1 and $i <= $row-span-max {
+		@if list.index($row-spans, $i) {
 			.#{$root}__row-span-#{$i} { grid-row-end: span #{$i}; }
 		}
 	}

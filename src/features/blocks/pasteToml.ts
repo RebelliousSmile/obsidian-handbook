@@ -2,7 +2,7 @@ import { Menu, Notice, TFile } from "obsidian";
 import type { MarkdownSectionInformation } from "obsidian";
 import type BrumesPlugin from "../../BrumesPlugin";
 import { MIST_SOURCE_CONVERSION_CODECS } from "schema-in-the-mist";
-import { looksLikeToml } from "./schemaValues";
+import { looksLikeToml, withoutCodeFence } from "./schemaValues";
 import type { TomlExport } from "./copyAsToml";
 import { t, tNoun } from "../../utils/i18n";
 
@@ -25,12 +25,24 @@ export function rememberRenderedTomlContext(
 	renderedTomlContexts.set(plugin, { ...context, rememberedAt: Date.now() });
 }
 
-/** Add the paste action to Obsidian's own menu for the card just right-clicked. */
-export function contributeRenderedTomlPaste(menu: Menu, plugin: BrumesPlugin): boolean {
+/** The card that was just right-clicked, if its context is still recent enough to be pasted into. */
+function recentRenderedTomlContext(plugin: BrumesPlugin): RenderedTomlContext | null {
 	const context = renderedTomlContexts.get(plugin);
 	if (!context || Date.now() - context.rememberedAt > RENDERED_TOML_CONTEXT_LIFETIME_MS) {
-		return false;
+		return null;
 	}
+	return context;
+}
+
+/** Whether the menu being opened belongs to a card that can receive a pasted document. */
+export function hasRenderedTomlPaste(plugin: BrumesPlugin): boolean {
+	return recentRenderedTomlContext(plugin) !== null;
+}
+
+/** Add the paste action to Obsidian's own menu for the card just right-clicked. */
+export function contributeRenderedTomlPaste(menu: Menu, plugin: BrumesPlugin): boolean {
+	const context = recentRenderedTomlContext(plugin);
+	if (!context) return false;
 
 	menu.addItem((item) => item
 		.setTitle(t("Paste toml into {noun}", { noun: tNoun(context.spec.noun) }))
@@ -50,11 +62,21 @@ export function contributeRenderedTomlPaste(menu: Menu, plugin: BrumesPlugin): b
 
 /** Convert a clipboard document only when the target block can render the result. */
 export function tomlToBlockSource<T>(
-	clipboard: string,
+	rawClipboard: string,
 	spec: TomlExport<T>,
 ): string | null {
-	if (!spec.sourceTarget || !looksLikeToml(clipboard)) {
+	const clipboard = withoutCodeFence(rawClipboard);
+	if ((!spec.sourceTarget && !spec.sourceIsToml) || !looksLikeToml(clipboard)) {
 		return null;
+	}
+
+	if (!spec.sourceTarget) {
+		const source = clipboard.trim();
+		try {
+			return spec.block.parse(source) === null ? null : source;
+		} catch {
+			return null;
+		}
 	}
 
 	try {

@@ -14,7 +14,9 @@ export interface GameParameters {
 	typeDeCreation?: "equitable" | "aleatoire";
 	typeDeScenario?: "one-shot" | "campagne";
 	declinaisonDeCampagne?: "bac-a-sable" | "storyline";
-	px?: number;
+	scenario?: string;
+	/** Experience points: the contract types them as a range, minimum ≤ current ≤ maximum. */
+	px?: { minimum: number; current: number; maximum: number };
 }
 
 export interface AdrenalinePjData {
@@ -22,7 +24,7 @@ export interface AdrenalinePjData {
 	identite?: Identity;
 	caracteristiques: Characteristics;
 	sante: Health;
-	protections: Protections;
+	protections?: Protections;
 	formations?: Formation[];
 	equipement?: Equipment;
 	parametresDuJeu?: GameParameters;

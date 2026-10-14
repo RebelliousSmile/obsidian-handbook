@@ -18,6 +18,7 @@ import {
 } from "../adrenaline/document";
 import { contractRefusal } from "../adrenaline/publishedContract";
 import { AdrenalinePjData, GameParameters } from "./parser";
+import { upgradeLegacyPj } from "./legacyRanges";
 
 const THRESHOLDS = ["superficiel", "leger", "grave", "profond"] as const;
 
@@ -32,7 +33,7 @@ function readGameParameters(value: unknown): GameParameters | undefined {
 	if (!record) return undefined;
 	warnUnknownKeys(
 		record,
-		["joueur", "typeDeCreation", "typeDeScenario", "declinaisonDeCampagne", "px"],
+		["joueur", "typeDeCreation", "typeDeScenario", "declinaisonDeCampagne", "scenario", "px"],
 		"parametresDuJeu",
 	);
 	const result: GameParameters = {};
@@ -40,25 +41,34 @@ function readGameParameters(value: unknown): GameParameters | undefined {
 	const creation = asString(record.typeDeCreation);
 	const scenario = asString(record.typeDeScenario);
 	const campaign = asString(record.declinaisonDeCampagne);
-	const px = asInteger(record.px, 0, 1000000);
+	const scenarioName = asString(record.scenario);
+	const range = asRecord(record.px);
+	const minimum = asInteger(range?.minimum, 0, 1000000);
+	const current = asInteger(range?.current, 0, 1000000);
+	const maximum = asInteger(range?.maximum, 0, 1000000);
+	const px = minimum !== undefined && current !== undefined && maximum !== undefined ? { minimum, current, maximum } : undefined;
 	if (joueur) result.joueur = joueur;
 	if (creation === "equitable" || creation === "aleatoire") result.typeDeCreation = creation;
 	if (scenario === "one-shot" || scenario === "campagne") result.typeDeScenario = scenario;
 	if (campaign === "bac-a-sable" || campaign === "storyline") result.declinaisonDeCampagne = campaign;
+	if (scenarioName) result.scenario = scenarioName;
 	if (px !== undefined) result.px = px;
 	return Object.keys(result).length > 0 ? result : undefined;
 }
 
 export function documentToPj(value: unknown): AdrenalinePjData | null {
-	const document = asRecord(value);
-	if (!document) return null;
+	const written = asRecord(value);
+	if (!written) return null;
+	// A note written before contract 5.0.0 still draws: its ranges become the number the sheet prints.
+	const document = upgradeLegacyPj(written);
 	if (contractRefusal("pj", document)) return null;
 	warnUnknownKeys(
 		document,
 		["nom", "identite", "caracteristiques", "sante", "protections", "formations", "equipement", "parametresDuJeu", "etatDePartie", "meta"],
 		"pj",
 	);
-	const nom = asString(document.nom);
+	// The contract asks for a name of at least one character: a name that is only blanks is a name, kept as entered.
+	const nom = asString(document.nom) || (typeof document.nom === "string" ? document.nom : "");
 	const caracteristiques = readCharacteristics(document.caracteristiques);
 	const sante = readHealth(document.sante);
 	const protections = readProtections(document.protections);
@@ -66,15 +76,12 @@ export function documentToPj(value: unknown): AdrenalinePjData | null {
 		!nom ||
 		!caracteristiques ||
 		!CHARACTERISTIC_KEYS.every((key) => caracteristiques[key] !== undefined) ||
-		!completeHealth(sante) ||
-		!protections?.physiques ||
-		protections.physiques.solidite === undefined ||
-		!protections.mentales ||
-		protections.mentales.solidite === undefined
+		!completeHealth(sante)
 	) {
 		return null;
 	}
-	const data: AdrenalinePjData = { nom, caracteristiques, sante: sante!, protections };
+	const data: AdrenalinePjData = { nom, caracteristiques, sante: sante! };
+	if (protections) data.protections = protections;
 	const identite = readIdentity(document.identite);
 	const formations = readFormations(document.formations);
 	const equipement = readEquipment(document.equipement, "pj");
@@ -100,8 +107,8 @@ export function pjToDocument(data: AdrenalinePjData): AdrenalineDocument {
 		nom: data.nom,
 		caracteristiques: data.caracteristiques,
 		sante: data.sante,
-		protections: data.protections,
 	};
+	if (data.protections) document.protections = data.protections;
 	if (data.identite) document.identite = data.identite;
 	if (data.formations) document.formations = data.formations;
 	if (data.equipement) document.equipement = data.equipement;

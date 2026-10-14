@@ -29,7 +29,8 @@ export function documentToPnj(value: unknown): AdrenalinePnjData | null {
 		["nom", "categorie", "niveauDeDanger", "niveauDeDangerAlternatif", "niveauDeDangerNote", "description", "identite", "caracteristiques", "sante", "protections", "formations", "competences", "equipement", "pistes", "etatDePartie", "narratif", "meta"],
 		"pnj",
 	);
-	const nom = asString(document.nom);
+	// The contract asks for a name of at least one character: a name that is only blanks is a name, kept as entered.
+	const nom = asString(document.nom) || (typeof document.nom === "string" ? document.nom : "");
 	if (!nom) return null;
 	const data: AdrenalinePnjData = { nom };
 	const danger = asInteger(document.niveauDeDanger, 0, 100);

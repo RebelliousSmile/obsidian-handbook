@@ -173,3 +173,12 @@ export function looksLikeToml(source: string): boolean {
 
 	return false;
 }
+
+/** A block copied from a note arrives with its fence: the document is what lies between the two fence lines. */
+export function withoutCodeFence(text: string): string {
+	const lines = text.replace(/\r\n/g, "\n").trim().split("\n");
+	if (lines.length >= 2 && /^(`{3,}|~{3,})[\w-]*$/.test(lines[0].trim()) && /^(`{3,}|~{3,})$/.test(lines[lines.length - 1].trim())) {
+		return lines.slice(1, -1).join("\n");
+	}
+	return text;
+}

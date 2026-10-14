@@ -5,33 +5,9 @@
 // the game's marks, and a reader who wants other ones should be able to say so
 // in `overrides.json` rather than fork a stylesheet. This file keeps the shape
 // of the stroke.
-@mixin global {
-	.brumes-tag,
-	.brumes-tag-content {
-		position: relative;
-		font-style: italic;
-		text-box: trim-both cap alphabetic;
-		display: inline-block;
-		border-top: 0.2ch solid;
-		border-bottom: 0.4ch solid;
-	}
-}
-
-@mixin power {
-	.brumes-power,
-	.brumes-power-content {
-		background-color: var(--brumes-power-color);
-		border-color: var(--brumes-power-color);
-	}
-}
-
+// The stroke and the colours of tags, statuses and limits are shared with
+// City of Mist, in `../mist-shared`.
 @mixin weakness {
-	.brumes-weakness,
-	.brumes-weakness-content {
-		background-color: var(--brumes-weakness-color);
-		border-color: var(--brumes-weakness-color);
-	}
-
 	.brumes-weakness {
 		padding-left: 1.8ch; /* Adjusted for ::before content */
 	}
@@ -52,21 +28,7 @@
 	}
 }
 
-@mixin status {
-	.brumes-status,
-	.brumes-status-content {
-		background-color: var(--brumes-status-color);
-		border-color: var(--brumes-status-color);
-	}
-}
-
 @mixin limit {
-	.brumes-limit,
-	.brumes-limit-content {
-		background-color: var(--brumes-limit-color);
-		border-color: var(--brumes-limit-color);
-	}
-
 	.brumes-limit {
 		border-right: 1ch solid var(--brumes-limit-color);
 		margin-right: 1.5ch; /* Adjusted for ::after content */
@@ -105,10 +67,7 @@
 	// Inline, a tag highlights a word inside a sentence and must not push its
 	// neighbours around. Inside a card it stands alone, so it gets the
 	// breathing room a chip needs.
-	.brumes-story-theme,
-	.brumes-theme-kit,
-	.brumes-challenge,
-	.brumes-journey {
+	:is(.brumes-story-theme, .brumes-theme-kit, .brumes-challenge, .brumes-journey) {
 		.brumes-tag {
 			padding-inline: 0.5ch;
 		}

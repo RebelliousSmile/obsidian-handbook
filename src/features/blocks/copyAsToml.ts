@@ -102,6 +102,8 @@ export interface TomlExport<T> {
 	noun: string;
 	toToml(data: T): string;
 	sourceTarget?: MistSourceConversionTarget;
+	/** The block's own source is TOML (Adrenaline): a pasted document replaces it as it is, once the block can render it. */
+	sourceIsToml?: boolean;
 	/** What the block is missing, so the notice says what to fix. */
 	describeFailure(source: string): string;
 }

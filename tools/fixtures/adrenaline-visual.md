@@ -64,7 +64,7 @@ dex = 50
 rap = 40
 log = 50
 vol = 40
-per = 60
+per = 50
 cha = 30
 [sante.physique.superficiel]
 base = 6
@@ -82,25 +82,20 @@ base = 13
 base = 18
 [sante.mental.profond]
 base = 23
-[protections.physiques]
-solidite = 6
-[protections.mentales]
-solidite = 6
 [[formations]]
-nom = "Survie urbaine"
-type = "Terrain"
 pourcentage = 55
+nom = "Survie urbaine"
+type = "professionnelle"
 [[formations.competences]]
-nom = "Escalade"
 pourcentage = 45
-caracteristique = "dex"
+nom = "Escalade"
 [equipement]
 possessions = ["Radio", "Trousse de secours"]
 equipementFavori = "Multitool"
 [[equipement.armesPhysiques]]
 nom = "Pied-de-biche"
-pourcentage = 55
 desDeDegats = 2
+pourcentage = 55
 ```
 
 ## Contact
@@ -128,6 +123,14 @@ base = 10
 [sante.physique.grave]
 base = 15
 [sante.physique.profond]
+base = 20
+[sante.mental.superficiel]
+base = 5
+[sante.mental.leger]
+base = 10
+[sante.mental.grave]
+base = 15
+[sante.mental.profond]
 base = 20
 [protections.physiques]
 solidite = 3

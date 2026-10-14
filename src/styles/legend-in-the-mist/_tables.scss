@@ -10,51 +10,26 @@
 // the parchment behind it. A pack that changed one without the other would get
 // a rim floating over the wrong ground, so the two are kept together, in the
 // one place that can see both.
+//
+// The skeleton (width, collapse, the zeroed borders, the cell padding) is
+// shared with City of Mist, in `../mist-shared`.
 @mixin oracle-table {
 	table {
-		width: 100%;
-		border-collapse: collapse;
 		font-family: "Labrada", serif;
-		font-size: 0.95rem;
-		background: transparent;
-		color: var(--brumes-table-ink);
 
 		thead {
-			background: var(--brumes-table-header-paper);
 			border: 2px solid #b09a85;
 			box-shadow: inset 0 0 10px #c3a897;
 
-			--table-header-border-width: 0px;
-			--table-column-first-border-width: 0px;
-			--table-header-border-width: 0px;
-
-			tr {
-				background: none !important;
-			}
-
 			th,
 			th .cm-line {
-				padding: var(--size-4-2) var(--size-4-2);
 				font-family: "PragRoman", serif;
-				text-align: left;
-				font-weight: bold;
 				text-transform: uppercase;
 				font-size: 0.7rem;
-				color: var(--table-header-color);
-				border: 0;
-
-				.table-cell-wrapper {
-					padding: var(--size-4-2) var(--size-4-2) !important;
-				}
 			}
 		}
 
 		tbody {
-			--table-column-first-border-width: 0px;
-			--table-border-width: 0px;
-			--table-column-last-border-width: 0px;
-			--table-row-last-border-width: 0px;
-
 			tr {
 				--table-row-alt-background-hover: var(--brumes-table-row-paper);
 				--table-row-alt-background: var(--brumes-table-row-paper);

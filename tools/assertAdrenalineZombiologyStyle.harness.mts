@@ -35,9 +35,20 @@ assert.match(pj, /\.brumes-adrenaline-pj__block\s*\{[^}]*min-width:\s*0/, "PJ bl
 assert.match(pj, /--values-handwritten \.brumes-adrenaline-pj__value\s*\{[^}]*Adrenaline Handwriting[^}]*\}/, "PJ values must use the published handwritten font");
 assert.match(pj, /--values-handwritten \.brumes-adrenaline-pj__value\s*\{[^}]*--adrenaline-handwritten-ink/, "PJ values must use the handwritten ink token");
 assert.match(pj, /--surface-paper-sheet::before\s*\{[^}]*--adrenaline-page-texture/, "PJ paper sheet must lay the pack's paper grain");
-assert.match(pj, /grid-template-areas:\s*"nom brand params"/, "PJ cartouche must keep name, mark and parameters side by side");
+assert.match(pj, /grid-template-areas:\s*"nom brand params"/, "PJ cartouche must keep name, mark and parameters side by side, as the paper sheet");
 assert.match(pj, /writing-mode:\s*vertical-rl/, "PJ malus and state cards must carry a vertical label");
 assert.match(pj, /--adrenaline-fatigue\)/, "PJ fatigue track must read the fatigue token");
+// Santé, comme la feuille : États en haut à droite, bande Malus dessous (blessures, choc, divers, total).
+assert.match(pj, /grid-template-areas:\s*"sp sm etats etats etats" "bp bm choc divers total"/, "PJ health must put the states at the top right and the malus band under the thresholds");
+assert.match(pj, /--sante > \.brumes-adrenaline-pj__section-body \{ grid-template-areas: "sp" "sm" "etats" "bp" "bm" "choc" "divers" "total"; \}/, "PJ health must fold to one column in a narrow note without losing a zone");
+// Les zones se déclarent APRÈS les replis : la remise à zéro `.brumes-adrenaline-pj__block` (même spécificité) les efface sinon.
+const lastFold = pj.lastIndexOf("@container (max-width: 420px)");
+const areaRules = pj.match(/\.brumes-adrenaline-pj__(?:seuils-physiques|seuils-mentaux|choc|divers|blessures-physiques|blessures-mentales|total-malus|etats-encaisses) \{ grid-area: [a-z]+; \}/g) ?? [];
+assert.strictEqual(areaRules.length, 8, "PJ health must place its eight zones through grid-area");
+assert.ok(areaRules.every((rule) => pj.lastIndexOf(rule) > lastFold), "PJ health grid-area rules must follow the medium and narrow folds, which reset the block placement at the same specificity");
+assert.match(pj, /__track-body\s*\{[^}]*flex-direction:\s*column/, "PJ shock circles must stack in a column, as the paper sheet");
+assert.match(pj, /__track-period\s*\{[^}]*order:\s*1/, "PJ shock label must sit under the circles");
+assert.doesNotMatch(readFileSync(join("src", "features", "adrenalinePj", "renderer.ts"), "utf8"), /["'`]rounds["'`]/i, "PJ shock label must come from the published contract, never be written in the host");
 assert.match(pj, /--adrenaline-condition-border\)/, "PJ state cards must read the condition token");
 assert.match(pj, /@container \(max-width: 600px\)/, "PJ must fold to two columns in a medium note");
 assert.match(pnj, /brumes-adrenaline-pnj--description/, "PNJ must keep a dedicated narrative treatment");

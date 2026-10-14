@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.44.0] - 2026-10-14
+
+### Changed
+
+- The player sheet follows contract 5.0.0 of `schema-adrenaline`, as the paper sheet prints it. Characteristics, thresholds, protection points and percentages are one number; the armour and the character trait are one line with their points and locations; solidity, shield, the type and note of a weapon, a skill's characteristic and total, and the shock hours are no longer printed. A weapon prints its nature (choquante, blessante) instead of its type.
+- A note written before contract 5.0.0 still draws: its `{minimum, current, maximum}` values are read as their current value and the keys the sheet no longer prints are ignored. The experience points keep their three values.
+- The player sheet prints what the published presentation describes for it: the states as one free text, the wound circles and notes of each column, the advantages and immunities, the constraints, history and personality of the identity, the scenario and the social weapons table with the ones the character does not use struck out.
+- The shock prints five « ROUND » circles, the equipment prints five weapon lines and four possession lines, and the thresholds read « Léger », « Modéré », « Grave », « Profond » with their malus count.
+
+### Added
+
+- A block of the Adrenaline family accepts a TOML document pasted into it: the context menu of the player, NPC and creature blocks has a « TOML » submenu with « Copier en TOML » and « Coller du TOML », which also reads a block copied from a note with its fence. A document exported from Lantern pastes as the sheet it holds.
+- The insertion menu offers a complete starter for the player, NPC and creature sheets: the three formations with a skill, identity, game parameters and equipment are present and the contract accepts them as written.
+
 ## [2.43.0] - 2026-10-11
 
 ### Changed

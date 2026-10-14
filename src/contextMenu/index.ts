@@ -8,7 +8,7 @@ import {
 	contributeTomlExports,
 	hasTomlExportAtCursor,
 } from "../features/blocks/tomlExports";
-import { contributeRenderedTomlPaste } from "../features/blocks/pasteToml";
+import { contributeRenderedTomlPaste, hasRenderedTomlPaste } from "../features/blocks/pasteToml";
 import {
 	contributeTagInsertion,
 	hasTagInsertion,
@@ -21,7 +21,7 @@ import {
 } from "../features/callouts/contextMenu";
 import { contributeLayoutRegionInsertion } from "../features/layoutRegions/insertion";
 import { contributeModeSectionInsertion } from "../features/modeSections/insertion";
-import { getOrCreateBrumesSubmenu } from "../utils/contextSubMenu";
+import { addSubmenu, getOrCreateBrumesSubmenu } from "../utils/contextSubMenu";
 
 export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 	return plugin.app.workspace.on(
@@ -54,11 +54,6 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			if (hasItems) {
 				submenu.addSeparator();
 			}
-			const renderedPasteItems = contributeRenderedTomlPaste(submenu, plugin);
-			hasItems = hasItems || renderedPasteItems;
-			if (hasBlockInsertions(plugin.settings) && renderedPasteItems) {
-				submenu.addSeparator();
-			}
 			const blockItems = contributeBlockInsertions(
 				submenu,
 				editor,
@@ -69,12 +64,14 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 			if (hasItems) submenu.addSeparator();
 			contributeLayoutRegionInsertion(submenu, editor);
 			contributeModeSectionInsertion(submenu, editor);
-			hasItems = true;
 
-			const hasTomlExport =hasTomlExportAtCursor(editor, plugin.settings);
-			if (hasTomlExport) {
-				if (hasItems) submenu.addSeparator();
-				contributeTomlExports(submenu, editor, plugin.settings);
+			// Paste and copy share one entry, so the menu keeps a single line for TOML.
+			const hasTomlExport = hasTomlExportAtCursor(editor, plugin.settings);
+			if (hasTomlExport || hasRenderedTomlPaste(plugin)) {
+				submenu.addSeparator();
+				const tomlMenu = addSubmenu(submenu, "TOML", "file-code");
+				contributeRenderedTomlPaste(tomlMenu, plugin);
+				if (hasTomlExport) contributeTomlExports(tomlMenu, editor, plugin.settings);
 			}
 		},
 	);

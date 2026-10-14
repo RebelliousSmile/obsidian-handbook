@@ -66,8 +66,7 @@
 	.brumes-adrenaline-card__block { padding: 0.2rem 0.5rem; }
 	.brumes-adrenaline-card__paragraph { margin: 0; }
 	.brumes-adrenaline-card__list { margin-block: 0.15rem 0; padding-inline-start: 1.1rem; }
-	.brumes-adrenaline-card__line,
-	.brumes-adrenaline-card__block-etats-permanents { display: flex; flex-wrap: wrap; gap: 0 0.35rem; }
+	:is(.brumes-adrenaline-card__line, .brumes-adrenaline-card__block-etats-permanents) { display: flex; flex-wrap: wrap; gap: 0 0.35rem; }
 	// A figure (percentage, total, solidity) sits where the published
 	// `values.align` puts it; prose values always follow their label.
 	.brumes-adrenaline-card--values-end .brumes-adrenaline-card__figure {
@@ -92,7 +91,7 @@
 	.brumes-adrenaline-card__cell > .brumes-adrenaline-card__value { white-space: nowrap; }
 	// Pointer rows and the section grid share the published `placement` geometry:
 	// a cell sits on the column of its published position (`__col-N`).
-	@include placement.placement("brumes-adrenaline-card", 4, 2, 3, 0);
+	@include placement.placement("brumes-adrenaline-card", 1 2 3 4, 2, 1 2 3, ());
 	// Health: the thresholds and the permanent states on one row, the malus and
 	// the protections under them, over the width of the section.
 	.brumes-adrenaline-card__placed {
@@ -123,8 +122,7 @@
 	.brumes-adrenaline-card__inline-list { margin: 0; }
 
 	// Skills and actions: the line, then the dice badge and its properties.
-	.brumes-adrenaline-card__skill,
-	.brumes-adrenaline-card__action { display: flex; flex-wrap: wrap; gap: 0.15rem 0.4rem; align-items: baseline; }
+	:is(.brumes-adrenaline-card__skill, .brumes-adrenaline-card__action) { display: flex; flex-wrap: wrap; gap: 0.15rem 0.4rem; align-items: baseline; }
 	// The skill's name and its figure share the first line; damage and notes follow under it.
 	.brumes-adrenaline-card__skill-head { display: flex; flex: 1 0 100%; flex-wrap: wrap; gap: 0 0.35rem; align-items: baseline; }
 	.brumes-adrenaline-card__skill + .brumes-adrenaline-card__skill,
@@ -145,8 +143,7 @@
 		color: var(--adrenaline-dice-badge-ink);
 		background: var(--adrenaline-dice-badge-bg);
 	}
-	.brumes-adrenaline-card__damage-detail,
-	.brumes-adrenaline-card__note { font-size: 0.9em; }
+	:is(.brumes-adrenaline-card__damage-detail, .brumes-adrenaline-card__note) { font-size: 0.9em; }
 	.brumes-adrenaline-card__trigger {
 		display: inline-block;
 		padding: 0 0.3rem;

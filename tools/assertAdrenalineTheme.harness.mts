@@ -9,6 +9,7 @@ import { buildGameStyle } from "../src/features/modes/styleElement";
 import { readGamePluginManifest } from "../src/games/pluginManifest";
 import { at, renderCompactSection } from "../src/features/adrenaline/compactCard";
 import type { PublishedPresentation, PublishedSection } from "../src/features/adrenaline/publishedPresentation";
+import { pjToDocument } from "../src/features/adrenalinePj/schema";
 import { parseAdrenalineDocument, stringifyAdrenalineDocument } from "../src/features/adrenaline/document";
 import { log } from "../src/utils/logger";
 
@@ -179,12 +180,16 @@ assert.deepEqual(
 assert.ok(npcCard.classes.includes(`${CARD}--banner-garnet`), "a PNJ category prints on the garnet banner");
 assert.equal(only(npcCard, `${CARD}__banner-icon`, "one banner icon").dataset.icon, "user");
 assert.equal(only(npcCard, `${CARD}__banner-danger`, "one danger level").textContent, "ND 17");
-const npcNoted = adrenalinePnjBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "pnj", "agent-de-securite.toml"), "utf8").replace(/^(nom = .*)$/m, '$1\nnarratif = "Ronde à 22 h"'));
+const npcNoted = adrenalinePnjBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "pnj", "agent-de-securite.toml"), "utf8").replace(/\s*$/, '\n[narratif]\nnotesMj = ["Ronde à 22 h"]\n'));
 assert.ok(npcNoted, "the security guard with notes must parse");
 const npcNotes = findAll(adrenalinePnjBlock.render(npcNoted, doc) as unknown as El, `${CARD}__section-notes`);
 assert.equal(npcNotes.length, 1, "the NPC notes section is printed once");
 assert.match(textOf(npcNotes[0]), /Ronde à 22 h/, "the NPC notes are printed");
-assert.equal(countWord(textOf(npcNotes[0]), "Notes"), 1, "the NPC notes title is not repeated by its block label");
+assert.deepEqual(
+	findAll(npcNotes[0], `${CARD}__section-title`).concat(findAll(npcNotes[0], `${CARD}__line-label`)).map((heading) => heading.textContent).filter((heading) => heading === "Notes"),
+	["Notes"],
+	"the NPC notes title is not repeated by its block label",
+);
 assert.deepEqual(
 	findAll(npcCard, `${CARD}__skill-name`).slice(0, 2).map((skill) => skill.textContent),
 	["Arme à feu (Pistolet) 40 % + DEX", "Art martial (Judo) 40 % + DEX"],
@@ -505,7 +510,7 @@ assert.equal(only(rodeurCards[1], `${CARD}__state-label`, "one state name").text
 assert.equal(only(rodeurCards[0], `${CARD}__state-label`, "one state name").textContent, "Non stimulé", "the base is the unstimulated one");
 
 // A creature with no state besides its base: one card, which carries the equipment by the published fallback.
-const single = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\ninstinct = "Chasseur"\nactionsParRound = 2\ncomportement = ["Rôde."]\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n[sante.physique]\nsuperficiel.base = 6\n[equipement]\npossessions = ["Radio"]\n`);
+const single = adrenalineMonsterBlock.parse(`nom = "Rôdeur"\ninstinct = "Chasseur"\nactionsParRound = 2\ncomportement = ["Rôde."]\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n[sante.physique]\nsuperficiel.base = 6\nleger.base = 12\ngrave.base = 18\nprofond.base = 24\n[equipement]\npossessions = ["Radio"]\n`);
 assert.ok(single, "the single-card creature must parse");
 const singleCards = findAll(adrenalineMonsterBlock.render(single, doc) as unknown as El, `${CARD}__state-card`);
 assert.equal(singleCards.length, 1);
@@ -556,18 +561,456 @@ try {
 	for (const key of ["log", "vol", "cha"]) {
 		refusal(adrenalineMonsterBlock, zy2Source.replace("[caracteristiques]", `[caracteristiques]\n${key} = { minimum = 0, current = 20, maximum = 20 }`), `caracteristiques.${key}`, `${key} on a creature is refused`);
 	}
+	// schema-adrenaline 5.0.0 retires armesMentales from the player sheet, and the equipment is a closed object
+	// (additionalProperties: false) on every sheet: the key is refused wherever it is entered, with its name logged.
 	const mental = "\n[[equipement.armesMentales]]\nnom = \"Arme sociale\"\ndesDeDegats = 1\ntype = \"Sociale\"\n";
 	refusal(adrenalineMonsterBlock, `nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n${mental}`, "equipement.armesMentales", "armesMentales on a creature is refused");
 	const stateMental = "\n[[etats]]\nid = \"stimule\"\nnom = \"Stimulé\"\n[[etats.delta.equipement.armesMentales]]\nnom = \"Arme sociale\"\ndesDeDegats = 1\ntype = \"Sociale\"\n";
 	refusal(adrenalineMonsterBlock, `nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n${stateMental}`, "etats[0].delta.equipement.armesMentales", "armesMentales on the state of a creature is refused");
 	const npcSource = readFileSync(join(sourceRoot, "examples", "adrenaline", "pnj", "agent-de-securite.toml"), "utf8");
 	refusal(adrenalinePnjBlock, npcSource + mental, "equipement.armesMentales", "armesMentales on a PNJ is refused");
-	assert.ok(adrenalinePjBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "pj", "survivante-complete.toml"), "utf8")), "the PJ keeps armesMentales");
-	refusal(adrenalineMonsterBlock, `${zy2Source}\n[[etats]]\nid = "autre"\nnom = "Autre"\n`, "etats", "two entries in etats are refused");
-	// A merely unknown key keeps the old behaviour: warned, dropped, the document stays.
+	const pjExample = readFileSync(join(sourceRoot, "examples", "adrenaline", "pj", "survivante-complete.toml"), "utf8");
+	assert.equal(pjExample.indexOf("armesMentales"), -1, "the published PJ example no longer enters armesMentales");
+	refusal(adrenalinePjBlock, pjExample + mental, "equipement.armesMentales", "armesMentales on a PJ is refused");
+	// Any other key under the equipment is refused too, and nothing of it is printed: the contract closes the object.
+	refusal(adrenalinePjBlock, pjExample + "\n[[equipement.armesImaginaires]]\nnom = \"Menottes plastiques\"\n", "equipement.armesImaginaires", "an unpublished equipment key on a PJ is refused");
+	refusal(adrenalinePnjBlock, npcSource + "\n[[equipement.armesImaginaires]]\nnom = \"Menottes plastiques\"\n", "equipement.armesImaginaires", "an unpublished equipment key on a PNJ is refused");
+	refusal(adrenalineMonsterBlock, `nom = "Rôdeur"\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n[[equipement.armesImaginaires]]\nnom = "Menottes plastiques"\n`, "equipement.armesImaginaires", "an unpublished equipment key on a creature is refused");
+	// The same closed reading reaches every closed object and every enumeration the contract declares: a weapon, the
+	// identity, the stress counters, the wounds. Each is refused by the schema, never by a list kept here.
+	const lineOf = (source: string, text: string): string => {
+		const found = source.split(/\r?\n/).filter((line) => line.indexOf(text) >= 0);
+		assert.ok(found.length > 0, `the published example holds ${text}`);
+		return found[0];
+	};
+	const natureLine = lineOf(pjExample, "nature = ");
+	refusal(adrenalinePjBlock, pjExample.replace(natureLine, 'nature = "mortelle"'), "equipement.armesPhysiques[0].nature", "a weapon nature outside the enumeration is refused");
+	refusal(adrenalinePjBlock, pjExample.replace(natureLine, `${natureLine}\nportee = 3`), "equipement.armesPhysiques[0].portee", "an unknown key in a weapon is refused");
+	refusal(adrenalinePjBlock, pjExample.replace("[identite]", '[identite]\nreligion = "x"'), "identite.religion", "an unknown identity key is refused");
+	refusal(adrenalinePjBlock, pjExample.replace("[etatDePartie.stress]", "[etatDePartie.stress]\ncalme = 1"), "etatDePartie.stress.calme", "an unknown stress counter is refused");
+	refusal(adrenalinePjBlock, pjExample.replace("semaine = true", "semaine = true\nannee = true"), "etatDePartie.blessures.physiques.secondeColonne.annee", "an unknown wound key is refused");
+	refusal(adrenalinePnjBlock, `${npcSource}\n[[equipement.armesPhysiques]]\nnom = "Matraque"\nnature = "mortelle"\n`, "equipement.armesPhysiques[0].nature", "a PNJ weapon nature outside the enumeration is refused");
 	warnings.length = 0;
-	assert.ok(adrenalineMonsterBlock.parse(`nom = "Rôdeur"\nclefInconnue = 1\n[caracteristiques]\nfor = 40\ncon = 40\ndex = 30\nrap = 30\n`), "an unknown key does not refuse the document");
-	assert.ok(warnings.some((line) => line.indexOf("clefInconnue") >= 0), "an unknown key is warned");
+	assert.ok(adrenalinePjBlock.parse(pjExample), "the published PJ example parses");
+	assert.deepEqual(warnings, [], "the published PJ example parses without a warning");
+
+	// The player sheet, drawn from the published complete example (the contract owns the corpus; no local witness).
+	const PJ = "brumes-adrenaline-pj";
+	const pjSections = PJ_PRESENTATION.sections;
+	const sheet = adrenalinePjBlock.render(adrenalinePjBlock.parse(pjExample) as never, doc) as unknown as El;
+	const sectionOrder = pjSections.map((section) => section.id).filter((id) => findAll(sheet, `${PJ}--${id}`).length > 0);
+	assert.deepEqual(sectionOrder, pjSections.map((section) => section.id), "every published section is drawn on the complete example");
+	// Identity: the last published section, collapsible, closed by default, holding the constraints and the two narratives.
+	const lastSection = pjSections[pjSections.length - 1];
+	assert.equal(lastSection.id, "identite", "the contract puts the identity last");
+	assert.equal((lastSection as { collapsible?: boolean }).collapsible, true, "the contract makes the identity collapsible");
+	const identity = only(sheet, `${PJ}--identite`, "one identity section");
+	const identityBox = identity.children.find((child) => child.classes.includes(`${PJ}__section`)) ?? identity;
+	assert.equal(identityBox.tagName, "details", "a collapsible section is a details element");
+	assert.equal(identityBox.attributes.open, undefined, "the identity is closed by default");
+	assert.equal(identityBox.children[0].tagName, "summary", "the title is the summary");
+	assert.equal(textOf(identityBox.children[0]), lastSection.label, "the summary carries the published label");
+	for (const block of lastSection.blocks) {
+		assert.equal(findAll(identityBox, `${PJ}__${block.id}`).length, 1, `the identity section holds ${block.id}`);
+	}
+	assert.equal(findAll(sheet, `${PJ}__form-identity-fields`).length, findAll(identityBox, `${PJ}__form-identity-fields`).length, "no identity table outside the identity section");
+	assert.match(textOf(only(identityBox, `${PJ}__contraintes`, "constraints")), /Astreinte radio chaque soir à 20 h/, "a constraint prints as entered");
+	assert.match(textOf(only(identityBox, `${PJ}__historique`, "history")), /Ancienne cheffe d'équipe/, "the history prints as entered");
+	assert.match(textOf(only(identityBox, `${PJ}__personnalite`, "personality")), /Obstinée, méthodique/, "the personality prints as entered");
+	assert.match(textOf(only(identityBox, `${PJ}__contraintes`, "constraints")), /Familiales/, "an entered constraint keeps its published label");
+	// No identity entered: no empty section is printed, and nothing is warned about the absent fields.
+	warnings.length = 0;
+	const minimal = adrenalinePjBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "pj", "figurant-minimal.toml"), "utf8"));
+	assert.ok(minimal, "the minimal PJ parses");
+	const minimalSheet = adrenalinePjBlock.render(minimal as never, doc) as unknown as El;
+	assert.equal(findAll(minimalSheet, `${PJ}--identite`).length, 0, "a PJ without identity prints no identity section");
+	assert.equal(findAll(minimalSheet, `${PJ}__form-identity-fields`).length, 0, "and no identity table");
+	assert.deepEqual(warnings, [], "a PJ that enters none of the added fields reads without a warning");
+	// Social weapons: a table whose columns and lines come from the presentation; no note, no dice, no printed legend.
+	const socialPublished = pjSections.reduce<NonNullable<(typeof PJ_PRESENTATION.sections)[number]["blocks"][number]["referenceTable"]>[]>((all, section) => all.concat(section.blocks.filter((block) => block.referenceTable).map((block) => block.referenceTable as never)), []);
+	assert.equal(socialPublished.length, 1, "the contract publishes one reference table");
+	const reference = socialPublished[0];
+	const social = only(sheet, `${PJ}__armes-sociales`, "one social weapons block");
+	assert.equal(findAll(social, `${PJ}__ref-note`).length, 0, "the table prints no note");
+	assert.equal(findAll(social, `${PJ}__ref-column`).length, 0, "the table prints no column head: the block title is the first column");
+	assert.equal(reference.columns[0], "Armes sociales", "the published first column is the block title");
+	assert.equal(findAll(social, `${PJ}__ref-name`).length, reference.lines.length, "one table row per published line");
+	assert.deepEqual(findAll(social, `${PJ}__ref-name`).map(textOf), reference.lines.map((line) => line.name), "the published names, in order");
+	assert.deepEqual(findAll(social, `${PJ}__ref-properties`).map(textOf), reference.lines.map((line) => line.properties), "the published properties, in order");
+	assert.equal(findAll(social, `${PJ}__ref-legend`).length, 0, "the table prints no legend");
+	assert.equal(findAll(social, `${PJ}__ref-dice`).length, 0, "the table prints no die: the damage is not a column");
+	const withStruck = JSON.parse(JSON.stringify(adrenalinePjBlock.parse(pjExample))) as { equipement?: Record<string, unknown> };
+	withStruck.equipement = { ...(withStruck.equipement ?? {}), armesSocialesBarrees: [reference.lines[1].name, reference.lines[4].name] };
+	const struckSheet = adrenalinePjBlock.render(withStruck as never, doc) as unknown as El;
+	const struckRows = findAll(only(struckSheet, `${PJ}__armes-sociales`, "the social weapons block"), `${PJ}__ref-row--struck`);
+	assert.equal(struckRows.length, 2, "two struck weapons print two struck rows");
+	assert.deepEqual(struckRows.map((row) => textOf(findAll(row, `${PJ}__ref-name`)[0])), [reference.lines[1].name, reference.lines[4].name], "the struck rows are the entered names");
+	assert.equal(findAll(only(struckSheet, `${PJ}__armes-sociales`, "the social weapons block"), `${PJ}__ref-name`).length, reference.lines.length, "a struck weapon stays on its line");
+	// Ruled lines and weapon lines: the lines drawn are the published `minimumRows`, or the entries when they outnumber it.
+	const rowsPublished = pjSections.reduce<Array<(typeof PJ_PRESENTATION.sections)[number]["blocks"][number]>>((all, section) => all.concat(section.blocks.filter((block) => block.minimumRows !== undefined)), []);
+	assert.ok(rowsPublished.length > 0, "the contract publishes minimumRows on at least one block");
+	// A document that enters none of the lists (no equipment at all) still prints the published lines.
+	const withoutLists = JSON.parse(JSON.stringify(adrenalinePjBlock.parse(pjExample))) as Record<string, unknown>;
+	delete withoutLists.equipement;
+	const withoutListsSheet = adrenalinePjBlock.render(withoutLists as never, doc) as unknown as El;
+	for (const [drawn, data] of [[sheet, adrenalinePjBlock.parse(pjExample)], [minimalSheet, minimal], [withoutListsSheet, withoutLists]] as const) {
+		const drawnSource = pjToDocument(data as never);
+		for (const block of rowsPublished) {
+			const blocks = findAll(drawn, `${PJ}__${block.id}`);
+			assert.equal(blocks.length, 1, `one ${block.id} block`);
+			const lineClass = block.form === "weapon-lines" ? `${PJ}__weapon-line` : block.form === "ruled-list" ? `${PJ}__ruled-line` : "";
+			assert.notEqual(lineClass, "", `${block.id} publishes minimumRows on a form that draws lines`);
+			const entered = block.paths.reduce((count, pointer) => { const found = at(drawnSource, pointer); return count + (Array.isArray(found) ? found.length : 0); }, 0);
+			assert.equal(findAll(blocks[0], lineClass).length, Math.max(block.minimumRows as number, entered), `${block.id} draws the published minimumRows, or the entries when more`);
+		}
+	}
+	assert.equal(/minimumRows\s*[:=]\s*\d|PRINTED_LINES/.test(readFileSync(join("src", "features", "adrenalinePj", "renderer.ts"), "utf8")), false, "the renderer holds no line count of its own");
+	// The header reads like the paper sheet: the character's name on the left, the game parameters on the right (the published order carries no placement; the paper decides).
+	const headerStyle = readFileSync(join("src", "styles", "adrenaline", "_pj.scss"), "utf8");
+	const headerBody = /\.brumes-adrenaline-pj--entete > \.brumes-adrenaline-pj__section-body \{[^}]*\}/.exec(headerStyle);
+	assert.ok(headerBody, "the header declares its grid");
+	const headerAreas = /grid-template-areas:\s*"([^"]+)"/.exec(headerBody[0]);
+	assert.ok(headerAreas, "the header names its grid areas");
+	const headerOrder = headerAreas[1].split(/\s+/);
+	assert.deepEqual(headerOrder, ["nom", "brand", "params"], "the name sits left of the brand, the game parameters sit right");
+	const headerSheet = findAll(sheet, `${PJ}--entete`)[0];
+	assert.ok(headerSheet, "the header section is drawn");
+	for (const area of ["nom", "parametres-jeu"]) {
+		assert.equal(findAll(headerSheet, `${PJ}__${area}`).length, 1, `the header draws ${area}`);
+	}
+	const mediumHeader = /@container \(max-width: 600px\) \{[\s\S]*?\.brumes-adrenaline-pj--entete > \.brumes-adrenaline-pj__section-body \{[^}]*grid-template-areas:\s*"brand brand"\s*"([^"]+)"/.exec(headerStyle);
+	assert.ok(mediumHeader, "the medium header names its areas");
+	assert.deepEqual(mediumHeader[1].split(/\s+/), ["nom", "params"], "the medium header keeps the name left of the parameters");
+	// The Handbook code carries none of those lines: a published row changing is read, never copied.
+	const rendererSource = readFileSync(join("src", "features", "adrenalinePj", "renderer.ts"), "utf8");
+	for (const line of reference.lines) {
+		assert.equal(rendererSource.indexOf(line.name), -1, `the renderer does not write the row "${line.name}"`);
+		assert.equal(rendererSource.indexOf(line.properties), -1, `the renderer does not write the properties of "${line.name}"`);
+	}
+	// The thresholds print the published labels; the characteristics print the current value only, with no head.
+	const thresholdLabels = pjSections.reduce<string[]>((all, section) => all.concat(section.blocks.reduce<string[]>((inner, block) => inner.concat((block.thresholdLevels ?? []).map((level) => level.label)), [])), []);
+	for (const label of ["Léger", "Modéré", "Grave", "Profond"]) assert.ok(thresholdLabels.indexOf(label) >= 0, `the contract publishes the threshold ${label}`);
+	const health = textOf(only(sheet, `${PJ}--sante`, "health section"));
+	for (const label of thresholdLabels) assert.ok(health.indexOf(label) >= 0, `the threshold ${label} is printed`);
+	assert.equal(findAll(sheet, `${PJ}__metric-head`).length, 0, "the characteristics carry no range head");
+	// Thresholds: the label and the malus count the contract publishes for each level, in the block of each side.
+	const publishedBlocks = pjSections.reduce<Array<(typeof PJ_PRESENTATION.sections)[number]["blocks"][number]>>((all, section) => all.concat(section.blocks), []);
+	const thresholdBlocks = publishedBlocks.filter((block) => block.thresholdLevels !== undefined);
+	assert.ok(thresholdBlocks.length > 0, "the contract publishes threshold levels");
+	for (const block of thresholdBlocks) {
+		const rows = findAll(only(sheet, `${PJ}__${block.id}`, `one ${block.id} block`), `${PJ}__metric`);
+		const levels = block.thresholdLevels ?? [];
+		assert.equal(rows.length, levels.length, `${block.id} prints one row per published level`);
+		levels.forEach((level, index) => {
+			const name = textOf(findAll(rows[index], `${PJ}__metric-name`)[0]);
+			assert.ok(name.indexOf(level.label) === 0, `${block.id}: the row ${index} opens on the label ${level.label}`);
+			assert.equal(name.split(" ").filter(Boolean).slice(-2)[0], String(level.malus), `${block.id}: ${level.label} prints its published malus count (${level.malus})`);
+		});
+	}
+	// Wounds, as on the paper: one panel per published column; in each, one line per published duration (its circle, then
+	// its name), the entered one ticked, then the writing area holding what the document writes.
+	const woundBlocks = publishedBlocks.filter((block) => block.form === "wound-circles");
+	assert.equal(woundBlocks.length, 2, "physical and mental wounds");
+	const pjData = pjToDocument(adrenalinePjBlock.parse(pjExample) as never);
+	for (const block of woundBlocks) {
+		const wound = block.decoration as { durations: readonly string[]; columns: readonly { key: string; label: string }[]; circles: number };
+		const side = only(sheet, `${PJ}__${block.id}`, `one ${block.id} block`);
+		const panels = findAll(side, `${PJ}__wound`);
+		assert.equal(panels.length, wound.columns.length, `${block.id}: one panel per published column`);
+		const entered = at(pjData, block.paths[0]) as Record<string, Record<string, unknown> | undefined> | undefined;
+		panels.forEach((panel, column) => {
+			const lines = findAll(panel, `${PJ}__wound-line`);
+			assert.equal(lines.length, wound.durations.length, `${block.id}: one line per published duration`);
+			const mine = entered?.[wound.columns[column].key];
+			lines.forEach((line, index) => {
+				const duration = wound.durations[index];
+				assert.equal(textOf(findAll(line, `${PJ}__wound-head`)[0]).toLowerCase(), duration, `${block.id}: the duration ${duration} names its line`);
+				assert.equal(findAll(line, `${PJ}__dot-mark`).length, wound.circles, `${block.id}: ${duration} draws the published circle count`);
+				const expected = mine?.[duration] === true ? wound.circles : 0;
+				assert.equal(findAll(line, `${PJ}__dot-filled`).length, expected, `${block.id}: ${duration}, ${wound.columns[column].label} ticks only what is entered`);
+			});
+			const written = findAll(panel, `${PJ}__wound-write`);
+			assert.equal(written.length, 1, `${block.id}: one writing area per wound`);
+			assert.equal(textOf(written[0]), typeof mine?.notes === "string" ? mine.notes : "", `${block.id}: the writing area holds the entered text`);
+		});
+	}
+	assert.ok(woundBlocks.some((block) => findAll(only(sheet, `${PJ}__${block.id}`, "wounds"), `${PJ}__dot-filled`).length > 0), "the example ticks at least one wound");
+	// A wound is ticked by `true` and by nothing else. The contract refuses another value at parse (the document below
+	// is the example with a number where a boolean is published); a document that reaches the sheet with one still ticks nothing.
+	refusal(adrenalinePjBlock, pjExample.replace("semaine = true", "semaine = 1"), "etatDePartie.blessures.physiques.secondeColonne.semaine", "a wound entered as a number is refused");
+	const notBoolean = adrenalinePjBlock.parse(pjExample);
+	assert.ok(notBoolean, "the example parses");
+	const notBooleanDocument = pjToDocument(notBoolean as never);
+	for (const block of woundBlocks) {
+		const wound = block.decoration as { durations: readonly string[]; columns: readonly { key: string }[] };
+		const side = at(notBooleanDocument, block.paths[0]) as Record<string, Record<string, unknown>>;
+		for (const column of wound.columns) {
+			if (!side[column.key]) side[column.key] = {};
+			for (const duration of wound.durations) side[column.key][duration] = "oui";
+		}
+	}
+	const notBooleanSheet = adrenalinePjBlock.render(notBoolean as never, doc) as unknown as El;
+	for (const block of woundBlocks) {
+		const box = only(notBooleanSheet, `${PJ}__${block.id}`, `one ${block.id} block`);
+		assert.ok(findAll(box, `${PJ}__dot-mark`).length > 0, `${block.id}: the circles are still printed`);
+		assert.equal(findAll(box, `${PJ}__dot-filled`).length, 0, `${block.id}: a wound entered as a word ticks nothing`);
+	}
+	const circleRow = only(sheet, `${PJ}__form-circle-row`, "the Divers circles");
+	assert.equal(findAll(circleRow, `${PJ}__dot-mark`).length, 4, "four published circles");
+	assert.equal(findAll(circleRow, `${PJ}__dot-filled`).length, 1, "the entered counter ticks its circles");
+	// The values printed are the ones the document enters, line for line: the expected value is read from the document, never written here.
+	const byId = (rendered: El, id: string, why: string): El => only(rendered, `${PJ}__${id}`, why);
+	let thresholdBases = 0;
+	for (const block of thresholdBlocks) {
+		const side = at(pjData, block.paths[0]) as Record<string, { base?: unknown } | undefined>;
+		const rows = findAll(byId(sheet, block.id, `one ${block.id} block`), `${PJ}__metric`);
+		(block.thresholdLevels ?? []).forEach((level, index) => {
+			const values = findAll(rows[index], `${PJ}__metric-value`).map(textOf);
+			assert.deepEqual(values, [String(side[level.key]?.base ?? "")], `${block.id}: ${level.label} prints its entered value, once`);
+			if (values[0] !== "") thresholdBases += 1;
+		});
+	}
+	assert.ok(thresholdBases > 0, "the example enters threshold values");
+	// Protections: the boxes of a location are the published count, the first one ticked when the armour covers the location.
+	let coveredPlaces = 0;
+	let uncoveredPlaces = 0;
+	for (const block of publishedBlocks.filter((candidate) => candidate.form === "location-grid")) {
+		const grid = block.decoration as { side: string; boxes: number; locations: readonly { id: string }[] };
+		const side = at(pjData, block.paths[0]) as Record<string, { localisations?: unknown } | undefined>;
+		const cover = side[grid.side === "physical" ? "armure" : "caractere"];
+		const covered = Array.isArray(cover?.localisations) ? (cover?.localisations as string[]) : [];
+		const rows = findAll(byId(sheet, block.id, `one ${block.id} block`), `${PJ}__location`);
+		assert.equal(rows.length, grid.locations.length, `${block.id}: one line per published location`);
+		grid.locations.forEach((place, index) => {
+			assert.equal(findAll(rows[index], `${PJ}__box-mark`).length, grid.boxes, `${block.id}: ${place.id} draws the published boxes`);
+			const isCovered = covered.indexOf(place.id) >= 0;
+			assert.equal(findAll(rows[index], `${PJ}__box-ticked`).length, isCovered ? 1 : 0, `${block.id}: ${place.id} ticks one box when covered, none otherwise`);
+			if (isCovered) coveredPlaces += 1; else uncoveredPlaces += 1;
+		});
+	}
+	assert.ok(coveredPlaces > 0 && uncoveredPlaces > 0, "the example covers some locations and leaves others");
+	// Choc: one circle per published round, ticked as many times as entered.
+	const shockBlock = publishedBlocks.find((candidate) => candidate.form === "shock-circles");
+	assert.ok(shockBlock, "the contract publishes the shock circles");
+	const shockGroups = (shockBlock.decoration as unknown as { groups: readonly { label: string; count: number }[] }).groups;
+	const shockEntered = at(pjData, shockBlock.paths[0]) as Record<string, unknown>;
+	const shockEl = byId(sheet, shockBlock.id, "the Choc block");
+	assert.equal(findAll(shockEl, `${PJ}__dot-mark`).length, shockGroups.reduce((sum, group) => sum + group.count, 0), "Choc draws the published circles");
+	const shockTicked = shockGroups.reduce((sum, group) => sum + Math.min(group.count, Number(shockEntered[group.key]) || 0), 0);
+	assert.ok(shockTicked > 0, "the example enters a shock");
+	assert.equal(findAll(shockEl, `${PJ}__dot-filled`).length, shockTicked, "Choc ticks the rounds entered");
+	// Total des malus: the published steps (numbered ones on the grid, the closing one apart), only the entered total circled.
+	const scaleBlock = publishedBlocks.find((candidate) => candidate.form === "malus-scale");
+	assert.ok(scaleBlock, "the contract publishes the malus scale");
+	const scaleDecoration = scaleBlock.decoration as unknown as { from: number; to: number; last: string };
+	const numbered: string[] = [];
+	for (let step = scaleDecoration.from; step <= scaleDecoration.to; step += 1) numbered.push(String(step));
+	const scaleEl = byId(sheet, scaleBlock.id, "the scale block");
+	assert.deepEqual(findAll(scaleEl, `${PJ}__scale-step`).map(textOf), [...numbered, scaleDecoration.last], "the scale prints its published steps, then the closing one");
+	assert.deepEqual(findAll(only(scaleEl, `${PJ}__scale-grid`, "one grid of numbered steps"), `${PJ}__scale-step`).map(textOf), numbered, "the numbered steps are on the grid, the closing one apart");
+	const scaleTotal = String(at(pjData, scaleBlock.paths[0]));
+	assert.ok(numbered.indexOf(scaleTotal) >= 0, "the example enters a total inside the scale");
+	assert.deepEqual(findAll(scaleEl, `${PJ}__scale-step--current`).map(textOf), [scaleTotal], "only the entered total is circled");
+	const beyond = adrenalinePjBlock.parse(pjExample.replace(`total = ${scaleTotal}`, `total = ${scaleDecoration.to + 1}`));
+	assert.ok(beyond, "a total past the numbered steps parses");
+	const beyondEl = byId(adrenalinePjBlock.render(beyond as never, doc) as unknown as El, scaleBlock.id, "the scale block");
+	assert.deepEqual(findAll(beyondEl, `${PJ}__scale-step--current`).map(textOf), [scaleDecoration.last], "a total past the steps circles the closing one");
+	// Stress: the counter ticks the circle of its own rank only, one die option per circle.
+	const stressBlock = publishedBlocks.find((candidate) => candidate.form === "stress-dice");
+	assert.ok(stressBlock, "the contract publishes the stress dice");
+	const stressDice = stressBlock.decoration as unknown as { favorable: readonly string[]; defavorable: readonly string[] };
+	const stressOf = (adrenaline: number, panique: number): number[][] => {
+		const stressSource = pjExample.replace(/adrenaline = \d+/, `adrenaline = ${adrenaline}`).replace(/panique = \d+/, `panique = ${panique}`);
+		const parsed = adrenalinePjBlock.parse(stressSource);
+		assert.ok(parsed, "a PJ with that stress parses");
+		const cards = findAll(byId(adrenalinePjBlock.render(parsed as never, doc) as unknown as El, stressBlock.id, "the stress block"), `${PJ}__stress-card`);
+		return cards.map((card) => findAll(card, `${PJ}__stress-roll`).map((roll) => findAll(roll, `${PJ}__dot-filled`).length));
+	};
+	const ranks = (dice: readonly string[], count: number): number[] => dice.map((_, index) => (count === index + 1 ? 1 : 0));
+	for (const [adrenaline, panique] of [[1, 0], [2, 1], [0, 2]]) {
+		assert.deepEqual(stressOf(adrenaline, panique), [ranks(stressDice.favorable, adrenaline), ranks(stressDice.defavorable, panique)], `stress ${adrenaline}/${panique} ticks the circle of its rank only`);
+	}
+	// Weapons: no label on the lines, the die colour is the entered nature.
+	let natures = 0;
+	for (const block of publishedBlocks.filter((candidate) => candidate.form === "weapon-lines")) {
+		const weapons = (at(pjData, block.paths[0]) ?? []) as { nature?: string }[];
+		const lines = findAll(byId(sheet, block.id, `one ${block.id} block`), `${PJ}__weapon-line`);
+		weapons.forEach((weapon, index) => {
+			assert.equal(findAll(lines[index], `${PJ}__write-label`).length, 0, `${block.id}: a weapon line carries no label of its own`);
+			const printed = findAll(lines[index], `${PJ}__weapon-damage`)[0].classes.filter((name) => name.indexOf(`${PJ}__dice--`) === 0);
+			assert.deepEqual(printed, weapon.nature ? [`${PJ}__dice--${weapon.nature}`] : [], `${block.id}: the die of line ${index} carries the entered nature`);
+			if (weapon.nature) natures += 1;
+		});
+	}
+	assert.ok(natures > 0, "the example enters a weapon nature");
+	// A weapon without nature, or a ruled blank line, has no colour of nature and no die label.
+	for (const block of publishedBlocks.filter((candidate) => candidate.form === "weapon-lines")) {
+		const weapons = (at(pjData, block.paths[0]) ?? []) as { nature?: string; desDeDegats?: number }[];
+		const lines = findAll(byId(sheet, block.id, `one ${block.id} block`), `${PJ}__weapon-line`);
+		lines.forEach((line, index) => {
+			const damage = findAll(line, `${PJ}__weapon-damage`)[0];
+			const entered = weapons[index];
+			if (!entered || entered.desDeDegats === undefined) assert.equal(textOf(damage), "", `${block.id}: line ${index} enters no die and prints no die label`);
+			if (!entered || !entered.nature) assert.equal(damage.classes.some((name) => name.indexOf(`${PJ}__dice--`) === 0), false, `${block.id}: line ${index} enters no nature and takes no colour of nature`);
+		});
+	}
+	const diceStyle = readFileSync(join("src", "styles", "adrenaline", "_pj.scss"), "utf8");
+	const baseDice = /\.brumes-adrenaline-pj \.brumes-adrenaline-pj__weapon-damage\s*\{([^}]*)\}/.exec(diceStyle);
+	assert.ok(baseDice, "the dice have a neutral base rule");
+	assert.doesNotMatch(baseDice[1], /status-(yellow|red)|background/, "the base rule of a die carries no colour of nature: the colour comes from the nature only");
+	// What the document enters is printed as entered: never reduced to the published lines, hidden, swapped or invented.
+	// Each expected value is read from the entered document or from the contract; none is written here.
+	const variant = (source: string): { sheet: El; data: ReturnType<typeof pjToDocument> } => {
+		const parsed = adrenalinePjBlock.parse(source);
+		assert.ok(parsed, "the variant parses");
+		return { sheet: adrenalinePjBlock.render(parsed as never, doc) as unknown as El, data: pjToDocument(parsed as never) };
+	};
+	// Weapons: more entries than published lines are all printed, with their die (the PJ weapon has no type and no notes).
+	const weaponBlock = publishedBlocks.find((candidate) => candidate.form === "weapon-lines");
+	assert.ok(weaponBlock && weaponBlock.minimumRows !== undefined && weaponBlock.decoration?.kind === "weapon-die", "the contract publishes weapon lines with minimumRows and a die");
+	const dieLabel = weaponBlock.decoration.label;
+	const manyWeapons = Array.from({ length: weaponBlock.minimumRows + 2 }, (_unused, index) => index + 1).map((rank) => `\n[[equipement.armesPhysiques]]\nnom = "Arme ${rank}"\ndesDeDegats = ${rank}\n`).join("");
+	const many = variant(pjExample + manyWeapons);
+	const manyEntered = at(many.data, weaponBlock.paths[0]) as { nom: string; desDeDegats?: number }[];
+	assert.ok(manyEntered.length > weaponBlock.minimumRows, "the variant enters more weapons than the published lines");
+	const manyBox = only(many.sheet, `${PJ}__${weaponBlock.id}`, "the weapons block");
+	const manyLines = findAll(manyBox, `${PJ}__weapon-line`);
+	assert.equal(manyLines.length, manyEntered.length, "every entered weapon is printed, none cut at the published lines");
+	manyEntered.forEach((weapon, index) => {
+		const name = textOf(findAll(manyLines[index], `${PJ}__write-field`)[0]);
+		assert.ok(name.indexOf(weapon.nom) === 0, `line ${index} opens on the weapon name`);
+		if (weapon.desDeDegats !== undefined) assert.equal(textOf(findAll(manyLines[index], `${PJ}__weapon-damage`)[0]), `${weapon.desDeDegats}${dieLabel}`, `line ${index} prints the entered die with the published label`);
+	});
+	assert.deepEqual(findAll(manyBox, `${PJ}__note`).map(textOf), [], "the PJ weapon has no notes to print");
+	// Stress: each card carries the dice of its own side and says which side it is.
+	const stressCards = findAll(byId(sheet, stressBlock.id, "the stress block"), `${PJ}__stress-card`);
+	const sideOf = (label: string): string => label.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+	(["favorable", "defavorable"] as const).forEach((side, index) => {
+		const rolls = findAll(stressCards[index], `${PJ}__stress-roll`);
+		assert.deepEqual(rolls.map((roll) => textOf(findAll(roll, `${PJ}__stress-die`)[0])), stressDice[side].map((die) => die.replace("-", "−")), `card ${index} prints the published ${side} dice`);
+		assert.deepEqual(rolls.map((roll) => sideOf(textOf(findAll(roll, `${PJ}__stress-side`)[0]))), rolls.map(() => side), `card ${index} names its side (${side})`);
+	});
+	// A counter past the published ranks ticks no circle: it does not fall back on the last one.
+	assert.deepEqual(stressOf(stressDice.favorable.length + 1, stressDice.defavorable.length + 1), [stressDice.favorable.map(() => 0), stressDice.defavorable.map(() => 0)], "a stress above the published ranks ticks nothing");
+	// Scale: the closing step is circled only past the numbered ones; a total on the last numbered step circles that step.
+	const onLast = adrenalinePjBlock.parse(pjExample.replace(`total = ${scaleTotal}`, `total = ${scaleDecoration.to}`));
+	assert.ok(onLast, "a total on the last numbered step parses");
+	assert.deepEqual(findAll(byId(adrenalinePjBlock.render(onLast as never, doc) as unknown as El, scaleBlock.id, "the scale block"), `${PJ}__scale-step--current`).map(textOf), [String(scaleDecoration.to)], "a total on the last numbered step circles that step, not the closing one");
+	// Shock: a counter past the published circles ticks them all and no more.
+	const shockCount = shockGroups.reduce((sum, group) => sum + group.count, 0);
+	// The contract refuses such a counter (the contract harness proves it), so it does not come from parsing: the sheet is
+	// still given a document that holds one, as the published circles are all it may draw.
+	const overShockParsed = adrenalinePjBlock.parse(pjExample);
+	assert.ok(overShockParsed, "the example parses");
+	const overShockDocument = pjToDocument(overShockParsed as never) as { etatDePartie: { malus: { choc: { rounds: number } } } };
+	overShockDocument.etatDePartie.malus.choc.rounds = shockCount + 3;
+	const overShock = { sheet: adrenalinePjBlock.render(overShockParsed as never, doc) as unknown as El };
+	const overShockEl = byId(overShock.sheet, shockBlock.id, "the Choc block");
+	assert.equal(findAll(overShockEl, `${PJ}__dot-mark`).length, shockCount, "an excessive shock still draws the published circles");
+	assert.equal(findAll(overShockEl, `${PJ}__dot-filled`).length, shockCount, "an excessive shock ticks them all, and no more");
+	// Thresholds: the current value is printed, not the maximum.
+	const lowered = variant(pjExample.replace(/(\[sante\.mental\.grave\]\r?\nbase = )\d+/, (_all, head: string) => `${head}1`));
+	let differing = 0;
+	for (const block of thresholdBlocks) {
+		const side = at(lowered.data, block.paths[0]) as Record<string, { base?: unknown } | undefined>;
+		const rows = findAll(byId(lowered.sheet, block.id, `one ${block.id} block`), `${PJ}__metric`);
+		(block.thresholdLevels ?? []).forEach((level, index) => {
+			const base = side[level.key]?.base;
+			assert.deepEqual(findAll(rows[index], `${PJ}__metric-value`).map(textOf), [String(base ?? "")], `${block.id}: ${level.label} prints its current value`);
+			const original = (at(pjData, block.paths[0]) as Record<string, { base?: unknown } | undefined>)[level.key]?.base;
+			if (base !== undefined && base !== original) differing += 1;
+		});
+	}
+	assert.ok(differing > 0, "the variant enters a threshold that differs from the document");
+	// Protections: the armour is one line on the sheet. A PNJ detail is not declared for a PJ: the sheet never prints it.
+	const armourDetail = "Detail-hors-feuille";
+	const withDetail = pjExample.replace(/(localisations = \[ "torse", "bras-fort" \])/, (_all, line: string) => `${line}\ncouverture = "${armourDetail}"`);
+	assert.notEqual(withDetail, pjExample, "the variant enters a detail on the armour");
+	const detailParsed = adrenalinePjBlock.parse(withDetail);
+	if (detailParsed) assert.equal(JSON.stringify(adrenalinePjBlock.render(detailParsed as never, doc)).indexOf(armourDetail), -1, "a detail of the PJ armour is never printed");
+	for (const block of publishedBlocks.filter((candidate) => candidate.form === "location-grid")) {
+		const physical = (block.decoration as unknown as { side: string }).side === "physical";
+		const protections = at(pjData, block.paths[0]) as Record<string, Record<string, unknown> | undefined>;
+		const cover = protections[physical ? "armure" : "caractere"] ?? {};
+		const gridBox = byId(sheet, block.id, `one ${block.id} block`);
+		const field = textOf(findAll(findAll(gridBox, `${PJ}__unit-line`)[0], `${PJ}__write-field`)[0]);
+		const name = cover[physical ? "nom" : "trait"];
+		assert.ok(typeof name === "string" && field.indexOf(name) >= 0, `${block.id}: the protection prints its name (got "${field}")`);
+		assert.equal(findAll(gridBox, `${PJ}__write-line`).length, 0, `${block.id}: no shield line, as on the paper sheet`);
+		assert.equal(findAll(gridBox, `${PJ}__unit-line`).length, 1, `${block.id}: the armour or character line only, no toughness line`);
+	}
+	// Identity: the age carries its unit; the favourite equipment is labelled in words; the constraints print only what is entered.
+	const identityData = at(pjData, "/identite") as { age?: number };
+	assert.ok(identityData.age !== undefined, "the example enters an age");
+	const ageFields = findAll(identityBox, `${PJ}__write-field`).map(textOf).filter((printed) => printed.indexOf(String(identityData.age)) === 0);
+	assert.equal(ageFields.length, 1, "the age is printed once");
+	assert.ok(ageFields[0].length > String(identityData.age).length, "the age is printed with its unit");
+	const favorite = (at(pjData, "/equipement") as { equipementFavori?: string }).equipementFavori as string;
+	const favoriteLine = findAll(sheet, `${PJ}__write-line`).filter((line) => findAll(line, `${PJ}__write-field`).some((field) => textOf(field) === favorite))[0];
+	assert.ok(favoriteLine, "the favourite equipment is printed");
+	assert.ok(textOf(findAll(favoriteLine, `${PJ}__write-label`)[0]).indexOf(" ") > 0, "the favourite equipment is labelled in words, not by its key");
+	// Titles and notes: a block already titled by its section is not titled twice, and every block prints the notes it publishes.
+	for (const section of pjSections) {
+		for (const block of section.blocks) {
+			const drawn = findAll(sheet, `${PJ}__${block.id}`);
+			if (drawn.length !== 1) continue;
+			const titles = findAll(drawn[0], `${PJ}__block-title`);
+			if (block.label === section.label) assert.equal(titles.length, 0, `${block.id}: the section already says "${block.label}"`);
+			else if (block.form === "ruled-list") assert.deepEqual(titles.map((title) => title.textContent), [block.label], `${block.id}: a ruled list titles itself once`);
+			// A block narrower than its multi-column section hands its notes to the section, which prints them across all columns.
+			const lifted = section.layout === "columns" && (section.columns ?? 1) > 1 && block.placement !== undefined && (block.placement.columnSpan ?? 1) < (section.columns ?? 1);
+			const inBlock = findAll(drawn[0], `${PJ}__block-note`).map(textOf);
+			if (lifted) {
+				assert.deepEqual(inBlock, [], `${block.id}: leaves its notes to the section`);
+				const inSheet = findAll(sheet, `${PJ}__block-note`).map(textOf);
+				for (const note of block.notes ?? []) assert.equal(inSheet.filter((item) => item === note).length, 1, `${block.id}: the section prints the note once`);
+			} else assert.deepEqual(inBlock, [...(block.notes ?? [])], `${block.id}: prints the notes the contract publishes`);
+		}
+	}
+	// Identity: the nine-line table is printed only when one of its fields is entered, the section only when something is printed.
+	const minimalSource = readFileSync(join(sourceRoot, "examples", "adrenaline", "pj", "figurant-minimal.toml"), "utf8");
+	const identityOf = (extra: string): El => {
+		const parsed = adrenalinePjBlock.parse(`${minimalSource}\n${extra}\n`);
+		assert.ok(parsed, `the identity variant parses: ${extra.slice(0, 30)}`);
+		return adrenalinePjBlock.render(parsed as never, doc) as unknown as El;
+	};
+	const onlyConstraints = identityOf("[identite.contraintes]\nfamiliales = \"Garde de nuit\"");
+	assert.equal(findAll(onlyConstraints, `${PJ}__form-identity-fields`).length, 0, "constraints alone: no empty nine-line table");
+	assert.equal(findAll(onlyConstraints, `${PJ}__contraintes`).length, 1, "constraints alone: the constraints are printed");
+	assert.equal(findAll(onlyConstraints, `${PJ}__historique`).length, 0, "constraints alone: no history");
+	const onlyHistory = identityOf("[identite]\nhistorique = \"Ancien convoyeur\"");
+	assert.equal(findAll(onlyHistory, `${PJ}__form-identity-fields`).length, 0, "history alone: no empty nine-line table");
+	assert.ok(textOf(only(onlyHistory, `${PJ}__historique`, "history alone: the history")).indexOf("Ancien convoyeur") >= 0, "history alone: the history is printed");
+	const oneField = identityOf("[identite]\nnationalite = \"Belge\"");
+	assert.equal(findAll(oneField, `${PJ}__form-identity-fields`).length, 1, "one field entered: the table is printed");
+	assert.match(textOf(only(oneField, `${PJ}__form-identity-fields`, "the table")), /Belge/, "one field entered: it is in the table");
+	// Constraints: only what is entered is printed, with the label the contract publishes.
+	const constraintsBlock = publishedBlocks.find((candidate) => candidate.form === "compact-rows");
+	assert.ok(constraintsBlock && constraintsBlock.pointerRows, "the contract publishes compact rows");
+	const oneConstraint = identityOf("[identite.contraintes]\nfamiliales = \"Garde de nuit\"");
+	const constraintData = pjToDocument(adrenalinePjBlock.parse(`${minimalSource}\n[identite.contraintes]\nfamiliales = "Garde de nuit"\n`) as never);
+	const enteredCells = constraintsBlock.pointerRows.reduce<{ label?: string; path: string }[]>((all, row) => all.concat(row.filter((cell) => { const found = at(constraintData, cell.path); return found !== undefined && found !== ""; })), []);
+	assert.equal(enteredCells.length, 1, "one constraint is entered");
+	const constraintLines = findAll(only(oneConstraint, `${PJ}__${constraintsBlock.id}`, "the constraints"), `${PJ}__write-line`);
+	assert.equal(constraintLines.length, enteredCells.length, "only the constraints entered are printed");
+	assert.equal(textOf(findAll(constraintLines[0], `${PJ}__write-label`)[0]), enteredCells[0].label, "the constraint carries its published label");
+	// The contract closes the document: a key it does not publish, at the top level as anywhere, refuses the whole document and is named.
+	for (const [block, source] of [[adrenalinePjBlock, pjExample], [adrenalinePnjBlock, npcSource], [adrenalineMonsterBlock, zy2Source]] as const) {
+		refusal(block, `clefFantome = "Valeur fantôme"
+${source}`, "clefFantome", "an unknown top-level key refuses the document");
+	}
+	// Print: the closed identity section is unfolded on the paper.
+	const pjScss = readFileSync(join("src", "styles", "adrenaline", "_pj.scss"), "utf8");
+	assert.match(pjScss, /@media print\s*\{[^}]*::details-content\s*\{[^}]*content-visibility:\s*visible/, "the closed identity section is unfolded in print");
+	refusal(adrenalineMonsterBlock, `${zy2Source}\n[[etats]]\nid = "autre"\nnom = "Autre"\n`, "etats", "two entries in etats are refused");
+	refusal(adrenalineMonsterBlock, `nom = "Rôdeur"
+clefInconnue = 1
+[caracteristiques]
+for = 40
+con = 40
+dex = 30
+rap = 30
+`, "clefInconnue", "a key no sheet publishes refuses the document, and is named");
 } finally {
 	console.warn = realWarn;
 	log.setLevel("error");
@@ -588,16 +1031,17 @@ assert.equal(secondaryRule.length, 1, "the creature presentation conditions one 
 assert.equal(singleCards.length, 1, "no etats, no etatAlternatif: the conditioned card does not exist");
 assert.equal(zy2Cards.length, 2, "etats: the conditioned card exists");
 assert.equal(richCards.length, 2, "etatAlternatif: the conditioned card exists");
-// An alternate state entered empty is no value at the published pointer: the conditioned card is not printed.
+// A list of states entered empty is no value at the published pointer: the conditioned card is not printed.
+// The contract refuses an empty `etatAlternatif` (its name is required), so the empty value is the list of states.
 const emptyAlternate = adrenalineMonsterBlock.parse(`nom = "Rôdeur"
+etats = []
 [caracteristiques]
 for = 40
 con = 40
 dex = 30
 rap = 30
-[etatAlternatif]
 `);
-assert.ok(emptyAlternate, "a creature with an empty alternate state must parse");
+assert.ok(emptyAlternate, "a creature with an empty list of states must parse");
 assert.equal(findAll(adrenalineMonsterBlock.render(emptyAlternate, doc) as unknown as El, `${CARD}__state-card`).length, 1, "an empty value at the published pointer leaves the card out");
 // The blocks name their cards: the protections sit on the principal card only, even when the small card exists.
 const protectedCreature = adrenalineMonsterBlock.parse(readFileSync(join(sourceRoot, "examples", "adrenaline", "monstre", "infecte-rodeur.toml"), "utf8"));
@@ -726,10 +1170,12 @@ const healthLines = [
 	"[sante.physique.profond]", `base = ${triplet(24)}`,
 	"[sante.mental.superficiel]", `base = ${triplet(6)}`, `couvert = ${triplet(4)}`,
 	"[sante.mental.leger]", `base = ${triplet(13)}`,
+	"[sante.mental.grave]", `base = ${triplet(18)}`,
+	"[sante.mental.profond]", `base = ${triplet(23)}`,
 	"[protections.physiques]", `solidite = ${triplet(3)}`,
 	"[protections.physiques.armure]", 'nom = "Gilet"', `points = ${triplet(9)}`, 'localisations = ["torse"]',
 	"[protections.mentales]", `solidite = ${triplet(2)}`,
-	"[protections.mentales.caractere]", 'trait = "Calme"', `points = ${triplet(8)}`, 'localisations = ["tête"]',
+	"[protections.mentales.caractere]", 'trait = "Calme"', `points = ${triplet(8)}`, 'localisations = ["anxiete"]',
 ];
 const creatureTriplets = [
 	'nom = "Écho"', 'typeDeCorps = "silhouette"', 'instinct = "isoler"', "niveauDeDanger = 3", "actionsParRound = 2",
@@ -751,7 +1197,7 @@ const npcTriplets = [
 	"[caracteristiques]",
 	`for = ${triplet(35)}`, `con = ${triplet(40)}`, `log = ${triplet(55)}`,
 	...healthLines,
-	"[[formations]]", 'nom = "Survie urbaine"', 'type = "Terrain"', `pourcentage = ${triplet(55)}`,
+	"[[formations]]", 'nom = "Survie urbaine"', 'type = "professionnelle"', `pourcentage = ${triplet(55)}`,
 	"[[formations.competences]]", 'nom = "Escalade"', `pourcentage = ${triplet(45)}`, 'caracteristique = "dex"',
 	"[[competences]]", 'nom = "Mécanique"', `pourcentage = ${triplet(60)}`, 'caracteristique = "log"',
 	"[[equipement.armesPhysiques]]", 'nom = "Clé"', `pourcentage = ${triplet(55)}`, "desDeDegats = 2",
@@ -798,6 +1244,62 @@ for (const [label, block, tripletSource, expectedAtLeast] of [
 	const plainSection = renderCompactSection(doc, published, source, MONSTRE_PRESENTATION as unknown as PublishedPresentation) as unknown as El | null;
 	assert.ok(plainSection);
 	assert.equal(plainSection.tagName, "section", "a section that is not collapsible stays a <section>");
+}
+
+// Placement, span and column classes: every one the renderers emit for a published presentation has a rule in the built stylesheet.
+{
+	let builtCss = "";
+	try { builtCss = readFileSync(join("dist", "styles.css"), "utf8"); } catch { assert.fail("dist/styles.css is missing: run the build before this assertion"); }
+	const hasRule = (name: string): boolean => new RegExp(String.raw`\.${name}(?![\w-])`).test(builtCss);
+	// Geometry classes only (`__col-N`, `__row-N`, `__span-N`, `__columns-N`, and the spans). The count modifiers (`block-columns-N`,
+	// `grid--columns-N`, `placed--columns-N`) are markers or default-valued variables: the default carries no rule by design.
+	const positional = /__(col|row|span|columns|col-span|row-span)-\d+$/;
+	const wanted = new Map<string, string>();
+	const want = (name: string, why: string): void => { if (!wanted.has(name)) wanted.set(name, why); };
+	// 1. Derived from the published values (blocks unexercised by an example are covered too).
+	const wantPlacement = (root: string, placement: { column: number; row: number; rowSpan?: number; columnSpan?: number } | undefined, why: string): void => {
+		if (!placement) return;
+		want(`${root}__col-${placement.column}`, why);
+		want(`${root}__row-${placement.row}`, why);
+		if (placement.rowSpan) want(`${root}__row-span-${placement.rowSpan}`, why);
+		if (placement.columnSpan) want(`${root}__col-span-${placement.columnSpan}`, why);
+	};
+	for (const section of PJ_PRESENTATION.sections) {
+		const rowSpan = (section as { row?: { span?: unknown } }).row?.span;
+		want(`${PJ_ROOT}__span-${rowSpan === 1 || rowSpan === 2 ? rowSpan : 3}`, `pj section ${section.id}`);
+		want(`${PJ_ROOT}__columns-${section.columns ?? 1}`, `pj section ${section.id}`);
+		for (const block of section.blocks) {
+			wantPlacement(PJ_ROOT, block.placement, `pj block ${block.id}`);
+		}
+	}
+	for (const published of [PNJ_PRESENTATION, MONSTRE_PRESENTATION]) {
+		for (const section of published.sections) {
+			for (const block of publishedBlocksOf({ sections: [section as { blocks: ReadonlyArray<object> }] }) as Array<{ id: string; placement?: { column: number; row: number; rowSpan?: number; columnSpan?: number } }>) {
+				wantPlacement(CARD, block.placement, `${published.sheet.id} block ${block.id}`);
+			}
+		}
+	}
+	// 2. Emitted by the renderers on the published examples and the visual fixture.
+	const examples = (kind: string): string[] => readdirSync(join(sourceRoot, "examples", "adrenaline", kind)).filter((file) => file.endsWith(".toml")).map((file) => readFileSync(join(sourceRoot, "examples", "adrenaline", kind, file), "utf8"));
+	const collect = (root: El): void => {
+		for (const name of root.classes) if (positional.test(name)) want(name, "emitted by a renderer");
+		root.children.forEach(collect);
+	};
+	for (const [block, kind] of [[adrenalinePjBlock, "pj"], [adrenalinePnjBlock, "pnj"], [adrenalineMonsterBlock, "monstre"]] as const) {
+		const sources = examples(kind);
+		const fence = visualFixture.match(new RegExp("```" + block.id + "\\r?\\n([\\s\\S]*?)\\r?\\n```"));
+		if (fence) sources.push(fence[1]);
+		for (const source of sources) {
+			const data = block.parse(source);
+			assert.ok(data, `${block.id} example parses for the placement guard`);
+			collect(block.render(data as never, doc) as unknown as El);
+		}
+	}
+	assert.ok(wanted.size > 0, "the guard derives placement classes");
+	const missing = [...wanted.keys()].filter((name) => !hasRule(name)).map((name) => `${name} (${wanted.get(name) ?? ""})`);
+	assert.deepEqual(missing, [], "every placement, span and column class a renderer emits has a rule in dist/styles.css");
+	// The guard sees a class without a rule.
+	assert.equal(hasRule(`${CARD}__col-99`), false, "the rule probe does not match an unpublished class");
 }
 
 console.log("Adrenaline theme assertions passed.");

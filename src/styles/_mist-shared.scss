@@ -1,0 +1,87 @@
+// What City of Mist and Legend in the Mist print the same way.
+//
+// The two games share one stroke for tags and one skeleton for tables, and
+// their rules were written twice, once under each game class. Listing the two
+// classes in one `:is()` writes each declaration block once; the specificity
+// is the same (`:is()` weighs its most specific argument, a single class here)
+// and a note carries one game class at a time, so no cascade order between the
+// two games exists to preserve. What differs between the games stays in each
+// game's own partial.
+:is(.brumes--city-of-mist, .brumes--legend-in-the-mist) {
+	// Tags, statuses and limits: the shape of a highlighter stroke. The colours
+	// are the pack's (`--brumes-*-color`), one set per polarity.
+	.brumes-tag,
+	.brumes-tag-content {
+		position: relative;
+		font-style: italic;
+		text-box: trim-both cap alphabetic;
+		display: inline-block;
+		border-top: 0.2ch solid;
+		border-bottom: 0.4ch solid;
+	}
+
+	.brumes-power,
+	.brumes-power-content {
+		background-color: var(--brumes-power-color);
+		border-color: var(--brumes-power-color);
+	}
+
+	.brumes-weakness,
+	.brumes-weakness-content {
+		background-color: var(--brumes-weakness-color);
+		border-color: var(--brumes-weakness-color);
+	}
+
+	.brumes-status,
+	.brumes-status-content {
+		background-color: var(--brumes-status-color);
+		border-color: var(--brumes-status-color);
+	}
+
+	.brumes-limit,
+	.brumes-limit-content {
+		background-color: var(--brumes-limit-color);
+		border-color: var(--brumes-limit-color);
+	}
+
+	// Tables: the colours come from the pack, the borders are zeroed the same
+	// way in both games.
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.95rem;
+		background: transparent;
+		color: var(--brumes-table-ink);
+
+		thead {
+			background: var(--brumes-table-header-paper);
+
+			--table-header-border-width: 0px;
+			--table-column-first-border-width: 0px;
+
+			tr {
+				background: none !important;
+			}
+
+			th,
+			th .cm-line {
+				padding: var(--size-4-2) var(--size-4-2);
+				text-align: left;
+				font-weight: bold;
+				color: var(--table-header-color);
+				border: 0;
+
+				.table-cell-wrapper {
+					padding: var(--size-4-2) var(--size-4-2) !important;
+				}
+			}
+		}
+
+		tbody {
+			--table-column-first-border-width: 0px;
+			--table-border-width: 0px;
+			--table-column-last-border-width: 0px;
+			--table-row-last-border-width: 0px;
+		}
+	}
+}

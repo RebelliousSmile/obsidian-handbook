@@ -25,6 +25,7 @@
 // Every partial that keeps a colour of its own says at the top which of those
 // it is. A silent one is a debt no one can see.
 
+@use "mist-shared";
 @use "city-of-mist/index.scss" as cityOfMist;
 @use "legend-in-the-mist/index.scss" as legendInTheMist;
 @use "otherscape/index.scss" as otherscape;

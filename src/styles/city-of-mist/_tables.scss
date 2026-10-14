@@ -12,49 +12,24 @@
 // something other than `0px` would only break its own tables. The typeface is
 // already the note's, named in the pack; it is repeated on the header because
 // Obsidian's own rule is more specific than inheritance.
+//
+// The skeleton (width, collapse, the zeroed borders, the cell padding) is
+// shared with Legend in the Mist, in `../mist-shared`.
 @mixin global {
 	table {
-		width: 100%;
-		border-collapse: collapse;
 		font-family: "PT Serif", serif;
-		font-size: 0.95rem;
-		background: transparent;
-		color: var(--brumes-table-ink);
 
 		thead {
-			background: var(--brumes-table-header-paper);
 			border: none;
 			box-shadow: none;
 
-			--table-header-border-width: 0px;
-			--table-column-first-border-width: 0px;
-			--table-header-border-width: 0px;
-
-			tr {
-				background: none !important;
-			}
-
 			th,
 			th .cm-line {
-				padding: var(--size-4-2) var(--size-4-2);
 				font-family: "PT Serif", serif;
-				text-align: left;
-				font-weight: bold;
-				color: var(--table-header-color);
-				border: 0;
-
-				.table-cell-wrapper {
-					padding: var(--size-4-2) var(--size-4-2) !important;
-				}
 			}
 		}
 
 		tbody {
-			--table-column-first-border-width: 0px;
-			--table-border-width: 0px;
-			--table-column-last-border-width: 0px;
-			--table-row-last-border-width: 0px;
-
 			tr {
 				--table-row-alt-background-hover: transparent;
 				--table-row-alt-background: transparent;

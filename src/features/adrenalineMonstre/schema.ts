@@ -104,7 +104,8 @@ export function documentToMonster(value: unknown): AdrenalineMonsterData | null 
 		["nom", "categorie", "typeDeCorps", "instinct", "typeInfecte", "description", "niveauDeDanger", "niveauDeDangerAlternatif", "niveauDeDangerNote", "caracteristiques", "sante", "etatsPermanents", "malusAvantHs", "protections", "zoneDeDetection", "deplacement", "actionsParRound", "defense", "actions", "etatDeBase", "etatPrincipal", "etats", "etatActif", "etatDePartie", "etatAlternatif", "comportement", "traitsSpeciaux", "competences", "equipement", "contagion", "narratif", "meta"],
 		"monstre",
 	);
-	const nom = asString(document.nom);
+	// The contract asks for a name of at least one character: a name that is only blanks is a name, kept as entered.
+	const nom = asString(document.nom) || (typeof document.nom === "string" ? document.nom : "");
 	const characteristics = readCharacteristics(document.caracteristiques, MONSTER_CHARACTERISTIC_KEYS);
 	const requiredPhysicalCharacteristics = ["for", "con", "dex", "rap"] as const;
 	if (!nom || !characteristics || requiredPhysicalCharacteristics.some((key) => characteristics[key] === undefined)) return null;

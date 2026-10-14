@@ -30,25 +30,6 @@
 			margin-bottom: 0.2em;
 		}
 
-		&--tags {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 0.25em;
-			text-align: center;
-
-			& > li {
-				margin-inline-start: 0 !important;
-				// A tag span trims its own box, so the line still needs a
-				// height of its own or two tags overlap.
-				line-height: 1.35;
-				padding: 0;
-			}
-		}
-
 		&--weakness-tags {
 			margin-top: 0.35em;
 		}

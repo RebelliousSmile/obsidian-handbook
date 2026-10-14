@@ -2,32 +2,30 @@
 // Toutes les couleurs sont des jetons du pack : aucune valeur en dur ici.
 
 
+@use "sass:list";
 @use "./placement";
 
-@mixin display($size, $weight: 800) {
-	font-family: var(--font-header-theme);
-	font-size: $size;
-	font-weight: $weight;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-}
+// Petites capitales : la police, l'interlettrage et la graisse (800) sont posés une seule fois
+// par la règle groupée de `sheet` ; chaque rôle ne garde que sa taille (et sa graisse si elle diffère).
+$root: "brumes-adrenaline-pj";
+$display-roles: write-label, unit, card-label, brand-name, brand-sheet, location-range, location-label,
+	stress-side, track-label, track-period, scale-label, scale-step, condition-label, wound-head;
+$dotted-roles: write-field, ruled-line, weapon-score, weapon-damage, unit-value;
+$banner-roles: card-label, track-label, scale-label;
+$vertical-roles: condition-label;
+$column-roles: formation, block, ruled-list, wounds, tracks, condition-body;
+$note-roles: note, block-note;
+$full-row-roles: field-across, formations-competences;
+$pair-roles: stress-grid, condition-stack;
+$row-roles: location-boxes, wound-cell;
+$ink-roles: box-ticked, dot-filled;
 
-@mixin banner {
-	margin: 0;
-	background: var(--adrenaline-band);
-	color: var(--adrenaline-band-ink);
-	text-align: center;
-}
-
-@mixin dotted {
-	min-height: 1.25em;
-	border-bottom: 1px dotted var(--adrenaline-field-border);
-}
-
-@mixin vertical-label {
-	writing-mode: vertical-rl;
-	transform: rotate(180deg);
-	text-align: center;
+@function roles($names) {
+	$list: ();
+	@each $name in $names {
+		$list: list.append($list, ".#{$root}__#{$name}", comma);
+	}
+	@return $list;
 }
 
 @mixin sheet {
@@ -55,6 +53,32 @@
 		*::after { box-sizing: border-box; }
 	}
 
+	// Règles partagées (une seule fois chacune) ; les règles par rôle viennent après et gagnent à spécificité égale.
+	:is(#{roles($display-roles)}),
+	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-name,
+	.brumes-adrenaline-pj :is(:is(h4, summary).brumes-adrenaline-pj__section-title, h5.brumes-adrenaline-pj__block-title) {
+		font-family: var(--font-header-theme);
+		font-weight: 800;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		font-style: normal;
+		text-decoration: none;
+	}
+	:is(#{roles($dotted-roles)}) {
+		min-height: 1.25em;
+		border-bottom: 1px dotted var(--adrenaline-field-border);
+	}
+	:is(#{roles($banner-roles)}),
+	.brumes-adrenaline-pj :is(h4, summary).brumes-adrenaline-pj__section-title {
+		background: var(--adrenaline-band);
+		color: var(--adrenaline-band-ink);
+	}
+	:is(#{roles($vertical-roles)}) {
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		text-align: center;
+	}
+
 	// Grain de papier sous la fiche, même jeton que la page.
 	.brumes-adrenaline-pj--surface-paper-sheet::before {
 		content: "";
@@ -68,45 +92,45 @@
 	.brumes-adrenaline-pj--outer-rule { border: 1px solid var(--adrenaline-rule); }
 
 	// Sections : bandeau de titre et corps en grille publiée.
-	.brumes-adrenaline-pj__section { min-width: 0; }
-	.brumes-adrenaline-pj__span-1 { grid-column: span 1; }
-	.brumes-adrenaline-pj__span-2 { grid-column: span 2; }
-	.brumes-adrenaline-pj__span-3 { grid-column: 1 / -1; }
+	.brumes-adrenaline-pj__section, .brumes-adrenaline-pj__formation, .brumes-adrenaline-pj__block { min-width: 0; }
 	.brumes-adrenaline-pj__section:not(.brumes-adrenaline-pj--entete) { border: 1px solid var(--adrenaline-rule); }
 	// Le h4 du thème (.markdown-reading-view h4, préfixé par le body) l'emporterait
 	// à spécificité égale : on remonte d'un cran par la racine de la fiche.
-	.brumes-adrenaline-pj h4.brumes-adrenaline-pj__section-title {
-		@include banner;
-		font-style: normal;
-		text-decoration: none;
-		@include display(12px);
+	.brumes-adrenaline-pj :is(h4, summary).brumes-adrenaline-pj__section-title {
+		margin: 0;
+		text-align: center;
+		font-size: 12px;
 		padding: 3px 8px;
 	}
-	.brumes-adrenaline-pj--titles-center h4.brumes-adrenaline-pj__section-title { text-align: center; }
-	.brumes-adrenaline-pj__section-body {
+	// Section repliable (Identité) : le titre est le bouton, fermée par défaut.
+	.brumes-adrenaline-pj summary.brumes-adrenaline-pj__section-title {
+		display: block;
+		cursor: pointer;
+		list-style: none;
+
+		&::-webkit-details-marker { display: none; }
+		&::before { content: "\25B8\00A0"; }
+	}
+	.brumes-adrenaline-pj details[open] > summary.brumes-adrenaline-pj__section-title::before { content: "\25BE\00A0"; }
+	:is(.brumes-adrenaline-pj__section-body, .brumes-adrenaline-pj__block-grid) {
 		display: grid;
 		gap: 10px;
 		min-width: 0;
 	}
 	.brumes-adrenaline-pj__section:not(.brumes-adrenaline-pj--entete) > .brumes-adrenaline-pj__section-body { padding: 9px 10px 11px; }
 	.brumes-adrenaline-pj__columns-1 { grid-template-columns: minmax(0, 1fr); }
-	.brumes-adrenaline-pj__columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-	.brumes-adrenaline-pj__columns-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+	:is(.brumes-adrenaline-pj__columns-3, .brumes-adrenaline-pj__block-grid) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
-	.brumes-adrenaline-pj__formation,
-	.brumes-adrenaline-pj__block {
+	:is(#{roles($column-roles)}) {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		min-width: 0;
 	}
-	@include placement.placement("brumes-adrenaline-pj", 3);
+	@include placement.placement("brumes-adrenaline-pj", 1 2 3, 3, 1 2 3, 2);
 
 	// Sous-titre de bloc : bordeaux, filet.
 	.brumes-adrenaline-pj h5.brumes-adrenaline-pj__block-title {
-		@include display(10px);
-		font-style: normal;
-		text-decoration: none;
+		font-size: 10px;
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
@@ -116,7 +140,7 @@
 		border-bottom: 1px solid var(--adrenaline-track-mark);
 		color: var(--adrenaline-rule);
 	}
-	.brumes-adrenaline-pj__subhead-trailing { display: flex; gap: 0; }
+	.brumes-adrenaline-pj__subhead-trailing { display: flex; }
 	.brumes-adrenaline-pj__subhead-head { min-width: 42px; text-align: center; }
 
 	// Valeurs manuscrites.
@@ -127,13 +151,17 @@
 		font-size: 1.15em;
 		line-height: 1.1;
 	}
-	.brumes-adrenaline-pj--values-end .brumes-adrenaline-pj__metric-value,
-	.brumes-adrenaline-pj--values-end .brumes-adrenaline-pj__unit-value { text-align: center; }
-	.brumes-adrenaline-pj__note {
+	// (`unit-value` est déjà centrée par sa règle de ligne : seule la métrique change.)
+	.brumes-adrenaline-pj--values-end .brumes-adrenaline-pj__metric-value { text-align: center; }
+	:is(#{roles($note-roles)}) {
 		margin: 0;
-		font-size: 0.88em;
+		font-size: 0.78em;
 		font-style: italic;
+		line-height: 1.1;
+		text-align: center;
 	}
+	// Note de fin de bloc : rognée dans l'écart de la grille et le bas de la section, elle ne coûte presque pas de hauteur.
+	.brumes-adrenaline-pj__block-note { grid-column: 1 / -1; align-self: stretch; justify-self: stretch; width: 100%; margin-block: -3px -4px; line-height: 1; text-align: center; }
 
 	// Ligne d'écriture : libellé bordeaux, champ pointillé.
 	// Un libellé long ou une valeur longue repasse sous le libellé plutôt que de s'écraser.
@@ -148,27 +176,23 @@
 	.brumes-adrenaline-pj__write-label,
 	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-name,
 	.brumes-adrenaline-pj__unit {
-		@include display(9px);
+		font-size: 9px;
 		color: var(--adrenaline-rule);
 	}
 	.brumes-adrenaline-pj__write-label { white-space: nowrap; }
 	.brumes-adrenaline-pj__write-field {
-		@include dotted;
 		flex: 1 1 7em;
 		min-width: 0;
 	}
 
 	// Métrique : nom et valeur bordée.
 	.brumes-adrenaline-pj__metric-list { display: flex; flex-direction: column; gap: 3px; }
-	.brumes-adrenaline-pj__metric,
-	.brumes-adrenaline-pj__metric-heads {
+	.brumes-adrenaline-pj__metric {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 42px;
-		align-items: stretch;
 		min-width: 0;
+		border: 1px solid var(--adrenaline-field-border);
 	}
-	.brumes-adrenaline-pj__metric-2 { grid-template-columns: minmax(0, 1fr) 42px 42px; }
-	.brumes-adrenaline-pj__metric { border: 1px solid var(--adrenaline-field-border); }
 	.brumes-adrenaline-pj__metric-name {
 		padding: 2px 5px;
 		align-self: center;
@@ -180,35 +204,26 @@
 		min-height: 20px;
 		border-left: 1px solid var(--adrenaline-field-border);
 	}
-	.brumes-adrenaline-pj__metric-head {
-		@include display(7px);
-		letter-spacing: 0;
-		white-space: nowrap;
-		color: var(--adrenaline-rule);
-		text-align: center;
-	}
 
 	// ── En-tête : nom, marque, paramètres + PX.
 	.brumes-adrenaline-pj--entete > .brumes-adrenaline-pj__section-body {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1.15fr);
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1fr);
 		grid-template-areas: "nom brand params";
-		align-items: stretch;
 	}
 	// Zones nommées préfixées par la section : la remise à `auto` des placements
 	// (seuil moyen) ne doit pas les écraser à spécificité égale.
 	.brumes-adrenaline-pj--entete .brumes-adrenaline-pj__nom { grid-area: nom; }
 	.brumes-adrenaline-pj--entete .brumes-adrenaline-pj__brand { grid-area: brand; }
-	.brumes-adrenaline-pj--entete .brumes-adrenaline-pj__parametres-jeu,
-	.brumes-adrenaline-pj--entete .brumes-adrenaline-pj__px { grid-area: params; }
-	.brumes-adrenaline-pj__form-name-card,
-	.brumes-adrenaline-pj__form-game-parameters {
+	.brumes-adrenaline-pj--entete :is(.brumes-adrenaline-pj__parametres-jeu, .brumes-adrenaline-pj__px) { grid-area: params; }
+	:is(.brumes-adrenaline-pj__form-name-card, .brumes-adrenaline-pj__form-game-parameters) {
 		gap: 0;
 		border: 1px solid var(--adrenaline-rule);
 		background: var(--adrenaline-card-surface, var(--background-primary));
 	}
 	.brumes-adrenaline-pj__card-label {
-		@include banner;
-		@include display(10px);
+		margin: 0;
+		text-align: center;
+		font-size: 10px;
 		display: block;
 		padding: 2px 6px;
 	}
@@ -227,9 +242,13 @@
 	.brumes-adrenaline-pj__card-fields {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
-		padding: 5px 48px 5px 6px;
+		gap: 0;
+		padding: 2px 48px 3px 6px;
+		line-height: 1.1;
 	}
+	// Paramètres du jeu : une ligne serrée par paramètre, champ pointillé à la hauteur du texte.
+	.brumes-adrenaline-pj__card-fields > .brumes-adrenaline-pj__write-line { flex-wrap: nowrap; align-items: baseline; gap: 4px; }
+	.brumes-adrenaline-pj__card-fields .brumes-adrenaline-pj__write-field { min-height: 0; line-height: 1.1; }
 	.brumes-adrenaline-pj__px {
 		z-index: 1;
 		align-self: stretch;
@@ -249,9 +268,10 @@
 		color: var(--adrenaline-rule);
 		text-align: center;
 	}
-	.brumes-adrenaline-pj__brand-name { @include display(25px, 900); line-height: 1; }
+	.brumes-adrenaline-pj__brand-name { font-size: 25px; font-weight: 900; line-height: 1; }
+	.brumes-adrenaline-pj__brand-subtitle { font-size: 10px; font-style: italic; line-height: 1.1; }
 	.brumes-adrenaline-pj__brand-sheet {
-		@include display(10px);
+		font-size: 10px;
 		display: flex;
 		align-items: center;
 		gap: 6px;
@@ -267,13 +287,7 @@
 	}
 
 	// ── Compétences : une colonne par formation.
-	.brumes-adrenaline-pj__formations-competences { grid-column: 1 / -1; }
-	.brumes-adrenaline-pj__block-grid {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 10px;
-		min-width: 0;
-	}
+	:is(#{roles($full-row-roles)}, .brumes-adrenaline-pj__span-3) { grid-column: 1 / -1; }
 
 	// ── Profil.
 	// Identité : deux champs par ligne publiée, un champ seul sur toute la largeur.
@@ -285,43 +299,130 @@
 		min-width: 0;
 	}
 	.brumes-adrenaline-pj__field-rows > .brumes-adrenaline-pj__write-line { flex-wrap: nowrap; }
+	// Un champ après une liste réglée (équipement favori) : un peu d'air sous la dernière ligne.
+	.brumes-adrenaline-pj__ruled-list + .brumes-adrenaline-pj__write-line { margin-block-start: 6px; }
 	.brumes-adrenaline-pj__field-rows .brumes-adrenaline-pj__write-field { flex: 1 1 0; }
-	.brumes-adrenaline-pj__field-across { grid-column: 1 / -1; }
 	.brumes-adrenaline-pj__characteristic { border: 0; gap: 3px; }
 	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-value { border: 1px solid var(--adrenaline-field-border); }
-	.brumes-adrenaline-pj__form-characteristic-rows .brumes-adrenaline-pj__metric-heads { grid-template-columns: minmax(0, 1fr) 42px 42px; gap: 3px; }
+
+	// Identité repliée : récits en paragraphes, notes de bloc discrètes.
+	.brumes-adrenaline-pj__narrative { margin: 0; white-space: pre-wrap; }
 
 	// ── Équipement.
-	.brumes-adrenaline-pj__ruled-list { display: flex; flex-direction: column; gap: 4px; }
-	.brumes-adrenaline-pj__ruled-line { @include dotted; }
-	.brumes-adrenaline-pj__weapon-line,
-	.brumes-adrenaline-pj__unit-line {
+	:is(.brumes-adrenaline-pj__weapon-line, .brumes-adrenaline-pj__unit-line) {
 		display: grid;
 		align-items: end;
 		gap: 5px;
 		min-width: 0;
 	}
-	.brumes-adrenaline-pj__weapon-line { grid-template-columns: auto minmax(0, 1fr) 42px auto; }
-	.brumes-adrenaline-pj__unit-line { grid-template-columns: auto minmax(0, 1fr) auto 32px; }
-	.brumes-adrenaline-pj__weapon-score,
-	.brumes-adrenaline-pj__weapon-damage,
-	.brumes-adrenaline-pj__unit-value { @include dotted; text-align: center; white-space: nowrap; }
+	.brumes-adrenaline-pj__weapon-line { grid-template-columns: minmax(0, 1fr) 42px auto; }
+	.brumes-adrenaline-pj__unit-line { grid-template-columns: auto minmax(0, 1fr) auto; }
+	:is(.brumes-adrenaline-pj__weapon-score, .brumes-adrenaline-pj__weapon-damage, .brumes-adrenaline-pj__unit-value) { text-align: center; white-space: nowrap; }
 	.brumes-adrenaline-pj__unit { text-align: end; }
 
-	// ── Santé : stress et seuils, puis la colonne Malus de la fiche (Choc, Divers, Total) et les états.
-	.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress sp sm" "choc etats etats" "divers etats etats" "total etats etats"; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__stress { grid-area: stress; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__seuils-physiques { grid-area: sp; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__seuils-mentaux { grid-area: sm; }
-	// fatigue et malus : ids publiés jusqu'à schema-adrenaline 2.6.0.
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__choc,
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__fatigue { grid-area: choc; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__divers,
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__malus { grid-area: divers; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__total-malus { grid-area: total; }
-	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__etats-encaisses { grid-area: etats; }
+	// Dés : la nature saisie reste une classe (donnée), mais la feuille ne la colore pas.
+	.brumes-adrenaline-pj .brumes-adrenaline-pj__weapon-damage {
+		padding-inline: 4px;
+		border-bottom: 1px dotted var(--adrenaline-field-border);
+	}
 
-	.brumes-adrenaline-pj__stress-grid {
+	// Protections : six localisations, trois cases chacune.
+	.brumes-adrenaline-pj__locations {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+		gap: 2px 8px;
+	}
+	.brumes-adrenaline-pj__location {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+	}
+	:is(.brumes-adrenaline-pj__location-range, .brumes-adrenaline-pj__location-label) {
+		font-size: 8px;
+		font-weight: 700;
+		color: var(--adrenaline-rule);
+		letter-spacing: 0;
+	}
+	:is(#{roles($row-roles)}) { display: inline-flex; gap: 2px; }
+	.brumes-adrenaline-pj__box-mark {
+		display: inline-block;
+		width: 9px;
+		height: 9px;
+		border: 1px solid var(--adrenaline-track-mark);
+	}
+	// Localisations : les trois cases se touchent, comme sur la feuille papier.
+	.brumes-adrenaline-pj__location-boxes { gap: 0; }
+	.brumes-adrenaline-pj__location-boxes > .brumes-adrenaline-pj__box-mark + .brumes-adrenaline-pj__box-mark { margin-inline-start: -1px; }
+	// Avantages et immunités : les trois premières lignes portent leur rang entouré.
+	.brumes-adrenaline-pj__avantages-immunites .brumes-adrenaline-pj__ruled-line:nth-child(-n + 3)::before {
+		display: inline-block;
+		width: 11px;
+		height: 11px;
+		margin-inline-end: 4px;
+		border: 1px solid var(--adrenaline-rule);
+		border-radius: 50%;
+		font-size: 8px;
+		line-height: 11px;
+		text-align: center;
+		vertical-align: 1px;
+		color: var(--adrenaline-rule);
+	}
+	.brumes-adrenaline-pj__avantages-immunites .brumes-adrenaline-pj__ruled-line:nth-child(1)::before { content: "1"; }
+	.brumes-adrenaline-pj__avantages-immunites .brumes-adrenaline-pj__ruled-line:nth-child(2)::before { content: "2"; }
+	.brumes-adrenaline-pj__avantages-immunites .brumes-adrenaline-pj__ruled-line:nth-child(3)::before { content: "3"; }
+	:is(#{roles($ink-roles)}) { background: var(--adrenaline-handwritten-ink); }
+
+	// Armes sociales : un tiers de la feuille, deux colonnes (nom, propriétés), ni dé ni légende.
+	.brumes-adrenaline-pj__ref-table {
+		display: block;
+		width: 100%;
+		margin: 0;
+		font-size: 10px;
+		line-height: 1.15;
+	}
+	:is(.brumes-adrenaline-pj__ref-body) { display: block; }
+	.brumes-adrenaline-pj__ref-row {
+		display: grid;
+		grid-template-columns: 66px minmax(0, 1fr);
+		gap: 0 6px;
+		padding: 1px 0;
+		border-bottom: 1px solid var(--adrenaline-field-border);
+	}
+	.brumes-adrenaline-pj__ref-row > * { padding: 0; border: 0; text-align: start; }
+	.brumes-adrenaline-pj__ref-properties { font-size: 9px; white-space: nowrap; }
+	// Arme sociale non utilisée : la ligne reste lisible, rayée et éclaircie — la typographie seule, aucun ajout sur la ligne.
+	.brumes-adrenaline-pj__ref-row--struck { opacity: 0.5; text-decoration: line-through; }
+	// L'en-tête fait le titre du bloc, comme « Armes physiques » : seule la première colonne s'imprime.
+	.brumes-adrenaline-pj__ref-name { font-weight: 700; white-space: nowrap; }
+
+	// ── Santé, comme la feuille : seuils physiques, seuils mentaux et États en haut à droite ; dessous la bande
+	// Malus (blessures physiques, blessures mentales, Choc, Divers, Total). Le contrat ne publie aucun placement
+	// pour ces blocs : l'ordre est local, il suit la feuille. Au-delà de la note moyenne seulement, les replis
+	// moyen et étroit (plus bas) gardent leur propre grille.
+	@container (min-width: 601px) {
+		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body {
+			grid-template-columns: repeat(2, minmax(0, 3fr)) repeat(2, minmax(0, 1fr)) minmax(0, 1.5fr);
+			grid-template-areas: "sp sm etats etats etats" "bp bm choc divers total";
+		}
+	}
+	// Les blocs d'une même rangée de la Santé ont la même hauteur : le cadre de chacun remplit son bloc.
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__block > :is(.brumes-adrenaline-pj__tracks, .brumes-adrenaline-pj__scale, .brumes-adrenaline-pj__wounds, .brumes-adrenaline-pj__states-zone) { flex: 1; }
+	.brumes-adrenaline-pj--sante .brumes-adrenaline-pj__tracks > .brumes-adrenaline-pj__track { flex: 1; }
+	// La note du Total des malus se pose dans son cadre : les trois cadres du bas finissent à la même ligne.
+	.brumes-adrenaline-pj__total-malus { position: relative; }
+	.brumes-adrenaline-pj__total-malus .brumes-adrenaline-pj__scale { padding-bottom: 16px; }
+	.brumes-adrenaline-pj__total-malus .brumes-adrenaline-pj__block-note {
+		position: absolute;
+		inset-inline: 0;
+		bottom: 2px;
+		margin: 0;
+		text-align: center;
+	}
+	.brumes-adrenaline-pj--caracteristique .brumes-adrenaline-pj__stress { align-self: start; }
+
+	:is(#{roles($pair-roles)}) {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 6px;
@@ -335,8 +436,6 @@
 		align-items: center;
 		gap: 2px 5px;
 		padding: 3px 5px;
-
-		& + & { border-top: 1px solid var(--adrenaline-field-border); }
 	}
 	.brumes-adrenaline-pj__stress-die {
 		color: var(--adrenaline-rule);
@@ -344,7 +443,8 @@
 		white-space: nowrap;
 	}
 	.brumes-adrenaline-pj__stress-side {
-		@include display(7px, 700);
+		font-size: 8px;
+		font-weight: 700;
 		flex: 1 0 auto;
 		letter-spacing: 0;
 		white-space: nowrap;
@@ -359,37 +459,37 @@
 		border: 1px solid var(--adrenaline-track-mark);
 		border-radius: 50%;
 	}
-	.brumes-adrenaline-pj__dot-filled { background: var(--adrenaline-handwritten-ink); }
 
-	.brumes-adrenaline-pj__tracks { display: flex; flex-direction: column; gap: 4px; }
+	// Choc et Divers : un bandeau au sommet, puis une colonne de cercles (l'étiquette du groupe, « rounds », sous les cercles).
+	.brumes-adrenaline-pj__tracks { flex: 1; }
 	.brumes-adrenaline-pj__track {
 		display: grid;
-		grid-template-columns: 17px minmax(0, 1fr);
+		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-rows: auto 1fr;
+		flex: 1;
 		min-height: 36px;
 		border: 1px solid var(--adrenaline-rule);
 	}
 	.brumes-adrenaline-pj__track-label {
-		@include vertical-label;
-		@include display(8px);
-		background: var(--adrenaline-band);
-		color: var(--adrenaline-band-ink);
+		grid-column: 1 / -1;
+		font-size: 8px;
+		text-align: center;
 	}
 	.brumes-adrenaline-pj__track-body {
 		display: flex;
-		flex-wrap: wrap;
+		flex-direction: column;
 		align-items: center;
 		gap: 4px;
 		padding: 4px 6px;
 		min-width: 0;
 	}
-	.brumes-adrenaline-pj__track-line {
-		flex: 1;
-		min-width: 12px;
-		border-bottom: 1px dotted var(--adrenaline-field-border);
-	}
-	.brumes-adrenaline-pj__track-value { min-width: 42px; text-align: center; }
+	// « rounds » s'écrit à la verticale, comme la bande d'écriture voisine (lu de bas en haut).
 	.brumes-adrenaline-pj__track-period {
-		@include display(8px);
+		order: 1;
+		margin-block-start: auto;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		font-size: 8px;
 		color: var(--adrenaline-rule);
 	}
 	// Choc : la case jaune de la fiche (jetons --adrenaline-fatigue du pack).
@@ -401,32 +501,50 @@
 	// Divers : cadre bordeaux à écrire librement.
 	.brumes-adrenaline-pj__track--frame { border-color: var(--adrenaline-condition-border); }
 	.brumes-adrenaline-pj__track--frame .brumes-adrenaline-pj__track-label { background: var(--adrenaline-condition); }
-	.brumes-adrenaline-pj__track-text { flex: 1; min-width: 0; text-align: start; }
+	// De quoi écrire devant les cercles : une bande verticale, texte tourné d'un quart de tour (lu de bas en haut).
+	.brumes-adrenaline-pj__track-text {
+		grid-column: 2;
+		min-width: 16px;
+		margin: 4px 4px 4px 0;
+		border-inline-start: 1px dotted var(--adrenaline-field-border);
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		text-align: start;
+		font-size: 10px;
+		line-height: 1.2;
+		overflow: hidden;
+	}
 
-	// Total des malus : l'échelle imprimée, le total courant entouré.
+	// Total des malus : l'échelle imprimée, le total courant entouré, sous un bandeau ; la fermeture (HS) en pied.
 	.brumes-adrenaline-pj__scale {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
 		gap: 4px;
-		padding: 4px 8px;
-		border-radius: 6px;
+		padding-block-end: 4px;
+		border: 1px solid var(--adrenaline-rule);
 		background: var(--adrenaline-card-surface, var(--background-primary));
 	}
 	.brumes-adrenaline-pj__scale-label {
-		@include display(7px);
-		max-width: 44px;
+		align-self: stretch;
+		font-size: 8px;
 		line-height: 1.1;
 		text-align: center;
-		color: var(--adrenaline-rule);
+		padding: 2px 3px;
+	}
+	.brumes-adrenaline-pj__scale-grid {
+		display: grid;
+		grid-template-columns: repeat(3, auto);
+		gap: 2px;
 	}
 	.brumes-adrenaline-pj__scale-step {
-		@include display(15px);
+		font-size: 15px;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 20px;
+		min-width: 20px;
 		height: 20px;
+		white-space: nowrap;
 		color: var(--adrenaline-rule);
 	}
 	.brumes-adrenaline-pj__scale-step--current {
@@ -435,35 +553,61 @@
 		color: var(--adrenaline-handwritten-ink);
 	}
 
-	.brumes-adrenaline-pj__condition-stack {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 6px;
-	}
-	.brumes-adrenaline-pj__condition-card {
-		display: grid;
-		grid-template-columns: 20px minmax(0, 1fr);
+	// États : une zone libre, un cadre vide à remplir à la main ; ce que le document écrit y est posé en lignes de texte.
+	// Pas de hauteur propre : la rangée est donnée par les seuils, et la zone finit à la ligne de leur dernier niveau.
+	.brumes-adrenaline-pj__states-zone {
+		min-height: 0;
+		padding: 5px 6px;
 		border: 1px solid var(--adrenaline-condition-border);
 	}
-	.brumes-adrenaline-pj__condition-label {
-		@include vertical-label;
-		@include display(8px);
-		background: var(--adrenaline-condition);
-		color: var(--adrenaline-band-ink);
+	.brumes-adrenaline-pj__states-line { margin: 0 0 2px; font-size: 11px; }
+
+	// Blessures, comme la feuille : deux panneaux séparés par un pointillé ; dans chacun, quatre lignes
+	// « cercle + durée » (une seule cochée), puis de quoi écrire la blessure.
+	.brumes-adrenaline-pj__wounds {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		flex: 1;
+		padding: 4px;
 	}
-	.brumes-adrenaline-pj__condition-body {
+	.brumes-adrenaline-pj__wound {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
-		padding: 5px 6px;
-		min-width: 0;
+		gap: 3px;
+		padding-inline: 4px;
 	}
-	.brumes-adrenaline-pj__condition-body .brumes-adrenaline-pj__write-label { font-size: 8px; }
+	.brumes-adrenaline-pj__wound + .brumes-adrenaline-pj__wound { border-inline-start: 1px dotted var(--adrenaline-malus-wound); }
+	.brumes-adrenaline-pj__wound-line { display: flex; align-items: center; gap: 4px; }
+	// Cadre rouge de la feuille : bandeau au sommet, panneaux en dessous.
+	.brumes-adrenaline-pj__form-wound-circles {
+		gap: 0;
+		border: 1px solid var(--adrenaline-malus-wound);
+	}
+	.brumes-adrenaline-pj__form-wound-circles h5.brumes-adrenaline-pj__block-title {
+		justify-content: center;
+		padding: 2px 4px;
+		border: 0;
+		background: var(--adrenaline-malus-wound);
+		color: var(--adrenaline-band-ink);
+	}
+	// De quoi écrire la blessure : une zone rayée sous ses quatre durées.
+	.brumes-adrenaline-pj__wound-write {
+		flex: 1;
+		margin: 0;
+		min-height: 48px;
+		font-size: 11px;
+		background: repeating-linear-gradient(to bottom, transparent 0 15px, var(--adrenaline-field-border) 15px 16px);
+	}
+	.brumes-adrenaline-pj__wound-head {
+		font-size: 8px;
+		font-weight: 700;
+		letter-spacing: 0;
+		color: var(--adrenaline-rule);
+	}
 
 	// Note moyenne : deux colonnes, cartouche empilé.
 	@container (max-width: 600px) {
-		.brumes-adrenaline-pj__columns-3,
-		.brumes-adrenaline-pj__block-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		:is(.brumes-adrenaline-pj__columns-3, .brumes-adrenaline-pj__block-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 		.brumes-adrenaline-pj__block { grid-column: auto; grid-row: auto; }
 		.brumes-adrenaline-pj__formations-competences { grid-column: 1 / -1; }
 		.brumes-adrenaline-pj__section { grid-column: 1 / -1; }
@@ -471,20 +615,37 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			grid-template-areas: "brand brand" "nom params";
 		}
-		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress stress" "sp sm" "choc divers" "total total" "etats etats"; }
+		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "sp sm" "etats etats" "bp bm" "choc divers" "total total"; }
 	}
 
 	// Note étroite : une seule colonne.
 	@container (max-width: 420px) {
-		.brumes-adrenaline-pj__columns-3,
-		.brumes-adrenaline-pj__block-grid,
-		.brumes-adrenaline-pj__field-rows,
-		.brumes-adrenaline-pj__condition-stack { grid-template-columns: minmax(0, 1fr); }
+		:is(.brumes-adrenaline-pj__columns-3, .brumes-adrenaline-pj__block-grid, .brumes-adrenaline-pj__field-rows, .brumes-adrenaline-pj__condition-stack) { grid-template-columns: minmax(0, 1fr); }
 		.brumes-adrenaline-pj__block { grid-column: 1; }
 		.brumes-adrenaline-pj--entete > .brumes-adrenaline-pj__section-body {
 			grid-template-columns: minmax(0, 1fr);
 			grid-template-areas: "brand" "nom" "params";
 		}
-		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "stress" "sp" "sm" "choc" "divers" "total" "etats"; }
+		.brumes-adrenaline-pj--sante > .brumes-adrenaline-pj__section-body { grid-template-areas: "sp" "sm" "etats" "bp" "bm" "choc" "divers" "total"; }
+	}
+
+	// Zones de la Santé, déclarées APRÈS les replis : la remise à zéro `.brumes-adrenaline-pj__block` des notes
+	// moyenne et étroite a la même spécificité et effacerait sinon `grid-area`.
+	.brumes-adrenaline-pj__seuils-physiques { grid-area: sp; }
+	.brumes-adrenaline-pj__seuils-mentaux { grid-area: sm; }
+	.brumes-adrenaline-pj__choc { grid-area: choc; }
+	.brumes-adrenaline-pj__divers { grid-area: divers; }
+	.brumes-adrenaline-pj__blessures-physiques { grid-area: bp; }
+	.brumes-adrenaline-pj__blessures-mentales { grid-area: bm; }
+	.brumes-adrenaline-pj__total-malus { grid-area: total; }
+	.brumes-adrenaline-pj__etats-encaisses { grid-area: etats; }
+
+	// Impression : la section repliée est dépliée sur le papier.
+	@media print {
+		.brumes-adrenaline-pj details.brumes-adrenaline-pj__section::details-content {
+			content-visibility: visible;
+			display: block;
+		}
+		.brumes-adrenaline-pj summary.brumes-adrenaline-pj__section-title::before { content: none; }
 	}
 }

@@ -133,7 +133,7 @@ La place exacte de (4) à (6) et de (11) se cale sur la feuille du PDF : compét
 
 ### `2)` Contrat : champs ajoutés
 
-> Uniquement des champs facultatifs ; aucun retrait.
+> Uniquement des champs facultatifs ; un seul retrait, `equipement.armesMentales` du PJ (décision du 2026-10-12, tableau Decisions du plan).
 
 1. Retirer `armesMentales` de l'équipement du PJ et son bloc de `PJ_PRESENTATION` ; l'exemple `pj/survivante-complete.toml` perd ses lignes ; rupture au `CHANGELOG`.
 1. `parametresDuJeu.scenario` : texte facultatif, libellé « Scénario » ; `typeDeScenario` inchangé ; `declinaisonDeCampagne` reste déclaré.

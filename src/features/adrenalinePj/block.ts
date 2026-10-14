@@ -31,10 +31,40 @@ base = 11
 base = 16
 [sante.mental.profond]
 base = 21
-[protections.physiques]
-solidite = 5
-[protections.mentales]
-solidite = 5
+[identite]
+nationalite = "Nationalité"
+genre = "Genre"
+age = 30
+historique = "Historique du personnage"
+personnalite = "Traits de caractère"
+[parametresDuJeu]
+joueur = "Nom du joueur"
+typeDeCreation = "equitable"
+typeDeScenario = "one-shot"
+scenario = "Nom du scénario"
+[equipement]
+possessions = ["Objet porté"]
+[[formations]]
+pourcentage = 20
+type = "classe-sociale"
+nom = "Classe sociale"
+[[formations.competences]]
+pourcentage = 30
+nom = "Compétence"
+[[formations]]
+pourcentage = 20
+type = "professionnelle"
+nom = "Formation professionnelle"
+[[formations.competences]]
+pourcentage = 30
+nom = "Compétence"
+[[formations]]
+pourcentage = 20
+type = "personnelle"
+nom = "Formation personnelle"
+[[formations.competences]]
+pourcentage = 30
+nom = "Compétence"
 \`\`\`
 `;
 }

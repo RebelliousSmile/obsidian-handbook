@@ -188,6 +188,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-adrenaline-pj-as-toml",
 		noun: "Adrenaline player character",
 		toToml: pjToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(
 				source,
@@ -199,6 +200,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-adrenaline-pnj-as-toml",
 		noun: "Adrenaline non-player character",
 		toToml: pnjToToml,
+		sourceIsToml: true,
 		describeFailure: (source) => describeMissingPart(source, "nom is required"),
 	},
 	{
@@ -206,6 +208,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-adrenaline-monstre-as-toml",
 		noun: "Adrenaline monster",
 		toToml: monsterToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "nom and four physical characteristics are required"),
 	},

@@ -77,64 +77,41 @@
 		}
 	}
 
-	// Blue
+	// Blue (summary, info, todo, tip: one tint), green, yellow, orange, red.
+	// `:is()` over the `data-callout` values keeps the one attribute of weight
+	// each selector had, and names the prefix once.
 
-	.callout[data-callout="summary"],
-	.callout[data-callout="abstract"],
-	.callout[data-callout="tldr"] {
+	.callout:is(
+			[data-callout="summary"],
+			[data-callout="abstract"],
+			[data-callout="tldr"],
+			[data-callout="info"],
+			[data-callout="todo"],
+			[data-callout="tip"],
+			[data-callout="hint"],
+			[data-callout="important"]
+		) {
 		--brumes-callout-background: #bccdb035;
 	}
 
-	.callout[data-callout="info"] {
-		--brumes-callout-background: #bccdb035;
-	}
-
-	.callout[data-callout="todo"] {
-		--brumes-callout-background: #bccdb035;
-	}
-
-	.callout[data-callout="tip"],
-	.callout[data-callout="hint"],
-	.callout[data-callout="important"] {
-		--brumes-callout-background: #bccdb035;
-	}
-
-	// Green
-
-	.callout[data-callout="success"],
-	.callout[data-callout="check"],
-	.callout[data-callout="done"] {
+	.callout:is([data-callout="success"], [data-callout="check"], [data-callout="done"]) {
 		--brumes-callout-background: #bccdb056;
 	}
 
-	// Yellow
-
-	.callout[data-callout="question"],
-	.callout[data-callout="help"],
-	.callout[data-callout="faq"] {
+	.callout:is([data-callout="question"], [data-callout="help"], [data-callout="faq"]) {
 		--brumes-callout-background: #efd69333;
 	}
 
-	// Orange
-
-	.callout[data-callout="warning"],
-	.callout[data-callout="caution"],
-	.callout[data-callout="attention"] {
+	.callout:is([data-callout="warning"], [data-callout="caution"], [data-callout="attention"]) {
 		--brumes-callout-background: #dd932835;
 	}
 
-	// Red
-
-	.callout[data-callout="failure"] {
-		--brumes-callout-background: #d1a28e44;
-	}
-
-	.callout[data-callout="danger"],
-	.callout[data-callout="error"] {
-		--brumes-callout-background: #d1a28e44;
-	}
-
-	.callout[data-callout="bug"] {
+	.callout:is(
+			[data-callout="failure"],
+			[data-callout="danger"],
+			[data-callout="error"],
+			[data-callout="bug"]
+		) {
 		--brumes-callout-background: #d1a28e44;
 	}
 

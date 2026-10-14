@@ -78,15 +78,17 @@ export interface EquipmentWeapon {
 	pourcentage?: number;
 	desDeDegats?: number;
 	type?: string;
+	/** Colour of the damage die on the PJ sheet: shocking (yellow) or wounding (red). */
+	nature?: "choquante" | "blessante";
 	notes?: string;
 }
 
 export interface Equipment {
 	possessions?: string[];
 	equipementFavori?: string;
+	/** The PJ's advantages and immunities, one per line. */
+	avantagesEtImmunites?: string[];
 	armesPhysiques?: EquipmentWeapon[];
-	/** The PJ's mental weapons; the creature and the PNJ do not have them. */
-	armesMentales?: EquipmentWeapon[];
 	/** The creature's psychological weapons. */
 	armesPsychologiques?: EquipmentWeapon[];
 }
@@ -351,6 +353,8 @@ function readWeapons(value: unknown): EquipmentWeapon[] {
 		const damage = readCurrentValue(record.desDeDegats, 0, 100);
 		const type = asString(record.type);
 		const notes = asString(record.notes);
+		const nature = asString(record.nature);
+		if (nature === "choquante" || nature === "blessante") weapon.nature = nature;
 		if (pourcentage !== undefined) weapon.pourcentage = pourcentage;
 		if (damage !== undefined) weapon.desDeDegats = damage;
 		if (type) weapon.type = type;
@@ -368,13 +372,13 @@ export function readEquipment(value: unknown, kind: EquipmentKind): Equipment | 
 	const equipment: Equipment = {};
 	const possessions = asStringList(record.possessions);
 	const favorite = asString(record.equipementFavori);
+	const advantages = asStringList(record.avantagesEtImmunites);
 	const physical = readWeapons(record.armesPhysiques);
-	const mental = published.indexOf("armesMentales") >= 0 ? readWeapons(record.armesMentales) : [];
 	const psychological = published.indexOf("armesPsychologiques") >= 0 ? readWeapons(record.armesPsychologiques) : [];
 	if (possessions.length > 0) equipment.possessions = possessions;
 	if (favorite) equipment.equipementFavori = favorite;
+	if (advantages.length > 0) equipment.avantagesEtImmunites = advantages;
 	if (physical.length > 0) equipment.armesPhysiques = physical;
-	if (mental.length > 0) equipment.armesMentales = mental;
 	if (psychological.length > 0) equipment.armesPsychologiques = psychological;
 	return Object.keys(equipment).length > 0 ? equipment : undefined;
 }

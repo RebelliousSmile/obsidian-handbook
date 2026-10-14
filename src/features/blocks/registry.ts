@@ -105,6 +105,28 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 					return;
 				}
 
+				// Older Obsidian builds render the block but do not expose section
+				// metadata. The context menu must still be usable (and visible).
+				const section = typeof ctx.getSectionInfo === "function"
+					? ctx.getSectionInfo(el)
+					: null;
+				// Remembered before the source is read, so that a block the contract
+				// refuses can still be replaced by pasting a document over it.
+				const spec = tomlExportForBlock(block);
+				if (spec?.sourceTarget || spec?.sourceIsToml) {
+					const rememberRightClick = (event: MouseEvent) => {
+						if (event.button !== 2 && (event.buttons & 2) === 0) return;
+						rememberRenderedTomlContext(plugin, {
+							sourcePath: ctx.sourcePath,
+							section,
+							renderedSource: source,
+							spec,
+						});
+					};
+					el.addEventListener("pointerdown", rememberRightClick, { capture: true });
+					el.addEventListener("mousedown", rememberRightClick, { capture: true });
+				}
+
 				const parsed = block.parse(source);
 
 				if (parsed === null) {
@@ -132,25 +154,6 @@ export function loadBrumesBlocks(plugin: BrumesPlugin): void {
 					table?.addEventListener("contextmenu", (event) => {
 						openRollerContextMenu(plugin, parsed as import("../rollers/parser").RollerData, event as MouseEvent);
 					});
-				}
-				// Older Obsidian builds render the block but do not expose section
-				// metadata. The context menu must still be usable (and visible).
-				const section = typeof ctx.getSectionInfo === "function"
-					? ctx.getSectionInfo(el)
-					: null;
-				const spec = tomlExportForBlock(block);
-				if (spec?.sourceTarget) {
-					const rememberRightClick = (event: MouseEvent) => {
-						if (event.button !== 2 && (event.buttons & 2) === 0) return;
-						rememberRenderedTomlContext(plugin, {
-							sourcePath: ctx.sourcePath,
-							section,
-							renderedSource: source,
-							spec,
-						});
-					};
-					el.addEventListener("pointerdown", rememberRightClick, { capture: true });
-					el.addEventListener("mousedown", rememberRightClick, { capture: true });
 				}
 			});
 		}
