@@ -1,0 +1,621 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "adrenaline-fiche-pj",
+	"title": "Fiche PJ Adrenaline : contrat 5.0 et fiche imprimée (obsidian-handbook#101)",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 107,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/107"
+	},
+	"items": [
+		{
+			"repo": "schema-adrenaline",
+			"issue": 46,
+			"url": "https://github.com/RebelliousSmile/schema-adrenaline/issues/46",
+			"title": "Contrat 5.0 : la fiche PJ suit la feuille imprimée (valeurs simples, sans solidité ni armes mentales)",
+			"baseSha": "6026f14fb147d02699fad99d0aba986b7cd50b99",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "lantern",
+			"issue": 65,
+			"url": "https://github.com/RebelliousSmile/lantern/issues/65",
+			"title": "Adrenaline : l'éditeur de la fiche PJ suit le contrat 5.0 (zones, formations, collage TOML)",
+			"baseSha": "8ee3051a0442725c861cb4f3414778d3cc3df896",
+			"dependsOn": [
+				"schema-adrenaline"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 108,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/108",
+			"title": "Adrenaline : la fiche PJ suit le contrat 5.0, collage et gabarits TOML (#101)",
+			"baseSha": "a51a94be5d114245da3ab4201f5165386425418e",
+			"dependsOn": [
+				"schema-adrenaline"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {
+		"schema-adrenaline": {
+			"runs": [
+				{
+					"step": "candidate",
+					"workflow": "publish-candidate.yml",
+					"inputs": {
+						"tag": "v5.0.0-rc.1"
+					},
+					"id": 38602609465,
+					"url": "https://github.com/RebelliousSmile/schema-adrenaline/actions/runs/38602609465",
+					"conclusion": "success",
+					"at": "2026-10-14T16:58:12.984Z"
+				}
+			],
+			"candidate": {
+				"tag": "v5.0.0-rc.1",
+				"url": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v5.0.0-rc.1/schema-adrenaline-5.0.0.tgz",
+				"sha256": "7a7090566a4a2666cceb0ac73e42b41ecdd7d2605ddbc3a6812bf4eb5ca80c23",
+				"integrity": "sha512-1LG0ksm+XmVWQ+fUQC7m0O+eS2/C3uSLUqV2OpNjq8TTYEHQ6bitx8t7ZYk4ingCd2G21OpR30JqJvf64Espbg==",
+				"commit": "18b7e4978cef13e79b320039332344dec5919ea3",
+				"packed": "4ee271fa925b7b3f0abfb42b8897aafafa0ccd8fe7f28d3173c4e1e39669eca4"
+			},
+			"final": {
+				"tag": "v5.0.0",
+				"url": "https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v5.0.0/schema-adrenaline-5.0.0.tgz",
+				"sha256": "7a7090566a4a2666cceb0ac73e42b41ecdd7d2605ddbc3a6812bf4eb5ca80c23",
+				"integrity": "sha512-1LG0ksm+XmVWQ+fUQC7m0O+eS2/C3uSLUqV2OpNjq8TTYEHQ6bitx8t7ZYk4ingCd2G21OpR30JqJvf64Espbg=="
+			}
+		}
+	},
+	"presentation": {
+		"presentedAt": "2026-10-14T16:58:01.336Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:5e67c611a6a2e6fdf362923f72bd175f42df776d11c8d09c1e7180963eb6351a",
+		"repos": [
+			{
+				"repo": "schema-adrenaline",
+				"role": "provider",
+				"sha": "18b7e4978cef13e79b320039332344dec5919ea3",
+				"baseSha": "6026f14fb147d02699fad99d0aba986b7cd50b99",
+				"commits": [
+					{
+						"sha": "18b7e4978cef13e79b320039332344dec5919ea3",
+						"subject": "style(contract): format the 5.0.0 contract sources and corpus with Prettier"
+					},
+					{
+						"sha": "a13226688ed7d66e684d0fadfb6699df957db1d0",
+						"subject": "feat(pj)!: contract 5.0.0, the player sheet follows the printed sheet"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  173 +\n README.md                                          |    8 +-\n .../2026_10/2026_10_12_fiche-pj/ecarts-fiche-pj.md |  267 +\n .../2026_10_12_fiche-pj/fiche-pj-a-jour.jpg        |  Bin 0 -> 539888 bytes\n corpus/cases.json                                  |   53 +-\n corpus/contract/invalid/pj-nom-absent.toml         |  115 +-\n .../contract/invalid/pj-protections-absentes.toml  |   81 -\n corpus/contract/valid/pj-protections-absentes.toml |   28 +\n .../abreviation-de-caracteristique-inconnue.json   |  181 -\n corpus/refus/pj/armes-mentales-sur-pj.json         |   84 +\n corpus/refus/pj/armes-psychologiques-sur-pj.json   |  151 +-\n corpus/refus/pj/armure-sans-localisation.json      |  142 +-\n .../pj/blessure-nombre-au-lieu-de-booleen.json     |   71 +\n corpus/refus/pj/caracteristique-en-triplet.json    |   79 +\n corpus/refus/pj/caracteristique-hors-borne.json    |  142 +-\n corpus/refus/pj/caracteristique-manquante.json     |  136 +-\n corpus/refus/pj/caracteristique-negative.json      |  136 +-\n corpus/refus/pj/caracteristique-nombre-simple.json |  176 -\n corpus/refus/pj/cle-inconnue.json                  |  142 +-\n .../refus/pj/competence-avec-caracteristique.json  |   83 +\n corpus/refus/pj/competence-avec-ligne-d-arme.json  |   76 +\n corpus/refus/pj/etats-en-liste.json                |   80 +\n corpus/refus/pj/formation-en-trop.json             |  142 +-\n .../refus/pj/formation-pourcentage-en-triplet.json |   73 +\n corpus/refus/pj/formation-sans-type.json           |  148 +-\n corpus/refus/pj/identite-cle-inconnue.json         |   79 +\n corpus/refus/pj/localisation-inconnue.json         |  142 +-\n corpus/refus/pj/malus-physique.json                |  151 +-\n corpus/refus/pj/nom-absent.json                    |  136 +-\n corpus/refus/pj/nom-vide.json                      |  142 +-\n corpus/refus/pj/presentation-adapter-inconnu.json  |   56 +-\n corpus/refus/pj/protections-absentes.json          |  127 -\n corpus/refus/pj/sante-absente.json                 |   70 +-\n corpus/refus/pj/seuil-sans-base.json               |  136 +-\n corpus/refus/pj/total-des-malus-au-dela-de-hs.json |  151 +-\n corpus/refus/pj/type-de-formation-inconnu.json     |  142 +-\n corpus/refus/pj/type-de-publication-inconnu.json   |  142 +-\n corpus/refus/pj/type-de-scenario-inconnu.json      |  142 +-\n corpus/temoins/pj/protections-absentes.json        |   47 +\n corpus/temoins/pj/temoin.json                      |  151 +-\n cross-tool-provider.json                           |    2 +-\n examples/adrenaline/pj/figurant-minimal.toml       |  115 +-\n examples/adrenaline/pj/survivante-complete.toml    |  340 +-\n handbook.json                                      |    2 +-\n handbook/adrenaline/pack.json                      |    2 +-\n package-lock.json                                  |    4 +-\n package.json                                       |    6 +-\n schemas/adrenaline/5.0.0/monstre.schema.json       | 8737 ++++++++++++++++++++\n schemas/adrenaline/5.0.0/pj.schema.json            | 1975 +++++\n schemas/adrenaline/5.0.0/pnj.schema.json           | 3773 +++++++++\n schemas/adrenaline/monstre.schema.json             |   40 +-\n schemas/adrenaline/pj.schema.json                  | 2910 ++-----\n schemas/adrenaline/pnj.schema.json                 |   11 +-\n src/contract-version.ts                            |    4 +-\n src/index.ts                                       |   11 +-\n src/presentation.ts                                |  390 +-\n src/zod/adrenaline/pj.ts                           |   67 +-\n src/zod/common/equipement.ts                       |   75 +-\n src/zod/common/etat-de-partie.ts                   |  116 +\n src/zod/common/formations.ts                       |  117 +-\n src/zod/common/identite.ts                         |   35 +\n src/zod/common/protections.ts                      |   58 +-\n src/zod/common/sante.ts                            |   12 +-\n tools/validate-presentation.ts                     | 1109 ++-\n 64 files changed, 18827 insertions(+), 5665 deletions(-)",
+				"packed": {
+					"sha256": "4ee271fa925b7b3f0abfb42b8897aafafa0ccd8fe7f28d3173c4e1e39669eca4",
+					"files": 217,
+					"contents": {
+						"LICENSE": "b90fe31a9b52734a97fb9e0df449001c4ed7264fa6f692eebf88c1f586fb2782",
+						"README.md": "30da72c2ed3052f4835e98b5663804fa734dc33524513c6951fdd001da5363be",
+						"corpus/README.md": "2bca83a42a991778d1290df7c6d258191cf65c82bf1f6239114988fd8cc3465a",
+						"corpus/cases.json": "2a8b7c0bf95afcc4cf683032a65933acaa9edaef965eac7e8f57e80c15df1d11",
+						"corpus/contract/invalid/monstre-etat-alternatif-et-etats-vide.toml": "1a047adb73a18815cde9622de148313542c2ffb9021bb36d5e51b4e8fab10017",
+						"corpus/contract/invalid/monstre-etat-alternatif-et-etats.toml": "f7be2edc456b1250ba1ff1a68034324011fd32cd604c1cf3b6053b05e1154505",
+						"corpus/contract/invalid/pj-nom-absent.toml": "49d3f96c614b5005948f904a3a3944c0f934e88adc3144e6128d3ff090e9c3c0",
+						"corpus/contract/invalid/pnj-plage-current-superieur-maximum.toml": "30f72a7cad6605f74f2d6d8fe18bbbfacabece915ab1cc8d6454e764ff51c544",
+						"corpus/contract/invalid/pnj-plage-minimum-superieur-current.toml": "46d7732a5d56042e7d1f199cfdf79384976b2690ccaf98ea9ba6edc4e8410faf",
+						"corpus/contract/invalid/pnj-unknown-field.toml": "929504804f6a4c2afcaa0e6e075e7704850c60da4287f6b0bc55b2aa19ac5833",
+						"corpus/contract/valid/monstre-etat-alternatif-historique.toml": "a4a6bafd84c1311de7196dac00648ba242ce77434e8da36054fd83770b0454d9",
+						"corpus/contract/valid/pj-protections-absentes.toml": "f0626c652c25d508c522c6e5f81fa901e7722b6ac20a835fb9c45b8d4b679df1",
+						"corpus/contract/valid/pnj-syntax-edge-values.toml": "e2324a6141ce84934babb8c258cda5c741d561317bd71e5934055014f611d132",
+						"corpus/refus/monstre/actions-par-round-negatives.json": "8018db8e6877dd7c4f593e1d1adcf15eef79dd0edaf845dcbf0ca1662cf8f596",
+						"corpus/refus/monstre/armes-mentales-dans-delta-detat.json": "eead6328fd1e049027818eeeb40b7527a44c3b841a7cde14ad5623d512823c6f",
+						"corpus/refus/monstre/armes-mentales-sur-creature.json": "c2532aee3a534297f22f6e42ee6572cc6ea2221babf676c363ac6361fe4bdac3",
+						"corpus/refus/monstre/caracteristique-physique-manquante.json": "6ee1e6cbd9ca6f38e98b16fc61f978ad7fc484b562445e9cdd4d8546e0fe6436",
+						"corpus/refus/monstre/cha-dans-delta-detat.json": "7b55be7903db41a881224165cd3487d9acdec284eabfd8ad0d713e03e1148a55",
+						"corpus/refus/monstre/cha-dans-etat-alternatif.json": "bcb21a1c5ab87edad494d8fa254922ce4599fa5e20892a2c4398f37a2189ea2a",
+						"corpus/refus/monstre/cha-sur-creature.json": "01084cf4a6a60f583b6fa064bdfbacab3e751ef603a75aac49a2db271bf5838c",
+						"corpus/refus/monstre/deux-etats-sur-creature.json": "f7e256dc69116f243730a0d561f4c9580c0b5da54fce07881772bac4ffb0e053",
+						"corpus/refus/monstre/formations-sur-creature.json": "917a89f843b3f352f05931571dc22caa49046e84de3f5a42738e82f36114559b",
+						"corpus/refus/monstre/log-dans-delta-detat.json": "fe1a279311a1e81cd05c2beaa73809d1d42ca54178aca0ca019ad01bdc5d6585",
+						"corpus/refus/monstre/log-dans-etat-alternatif.json": "65a90828a1fc512f9ce3930462d2390057e0d6422aeff1982b82e0b861fd7d36",
+						"corpus/refus/monstre/log-sur-creature.json": "bb83f4fba2a1d0763bd965a5a2b42a7537f83c2d437c42905b8b03693971d2e2",
+						"corpus/refus/monstre/nom-absent.json": "6dc1cc4eccf69dffea00e0704cad6167243703483457c89a38fd73930e8e670c",
+						"corpus/refus/monstre/nombre-hors-borne.json": "b0863d1d06a627966ca550338922d54ee440f3ea20285c12665e64c7454ce621",
+						"corpus/refus/monstre/points-hors-borne.json": "adf8e066458a2efcbcd90ccefafa1e805e5db845c597e359406cc6ac735af9fd",
+						"corpus/refus/monstre/presentation-adapter-inconnu.json": "b6cbb91207863484d7ca4f957b359e08ee9cdb1e2d34926aeefa6a30b78d3ef7",
+						"corpus/refus/monstre/probabilite-hors-borne.json": "307bdb372c9306490caa543db7a055c2752dc8dbb9b662ccaa920cf51dfd66bc",
+						"corpus/refus/monstre/test-d-action-hors-borne.json": "18e71527ffb76bdb96a617cb301981d28c973c64600b033ed6c11edd684adc1f",
+						"corpus/refus/monstre/vol-dans-delta-detat.json": "9fbcff4362f946ec31f69c729fd47c319efcd4165b6ac7a391f684bc44a4a86b",
+						"corpus/refus/monstre/vol-dans-etat-alternatif.json": "5ffc8e6021fc9dfd27cd77ac578ae09e6280e714722e4d283477496d4da146c0",
+						"corpus/refus/monstre/vol-sur-creature.json": "e9aac71e0efdb4894b0e146f1ccafd4b329cba8b8c5baf9eef43fee0a8dfcc53",
+						"corpus/refus/pj/armes-mentales-sur-pj.json": "8943db35238d4f37c77a6bc11edf01360c4240348ca288b1c825e7a646cf0683",
+						"corpus/refus/pj/armes-psychologiques-sur-pj.json": "97eae3d10c71114b8120acf341bf04def349807b9441dc8d9b702118cce1850f",
+						"corpus/refus/pj/armure-sans-localisation.json": "e820c984daee1ddd4fdf1c6922358dd9cc0d83cc5b8af23d659041a9e38b5d89",
+						"corpus/refus/pj/blessure-nombre-au-lieu-de-booleen.json": "a1953573fc60dd193bf50328acb64640f62913146d9a091409c9de6fc3c53995",
+						"corpus/refus/pj/caracteristique-en-triplet.json": "740b01baa426a278d421512db1dd7d3945e5a48960a06d4067f6cb47a455dcf8",
+						"corpus/refus/pj/caracteristique-hors-borne.json": "ac67e24e80fee2c556e6dc6ecec156f7ae0135fb399f1ff3289eb9577d512fff",
+						"corpus/refus/pj/caracteristique-manquante.json": "2d9a42687a6db8809d8efead2b5e1691abb37dda04e1daac47d2d3368d6fff10",
+						"corpus/refus/pj/caracteristique-negative.json": "a24a13a8f90a42d120b2c74725cfdb39d950e34050acdee4a6b9ead402c181d2",
+						"corpus/refus/pj/cle-inconnue.json": "a8f4d73ed1f42c2113c9aa14cc687cbd1d1af38b3dd17f48f9a72267a95f7349",
+						"corpus/refus/pj/competence-avec-caracteristique.json": "ba63a2bbe20550f834d4011f0d9a48cf52b81514361cb619b5d0f8e4ebec60be",
+						"corpus/refus/pj/competence-avec-ligne-d-arme.json": "4eeff43427918fc9fc69ce73ba6f7bc61f42ab72a4b66571ac86eae7ca5c74cd",
+						"corpus/refus/pj/etats-en-liste.json": "5f2e924be4c0382038d4ac8c726beab4124a2210d148153ece3289ca2ff892e4",
+						"corpus/refus/pj/formation-en-trop.json": "2403776d6666ed5782410b6fcf1323bb5365bf415291a27ec7f007a3613cb123",
+						"corpus/refus/pj/formation-pourcentage-en-triplet.json": "011e5b072ef5be7aa7019662fcd6aa22ace925db6a8be7d2096400af0f037df6",
+						"corpus/refus/pj/formation-sans-type.json": "4c71daf80b7c3d58335faab6684525e1a659de9cfc58a299896308b41c3ba3f8",
+						"corpus/refus/pj/identite-cle-inconnue.json": "769a5f172b26eac05762d613084c4f80c5f367b679c6002a0a29d7eb7dd06346",
+						"corpus/refus/pj/localisation-inconnue.json": "3baf678bf3b1f226c740376ca7f9e70c67dbe2b61485617d97a033e2133874b4",
+						"corpus/refus/pj/malus-physique.json": "99f9d1ba346edc34ffd5c8821ee76d747da171c534d51a22d8b7f572bcc402f8",
+						"corpus/refus/pj/nom-absent.json": "9f0db0bf0d0994ff040232ddc87ea797c70d329ec3564542500fc9afbea65b29",
+						"corpus/refus/pj/nom-vide.json": "8214159500f61dce3f8cd8cde2f39bcce578c04f008b1021faadcb0162fd2418",
+						"corpus/refus/pj/presentation-adapter-inconnu.json": "8f55d5cc968c8f542eb53b5901b277dc0ec86b4cb82f70dea456f0d4ac317e18",
+						"corpus/refus/pj/sante-absente.json": "7dc6d4404ceae68c77878bc67d9a7d2ce633e481be379b96028636e4d9c50237",
+						"corpus/refus/pj/seuil-sans-base.json": "0b5265f5e7731a599333d582f15048898a7f90c090dd0b1bf3487eba717402c7",
+						"corpus/refus/pj/total-des-malus-au-dela-de-hs.json": "b878578b50f19884533755fed451b7cb8dbd637fa609b582ddb1d089b45c8199",
+						"corpus/refus/pj/type-de-formation-inconnu.json": "6227ae1a7a231426140640787da9329b45dffaa23547256cb5520bd43cd50688",
+						"corpus/refus/pj/type-de-publication-inconnu.json": "1418ff34a4e64a008212a19fedfbb1751b705035341173876b1a97a932efa907",
+						"corpus/refus/pj/type-de-scenario-inconnu.json": "5518b374d20277bd9ea47278a1079770fc953814394bb6264b26756383c2652e",
+						"corpus/refus/pnj/armes-mentales-sur-pnj.json": "02138704a24bc84d9f6c08e8c170e731528259473ef94eb9d263106f1d445f0c",
+						"corpus/refus/pnj/armes-psychologiques-sur-pnj.json": "5b272e6f3c610d7261904e034b9aa87c35b96e10c3b0c5f26a8d5cb7468d8cc0",
+						"corpus/refus/pnj/cle-inconnue-imbriquee.json": "cd692256dd020f2057ebc6d269720f5d4825766052f6505b3499d2c1e3df9852",
+						"corpus/refus/pnj/cle-inconnue.json": "4c4aea5ee982cbea5f4454c57f63176fb26688eb024ac8bcfc21f08005355f3e",
+						"corpus/refus/pnj/localisation-emotionnelle-inconnue.json": "7df5ac533b51becab9c113c47c6c84f641884508c014138d9e2c829d16ca7e1e",
+						"corpus/refus/pnj/niveau-de-danger-negatif.json": "3b10d05f77c6c1ae194888f671fb33df9c974e0b7730e4276091d78f221245d2",
+						"corpus/refus/pnj/nom-absent.json": "d92ad76c40d6135cd8371c0ba8869264b16f1c085b840734a99009dc5c3bd41a",
+						"corpus/refus/pnj/nom-vide.json": "dcb7e1392dab7972b2b1b04bce699de2ef92f51625cba7be5eb4c146ea84c876",
+						"corpus/refus/pnj/nombre-hors-borne.json": "4e9edec2a2b6ed138fb61043cd918d7743ffcefa9229906f66b7f8481d4eceae",
+						"corpus/refus/pnj/plage-current-superieur-maximum.json": "002526bf7ecd244125f3e1eb06e7b0129da2933348ff1a6b6b326d655eb95a89",
+						"corpus/refus/pnj/plage-minimum-superieur-current.json": "0da0b05c3bf37e7cc9c9020260c938adb993c89d6993b841e514f74b5fd9c584",
+						"corpus/refus/pnj/presentation-adapter-inconnu.json": "829f20def35563a1834a5030f6a5f1f977a74be288ecd82adfdf4c7dc12c69b6",
+						"corpus/temoins/monstre/temoin.json": "520963b20bdf54568792e76b04dfc0d2f7dd4486413f7638e0ef96ee733bf694",
+						"corpus/temoins/monstre/test-d-action-en-triplet.json": "9bef2b51051740bcad2b1ac5d5649d665b4b41e829e93cb729b9ca93ca390c72",
+						"corpus/temoins/monstre/valeurs-nombres.json": "7d1e758f347772375c1cef4384acb552570b620af8379b4bfd152a90ccb4f1bf",
+						"corpus/temoins/pj/protections-absentes.json": "0779d4a92212da09b7254df4a90f6e075612f10c7a8c6b247305c7a384fa21f4",
+						"corpus/temoins/pj/temoin.json": "f96e01a6fe4dc7348bbfcdb2cdaa802885769bf3ea430421b648ef7f1a5c6e1a",
+						"corpus/temoins/pnj/temoin.json": "647234ebf84581bd9d577f663b9db07084765d6a59c6b38439067160e3b78ae5",
+						"corpus/temoins/pnj/valeurs-nombres.json": "794eeb286470c49d95a5d5c3a14a06df8936c2ff078d4cbe2bd0708601c5979a",
+						"corpus/temoins/pnj/valeurs-triplets.json": "9817817534e241b9da81dd953608d56b899e6896466ef007b28833c8efbfd702",
+						"cross-tool-provider.json": "fddcc6bc05c0178507f7152cf7dbc119368698fbf6f5bd05c1136f700f2e4e92",
+						"dist/callouts.d.ts": "288a357b95779980ed1e25f861ddd4c1bf9fe8a17683ae50777aff461c83243c",
+						"dist/callouts.d.ts.map": "2fec31fe95559b4a41c56b5d22b468f546beaa6f4782d5a66c559e8049eda531",
+						"dist/callouts.js": "d8d5f7ad8810b6097679162b63a045bfd9d9955bfe9a82c886736f46276213c2",
+						"dist/callouts.js.map": "ee7174b8965b737c854f917aec15ec69593f186b9d980e9b72764b8eb183740c",
+						"dist/codecs/documents.d.ts": "8b8fc48d720398cd4a835bff3fc3fa5822707a53d07f2f61e8d47a969a6b6141",
+						"dist/codecs/documents.d.ts.map": "5cd0dae65e3815bb8fb4430f579508dec07cf022fd366abef77090df74f1cf5f",
+						"dist/codecs/documents.js": "7e8f32a46feca4e7263ee081eca4d60e54af47328537904c5245e835738df642",
+						"dist/codecs/documents.js.map": "3fa1d6a4d15a2d02a59f5d3115bd6eefbcdc9c2b131aad8e83cc009d3f6cabce",
+						"dist/contract-version.d.ts": "23a521a0e5f65742bc0e151f0ba37ef241da30203a7fc90d48c9a17834ca29a8",
+						"dist/contract-version.d.ts.map": "7e9691b769a8bc03170a9382fafc8b8f490341a5cbf702b686fe2cbf391fab66",
+						"dist/contract-version.js": "12a792206ccb5d5fff06bdfb2f7281c31cd5f85382585f8b9bf87e821fa04e5e",
+						"dist/contract-version.js.map": "ebd53c2227bfc95a1dad4bc89d497a70ba3a606cd36e9469809682d859cfff47",
+						"dist/index.d.ts": "35000a9186db68b2dfd415e4032d7f674093a7ded1ad7d2371918eeaf3df15d9",
+						"dist/index.d.ts.map": "a431346d52624f428dae9e67f154bd9a6bca4dca59b82bbf9becff4285c5fbe6",
+						"dist/index.js": "2c2fa1848ca46105ac65aafb9a6559344afdf0c58ba94baf1ca0add527c44345",
+						"dist/index.js.map": "081138976b19f09fe2743dfe2228f6d8febe643c34d52644a54ebd7cab240589",
+						"dist/presentation.d.ts": "e580fc157a06beedc08d50db9cc6cc56c20bc033bcb71ac108f091b21ed58ed3",
+						"dist/presentation.d.ts.map": "eb01b6b770016ade00d802f0abf2a52af179c954d9993ebe4cc07a8ed20b2132",
+						"dist/presentation.js": "975ff4922347dc4b6256745b6f77a911ee3de0840dc7ac4bafdd6afcbcf62f2c",
+						"dist/presentation.js.map": "48ac5c8e0aace389fbf9dda5c22aadeb95b57f231b76f15ab057611d29e6b8ed",
+						"dist/validation/playable-ranges.d.ts": "4a5342b3b4cc6f6f8814906b4728d5530191ee5195d05cb77ea846b5e19562f4",
+						"dist/validation/playable-ranges.d.ts.map": "03c960b81dd70c84767e8892d7af4d5829de332d87e6619fb7478a034d129527",
+						"dist/validation/playable-ranges.js": "03d9bec3d45ffbffdcd23762b0c92c8b5c3cba20caa4653768a0baeb7945ab8f",
+						"dist/validation/playable-ranges.js.map": "bea1941923962a4b3542505907199bfb12e06104be1772b4aa969d7908536ea8",
+						"dist/zod/adrenaline/monstre.d.ts": "638c911315c300128da003ec487a94fefd3659ff8d3713861c914547af63bea7",
+						"dist/zod/adrenaline/monstre.d.ts.map": "c4d06b7cabe19942789516cd1ff3751b5365c37e09c3989baa115826426e2012",
+						"dist/zod/adrenaline/monstre.js": "91244234aa27db8df40a4218449aad5d0c17b3ac0aa8a65b4cbebdedb2d86db9",
+						"dist/zod/adrenaline/monstre.js.map": "0a94bdd26be91a45cc766e5bd27976f0104642a48cf0373997cd05aacd60117b",
+						"dist/zod/adrenaline/pj.d.ts": "3971a89739338920765afe4d7e2cc04e3e4fbd2a06c1297d757d091c1679121e",
+						"dist/zod/adrenaline/pj.d.ts.map": "33eff7fdb615ee67c99c994393cccd4902eba0e39b4b1cca17c13ae1ebbb4c14",
+						"dist/zod/adrenaline/pj.js": "9b96af84476f42d6f0a7db0cb311482b5b6a60da402ac59c337c2a71c6fba5b7",
+						"dist/zod/adrenaline/pj.js.map": "5cf07f6fd20930c4a2acc33fa25cad2763c8325a09c775aa84fb245fcb7e0f55",
+						"dist/zod/adrenaline/pnj.d.ts": "c9d0c620c7b0be92db4e067494f170da3011f863186a68e5dd7205c586218a32",
+						"dist/zod/adrenaline/pnj.d.ts.map": "72dec93fbfd4a65349c806ebe15b44a36a170874e914935b2aa8e6b9a0368460",
+						"dist/zod/adrenaline/pnj.js": "139a9c24b658dd3bb9dcdd763de87397c1b8e1d65fcf5d182c01ac5527b712f9",
+						"dist/zod/adrenaline/pnj.js.map": "6e0b41d39d6cdb4e217195445043a5ded62322fcfef8535642349852375ae9dd",
+						"dist/zod/common/caracteristiques.d.ts": "76a3cba9b4e59256af1c26585b989e0d3bd84ba0164d45f26731bf313d2d7a45",
+						"dist/zod/common/caracteristiques.d.ts.map": "149f0576a9a707b8e48bc9b99c6ffc8d4ab7d8f13726f9dc64be7fce0ce023b0",
+						"dist/zod/common/caracteristiques.js": "6d2591271d525a96f0f5843966cf6e8bfea43be3e2badb637b1730619a3c58ba",
+						"dist/zod/common/caracteristiques.js.map": "e40fde806ede478255dba7355aa246ddb9d6faf1aa114ffed923cf515a7188dd",
+						"dist/zod/common/categorie.d.ts": "78eaeb561bb0aa6095b2b6ac0ff1dbfd055eafe2dd066a4bf49883ba7e1a934a",
+						"dist/zod/common/categorie.d.ts.map": "37eccd37b8b7e38954f6e8d97cb8a0b558ada80eb9e67f77dda95a6eee8a2f63",
+						"dist/zod/common/categorie.js": "c4f4d81facad99110808178d5c89f3ea6c7707943bad74671033616de8d41e79",
+						"dist/zod/common/categorie.js.map": "afe033b7ea28a397bad17ab2a0be2eb85761e0c8de1f8c1effc7b531f31c471c",
+						"dist/zod/common/combat.d.ts": "9315c794d64975c01c3bd339f845103411284c1a2cb629557c5130823d325a49",
+						"dist/zod/common/combat.d.ts.map": "4653d82a2a8aaa19f7a2aa5cb437dbca113b6bd68a4f1292b1340321718da00f",
+						"dist/zod/common/combat.js": "7c5f4fdcc020b5f2b5f0d08178a6fa50ebb1ff2457f4c13fa16abc45c1a8f6f7",
+						"dist/zod/common/combat.js.map": "182e24aef169730724b517a4bfed5de425f7f63dc7b468c7312650901e0593ec",
+						"dist/zod/common/contagion.d.ts": "6e09807411736d8aece6e955b13ff4dbae171c43696de633b4f36291aa58e19c",
+						"dist/zod/common/contagion.d.ts.map": "2c6a2beb71bf044f7f284d920612ae2fb29f1e1d446b6d9bc69720f83009124b",
+						"dist/zod/common/contagion.js": "c9d70284dac29d34d4e091c5412201a0a200b6ece9a16902c4437283e6cb5363",
+						"dist/zod/common/contagion.js.map": "b3c54e3206e554b23e1ec6e6212161a7604bd5e6687dddf970101aef2ba48db8",
+						"dist/zod/common/danger.d.ts": "6df2224e6c3f016c943188128d4786b568af84c92cdef3afd9bb5bd9efc9b72e",
+						"dist/zod/common/danger.d.ts.map": "40eac6d5bebea5289752ce606ebea5e48c7a8b765eb36d6ca8f6c096550a7c6e",
+						"dist/zod/common/danger.js": "dae961bfd0f31a274055c3a1b570d67cdef4bc185c7affbbfeb578bd0068a8be",
+						"dist/zod/common/danger.js.map": "d1f01b5d84d3a7b028405c94e2401616ae9005d50790a448d872aaa68edee414",
+						"dist/zod/common/degats.d.ts": "bb164b7f861a83e406d3dae6957721e5dbefc1fae8ca4888c3df5bce55388bf3",
+						"dist/zod/common/degats.d.ts.map": "c8cec30c931e6b65af20ed10d915c4529b80c78faa9a932ec580bba4225208d4",
+						"dist/zod/common/degats.js": "74f069157e802d007a8b81125b3093b4c2266657a585453a35409e7d397e1c6c",
+						"dist/zod/common/degats.js.map": "08020752c995b675501cc8567941dc6c2bede50cce56acc042e11d2217d254cf",
+						"dist/zod/common/equipement.d.ts": "21e7663460a20a7d2a8bb1cae00715e1742db63fea968dc649eda5c7b00e7e4f",
+						"dist/zod/common/equipement.d.ts.map": "bdf94b546069ba893cec9caac57d8deaa893ae5ec4a3306e94fbed2b9b19660e",
+						"dist/zod/common/equipement.js": "90fc42431aa5adfa3543c350e40f8c9dde2fb44966814dfacfcacd33cddcc16f",
+						"dist/zod/common/equipement.js.map": "e68b1dbe3aab12287b02fbb095c2a72b8bcf865554ac5ba228b8c6e036512f47",
+						"dist/zod/common/etat-de-partie.d.ts": "1435e4461d56bf1d9d479a40ef2e275a992c3ec783a6babcdd63c60cdb383e15",
+						"dist/zod/common/etat-de-partie.d.ts.map": "13cd33f8c5b06ba8f233f4b2bb32430169d80ca71a8b58e22158ce5e691bc6ef",
+						"dist/zod/common/etat-de-partie.js": "03798b4752f6d7815a22913e97b1463bf27c5aa2420b0d9501fffbedaecc6663",
+						"dist/zod/common/etat-de-partie.js.map": "7d3faf211e721e32411344615ec04c489348b709ebd7ff4170d6d735f52a0fa1",
+						"dist/zod/common/etat-monstre.d.ts": "11399959286706db8bec29fbc6ad4c6d42aedcfd258fee4281d0a03839574499",
+						"dist/zod/common/etat-monstre.d.ts.map": "20e84f53f6d367e10f7ac9bc941a6e5a5ddf82d384ea7bb1045dfb80737510a5",
+						"dist/zod/common/etat-monstre.js": "9ad3038bd4cb0154f199d214167079f5f130d56b9c184f1936101a7d7a6be0b6",
+						"dist/zod/common/etat-monstre.js.map": "e599a00c253e2da410d0ffd205ec5279427cf71557c427bbc5b1f55a844d6b03",
+						"dist/zod/common/formations.d.ts": "ad2efa0fa1bd2bc86be53a333799e34716720747896717964a1a2f1de093c07e",
+						"dist/zod/common/formations.d.ts.map": "70a296d547ca3c77a89d47f844ac8982395bd96226da20174f91926be68daf39",
+						"dist/zod/common/formations.js": "c984b1511c93a198a9e8ccdfc064783ef47cd6466f8784eb1364bc2e2528a17f",
+						"dist/zod/common/formations.js.map": "05e2e118d476152b3c08074906909dc1a0be5c90cabbb70f53bd5d86cfab6c51",
+						"dist/zod/common/identite.d.ts": "11a7495cef0a3822080bcefd9e66cf4169c0981366e98afc05fa6c938ff191e4",
+						"dist/zod/common/identite.d.ts.map": "0a39b41459f3b695ca119276c079b51d57a2b3b51bb5ec4b1fe9405a3c3d096d",
+						"dist/zod/common/identite.js": "b72a26294b339b3b83bd7e04690779b1af4e0b2d7285f6395760d1f9e031dac7",
+						"dist/zod/common/identite.js.map": "056a18a408914085f4fed4d2cdb735467907cfe31fd1619ad41fcf004388e3f0",
+						"dist/zod/common/localisations.d.ts": "e39a2e6321a125aba5689bc247205e52ca1f9fee07891bca6899d96d11c7831c",
+						"dist/zod/common/localisations.d.ts.map": "781053e638ab08aedc7e7d94421c1adfb7e43fc99d95162e81b32da0b1a5ecdd",
+						"dist/zod/common/localisations.js": "812c70fe25a9529b6a867c81be78c5c87cf4acf902b04ef485eef5c11734bf84",
+						"dist/zod/common/localisations.js.map": "e4f7d54213f2d04c2fdd28c9cd6ba6af5cf72d63c0151f71de5133cddc89778c",
+						"dist/zod/common/meta.d.ts": "d9e5d7ef69f49314de66bb9156d4457b75791a7fbccb2345093a96f119bc4e4c",
+						"dist/zod/common/meta.d.ts.map": "aa647592e949ee003eb18900a7374b137b76536a8ea55cd9f83156be1b102c29",
+						"dist/zod/common/meta.js": "21f09bf3ba7b5b68a85c349adac156daa4fb65e917ec54b55c0dc896e9da164c",
+						"dist/zod/common/meta.js.map": "99052ccdfbecd6f87dcd4ff8af924fc6911e6fd3a66331e369cfe09db94393b2",
+						"dist/zod/common/narratif.d.ts": "41ec7bb5488293738a88ad758a9fdd46e9914fe3161e7767a51484d23d46ad76",
+						"dist/zod/common/narratif.d.ts.map": "19719736861b93214b8ba110cb270f1dd969a31017d7b9d943739ad6973dba56",
+						"dist/zod/common/narratif.js": "d628c8674900cf28358c92d0e7ff9a93c71cc780ecd6728309b4391167fcc723",
+						"dist/zod/common/narratif.js.map": "8d6e1c80b5cde9b754c0120fe220210bb38f90ff3dc0f7784664f420f218d098",
+						"dist/zod/common/primitives.d.ts": "bc4e8ac9c68c805e5aa489958e27025ba236809962081c75f981dddb8aa39de4",
+						"dist/zod/common/primitives.d.ts.map": "4a7284e2e5eb4d394875ba53849f2e6a88496dd5fffb2df32f63d23af67a7834",
+						"dist/zod/common/primitives.js": "b64766c12d9e4820093c2d169943589925b7006b4e5a5223d826eec8d33bf3b9",
+						"dist/zod/common/primitives.js.map": "1b4b35448d55442326c1003c4d9da3cf693963db01cb056c0a9fb1d275f5db51",
+						"dist/zod/common/protections.d.ts": "c25e33171ba03f09d353b79729f702837dfce1cb686a1f11aa2f48ace3ee088a",
+						"dist/zod/common/protections.d.ts.map": "01bf3b733414ef98c29f542accfdc0cf909aa8c6d70e8f25fd9fa7623884c39b",
+						"dist/zod/common/protections.js": "aa47d43f9fcdfeb2eb24d44b75ee37bde9f959e589db39aded56a09e616ffa3c",
+						"dist/zod/common/protections.js.map": "685b424f22d683327af0415b1f56de7253d25930916074066b912c85543156ed",
+						"dist/zod/common/sante.d.ts": "7d02eb8bf15c1b3c828e75739eed97ee84c73486574dc6d39cf7eee66a19e905",
+						"dist/zod/common/sante.d.ts.map": "d9b3191f18e44bec8c9c05952927e26ce1cab14a86a239738b81f86bbea66818",
+						"dist/zod/common/sante.js": "e2111dff26974b0e40109a00dfcff5245b1bf71200930b409a2e45a6e209381e",
+						"dist/zod/common/sante.js.map": "eb4232e597c639fd993688b41d99b9a5dce4b3474298d092f00553f53559a22f",
+						"dist/zod/constants.d.ts": "9a0f08649bd1b1231dff83d7a0f7963eb3231ab79f20ffdbb98b109666fb4784",
+						"dist/zod/constants.d.ts.map": "c2a959b3ecc328d7004f47e12f48a38d6d62ac8630132b53a1d1f9f56c3bb792",
+						"dist/zod/constants.js": "390b5dc7d048f719bd7ef9235de7d5d8978ac25bfddbeae5cb036f3c35085b87",
+						"dist/zod/constants.js.map": "38c23d07d6c0a9b640113f3a6f0ab12f55ce6f621d5f87cd03f11877475bd993",
+						"examples/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+						"examples/adrenaline/monstre/infecte-rodeur.toml": "f326cb4291a2daa75d09a06c3f161289e482df0eb1c71d0ca6e688752da7e4de",
+						"examples/adrenaline/monstre/infecte-zy-2.toml": "4d27cda359bccc0c76e00a4c51c5fa6f5af709d8c890938eafecce0db56b7c1f",
+						"examples/adrenaline/monstre/predateur-pensant.toml": "bded6436e211b9863ca484adc931cca5850d61d28843b4f3d0c3c0182431f9e4",
+						"examples/adrenaline/pj/figurant-minimal.toml": "f0626c652c25d508c522c6e5f81fa901e7722b6ac20a835fb9c45b8d4b679df1",
+						"examples/adrenaline/pj/survivante-complete.toml": "6976de2158b3b79995d60495dc5336d27b2112b35c7cd04ccb9c4d30d6846908",
+						"examples/adrenaline/pnj/agent-de-securite.toml": "4719e352102be0896581b3a6dbb572e3ef33951f37540f54ec6762fda23ab0dc",
+						"examples/adrenaline/pnj/pnj-majeur.toml": "154ddd33e775fd32d2293bded54be5961e7ea64a3ae3796b49bc0d616cfac156",
+						"examples/adrenaline/pnj/pnj-secondaire.toml": "494178f6d7d73cb86521f8c78f99cff4a1d0182d95cce71c15ddb39bc3038efc",
+						"handbook.json": "05a4ddd241c364fd082f57dce9a34be0879d763ac7d62fbe41116459b634dd3b",
+						"handbook/adrenaline/README.md": "8cc29c5505cc594e83e542903bfba75d32cf4b07bb4601d425b2ea399f87f5dc",
+						"handbook/adrenaline/assets/dark-organic.webp": "82e393ea2772643f3fef239a372b777a6af18e65f5afe30852a216b4305b08ed",
+						"handbook/adrenaline/assets/fonts/Caveat-OFL.txt": "163a2b400e16916ad3196296c946c526d0efce6baf22a2164269ffc62fb9f671",
+						"handbook/adrenaline/assets/fonts/EBGaramond-OFL.txt": "f03c8eda63076cd52317dcd40aa04db8472d4cb592dfaafa385129dfdafc7f9c",
+						"handbook/adrenaline/assets/fonts/RubikDirt-OFL.txt": "7b75ba397dab8c72c2425a6c2ebadd41d27a91dd089ad979e5d227572d31c6c6",
+						"handbook/adrenaline/assets/fonts/adrenaline-body.woff2": "d8248cd230db94203560ee8a08a1e132c87bda3d4c454236a28cf3c18a076526",
+						"handbook/adrenaline/assets/fonts/adrenaline-display.woff2": "111632a66722df20824ae5faef969974b52375de6c31467e8e0f67b9d5de5567",
+						"handbook/adrenaline/assets/fonts/adrenaline-handwriting.ttf": "047fa4fa904d4723b6c85494fb3ffc911a741cc0d9a46f40378fb118b81f214f",
+						"handbook/adrenaline/assets/paper-grain.webp": "d37bf53e9e9d663d36bd44393782b2df46aebe8b3d7731efc44e611f7b40ee07",
+						"handbook/adrenaline/assets/warning-stripe.webp": "555ccaec4d0742410023b51781176fb860a26861dd58ff914e8c5691ce2075ae",
+						"handbook/adrenaline/callout-contract.md": "89e647aa135ef3b30840a8b4bad76f6c5c551f2634f2e4bb889958677dc019ee",
+						"handbook/adrenaline/callouts-example.md": "317c7490dd72bd160e66a2d79bb62ea5b6797304faee5e52c729c3a2f090e626",
+						"handbook/adrenaline/pack.json": "bfacffbe1b6d3048d2cc48e4cc797cd2d255a75850e998c7972bf4ca1f81d4e9",
+						"package.json": "4b861b063b9b4846ce692cd202fbc46c3fea75806213a36170f8a40b20380025",
+						"schemas/adrenaline/5.0.0/monstre.schema.json": "2df94bea8b204b1290a4b4cd2330d66740bb75302c4c1352a8887009234170fe",
+						"schemas/adrenaline/5.0.0/pj.schema.json": "a2d5cf07ca3bab438285c5830fb19d569235707262694f651c73facf4b143dcc",
+						"schemas/adrenaline/5.0.0/pnj.schema.json": "547049bcc85d31bee4828cb34c25928e96bcddb039aca6028c0f4b481777fed2"
+					}
+				},
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"check"
+						],
+						"status": 0,
+						"tail": "> tsx tools/prepare-release.ts --verify\n\n✓ release preparation is reproducible by canonical package contents\n\n> schema-adrenaline@5.0.0 validate:packs\n> tsx tools/validate-packs.ts\n\n\n> schema-adrenaline@5.0.0 validate:pack\n> tsx tools/validate-handbook-pack.ts handbook\\adrenaline\\pack.json\n\nHandbook catalogue: green (1 pack, 9 assets, 792682 bytes)\n✓ 1 pack manifest validated.\n\n> schema-adrenaline@5.0.0 validate:pack\n> tsx tools/validate-handbook-pack.ts\n\nHandbook catalogue: green (1 pack, 9 assets, 792682 bytes)\n\n> schema-adrenaline@5.0.0 validate:handbook\n> tsx tools/validate-handbook-pack.ts --self-test\n\nHandbook catalogue: green (1 pack, 9 assets, 792682 bytes)\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 92659
+					}
+				],
+				"evidence": {
+					"key": "2356ae5dd0bdaf5e9bdc77c7bf6e6fae305190daaaa38ffc57e3afc80cf98c5d",
+					"provedAt": "2026-10-14T16:56:38.611Z"
+				}
+			},
+			{
+				"repo": "lantern",
+				"role": "consumer",
+				"sha": "e82d08c3f9b9bd302c7ef95bcdec51c0bb0319d2",
+				"baseSha": "8ee3051a0442725c861cb4f3414778d3cc3df896",
+				"commits": [
+					{
+						"sha": "e82d08c3f9b9bd302c7ef95bcdec51c0bb0319d2",
+						"subject": "fix(adrenaline-pj): type the published reference table lines and the optional skill characteristic"
+					},
+					{
+						"sha": "65a10516aa610cf0085ca14b49ae1b378874c064",
+						"subject": "feat(adrenaline-pj): edit the player sheet by zone on contract 5.0.0"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |    9 +\n package-lock.json                                  |    4 +-\n package.json                                       |    7 +-\n src/core/templates/types.ts                        |    8 +-\n src/core/workspace/store.ts                        |    7 +-\n src/i18n/locales/en/adrenaline.ts                  |  104 +-\n src/i18n/locales/fr/adrenaline.ts                  |  103 +-\n .../adrenaline/monstre/editor/ActionRows.tsx       |   71 +-\n .../monstre/editor/MonstreEditorPanel.tsx          |    7 +-\n .../adrenaline/monstre/editor/actionClean.ts       |   28 +-\n .../adrenaline/monstre/editor/forms/BasicForm.tsx  |   44 +-\n .../monstre/editor/forms/BehaviourForm.tsx         |    5 +\n .../monstre/editor/forms/ContagionForm.tsx         |    8 +-\n .../adrenaline/monstre/editor/forms/HealthForm.tsx |    2 +\n .../adrenaline/monstre/editor/forms/SkillsForm.tsx |    5 +\n .../adrenaline/monstre/editor/forms/StatesForm.tsx |  201 +--\n .../adrenaline/monstre/editor/useMonstreEdit.tsx   |   21 +-\n src/templates/adrenaline/monstre/toml.ts           |    7 +-\n src/templates/adrenaline/pj/descriptor.ts          |    3 +\n .../adrenaline/pj/editor/CompactDefence.tsx        |  154 +++\n .../adrenaline/pj/editor/CompactFields.tsx         |  143 +++\n .../adrenaline/pj/editor/PjEditorPanel.tsx         |  771 ++++++++---\n src/templates/adrenaline/pj/editor/StateFields.tsx |  230 ++++\n src/templates/adrenaline/pj/editor/zone.ts         |  172 +++\n src/templates/adrenaline/pj/preview/PjPreview.tsx  |   56 +-\n src/templates/adrenaline/pj/sample.ts              |    7 +-\n src/templates/adrenaline/pj/toml.ts                |   11 +-\n .../adrenaline/pnj/editor/PnjEditorPanel.tsx       |  513 ++++----\n src/templates/adrenaline/pnj/toml.ts               |    7 +-\n .../adrenaline/shared/editor/AdrenalineFields.tsx  |  662 ++++++++--\n .../adrenaline/shared/editor/FieldPrimitives.tsx   |  787 +++++++++++-\n .../adrenaline/shared/editor/OptionalFields.tsx    |   73 +-\n src/templates/adrenaline/shared/editor/clean.ts    |   30 +\n src/templates/adrenaline/shared/editor/draft.tsx   |  168 +++\n src/templates/adrenaline/shared/editor/pjLimits.ts |   26 +\n .../adrenaline/shared/editor/schemaCompact.ts      |   48 +\n .../adrenaline/shared/editor/schemaShapes.ts       |  102 ++\n src/templates/adrenaline/shared/formations.ts      |   30 +-\n src/templates/adrenaline/shared/legacyRanges.ts    |  108 +-\n src/templates/adrenaline/shared/presentation.ts    |   11 +\n .../shared/preview/PresentationBlocks.tsx          |  635 ++++++---\n .../shared/preview/presentationSheet.css           |  343 ++++-\n src/templates/adrenaline/shared/sections.ts        |    3 +-\n tools/adrenalineNotEditable.mjs                    |   15 +-\n tools/assert-adrenaline-pj.mjs                     |  127 ++\n tools/assertAdrenalinePj.editors.mts               |  673 ++++++++++\n tools/assertAdrenalinePj.harness.mts               | 1353 ++++++++++++++++++++\n tools/assertAdrenalinePj.hooks.mts                 |   45 +\n tools/assertAdrenalinePj.input.mts                 |   68 +\n tools/assertAdrenalinePj.react.mts                 |   32 +\n tools/assertAdrenalinePj.select.mts                |   87 ++\n tools/assertContracts.harness.mts                  |   83 +-\n 52 files changed, 7100 insertions(+), 1117 deletions(-)",
+				"linkedProviders": [
+					"schema-adrenaline"
+				],
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"lint"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 lint\n> eslint .\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 6824
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"typecheck"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 typecheck\n> tsc -b\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 14051
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:release-train\n> node tools/release-train-protocol.harness.mjs\n\nRelease-train protocol-1 and protocol-2 consumer proofs verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 624
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-identity"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:release-identity\n> node tools/assert-release-identity.mjs && node tools/release-identity.harness.mjs\n\nRelease metadata verified for v0.27.0.\nRelease identity fixtures verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 487
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train-matrix:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:release-train-matrix:unit\n> node tools/release-train-matrix.harness.mjs\n\nRelease train matrix covers 18 real manifests and rejects mutable, duplicate, or fixture inputs.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 452
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:consumer-schema-pins:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:consumer-schema-pins:unit\n> node tools/consumer-schema-pins.harness.mjs\n\nConsumer pin checks reject candidate URLs, lock drift, redirects, and wrong published bytes.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 418
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:workspace"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:158390:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:157897:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:158039:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:29369:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:158033:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:158119:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-qinLBU/workspace.mjs:158392:31",
+						"durationMs": 2043
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:adrenaline-examples"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:adrenaline-examples\n> node tools/assert-adrenaline-examples.mjs\n\nassert:adrenaline-examples: 3 templates start from a published example\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 406
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:adrenaline-coverage"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:adrenaline-coverage\n> node tools/assert-adrenaline-coverage.mjs\n\nassert:adrenaline-coverage: 38 published forms drawn across 3 sheets, 22 layout properties read, 3 card tokens read, 49 document keys named by an editor\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 561
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:presentation-coverage"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.27.0 assert:presentation-coverage\n> node tools/assert-presentation-coverage.mjs\n\ncovered: masks/npc, masks/playbook, monster-of-the-week/monster, monster-of-the-week/team, monster-of-the-week/threat, monster-of-the-week/playbook, monsterhearts/playbook, the-sprawl/corporation, the-sprawl/matrix, the-sprawl/mission, the-sprawl/resource, the-sprawl/threat, the-sprawl/playbook, urban-shadows/playbook\nnote: monsterhearts: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"urban-shadows-creation\" is in no row (fallback \"unplaced\")\npresentation coverage: every published playbook region is drawn and editable, every published block has its template\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 419
+					}
+				],
+				"evidence": {
+					"key": "27084020ae4e2f9c040b87c7995a2918e164f838a976b33da96c061423f6e6fc",
+					"provedAt": "2026-10-14T16:57:05.470Z"
+				}
+			},
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "d29f4868868e3db64f33abe0693b73118c0e812b",
+				"baseSha": "a51a94be5d114245da3ab4201f5165386425418e",
+				"commits": [
+					{
+						"sha": "d29f4868868e3db64f33abe0693b73118c0e812b",
+						"subject": "feat(adrenaline-pj): follow contract 5.0.0 and paste TOML into a block"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  14 +\n .../phase-4.md                                     |   2 +-\n .../phase-5.md                                     |   2 +-\n .../plan.md                                        |  18 +\n manifest.json                                      |   2 +-\n package.json                                       |   2 +-\n src/contextMenu/index.ts                           |  21 +-\n src/features/adrenaline/compactCard.ts             |   2 +-\n src/features/adrenaline/document.ts                |  12 +-\n src/features/adrenaline/publishedContract.ts       | 202 ++++++--\n src/features/adrenalineMonstre/block.ts            |   3 +-\n src/features/adrenalineMonstre/schema.ts           |   3 +-\n src/features/adrenalineMonstre/template.ts         |  49 ++\n src/features/adrenalinePj/block.ts                 |  38 +-\n src/features/adrenalinePj/legacyRanges.ts          | 123 +++++\n src/features/adrenalinePj/parser.ts                |   6 +-\n src/features/adrenalinePj/renderer.ts              | 362 ++++++++------\n src/features/adrenalinePj/schema.ts                |  31 +-\n src/features/adrenalinePnj/block.ts                |   3 +-\n src/features/adrenalinePnj/schema.ts               |   3 +-\n src/features/adrenalinePnj/template.ts             |  64 +++\n src/features/blocks/copyAsToml.ts                  |   2 +\n src/features/blocks/pasteToml.ts                   |  34 +-\n src/features/blocks/registry.ts                    |  41 +-\n src/features/blocks/schemaValues.ts                |   9 +\n src/features/blocks/tomlExports.ts                 |   3 +\n src/styles/_mist-shared.scss                       |  87 ++++\n src/styles/_mode-sections.scss                     |  40 +-\n src/styles/adrenaline/_pj.scss                     | 479 ++++++++++++-------\n src/styles/adrenaline/_placement.scss              |  16 +-\n src/styles/adrenaline/_short-sheet.scss            |  11 +-\n src/styles/city-of-mist/_tables.scss               |  31 +-\n src/styles/city-of-mist/_tags.scss                 |  44 +-\n src/styles/city-of-mist/_workspace.scss            |   7 +-\n src/styles/city-of-mist/index.scss                 |   4 -\n src/styles/legend-in-the-mist/_callouts.scss       |  69 +--\n src/styles/legend-in-the-mist/_tables.scss         |  31 +-\n src/styles/legend-in-the-mist/_tags.scss           |  47 +-\n src/styles/legend-in-the-mist/_theme-cards.scss    |  35 +-\n src/styles/legend-in-the-mist/_theme-kits.scss     |  19 -\n src/styles/legend-in-the-mist/index.scss           |   3 -\n src/styles/styles.scss                             |   1 +\n tools/assertAdrenalineContract.harness.mts         | 202 +++++++-\n tools/assertAdrenalineDocuments.harness.mts        |  91 ++++\n tools/assertAdrenalineTheme.harness.mts            | 528 ++++++++++++++++++++-\n tools/assertAdrenalineZombiologyStyle.harness.mts  |  13 +-\n tools/fixtures/adrenaline-visual.md                |  23 +-\n versions.json                                      |   3 +-\n 48 files changed, 2118 insertions(+), 717 deletions(-)",
+				"linkedProviders": [
+					"schema-adrenaline"
+				],
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "\n> obsidian-handbook@2.44.0 assert:style-scope C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-style-scope.mjs\n\ngame styles stay inside notes and rendered block scopes\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.44.0 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\n> check: assert:urban-shadows-layout\n\n> obsidian-handbook@2.44.0 assert:urban-shadows-layout C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-urban-shadows-layout.mjs\n\nUrban Shadows layout assertions passed.\n\n> check: assert:supervisor skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-udpTle\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-udpTle\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-udpTle\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-udpTle\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-udpTle\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-udpTle\\harness.cjs:306:5)",
+						"durationMs": 53936
+					}
+				],
+				"evidence": {
+					"key": "0c61b2f685090df41e68917e164574169014b87944a0ebcfacdc7c24c78d070d",
+					"provedAt": "2026-10-14T16:58:00.005Z"
+				}
+			}
+		],
+		"trainFiles": {
+			"schema-adrenaline": [
+				"release-train/"
+			],
+			"lantern": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"package-lock.json",
+				"release-train.matrix.json",
+				"CHANGELOG.md",
+				"release-train/"
+			],
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"schema-adrenaline: release candidate of schema-adrenaline",
+			"schema-adrenaline: final release of schema-adrenaline, same bytes as the candidate",
+			"lantern: release",
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-14T17:04:23.965Z",
+		"repos": [
+			{
+				"repo": "schema-adrenaline",
+				"sha": "8adba08d4f59934ae3fab22dfe40214f082412b4"
+			},
+			{
+				"repo": "lantern",
+				"sha": "4fadd159a98e5eab456a49b6e088b994316da390"
+			},
+			{
+				"repo": "obsidian-handbook",
+				"sha": "792b136ded5d11ca3cfaab53c4a3f887eefd4249"
+			}
+		],
+		"checks": [
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-train-matrix"
+				],
+				"status": 0
+			},
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			},
+			{
+				"repo": "schema-adrenaline",
+				"command": [
+					"npm",
+					"run",
+					"release-train:verify-final"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "lantern",
+			"version": "0.27.0",
+			"tag": "v0.27.0",
+			"sha": "4fadd159a98e5eab456a49b6e088b994316da390",
+			"url": "https://github.com/RebelliousSmile/lantern/releases/tag/v0.27.0"
+		},
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.44.0",
+			"tag": "v2.44.0",
+			"sha": "792b136ded5d11ca3cfaab53c4a3f887eefd4249",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.44.0"
+		}
+	],
+	"closedAt": "2026-10-14T17:12:47.246Z"
+}
