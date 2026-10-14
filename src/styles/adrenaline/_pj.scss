@@ -326,23 +326,32 @@ $ink-roles: box-ticked, dot-filled;
 		border-bottom: 1px dotted var(--adrenaline-field-border);
 	}
 
-	// Protections : six localisations, trois cases chacune.
+	// Protections : six localisations en tuiles, trois par rangée comme sur la feuille papier ;
+	// chaque tuile pose son rang, son libellé, puis ses trois cases.
 	.brumes-adrenaline-pj__locations {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-		gap: 2px 8px;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 4px;
+		margin-block-start: 4px;
 	}
 	.brumes-adrenaline-pj__location {
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
-		align-items: center;
-		gap: 4px;
+		justify-items: center;
+		gap: 1px;
 		min-width: 0;
+		padding: 2px;
+		border: 1px solid var(--adrenaline-field-border);
+		text-align: center;
 	}
-	:is(.brumes-adrenaline-pj__location-range, .brumes-adrenaline-pj__location-label) {
+	.brumes-adrenaline-pj__location-range {
 		font-size: 8px;
-		font-weight: 700;
+		font-weight: 800;
 		color: var(--adrenaline-rule);
+		letter-spacing: 0;
+	}
+	.brumes-adrenaline-pj__location-label {
+		font-size: 0.8em;
+		line-height: 1.1;
 		letter-spacing: 0;
 	}
 	:is(#{roles($row-roles)}) { display: inline-flex; gap: 2px; }
