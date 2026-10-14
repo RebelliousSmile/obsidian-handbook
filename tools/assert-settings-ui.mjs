@@ -130,8 +130,16 @@ if (!themeContentsModal.includes('.filter((capability) => capability.startsWith(
 	failures.push("The theme inventory does not derive code blocks from the installed schema manifest.");
 }
 
-if (!themeContentsModal.includes("handouts: blocks.filter((block) => block.handout)")) {
-	failures.push("The theme inventory does not derive handouts from declared blocks.");
+if (/handouts/.test(themeContentsModal) || /t("(Handouts|Code blocks)")/.test(themeContentsModal)) {
+	failures.push("The theme inventory still exposes a Handouts or Code blocks section.");
+}
+
+if (!themeContentsModal.includes("block.handout") || !themeContentsModal.includes("Game document")) {
+	failures.push("The theme inventory does not mark game documents from the handout flag.");
+}
+
+if (/.utility/.test(themeContentsModal)) {
+	failures.push("The theme inventory reads the utility flag, which no declared capability can reach.");
 }
 
 if (!source.includes("visibleCallouts(host.plugin.settings.callouts, host.plugin.settings.mode)")) {

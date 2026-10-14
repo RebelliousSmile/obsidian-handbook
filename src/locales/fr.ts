@@ -11,9 +11,9 @@ export const fr: Translations = {
 	"Tag, status or limit": "Tag, statut ou limite",
 	"Multi-column region": "Région multicolonne",
 	"Alternate section": "Section alternative",
-	"Insert callout": "Insérer un callout",
-	"Change callout type": "Changer le type de callout",
-	"{name} callout": "Callout {name}",
+	"Insert callout": "Insérer un encadré",
+	"Change callout type": "Changer le type d'encadré",
+	"{name} callout": "Encadré {name}",
 	"Paste toml into {noun}": "Coller du TOML dans {noun}",
 	"Copy {noun} as TOML": "Copier {noun} en TOML",
 	"Roller table": "Table de lancer",
@@ -33,11 +33,12 @@ export const fr: Translations = {
 
 	// Commands
 	"Reload illustrations and personal overrides": "Recharger les illustrations et les réglages personnels",
-	"Clean up callouts the game does not declare": "Nettoyer les callouts que le jeu ne déclare pas",
+	"Reload installed schema sources": "Recharger les sources de schéma installées",
+	"Clean up callouts the game does not declare": "Nettoyer les encadrés que le jeu ne déclare pas",
 
 	// Notices of the callout cleanup
-	"Every callout is declared by the game.": "Tous les callouts sont déclarés par le jeu.",
-	"{count} callout(s) moved to the game's first callout.": "{count} callout(s) ramené(s) au premier callout du jeu.",
+	"Every callout is declared by the game.": "Tous les encadrés sont déclarés par le jeu.",
+	"{count} callout(s) moved to the game's first callout.": "{count} encadré(s) ramené(s) au premier encadré du jeu.",
 
 	// Callout templates
 	"Title of the note": "Titre de la note",
@@ -80,7 +81,7 @@ export const fr: Translations = {
 	"Installed versions": "Versions installées",
 	"Game and appearance": "Jeu et apparence",
 	"Schema sources": "Sources de schémas",
-	"Callouts": "Callouts",
+	"Callouts": "Encadrés",
 	"Advanced": "Avancé",
 
 	// Settings: game and appearance
@@ -103,8 +104,8 @@ export const fr: Translations = {
 	"Light": "Clair",
 	"Dark": "Sombre",
 	"Theme features": "Fonctionnalités du thème",
-	"Review the callouts and code blocks declared for the active game.":
-		"Consultez les callouts et les blocs de code déclarés pour le jeu actif.",
+	"Review the callouts and content blocks declared for the active game.":
+		"Consultez les encadrés et les blocs de contenu déclarés pour le jeu actif.",
 	"View": "Afficher",
 	"Personal overrides": "Réglages personnels",
 	"Reload": "Recharger",
@@ -219,8 +220,8 @@ export const fr: Translations = {
 
 	// Settings: callouts
 	"Delete": "Supprimer",
-	"Delete the callout \"{name}\"?": "Supprimer le callout \"{name}\" ?",
-	"+ new callout": "+ nouveau callout",
+	"Delete the callout \"{name}\"?": "Supprimer l'encadré \"{name}\" ?",
+	"+ new callout": "+ nouvel encadré",
 	"All games": "Tous les jeux",
 	"none": "aucun",
 	"Scope: {scope} · aliases: {aliases}. {hint}": "Portée : {scope} · alias : {aliases}. {hint}",
@@ -231,14 +232,14 @@ export const fr: Translations = {
 		"Portée : {scope}. Seuls les alias sont modifiables ici, un par ligne.",
 	"Shortcut: Settings → Hotkeys → search for \"{command}\".":
 		"Raccourci : Réglages → Raccourcis clavier → rechercher \"{command}\".",
-	"Edit callout": "Modifier le callout",
-	"New callout": "Nouveau callout",
+	"Edit callout": "Modifier l'encadré",
+	"New callout": "Nouvel encadré",
 	"Name": "Nom",
 	"Aliases": "Alias",
 	"One alias per line. The first one is inserted from the context menu.":
 		"Un alias par ligne. Le premier est inséré depuis le menu contextuel.",
 	"Scope": "Portée",
-	"Where this callout is available.": "Où ce callout est disponible.",
+	"Where this callout is available.": "Où cet encadré est disponible.",
 	"Template": "Gabarit",
 	"Title + body": "Titre + corps",
 	"Body only": "Corps seul",
@@ -320,13 +321,12 @@ export const fr: Translations = {
 
 	// Settings: theme features
 	"{game} features": "Fonctionnalités de {game}",
-	"Handouts": "Handouts",
-	"No handout is declared for this game.": "Aucun handout n'est déclaré pour ce jeu.",
-	"Code block: {ids}": "Bloc de code : {ids}",
-	"No callout is declared for this game.": "Aucun callout n'est déclaré pour ce jeu.",
+	"Callouts (> [!type])": "Encadrés (> [!type])",
+	"No callout is declared for this game.": "Aucun encadré n'est déclaré pour ce jeu.",
 	"ID: {id}": "ID : {id}",
-	"Code blocks": "Blocs de code",
-	"No code block is declared for this game.": "Aucun bloc de code n'est déclaré pour ce jeu.",
+	"Content blocks (code fence)": "Blocs de contenu (code fence)",
+	"No content block is declared for this game.": "Aucun bloc de contenu n'est déclaré pour ce jeu.",
+	"Game document": "document de jeu",
 
 	// Roller
 	"Roll and copy result": "Lancer et copier le résultat",

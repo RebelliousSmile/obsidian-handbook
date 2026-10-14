@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.45.0] - 2026-10-14
+
+### Added
+
+- `pnpm dev:schema --source <repository> --vault <vault>` shows an edit of `schema-in-the-mist`, `schema-pbta` or `schema-adrenaline` in a test vault with no release, no tag and no change to the pin. It installs through the plugin's own installer, so the catalogue is validated, the source folder is replaced as one block and the assets the provider no longer declares are removed; an invalid pack is refused with the file named and the last valid state stays. The vault's `data.json` is never written. Guides: `doc/dev-schema.en.md` and `doc/dev-schema.fr.md`.
+- The command « Reload installed schema sources » (« Recharger les sources de schéma installées ») reads the installed sources again and repaints, for a vault without the Hot Reload plugin.
+
+### Changed
+
+- The « Theme features » window lists two families that follow what is typed in a note: callouts (`> [!type]`) and content blocks (code fence, each with its fence). The empty Handouts section Adrenaline showed is gone; the PbtA playbook carries a « game document » mention instead (#67). In French, « callout » now reads « encadré » everywhere in the interface (menus, notices, settings).
+- `pnpm dev:schema-pbta` is now an alias of `pnpm dev:schema --source ../schema-pbta`. The former copy tool, which did not validate and only followed asset paths, is removed.
+- Adrenaline creature and NPC cards read the « Detection zone » and « Movement » labels from the published presentation instead of a local copy. The printed text is unchanged; the theme assertions now also cover the column span of a published block and the asterisk of the danger level note.
+- The player sheet lays its six protection locations out as tiles, three per row as on the paper sheet.
+- The size ceiling of `dist/styles.css` checked by `assert:mist-font-packs` is raised from 160 000 to 165 000 bytes.
+
 ## [2.44.0] - 2026-10-14
 
 ### Changed

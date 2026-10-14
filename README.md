@@ -49,7 +49,7 @@ Le [guide d'installation](https://github.com/RebelliousSmile/obsidian-handbook/w
 | Sujet | Français | English |
 | --- | --- | --- |
 | Installation et réglages | [Démarrer](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Getting-Started-FR) | [Getting started](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Getting-Started-EN) |
-| Tags, callouts, régions et fiches | [Écrire des notes](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Writing-Notes-FR) | [Writing notes](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Writing-Notes-EN) |
+| Tags, encadrés, régions et fiches | [Écrire des notes](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Writing-Notes-FR) | [Writing notes](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Writing-Notes-EN) |
 | Exemples de fiches Mist | [Fiches Mist](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Mist-Blocks-FR) | [Mist sheets](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Mist-Blocks-EN) |
 | Exemples de fiches Adrenaline | [Fiches Adrenaline](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Adrenaline-Sheets-FR) | [Adrenaline sheets](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Adrenaline-Sheets-EN) |
 | Packs et contrats | [Packs et architecture](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Packs-and-Architecture-FR) | [Packs and architecture](https://github.com/RebelliousSmile/obsidian-handbook/wiki/Packs-and-Architecture-EN) |

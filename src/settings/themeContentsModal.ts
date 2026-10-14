@@ -7,7 +7,6 @@ import { visibleCallouts } from "../features/callouts/visibility";
 import type { GameRegistration } from "../games/variants";
 
 export interface ThemeContents {
-	handouts: BrumesBlock<unknown>[];
 	callouts: CalloutDefinition[];
 	blocks: BrumesBlock<unknown>[];
 }
@@ -27,7 +26,6 @@ export function resolveThemeContents(
 
 	const blocks = BRUMES_BLOCKS.filter((block) => requiredBlocks.has(block.id));
 	return {
-		handouts: blocks.filter((block) => block.handout),
 		callouts: visibleCallouts(callouts, gameId, requiredCapabilities),
 		blocks,
 	};
@@ -52,18 +50,7 @@ export class ThemeContentsModal extends Modal {
 		this.setTitle(t("{game} features", { game: this.registration.pack.label }));
 		const contents = resolveThemeContents(this.registration, this.callouts);
 
-		this.contentEl.createEl("h3", { text: t("Handouts") });
-		if (contents.handouts.length === 0) {
-			this.contentEl.createEl("p", { text: t("No handout is declared for this game.") });
-		} else {
-			for (const handout of contents.handouts) {
-				new Setting(this.contentEl)
-					.setName(handout.label)
-					.setDesc(t("Code block: {ids}", { ids: handout.id }));
-			}
-		}
-
-		this.contentEl.createEl("h3", { text: t("Callouts") });
+		this.contentEl.createEl("h3", { text: t("Callouts (> [!type])") });
 		if (contents.callouts.length === 0) {
 			this.contentEl.createEl("p", { text: t("No callout is declared for this game.") });
 		} else {
@@ -75,15 +62,18 @@ export class ThemeContentsModal extends Modal {
 			}
 		}
 
-		this.contentEl.createEl("h3", { text: t("Code blocks") });
+		this.contentEl.createEl("h3", { text: t("Content blocks (code fence)") });
 		if (contents.blocks.length === 0) {
-			this.contentEl.createEl("p", { text: t("No code block is declared for this game.") });
+			this.contentEl.createEl("p", { text: t("No content block is declared for this game.") });
 		} else {
 			for (const block of contents.blocks) {
-				const ids = [block.id, ...(block.aliases ?? [])];
+				const fences = [block.id, ...(block.aliases ?? [])].map((id) => "```" + id);
+				const description = block.handout
+					? `${fences.join(", ")} · ${t("Game document")}`
+					: fences.join(", ");
 				new Setting(this.contentEl)
 					.setName(block.label)
-					.setDesc(t("Code block: {ids}", { ids: ids.join(", ") }));
+					.setDesc(description);
 			}
 		}
 	}

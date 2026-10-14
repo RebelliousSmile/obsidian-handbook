@@ -179,7 +179,7 @@ export function renderThemeContents(host: SettingsHost, section: SettingGroup) {
 	section.addSetting((setting) => {
 		setting
 			.setName(t("Theme features"))
-			.setDesc(t("Review the callouts and code blocks declared for the active game."))
+			.setDesc(t("Review the callouts and content blocks declared for the active game."))
 			.addButton((button) =>
 				button.setButtonText(t("View")).onClick(() => {
 					new ThemeContentsModal(

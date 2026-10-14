@@ -131,6 +131,20 @@ export default class BrumesPlugin extends Plugin {
 			},
 		});
 
+		// A source changed on disk (the `dev:schema` loop, or a manual copy) is
+		// read again without Hot Reload. The registry first: it resets the assets
+		// that the style reload then loads.
+		this.addCommand({
+			id: "reload-schema-sources",
+			name: t("Reload installed schema sources"),
+			callback: () => {
+				void (async () => {
+					await this.refreshGameRegistry();
+					await this.reloadStyleSources();
+				})();
+			},
+		});
+
 		this.addCommand({
 			id: "clean-undeclared-callouts",
 			name: t("Clean up callouts the game does not declare"),

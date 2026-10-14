@@ -153,7 +153,7 @@ The validations of a linked consumer receive `SUPERVISOR_LINKED_PROVIDERS=<provi
 - it deploys `dist/` next to `data.json`, which it reads and never writes, then opens the vault;
 - it starts each consumer's vite server on those same checkouts, with its own config and aliases merged on top. Its `package.json` and lockfiles are not touched.
 
-Nothing in it belongs to one game or one schema: what gets mounted is what each provider of the train publishes and what each consumer declares. `--no-serve` stops at the vault, `--no-open` opens nothing, `--port` sets the dev server port, and `Ctrl+C` stops the servers. To follow `schema-pbta` continuously, `pnpm dev:schema-pbta -- <vault>` (#65) copies its packs again on every change.
+Nothing in it belongs to one game or one schema: what gets mounted is what each provider of the train publishes and what each consumer declares. `--no-serve` stops at the vault, `--no-open` opens nothing, `--port` sets the dev server port, and `Ctrl+C` stops the servers. To follow a provider (`schema-in-the-mist`, `schema-pbta` or `schema-adrenaline`) continuously in a test vault, with no release: `pnpm dev:schema --source <repository> --vault <vault>` (#65, guide: [`dev-schema.en.md`](dev-schema.en.md)).
 
 ### 6. `publish`: from the first dispatch to convergence
 

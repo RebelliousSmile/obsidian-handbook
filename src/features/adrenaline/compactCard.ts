@@ -16,7 +16,7 @@ const reportedForms = new Set<string>();
 
 /* Labels the published presentation leaves to the consumer: field names and enum values. */
 const FIELD_LABELS: Record<string, string> = {
-	zoneDeDetection: "Zone de détection", deplacement: "Dépl.", malusAvantHs: "Malus avant HS",
+	malusAvantHs: "Malus avant HS",
 	possessions: "Possessions", equipementFavori: "Équipement favori", armesPhysiques: "Armes physiques", armesPsychologiques: "Armes psychologiques",
 	role: "Rôle", attitude: "Attitude", personnalite: "Personnalité", historique: "Historique", evolutionPossible: "Évolution possible",
 	interpretation: "Interprétation", repliques: "Répliques", notesMj: "Notes du meneur",

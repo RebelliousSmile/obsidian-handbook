@@ -352,6 +352,21 @@ for (const card of zy2Cards) {
 }
 assert.equal(findAll(zy2Cards[1], `${CARD}__block-protections`).length, 0, "no protections on the small card");
 assert.equal(findAll(zy2Cards[1], `${CARD}__block-malus`).length, 0, "no malus on the small card");
+// A block the contract places across columns carries that span on the printed card: the stylesheet reads the class, not the contract.
+let spanningPrinted = 0;
+for (const [published, card] of [[PNJ_PRESENTATION, npcCard], [MONSTRE_PRESENTATION, zy2Card]] as const) {
+	for (const section of published.sections) {
+		for (const block of publishedBlocksOf({ sections: [section as { blocks: ReadonlyArray<object> }] }) as Array<{ id: string; placement?: { columnSpan?: number } }>) {
+			const span = block.placement?.columnSpan;
+			if (!span) continue;
+			for (const printed of findAll(card, `${CARD}__block-${block.id}`)) {
+				assert.ok(printed.classes.includes(`${CARD}__col-span-${span}`), `block ${block.id} prints its published column span ${span}`);
+				spanningPrinted += 1;
+			}
+		}
+	}
+}
+assert.ok(spanningPrinted > 0, "a spanning block is printed by the examples, so the span is proved on a real card");
 
 // The small card: health, then behaviour, under the one title the contract publishes (`joinedTo.title`), then the equipment.
 const joinedTitle = String(MONSTRE_PRESENTATION.sections.filter((section) => section.id === "comportement")[0].joinedTo?.title);
@@ -377,6 +392,22 @@ for (const card of [...zy2Cards, npcCard]) {
 		assert.equal(textOf(row), `${row.children[0].textContent} ${numbers.map((number) => number.textContent).join(" / ")}`, "the row reads SP 7 / 14 / 19 / 24");
 	}
 }
+// Thresholds entered as zero triplets are printed as entered; a side missing a number never reaches the card, the parse refuses it.
+const zy2Toml = readFileSync(join(sourceRoot, "examples", "adrenaline", "monstre", "infecte-zy-2.toml"), "utf8");
+const thresholdKeys = /^(superficiel|leger|grave|profond)\.base = .*$/gm;
+const zy2Zeros = adrenalineMonsterBlock.parse(zy2Toml.replace(thresholdKeys, (_line, key) => `${key}.base = { minimum = 0, current = 0, maximum = 0 }`));
+assert.ok(zy2Zeros, "Zy-2 with zero thresholds must parse");
+const zeroRows = thresholdRowsOf(adrenalineMonsterBlock.render(zy2Zeros, doc) as unknown as El);
+assert.ok(zeroRows.length > 0, "zero thresholds keep their rows");
+for (const row of zeroRows) assert.equal(textOf(row), "SP 0 / 0 / 0 / 0", "a zero threshold is printed as entered, never dropped or hidden");
+assert.ok(!adrenalineMonsterBlock.parse(zy2Toml.replace(/^(grave|profond)\.base = .*$/gm, "")), "a health side missing a threshold is refused, so a bare label cannot be printed");
+// The note of the danger level is called by an asterisk on the first level printed, then printed behind the same asterisk.
+const zy2WithNote = adrenalineMonsterBlock.parse(zy2Toml.replace(/^niveauDeDanger = .*$/m, (line) => `${line}\nniveauDeDangerNote = "Seul, hors horde"`));
+assert.ok(zy2WithNote, "Zy-2 with a danger note must parse");
+const zy2NoteCard = adrenalineMonsterBlock.render(zy2WithNote, doc) as unknown as El;
+assert.equal(only(zy2NoteCard, `${CARD}__banner-danger`, "one danger level").textContent, "ND 6*", "the asterisk calls the note on the level");
+assert.equal(only(zy2NoteCard, `${CARD}__banner-note`, "one danger note").textContent, "* Seul, hors horde", "the note is printed behind the same asterisk");
+assert.equal(findAll(zy2Card, `${CARD}__banner-note`).length, 0, "no note entered: no asterisk and no note line");
 // Creature banner: the contract's subtitle paths, entered values only, apart from the name; the PNJ publishes none.
 const subtitlePaths = publishedBlocksOf(MONSTRE_PRESENTATION).filter((published) => published.form === "name-card")[0].subtitlePaths;
 assert.ok(Array.isArray(subtitlePaths) && subtitlePaths.length > 0, "the contract publishes the creature subtitle");

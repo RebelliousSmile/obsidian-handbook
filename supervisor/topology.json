@@ -94,12 +94,22 @@
 				[
 					"npm",
 					"run",
+					"assert:block-templates"
+				],
+				[
+					"npm",
+					"run",
 					"assert:adrenaline-examples"
 				],
 				[
 					"npm",
 					"run",
 					"assert:adrenaline-coverage"
+				],
+				[
+					"npm",
+					"run",
+					"assert:adrenaline-pj"
 				],
 				[
 					"npm",

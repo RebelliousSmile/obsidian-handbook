@@ -1,12 +1,13 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.44.0",
+	"version": "2.45.0",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"packageManager": "pnpm@10.5.2",
 	"scripts": {
 		"dev": "node esbuild.config.mjs --watch",
-		"dev:schema-pbta": "node tools/dev-schema-source.mjs --source ../schema-pbta",
+		"dev:schema": "node tools/dev-schema.mjs",
+		"dev:schema-pbta": "node tools/dev-schema.mjs --source ../schema-pbta",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"build:bundle": "node esbuild.config.mjs production",
 		"assert:plugin-bundle": "node tools/assert-plugin-bundle.mjs",
@@ -26,6 +27,7 @@
 		"assert:repository-manifest": "node tools/assert-repository-manifest.mjs",
 		"assert:sibling-freshness": "node tools/assert-sibling-freshness.mjs",
 		"assert:source-installer": "node tools/assert-source-installer.mjs",
+		"assert:dev-schema": "node tools/assert-dev-schema.mjs",
 		"assert:schema-catalog": "node tools/assert-schema-catalog.mjs",
 		"e2e:request-url": "bash tools/e2e/request-url-journey.sh",
 		"e2e:layout-regions": "powershell -ExecutionPolicy Bypass -File tools/e2e/layout-regions-journey.ps1",

@@ -37,4 +37,22 @@ assert.match(
 );
 assert.match(collectDocuments, /addDocument\(leaf\.getContainer\(\)\?\.doc\)/);
 
+const reloadSources = onload.match(
+	/id: "reload-schema-sources",(?<body>[\s\S]*?)\r?\n\t\t\}\);/,
+)?.groups?.body;
+assert.ok(reloadSources, "the command that reloads installed schema sources must stay registered");
+assert.match(reloadSources, /name: t\("Reload installed schema sources"\)/);
+const refresh = reloadSources.indexOf("await this.refreshGameRegistry()");
+const repaint = reloadSources.indexOf("await this.reloadStyleSources()");
+assert.ok(
+	refresh !== -1 && repaint !== -1 && refresh < repaint,
+	"the registry must be read again before the style sources are reloaded",
+);
+const french = readFileSync("src/locales/fr.ts", "utf8");
+assert.match(
+	french,
+	/"Reload installed schema sources":\s*"[^"]+"/,
+	"the reload command must carry a French label",
+);
+
 console.log("plugin reload rerenders already-open Markdown views");

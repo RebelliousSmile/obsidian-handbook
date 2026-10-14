@@ -469,7 +469,7 @@ async function run(): Promise<void> {
 		check("the PbtA playbook is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-playbook")!, settings));
 		check("the PbtA non-player character is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-npc")!, settings));
 		check("the PbtA move is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-move")!, settings));
-		check("the unknown PbtA game exposes one handout", contents.handouts.map((block) => block.id).join(",") === "pbta-playbook");
+		check("the unknown PbtA game flags one game document", contents.blocks.filter((block) => block.handout).map((block) => block.id).join(",") === "pbta-playbook");
 		for (const id of ["pbta-team", "pbta-monster", "pbta-threat", "sprawl-matrix", "sprawl-mission", "sprawl-card"]) {
 			check(`the ${id} block is available from manifest capabilities`, isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === id)!, settings));
 		}

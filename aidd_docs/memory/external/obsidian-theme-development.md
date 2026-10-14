@@ -104,28 +104,27 @@ HTML et ne sont pas installées dans Obsidian. Les valeurs réellement consommé
 par Handbook sont dans `handbook/<jeu>/pack.json`, accompagnées des assets que
 ce manifeste déclare.
 
-Après avoir installé `RebelliousSmile/schema-pbta` une première fois dans le
-coffre, installer puis activer le plugin Obsidian `hot-reload`. Lancer ensuite
-depuis la racine de Handbook :
+Le plugin Handbook doit être installé dans le coffre ; installer puis activer
+le plugin Obsidian `hot-reload`. Lancer ensuite depuis la racine de Handbook :
 
 ```powershell
-cd C:\Users\fxgui\Documents\Code\Perso\handbook
-npm run dev:schema-pbta -- "C:\Users\fxgui\Documents\Perso\RPG\monsterhearts"
+cd C:\Users\fxgui\Documents\Code\Perso\obsidian\obsidian-handbook
+pnpm dev:schema --source ../schema-pbta --vault "C:\Users\fxgui\Documents\Perso\RPG\monsterhearts"
 ```
 
-Le watcher copie chaque `pack.json` et ses assets dans la source locale du
-coffre, crée le marqueur `.hotreload` et demande le rechargement de Handbook. Un
-JSON momentanément invalide pendant une sauvegarde n'écrase pas la dernière
-version valide. Le bouton **Reload installed sources** des réglages Handbook
-reste la solution manuelle de repli.
+La commande passe par l’installateur réel du plugin : elle valide le
+catalogue, remplace le dossier de la source d’un bloc (assets retirés compris),
+crée le marqueur `.hotreload` et demande le rechargement de Handbook. Un JSON
+momentanément invalide pendant une sauvegarde est refusé, avec le fichier en
+cause ; le dernier état valide reste. Sans Hot Reload, la commande **Recharger
+les sources de schéma installées** (palette) fait le même rechargement. Guide
+complet : `doc/dev-schema.fr.md`.
 
-Sous la version de npm utilisée sur Windows, le chemin du coffre doit rester un
-argument positionnel. Ne pas écrire `--vault` : npm intercepte cette option et
-ne la transmet pas au script. La synchronisation validée affiche :
+La synchronisation validée affiche, avec la révision `HEAD` du dépôt :
 
 ```text
-Synced 5 packs and requested Handbook reload.
-Watching C:\Users\fxgui\Documents\Code\Perso\schema-pbta for installable Handbook pack changes...
+[22:00:05] installed RebelliousSmile/schema-pbta 16897fb — masks@0.3.0, ...
+Watching C:\Users\fxgui\Documents\Code\Perso\obsidian\schema-pbta for installable changes...
 ```
 
 Garder ce terminal ouvert. Pour tester la boucle dans Obsidian :
@@ -136,7 +135,7 @@ Garder ce terminal ouvert. Pour tester la boucle dans Obsidian :
    `schema-pbta/handbook/monsterhearts/pack.json`, par exemple temporairement
    `--background-primary` ou `--text-normal` ;
 3. sauvegarder le JSON ;
-4. vérifier qu'une nouvelle ligne `Synced 5 packs...` apparaît et que Handbook
+4. vérifier qu'une nouvelle ligne `installed … ` apparaît et que Handbook
    est rechargé ;
 5. remettre la valeur finale souhaitée, puis lancer les validations du dépôt
    `schema-pbta`.
@@ -155,7 +154,7 @@ file:///C:/Users/fxgui/Documents/Code/Perso/schema-pbta/handbook/monsterhearts/p
 ```
 
 Pour une modification limitée à `schema-pbta`, il n'est pas nécessaire de
-lancer `npm run dev` dans Handbook : `dev:schema-pbta` et Hot Reload suffisent.
+lancer `npm run dev` dans Handbook : `dev:schema` et Hot Reload suffisent.
 `npm run dev` reste nécessaire lorsqu'on modifie aussi le TypeScript ou les SCSS
 propres à Handbook.
 
