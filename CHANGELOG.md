@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pnpm dev:schema-pbta` is now an alias of `pnpm dev:schema --source ../schema-pbta`. The former copy tool, which did not validate and only followed asset paths, is removed.
 - Adrenaline creature and NPC cards read the « Detection zone » and « Movement » labels from the published presentation instead of a local copy. The printed text is unchanged; the theme assertions now also cover the column span of a published block and the asterisk of the danger level note.
 - The player sheet lays its six protection locations out as tiles, three per row as on the paper sheet.
+- `supervise present` refuses a train whose record (`conduct`) leaves open a contract decision that touches the rendering, or a controller cycle past the maximum the topology sets with no decision recorded (#105). It judges no rendering and asks no approval; the other rules of conduct are written in `doc/supervisor.fr.md` and `doc/supervisor.en.md`.
 - The size ceiling of `dist/styles.css` checked by `assert:mist-font-packs` is raised from 160 000 to 165 000 bytes.
 
 ## [2.44.0] - 2026-10-14

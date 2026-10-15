@@ -73,7 +73,24 @@ export function checkTrain(train, topology, source = "train") {
 	if (!known.has(train.coordinationIssue.repo)) {
 		throw new SupervisorError(`${source}: coordination issue repository ${train.coordinationIssue.repo} is not in the topology`);
 	}
+	checkConductRecord(train.conduct, repos, source);
 	return train;
+}
+
+/** The conduct of the rendering phases: identifiers unique, cycles on items of the train, a decision dated only once taken. */
+function checkConductRecord(conduct, repos, source) {
+	if (!conduct) return;
+	const ids = new Set();
+	for (const decision of conduct.openDecisions ?? []) {
+		if (ids.has(decision.id)) throw new SupervisorError(`${source}: conduct.openDecisions lists "${decision.id}" twice`);
+		ids.add(decision.id);
+		if (decision.decidedAt !== undefined && decision.decision === undefined) {
+			throw new SupervisorError(`${source}: conduct.openDecisions "${decision.id}" has decidedAt but no decision`);
+		}
+	}
+	for (const cycle of conduct.cycles ?? []) {
+		if (!repos.has(cycle.item)) throw new SupervisorError(`${source}: conduct.cycles names ${cycle.item}, which is not an item of the train`);
+	}
 }
 
 export function serializeTrain(train) {

@@ -1,6 +1,6 @@
 ---
 objective: "`supervise present` refuse un train dont une décision de contrat touchant le rendu est restée ouverte, ou dont un élément a dépassé le nombre de cycles exécutant→contrôleur lu dans la topologie sans décision consignée ; le superviseur ne rouvre aucune approbation."
-status: pending
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->

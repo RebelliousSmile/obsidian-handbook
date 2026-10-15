@@ -118,6 +118,8 @@ pnpm supervise present
 
 Requires clean checkouts at `origin/main`, a train whose items are all `done`, and no repository engaged elsewhere. For each concerned repository, it reports the SHA, the commits since the base and the diff summary, then runs its validations (`validations` in the topology) **behind the publication guard**: a validation that tries `gh release create`, a workflow dispatch, `git push` or `git tag` fails. The presentation ends with the list of publications it binds.
 
+It also reads the optional `conduct` field of the train record, edited by hand, and refuses before any validation what the record itself says is open: a `conduct.openDecisions` entry that touches the rendering (`touchesRender`) and has no `decision`, and a `conduct.cycles` entry whose rank is past the topology's `conduct.maxControllerCycles` without a `decision`. The reason names the decision, or the item and the rank. With no `conduct` in the record, or no maximum in the topology, nothing is refused on this account; the supervisor does not judge the rendering (see [Conduct of a rendering phase](#conduct-of-a-rendering-phase)).
+
 A green presentation binds each repository to the commit its validations ran on. After it, a repository may only receive the commits the train needs: they touch its `trainFiles` only, and every release URL or SRI they introduce belongs to an archive the train observed. The commits the supervisor lands itself (adoption, manifests, records) therefore keep the presentation valid; any other change outdates it and sends you back to `present`. This binding is checked again before every step of `publish`, `converge`, `release` and `close`. The fingerprint of the presentation protects against an accidental edit of the train record, not against a deliberate one.
 
 The guard has a single rule table (`tools/supervisor/guard/rules.cjs`) and two interception paths, because neither is enough alone:
@@ -237,6 +239,15 @@ The validation covers **rendering and behaviour**: is the sheet or feature the o
 Everything technical moves on without asking: pack and version consistency, pins and SRI, release-train protocols, `pnpm check` / `npm run check` validations, provider CI. A red validation gets fixed in the code. It gets fixed in the validation itself in one case only: it compares to a figure a value the train moves, and that figure is replaced by a read of the source that declares it (see [What a guard may expect from a train](#what-a-guard-may-expect-from-a-train)). Then `ship --run` is run again. A validation is never bypassed: no validation disabled, no assertion removed, no comparator or threshold changed, no guard set aside. A defect of the supervisor gets fixed the same way, with its proof (`pnpm assert:supervisor`), and its code is pushed before the next run. It is reported afterwards, in the `present` report.
 
 What stays human: the corrections, the validation itself, and any deletion (branches, traces, files). The publication guard and the workflows are not changed to let a train through.
+
+## Conduct of a rendering phase
+
+A rendering phase is conducted in the conversation; the supervisor does not judge its result and asks for no approval. It carries two refusals only, read from the train record (`conduct`, § 5):
+
+1. **No decision of the contract that touches the rendering is left open.** It is recorded in `conduct.openDecisions` (`id`, `text`, `touchesRender`), then `decision` and `decidedAt` are written once it is settled. A decision that does not touch the rendering does not block.
+2. **No item goes past the number of executor → controller cycles the topology sets** (`conduct.maxControllerCycles`) without a decision recorded in `conduct.cycles` (`item`, `cycle`, `at`, `decision`). The number is read from the topology; it is written neither in the code nor here.
+
+The rest is conduct, not a guard: the rendering target (sheet, book, sizes, tables, inserts) is validated before a rendering item goes `done`; the contract decisions are taken before the rendering, not after; three checkpoints are fixed in advance; the heavy checks are played only after a validated rendering; the approval of a rendering is asked in the conversation, never in `ship`. The proposed text for the `ship-train` skill is in the folder of plan #105 (`ship-train-conduite.md`).
 
 ## What a guard may expect from a train
 

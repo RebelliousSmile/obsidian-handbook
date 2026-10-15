@@ -91,6 +91,42 @@
 		"closedAt": {
 			"description": "Written by supervise close --run, once the coordination issue is closed.",
 			"type": "string"
+		},
+		"conduct": {
+			"description": "How the rendering phases were conducted, edited by hand and read by supervise present: the decisions of the contract still open, and the executor-to-controller cycles each item went through.",
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"openDecisions": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "text", "touchesRender"],
+						"properties": {
+							"id": { "$ref": "#/definitions/id" },
+							"text": { "type": "string", "minLength": 1 },
+							"touchesRender": { "type": "boolean" },
+							"decision": { "type": "string", "minLength": 1 },
+							"decidedAt": { "type": "string", "minLength": 1 }
+						}
+					}
+				},
+				"cycles": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["item", "cycle", "at"],
+						"properties": {
+							"item": { "$ref": "#/definitions/id" },
+							"cycle": { "type": "integer", "minimum": 1 },
+							"at": { "type": "string", "minLength": 1 },
+							"decision": { "type": "string", "minLength": 1 }
+						}
+					}
+				}
+			}
 		}
 	},
 	"definitions": {

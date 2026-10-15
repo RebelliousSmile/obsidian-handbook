@@ -49,13 +49,17 @@ Les cases « fait côté contrat » se confirment une dernière fois au rendu su
 
 ## Décisions à trancher
 
-- **D1** — Libellé du choc : « rounds » (clé) ou « ROUND » (libellé publié) ; la feuille dit « ROUND ».
-- **D2** — Étiquettes « Première colonne » / « Seconde colonne » des blessures.
-- **D3** — Libellé « malus ».
-- **D4** — Anciens `.toml` portant `armesMentales` : refus net ou relecture tolérante.
+- **D1** — **tranché (2026-10-15) : « ROUND »**, le libellé publié, comme la feuille. Vérifié : un seul groupe de cinq cercles, libellé « ROUND » lu de la présentation ; aucun écart côté Handbook.
+- **D2** — **tranché : pas d'étiquettes de colonne**. La feuille n'en imprime pas ; `premiereColonne` et `secondeColonne` restent des clés de document. Vérifié : `renderWoundCircles` n'écrit que les durées (HEURE, JOUR, SEMAINE, MOIS, en petites capitales) ; aucun écart côté Handbook.
+- **D3** — **tranché : le mot de la feuille**. « malus » s'imprime tel que la feuille le dit (« 1 malus » sur les seuils, « Total des malus ») ; le nombre vient de la présentation. Aucun écart côté Handbook.
+- **D4** — **tranché : « armes mentales », non**. Le champ est sorti du contrat ; un ancien `.toml` qui le porte est refusé net, avec le chemin du champ (témoins : PJ, PNJ, créature, delta d'état ; corpus `refus/`). `upgradeLegacyPj` ne le retire pas et aucune relecture tolérante n'est ajoutée. Les valeurs des prétirés du coffre Zombiology sont à relever à la main avant retrait (section 3 bis).
 - **D5** — Garde de version du contrat : « majeur installé ≥ majeur déclaré dans `package.json` » (livrée) contre le littéral d'origine. Le littéral ne pouvait pas laisser passer un train de rang majeur ; le comparateur est néanmoins changé.
 - **D6** — Seuils : que zéro veuille dire « non saisi » (et ne s'imprime pas) est une décision de contrat, donc de `schema-adrenaline`. Aujourd'hui `SP 0 / 0 / 0 / 0` s'imprime tel que saisi.
 - **D7** — Plafond CSS : marge de 80 octets, relèvement du plafond (décision de l'utilisateur) ou réduction par suppression de règles, ce qui suppose de publier la liste fermée des valeurs que le contrat énumère (formes, dispositions, alignements, surfaces) pour prouver le non-usage.
+
+## Principe du nettoyage (2026-10-15)
+
+La feuille imprimée est la référence ; ce qui ne lui est pas conforme se nettoie. Écart restant, qui relève du contrat et non de Handbook : le libellé « Équipement favori » (`FIELD_LABELS` de `renderer.ts`) n'existe pas sur la feuille, qui ne distingue pas l'équipement favori (mention « (favorite) » sous « Avantages et immunités »). À demander à `schema-adrenaline` : retirer le champ du bloc `possessions` ou publier son libellé. Tant que le contrat le porte, Handbook l'imprime.
 
 ## Restes d'autres dépôts
 

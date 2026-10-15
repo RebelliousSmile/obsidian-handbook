@@ -46,7 +46,35 @@ function checkPreconditions(root, topology, train, repos) {
 	if (pending.length > 0) {
 		throw new SupervisorError(`present: not every item is done: ${pending.map((item) => `${item.label} (${item.state})`).join(", ")}; see supervise next`, 1);
 	}
+	const conduct = checkConduct(topology, train);
+	if (conduct.length > 0) throw new SupervisorError(`present: the conduct of the rendering phases is not settled\n  ${conduct.join("\n  ")}`, 1);
 	return checkCheckouts(root, repos, "present");
+}
+
+/**
+ * What the train recorded of the conduct of its rendering phases, against what the topology asks: a
+ * decision of the contract that touches the rendering is taken before the train leaves, and a cycle
+ * past the maximum of the topology carries the decision to go on. The supervisor judges no rendering;
+ * it only refuses what the record itself says is open.
+ */
+export function checkConduct(topology, train) {
+	const reasons = [];
+	const conduct = train.conduct;
+	if (!conduct) return reasons;
+	for (const decision of conduct.openDecisions ?? []) {
+		if (decision.touchesRender && decision.decision === undefined) {
+			reasons.push(`decision "${decision.id}" touches the rendering and has no recorded decision: ${decision.text}`);
+		}
+	}
+	const maximum = topology.conduct?.maxControllerCycles;
+	if (maximum !== undefined) {
+		for (const cycle of conduct.cycles ?? []) {
+			if (cycle.cycle > maximum && cycle.decision === undefined) {
+				reasons.push(`${cycle.item}: controller cycle ${cycle.cycle} is past the maximum of ${maximum} the topology sets and has no recorded decision`);
+			}
+		}
+	}
+	return reasons;
 }
 
 /** What differs in the checkout from its commit, as `git status --porcelain` lines. The coordinator's train records are not a change. */

@@ -405,6 +405,97 @@ scenario("present binds the SHAs without a terminal", (world) => {
 	assert.deepEqual(bindingMessages(world, topology), []);
 });
 
+/** The conduct the train carries, written beside the rest of its record, as the user edits it by hand. */
+function writeConduct(world: World, conduct: Record<string, unknown> | null): void {
+	const file = trainPath(world);
+	const record = JSON.parse(readFileSync(file, "utf8"));
+	if (conduct === null) delete record.conduct;
+	else record.conduct = conduct;
+	writeFileSync(file, `${JSON.stringify(record, null, "	")}
+`);
+}
+
+/** The maximum of controller cycles a topology file sets, read from it: the harness never writes the number itself. */
+function maxCycles(topology: string): number {
+	return JSON.parse(readFileSync(topology, "utf8")).conduct.maxControllerCycles;
+}
+
+/** A topology file without the conduct section, as one written before it existed. */
+function withoutConduct(world: World, topology: string): string {
+	const file = resolve(world.tmp, "topology-without-conduct.json");
+	const copy = JSON.parse(readFileSync(topology, "utf8"));
+	delete copy.conduct;
+	writeFileSync(file, JSON.stringify(copy));
+	return file;
+}
+
+scenario("present refuses a decision that touches the rendering and has none recorded, before any validation, and names it", (world) => {
+	const topology = testTopology(world, Object.fromEntries(EVIDENCE_REPOS.map((repo) => [repo, [countingValidation(world, repo)]])));
+	doneTrain(world);
+	writeConduct(world, { openDecisions: [{ id: "round-label", text: "Which label the shock circles carry", touchesRender: true }] });
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stderr, /conduct of the rendering phases is not settled/);
+	assert.match(result.stderr, /decision "round-label" touches the rendering/);
+	for (const repo of EVIDENCE_REPOS) assert.equal(runsOf(world, repo), 0, `${repo}: a validation ran before the refusal`);
+	assert.ok(!("presentation" in readRecord(world)), "a refused present wrote a presentation");
+});
+
+scenario("present accepts a decision that is recorded, one that does not touch the rendering, and a train without conduct", (world) => {
+	const topology = testTopology(world);
+	doneTrain(world);
+	writeConduct(world, {
+		openDecisions: [
+			{ id: "round-label", text: "Which label the shock circles carry", touchesRender: true, decision: "ROUND, as the sheet", decidedAt: "2026-10-15" },
+			{ id: "export-order", text: "Order of the exported fields", touchesRender: false },
+		],
+	});
+	ok(world.supervise(["present"], { topology }), "present with a recorded decision and a decision that does not touch the rendering");
+	writeConduct(world, null);
+	ok(world.supervise(["present"], { topology }), "present without conduct");
+});
+
+scenario("present refuses a cycle past the maximum of the topology without a decision, naming the item and the rank; a recorded decision lets it go", (world) => {
+	const topology = testTopology(world, Object.fromEntries(EVIDENCE_REPOS.map((repo) => [repo, [countingValidation(world, repo)]])));
+	doneTrain(world);
+	const past = maxCycles(topology) + 1;
+	writeConduct(world, { cycles: [
+		{ item: "lantern", cycle: maxCycles(topology), at: "2026-10-15" },
+		{ item: "lantern", cycle: past, at: "2026-10-15" },
+	] });
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, result.stderr);
+	assert.match(result.stderr, new RegExp(`lantern: controller cycle ${past} is past the maximum of ${maxCycles(topology)}`));
+	for (const repo of EVIDENCE_REPOS) assert.equal(runsOf(world, repo), 0, `${repo}: a validation ran before the refusal`);
+
+	writeConduct(world, { cycles: [{ item: "lantern", cycle: past, at: "2026-10-15", decision: "Third pass kept: the table moved after the first review" }] });
+	ok(world.supervise(["present"], { topology }), "present with the cycle decided");
+});
+
+scenario("a topology without the conduct section counts no cycle", (world) => {
+	const topology = withoutConduct(world, testTopology(world));
+	doneTrain(world);
+	writeConduct(world, { cycles: [{ item: "lantern", cycle: 9, at: "2026-10-15" }] });
+	ok(world.supervise(["present"], { topology }), "present without a maximum in the topology");
+});
+
+scenario("a record whose conduct repeats an id, dates an undecided decision or names a stranger item is refused by name", (world) => {
+	const topology = testTopology(world);
+	seedIssues(world);
+	openTrain(world);
+	ok(world.supervise(["link", "lantern#40"]), "link lantern");
+	const refuse = (conduct: Record<string, unknown>, expected: RegExp, label: string) => {
+		writeConduct(world, conduct);
+		const result = world.supervise(["next"], { topology });
+		assert.notEqual(result.status, 0, `${label}: the record was accepted`);
+		assert.match(result.stderr, expected, label);
+	};
+	const decision = (id: string, rest: Record<string, unknown> = {}) => ({ id, text: "A decision", touchesRender: true, ...rest });
+	refuse({ openDecisions: [decision("same"), decision("same")] }, /lists "same" twice/, "repeated id");
+	refuse({ openDecisions: [decision("dated", { decidedAt: "2026-10-15" })] }, /"dated" has decidedAt but no decision/, "date without decision");
+	refuse({ cycles: [{ item: "schema-pbta", cycle: 1, at: "2026-10-15" }] }, /names schema-pbta, which is not an item of the train/, "stranger item");
+});
+
 scenario("approve is no longer a command, and the help does not name it", (world) => {
 	const result = world.supervise(["approve"]);
 	assert.equal(result.status, 2, result.stderr);

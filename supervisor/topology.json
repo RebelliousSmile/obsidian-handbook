@@ -212,5 +212,8 @@
 				]
 			]
 		}
-	]
+	],
+	"conduct": {
+		"maxControllerCycles": 2
+	}
 }
