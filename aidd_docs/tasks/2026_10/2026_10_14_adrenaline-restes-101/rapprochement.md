@@ -17,13 +17,13 @@ Corps proposé pour l'issue. Chaque case des sections 2, 3 et 3 bis est confront
 | Case | État |
 | --- | --- |
 | En-tête d'état : pastille cyan et case à cocher | **fait** (forme `state-header` dessinée ; case de l'état actuel). Le placement « devant le nom » reste à juger au rendu. |
-| « Insensible » | **fait** côté contrat (publié par le schéma créature) ; rendu à confirmer sur un bloc réel. |
+| « Insensible » | **fait** côté contrat (publié par le schéma créature) ; **rendu confirmé le 2026-10-15** par l'utilisateur sur `infecte-zy-2` et `infecte-rodeur` (coffre Zombiology). |
 | Détection et déplacement sur la ligne des caractéristiques | **fait** (`pointerRows` publiés ; libellés lus dans la présentation). |
 | LOG, VOL et CHA hors du contrat créature | **fait** : le contrat publié ne porte que `for`, `con`, `dex`, `rap`, `per`. |
-| Petite carte de l'état secondaire : une section « Comportement et santé » | **fait** côté contrat ; **à confirmer au rendu** sur le coffre Zombiology. |
+| Petite carte de l'état secondaire : une section « Comportement et santé » | **fait** côté contrat ; **rendu confirmé le 2026-10-15** par l'utilisateur sur le coffre Zombiology (`infecte-zy-2`, `infecte-rodeur`, `predateur-pensant`). |
 | Garde « toute forme publiée est dessinée » | **fait** : `assert:adrenaline-theme` (garde de couverture et preuve négative sous forme inconnue). |
 | Liste d'états fermée : un seul état en plus de la base | **fait** : `maxItems` = 1 dans le contrat publié. |
-| Créature à carte unique : équipement sur la carte unique | **fait** côté contrat ; **à confirmer au rendu**. |
+| Créature à carte unique : équipement sur la carte unique | **fait** côté contrat ; **rendu confirmé le 2026-10-15** par l'utilisateur sur le témoin `predateur-pensant` du coffre Zombiology. |
 | Lignes libellées sous Comportement | **tranché le 2026-10-15 : on garde `comportement`** (liste de traits en texte libre, déjà imprimée sous « Comportement et santé ») ; une ligne libellée s'écrit « Idée fixe : … » dans le trait. Aucun champ dédié, aucun changement de contrat. |
 
 ## Section 3 : fiche PJ
@@ -45,7 +45,8 @@ Les cases « fait côté contrat » se confirment une dernière fois au rendu su
 ## Section 3 bis : coffre Zombiology
 
 - [ ] Passage sur les blocs créature et PNJ et sur les modèles de bloc : **ouvert** (geste au cas par cas, hors dépôt).
-- [ ] Passage sur les blocs PJ ; valeurs `armesMentales` des prétirés listées avant retrait : **ouvert**.
+- [x] Relevé des valeurs `armesMentales` des prétirés (2026-10-15, lecture seule du coffre) : **aucune valeur à relever**. Les 91 blocs `adrenaline-pj` / `adrenaline-pnj` / `adrenaline-monstre` du coffre (20 PJ : 6 prétirés de `07-pretires-2.md`, leurs 6 copies de `PAJ1.md`, 5 de `Scénario I3P.md`, 3 Naïma Berthier) ne portent aucun champ `armesMentales` ; tous les blocs PJ passent `parsePjToml` du contrat 6.0.0. La seule mention est un intertitre de prose « Armes physiques et mentales » dans `Scénario I3P.md` (Vincent : une arme sociale « Interrogatoire », profil déduit 1d10 choquante), qui n'est pas un champ et ne bloque rien. Deux blocs créature « Rôdeur accordé », dans les preuves historiques `aidd_docs/` du coffre (pas des notes vivantes), sont refusés pour une autre raison : `etats` porte plus d'un élément (maximum 1).
+- [ ] Passage sur les blocs PJ : **ouvert** (geste au cas par cas, hors dépôt) ; plus rien n'est à relever avant le retrait du champ.
 
 ## Décisions à trancher
 

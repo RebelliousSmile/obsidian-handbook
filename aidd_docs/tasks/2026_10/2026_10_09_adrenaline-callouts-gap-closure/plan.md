@@ -1,6 +1,6 @@
 ---
 objective: "L'issue schema-adrenaline#40 est fermée sur preuves : chaque critère d'acceptation est vérifié au rendu, et les écarts réels restants (retrait des listes, filet de h4, preuves manquantes) sont corrigés par un train du superviseur."
-status: pending
+status: closed-on-audit
 ---
 
 # Plan: Clore schema-adrenaline#40 (callouts, titres et listes Zombiology)
@@ -36,3 +36,7 @@ status: pending
 | Étendre l'existant, ne pas dupliquer | La preuve de (c) complète `assertAdrenalineZombiologyStyle`, qui couvre déjà h3, h4 et le glyphe. |
 | Pas de train si l'audit est propre | Un train sans changement est refusé par `present` (cas du train Monsterhearts). |
 | L'issue sœur Handbook est ouverte à la phase 3, pas avant | Elle n'a de sens que pour un écart réel côté consommateur ; sinon on documente son absence dans #40. |
+
+## Audit du 2026-10-15
+
+Critères 1 à 5 tenus (preuves : `nativeCallouts.ts`, `validate:pack`, `validate:presentation`, `assert:adrenaline-zombiology-style`, `callouts-example.md`), critère 6 sans objet. Écarts (a), (b), (e), (f) tranchés hors périmètre ou voulu ; aucun train : phases 2 à 4 sautées. Le tableau d'audit est le commentaire de clôture de #40.
