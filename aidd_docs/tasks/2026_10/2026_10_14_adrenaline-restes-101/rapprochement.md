@@ -44,9 +44,9 @@ Les cases « fait côté contrat » se confirment une dernière fois au rendu su
 
 ## Section 3 bis : coffre Zombiology
 
-- [ ] Passage sur les blocs créature et PNJ et sur les modèles de bloc : **ouvert** (geste au cas par cas, hors dépôt).
+- [x] Passage sur les blocs créature, PNJ et PJ (2026-10-15, lecture seule du coffre, codecs du contrat 6.1.0) : les 73 blocs vivants du coffre `zombiology` parsent sans refus (19 `adrenaline-monstre`, 34 `adrenaline-pnj`, 20 `adrenaline-pj`) ; aucun bloc à corriger. Reste le verdict de rendu dans l'application, geste de l'utilisateur.
 - [x] Relevé des valeurs `armesMentales` des prétirés (2026-10-15, lecture seule du coffre) : **aucune valeur à relever**. Les 91 blocs `adrenaline-pj` / `adrenaline-pnj` / `adrenaline-monstre` du coffre (20 PJ : 6 prétirés de `07-pretires-2.md`, leurs 6 copies de `PAJ1.md`, 5 de `Scénario I3P.md`, 3 Naïma Berthier) ne portent aucun champ `armesMentales` ; tous les blocs PJ passent `parsePjToml` du contrat 6.0.0. La seule mention est un intertitre de prose « Armes physiques et mentales » dans `Scénario I3P.md` (Vincent : une arme sociale « Interrogatoire », profil déduit 1d10 choquante), qui n'est pas un champ et ne bloque rien. Deux blocs créature « Rôdeur accordé », dans les preuves historiques `aidd_docs/` du coffre (pas des notes vivantes), sont refusés pour une autre raison : `etats` porte plus d'un élément (maximum 1).
-- [ ] Passage sur les blocs PJ : **ouvert** (geste au cas par cas, hors dépôt) ; plus rien n'est à relever avant le retrait du champ.
+- [x] Passage sur les blocs PJ : couvert par la ligne précédente (20 blocs, aucun refus).
 
 ## Décisions à trancher
 
