@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adrenaline contract 6.0.0: a damage threshold of zero on a non-player character or a creature is a blank field, not a value. The block is refused with the reading error instead of printing `SP 0 / 0 / 0 / 0`. Enter the real threshold, or remove the health block.
 
+### Fixed
+
+- `pnpm check` no longer fails in `assert:dev-schema` when the supervisor runs it under its guard: the local source read `HEAD` through `promisify(execFile)`, which the guard's wrapper turns into a bare string.
+
 ## [2.45.0] - 2026-10-14
 
 ### Added

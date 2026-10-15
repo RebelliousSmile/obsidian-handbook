@@ -1,11 +1,18 @@
 import { execFile } from "node:child_process";
 import { readFile, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { promisify } from "node:util";
 import type { ResolvedGithubSource } from "../../src/games/githubSources";
 import { resolveInside } from "./nodeAdapter.mjs";
 
-const run = promisify(execFile);
+/**
+ * `promisify(execFile)` is not used: the supervisor guard replaces `execFile` and
+ * drops its custom promisified form, which would resolve a bare string.
+ */
+function run(file: string, args: string[], options: { env: NodeJS.ProcessEnv }): Promise<{ stdout: string }> {
+	return new Promise((done, fail) => {
+		execFile(file, args, { ...options, encoding: "utf8" }, (error, stdout) => (error ? fail(error) : done({ stdout })));
+	});
+}
 
 /** `HEAD` of the checkout, which must itself be the repository root. */
 async function headRevision(root: string): Promise<string> {
