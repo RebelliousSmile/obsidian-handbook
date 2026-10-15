@@ -18,6 +18,9 @@ import {
 } from "../src/features/blocks/pasteToml";
 import { tomlExportForBlock } from "../src/features/blocks/tomlExports";
 import { normalizeSettings } from "../src/settings/types";
+import { tNoun } from "../src/utils/i18n";
+import { TOML_EXPORTS } from "../src/features/blocks/tomlExports";
+import { loadPbtaRenderCases, PBTA_TARGET_TO_BLOCK } from "./pbtaContractCorpus.mts";
 
 class FakeEditor {
 	constructor(private readonly source: string, private readonly line: number) {}
@@ -168,4 +171,44 @@ for (const target of sourceTargets as (keyof typeof MIST_SOURCE_CONVERSION_CODEC
 	const raw = readFileSync(join("node_modules/schema-in-the-mist/corpus/contract", entry.file), "utf8");
 	assert.equal(MIST_SOURCE_CONVERSION_CODECS[target].convertToSource(raw).kind, "concise");
 	assert.deepEqual(MIST_SOURCE_CONVERSION_CODECS[target].convertToSource(`${raw}\n# keep`).source, `${raw}\n# keep`);
+}
+
+// PbtA blocks keep their source as TOML: a Lantern export pasted over one is
+// the document itself, accepted when the block parses it and refused otherwise.
+const pbtaBlockIds = Array.from(new Set(
+	Object.keys(PBTA_TARGET_TO_BLOCK).map((target) => PBTA_TARGET_TO_BLOCK[target as keyof typeof PBTA_TARGET_TO_BLOCK]),
+)).sort();
+const pbtaSpecs = TOML_EXPORTS.filter((spec) => (pbtaBlockIds as string[]).indexOf(spec.block.id) !== -1);
+assert.deepEqual(pbtaSpecs.map((spec) => spec.block.id).sort(), pbtaBlockIds, "every PbtA block owes a TOML export");
+for (const spec of pbtaSpecs) {
+	assert.equal(spec.sourceIsToml, true, `${spec.block.id} must offer the paste: its source is TOML`);
+	assert.notEqual(tNoun(spec.noun, "fr"), spec.noun, `${spec.block.id}: the paste entry needs a French noun`);
+}
+const pbtaCases = loadPbtaRenderCases();
+assert.ok(pbtaCases.length > 0, "the schema-pbta corpus holds render cases");
+for (const entry of pbtaCases) {
+	const owner = PBTA_TARGET_TO_BLOCK[entry.target];
+	const spec = pbtaSpecs.filter((candidate) => candidate.block.id === owner)[0];
+	assert.ok(tomlToBlockSource(entry.source, spec) !== null, `${entry.path}: a Lantern export must paste into ${owner}`);
+	assert.ok(
+		tomlToBlockSource(["```toml", entry.source, "```"].join("\n"), spec) !== null,
+		`${entry.path}: the fenced clipboard must paste into ${owner} too`,
+	);
+}
+// A document of another target is refused. The single exception is the blank
+// Sprawl sheet of a matrix, a mission, a corporation or a resource, which holds
+// nothing that tells the three blocks apart: the contract parses it as each.
+for (const entry of pbtaCases) {
+	const owner = PBTA_TARGET_TO_BLOCK[entry.target];
+	const blankSprawl = /^valid\/the-sprawl-(matrix|mission|corporation|resource)-blank\.toml$/.test(entry.path);
+	for (const spec of pbtaSpecs) {
+		if (spec.block.id === owner) continue;
+		const sameFamily = owner.indexOf("sprawl-") === 0 && spec.block.id.indexOf("sprawl-") === 0;
+		const accepted = tomlToBlockSource(entry.source, spec) !== null;
+		assert.equal(
+			accepted,
+			blankSprawl && sameFamily,
+			`${entry.path} (${owner}) pasted into ${spec.block.id} must be ${blankSprawl && sameFamily ? "accepted" : "refused"}`,
+		);
+	}
 }

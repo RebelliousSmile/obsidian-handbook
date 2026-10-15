@@ -76,6 +76,13 @@ export const fr: Translations = {
 	"noun:Adrenaline monster": "le monstre Adrenaline",
 	"noun:PbtA playbook": "le livret PbtA",
 	"noun:PbtA move": "le move PbtA",
+	"noun:PbtA non-player character": "le personnage non joueur PbtA",
+	"noun:PbtA team": "l'Èquipe PbtA",
+	"noun:PbtA monster": "le monstre PbtA",
+	"noun:PbtA threat": "la menace PbtA",
+	"noun:Sprawl matrix sheet": "la fiche de matrice du Sprawl",
+	"noun:Sprawl mission": "la mission du Sprawl",
+	"noun:Sprawl MC card": "la carte du MC du Sprawl",
 
 	// Settings: sections
 	"Installed versions": "Versions install√©es",

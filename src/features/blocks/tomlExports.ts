@@ -217,6 +217,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-pbta-playbook-as-toml",
 		noun: "PbtA playbook",
 		toToml: pbtaPlaybookToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta playbook contract"),
 	},
@@ -225,6 +226,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-pbta-move-as-toml",
 		noun: "PbtA move",
 		toToml: pbtaMoveToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta move contract"),
 	},
@@ -233,6 +235,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-pbta-npc-as-toml",
 		noun: "PbtA non-player character",
 		toToml: pbtaNpcToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta npc contract"),
 	},
@@ -241,6 +244,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-pbta-team-as-toml",
 		noun: "PbtA team",
 		toToml: pbtaTeamToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta team contract"),
 	},
@@ -249,6 +253,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-pbta-monster-as-toml",
 		noun: "PbtA monster",
 		toToml: pbtaMonsterToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta monster contract"),
 	},
@@ -257,6 +262,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-pbta-threat-as-toml",
 		noun: "PbtA threat",
 		toToml: pbtaThreatToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta threat contract"),
 	},
@@ -265,6 +271,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-sprawl-matrix-as-toml",
 		noun: "Sprawl matrix sheet",
 		toToml: sprawlMatrixToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta Sprawl matrix contract"),
 	},
@@ -273,6 +280,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-sprawl-mission-as-toml",
 		noun: "Sprawl mission",
 		toToml: sprawlMissionToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta Sprawl mission contract"),
 	},
@@ -281,6 +289,7 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-sprawl-card-as-toml",
 		noun: "Sprawl MC card",
 		toToml: sprawlCardToToml,
+		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta Sprawl card contract"),
 	},

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `pnpm dev:schema --source <repository> --vault <vault>` shows an edit of `schema-in-the-mist`, `schema-pbta` or `schema-adrenaline` in a test vault with no release, no tag and no change to the pin. It installs through the plugin's own installer, so the catalogue is validated, the source folder is replaced as one block and the assets the provider no longer declares are removed; an invalid pack is refused with the file named and the last valid state stays. The vault's `data.json` is never written. Guides: `doc/dev-schema.en.md` and `doc/dev-schema.fr.md`.
 - The command « Reload installed schema sources » (« Recharger les sources de schéma installées ») reads the installed sources again and repaints, for a vault without the Hot Reload plugin.
+- « Paste TOML into … » (« Coller du TOML dans … ») is now offered on the PbtA playbook, move, non-player character, team, monster and threat blocks and on the Sprawl matrix, mission and card blocks: a Lantern export replaces the body of the block when the block accepts it, as for the Mist and Adrenaline blocks (#106).
 
 ### Changed
 
