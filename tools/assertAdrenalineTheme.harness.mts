@@ -392,14 +392,12 @@ for (const card of [...zy2Cards, npcCard]) {
 		assert.equal(textOf(row), `${row.children[0].textContent} ${numbers.map((number) => number.textContent).join(" / ")}`, "the row reads SP 7 / 14 / 19 / 24");
 	}
 }
-// Thresholds entered as zero triplets are printed as entered; a side missing a number never reaches the card, the parse refuses it.
+// A threshold of zero is a blank field, not a value: the contract refuses it, so the card is never printed with `SP 0 / 0 / 0 / 0`.
 const zy2Toml = readFileSync(join(sourceRoot, "examples", "adrenaline", "monstre", "infecte-zy-2.toml"), "utf8");
 const thresholdKeys = /^(superficiel|leger|grave|profond)\.base = .*$/gm;
-const zy2Zeros = adrenalineMonsterBlock.parse(zy2Toml.replace(thresholdKeys, (_line, key) => `${key}.base = { minimum = 0, current = 0, maximum = 0 }`));
-assert.ok(zy2Zeros, "Zy-2 with zero thresholds must parse");
-const zeroRows = thresholdRowsOf(adrenalineMonsterBlock.render(zy2Zeros, doc) as unknown as El);
-assert.ok(zeroRows.length > 0, "zero thresholds keep their rows");
-for (const row of zeroRows) assert.equal(textOf(row), "SP 0 / 0 / 0 / 0", "a zero threshold is printed as entered, never dropped or hidden");
+assert.ok(!adrenalineMonsterBlock.parse(zy2Toml.replace(thresholdKeys, (_line, key) => `${key}.base = 0`)), "Zy-2 with zero thresholds must be refused, not printed");
+assert.ok(!adrenalineMonsterBlock.parse(zy2Toml.replace(thresholdKeys, (_line, key) => `${key}.base = { minimum = 0, current = 0, maximum = 0 }`)), "zero threshold triplets must be refused too");
+assert.ok(adrenalineMonsterBlock.parse(zy2Toml.replace(thresholdKeys, (_line, key) => `${key}.base = { minimum = 0, current = 7, maximum = 7 }`)), "a triplet keeps its minimum at zero and its current at one or more");
 assert.ok(!adrenalineMonsterBlock.parse(zy2Toml.replace(/^(grave|profond)\.base = .*$/gm, "")), "a health side missing a threshold is refused, so a bare label cannot be printed");
 // The note of the danger level is called by an asterisk on the first level printed, then printed behind the same asterisk.
 const zy2WithNote = adrenalineMonsterBlock.parse(zy2Toml.replace(/^niveauDeDanger = .*$/m, (line) => `${line}\nniveauDeDangerNote = "Seul, hors horde"`));

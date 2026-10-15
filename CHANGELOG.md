@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.0] - 2026-10-15
+
+### Changed
+
+- Adrenaline contract 6.0.0: a damage threshold of zero on a non-player character or a creature is a blank field, not a value. The block is refused with the reading error instead of printing `SP 0 / 0 / 0 / 0`. Enter the real threshold, or remove the health block.
+
 ## [2.45.0] - 2026-10-14
 
 ### Added
