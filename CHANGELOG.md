@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.1] - 2026-10-15
+
+### Changed
+
+- Adrenaline contract 6.1.0: the published JSON Schema of a creature now refuses `etatAlternatif` together with `etats` or `etatActif`, as the block parser already did. A JSON Schema validator reading a creature no longer accepts the mix; the rendering of a block is unchanged.
+
 ## [2.46.0] - 2026-10-15
 
 ### Changed
