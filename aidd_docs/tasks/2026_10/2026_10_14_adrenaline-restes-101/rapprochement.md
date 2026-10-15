@@ -24,7 +24,7 @@ Corps proposé pour l'issue. Chaque case des sections 2, 3 et 3 bis est confront
 | Garde « toute forme publiée est dessinée » | **fait** : `assert:adrenaline-theme` (garde de couverture et preuve négative sous forme inconnue). |
 | Liste d'états fermée : un seul état en plus de la base | **fait** : `maxItems` = 1 dans le contrat publié. |
 | Créature à carte unique : équipement sur la carte unique | **fait** côté contrat ; **à confirmer au rendu**. |
-| Lignes libellées sous Comportement | **décision en attente** (champ `comportement` existant ou champ dédié, ajout non cassant). |
+| Lignes libellées sous Comportement | **tranché le 2026-10-15 : on garde `comportement`** (liste de traits en texte libre, déjà imprimée sous « Comportement et santé ») ; une ligne libellée s'écrit « Idée fixe : … » dans le trait. Aucun champ dédié, aucun changement de contrat. |
 
 ## Section 3 : fiche PJ
 
@@ -60,7 +60,7 @@ Les cases « fait côté contrat » se confirment une dernière fois au rendu su
 
 ## Principe du nettoyage (2026-10-15)
 
-La feuille imprimée est la référence ; ce qui ne lui est pas conforme se nettoie. Écart restant, qui relève du contrat et non de Handbook : le libellé « Équipement favori » (`FIELD_LABELS` de `renderer.ts`) n'existe pas sur la feuille, qui ne distingue pas l'équipement favori (mention « (favorite) » sous « Avantages et immunités »). À demander à `schema-adrenaline` : retirer le champ du bloc `possessions` ou publier son libellé. Tant que le contrat le porte, Handbook l'imprime.
+La feuille imprimée est la référence ; ce qui ne lui est pas conforme se nettoie. Écart écarté (décision de l'utilisateur, 2026-10-15) : le libellé « Équipement favori » (`FIELD_LABELS` de `renderer.ts`) n'existe pas sur la feuille, mais on ne demande rien à `schema-adrenaline` et Handbook continue de l'imprimer tant que le contrat porte le champ. Ne plus le relever comme reste.
 
 ## Restes d'autres dépôts
 

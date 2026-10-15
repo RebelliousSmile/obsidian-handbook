@@ -1,0 +1,106 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "release-handbook-2-45-0",
+	"title": "Release Handbook 2.45.0 (dev:schema, conduct of a rendering phase, paste TOML on PbtA)",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 110,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/110"
+	},
+	"items": [
+		{
+			"repo": "obsidian-handbook",
+			"issue": 106,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/106",
+			"title": "PbtA : coller le TOML du presse-papiers dans un bloc rendu (comme Mist et Adrenaline)",
+			"baseSha": "f5447326d3568301d621aeb35e36e784d7d8a121",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {},
+	"presentation": {
+		"presentedAt": "2026-10-15T09:48:38.825Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:565ed2ad60a1015a75bf5186e48d640d31e2d6b11cb75524711dfe914ee5ff2c",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "f5447326d3568301d621aeb35e36e784d7d8a121",
+				"baseSha": "f5447326d3568301d621aeb35e36e784d7d8a121",
+				"commits": [],
+				"diffstat": "",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "\n> obsidian-handbook@2.45.0 check C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/check.mjs\n\n\ncheck: this exact content already passed; nothing replayed (HANDBOOK_CHECK_FORCE=1 to replay).",
+						"durationMs": 732
+					}
+				],
+				"evidence": {
+					"key": "068c394f2c37038670fca2c329ff918561f36620f412139a5c6a0db330415ae0",
+					"provedAt": "2026-10-15T09:48:38.304Z"
+				}
+			}
+		],
+		"trainFiles": {
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-15T09:48:45.259Z",
+		"repos": [
+			{
+				"repo": "obsidian-handbook",
+				"sha": "f5447326d3568301d621aeb35e36e784d7d8a121"
+			}
+		],
+		"checks": [
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.45.0",
+			"tag": "v2.45.0",
+			"sha": "f5447326d3568301d621aeb35e36e784d7d8a121",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.45.0"
+		}
+	],
+	"closedAt": "2026-10-15T09:51:12.295Z"
+}
