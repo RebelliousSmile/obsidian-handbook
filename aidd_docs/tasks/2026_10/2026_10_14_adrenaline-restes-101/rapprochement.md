@@ -9,8 +9,8 @@ Corps proposé pour l'issue. Chaque case des sections 2, 3 et 3 bis est confront
 | `assert:block-templates` et `assert:adrenaline-pj` hors des `validations` de Lantern | **fait** : les deux gardes figurent dans `validations` de `lantern` (`supervisor/topology.json`), à la place que leur donne `check:project` ; jouées seules, vertes ; `assert:guards-by-role` vert. À commiter. |
 | Libellés recopiés (« Zone de détection », « Dépl. ») | **fait** : retirés de `FIELD_LABELS`, lus dans `pointerRows` ; `dump:dom` avant/après identique. `malusAvantHs` reste : publié comme chemin sans libellé. |
 | Preuves manquantes (`columnSpan`, contrôles d'un état, astérisque du ND) | **fait** : trois témoins ajoutés à `assert:adrenaline-theme` ; chacun a rougi sous mutation (`columnSpan` et l'astérisque du ND étaient d'abord verts : aucune fixture ne les portait). |
-| Seuils PNJ/créature « en triplets vides » | **pas de défaut Handbook** : un côté de santé auquel il manque un seuil est refusé à la lecture ; le seul triplet vide accepté est à zéro et s'imprime tel que saisi. Deux témoins ajoutés. Voir décision D6. |
-| Plafond CSS de `dist/styles.css` | **ouvert** : 80 octets de marge. Le regroupement sûr ne gagne que ~210 octets ; les ~2 900 octets de règles dont la classe n'apparaît nulle part sont construits par concaténation à partir d'énumérations publiées, donc non prouvables morts. Aucune règle visible supprimée. Voir D7. |
+| Seuils PNJ/créature « en triplets vides » | **fait (2026-10-15)** : un seuil à zéro est refusé à la lecture (contrat 6.0.0, adopté par Handbook 2.46.0) ; le bloc ne s'affiche pas et l'alerte de lecture le signale. Voir D6. |
+| Plafond CSS de `dist/styles.css` | **fait (2026-10-15)** : plafond relevé par l'utilisateur dans 2.45.0 (`assert:mist-font-packs`) ; la marge n'est plus un enjeu. Voir D7. |
 
 ## Section 2 : cartes compactes PNJ et créature
 
@@ -56,7 +56,7 @@ Les cases « fait côté contrat » se confirment une dernière fois au rendu su
 - **D5** — Garde de version du contrat : « majeur installé ≥ majeur déclaré dans `package.json` » (livrée) contre le littéral d'origine. Le littéral ne pouvait pas laisser passer un train de rang majeur ; le comparateur est néanmoins changé.
 - **D6** — Seuils : que zéro veuille dire « non saisi » (et ne s'imprime pas) est une décision de contrat, donc de `schema-adrenaline`. Aujourd'hui `SP 0 / 0 / 0 / 0` s'imprime tel que saisi.
   - **Décidé le 2026-10-15** : un seuil à zéro n'est pas une valeur, c'est un champ non rempli. Le contrat le refuse à la lecture (PNJ et créature ; `base` et `couvert` au moins 1, le triplet garde `minimum` à 0) : le bloc ne s'affiche pas et l'alerte de lecture le signale. Rupture, donc contrat 6.0.0 ; le PJ ne change pas. Côté Handbook : inverser le témoin `a zero threshold is printed as entered` de `assertAdrenalineTheme.harness.mts` une fois le contrat adopté, sans repli local.
-- **D7** — Plafond CSS : marge de 80 octets, relèvement du plafond (décision de l'utilisateur) ou réduction par suppression de règles, ce qui suppose de publier la liste fermée des valeurs que le contrat énumère (formes, dispositions, alignements, surfaces) pour prouver le non-usage.
+- **D7** — **tranché (2026-10-15) : plafond relevé** plutôt que des règles supprimées sans preuve de non-usage. Le relèvement est livré (2.45.0) ; aucune règle visible n'a été retirée.
 
 ## Principe du nettoyage (2026-10-15)
 

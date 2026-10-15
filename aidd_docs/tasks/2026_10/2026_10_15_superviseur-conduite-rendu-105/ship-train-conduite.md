@@ -1,6 +1,6 @@
 # Ajouts proposés au skill `ship-train` (conduite d'une phase de rendu)
 
-Le skill vit hors du dépôt (`C:\Users\fxgui\.claude\skills\ship-train\`) : ce texte est proposé, rien n'y est écrit. À appliquer sur accord de l'utilisateur.
+Le skill vit hors du dépôt (`C:\Users\fxgui\.claude\skills\ship-train\`) : ce texte a été appliqué le 2026-10-15 sur accord de l'utilisateur, dans `actions/01-board.md` (étape 5 « Render »), `actions/02-implement.md` (étape 4 « Bound » et rappel des contrôles lourds) et `actions/04-preview.md` (étape 7 « Stop »). Deux précisions s'y sont ajoutées : l'`id` d'une décision est en kebab-case minuscule, et le verdict de rendu se rend avant `ship`, qui enchaîne `present`.
 
 Le superviseur ne juge aucun rendu et ne demande aucun accord : ces règles se tiennent dans la conversation, et `supervise present` ne refuse que ce que le dossier de train déclare lui-même ouvert (`conduct`).
 
