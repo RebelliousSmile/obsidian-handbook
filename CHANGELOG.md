@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.4] - 2026-10-20
+
+### Fixed
+
+- The release workflow builds `dist/` when a green CI run lets `pnpm check` be skipped; v2.46.3 was tagged but never released for want of it, so this version carries the same changes (#118).
+
 ## [2.46.3] - 2026-10-20
 
 ### Changed
