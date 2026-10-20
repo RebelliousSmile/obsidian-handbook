@@ -98,4 +98,24 @@ for (const trigger of ["push", "pull_request", "workflow_dispatch"]) {
 	);
 }
 
+/* The release loads and uploads `dist/`: whichever way its conditions go, a step builds it first.
+   A green CI run once skipped `pnpm check`, the only build, and v2.46.3 was tagged with no release. */
+const release = readFileSync(join(workflows, "release.yml"), "utf8");
+const releaseSteps = release.replace(/^\s*#.*$/gm, "").split(/\n\s*- name:/);
+const firstUse = releaseSteps.findIndex((step) => step.indexOf("dist/") >= 0 || step.indexOf("e2e:plugin-load") >= 0);
+assert.ok(firstUse > 0, "release.yml no longer loads nor uploads dist/");
+const builds = [];
+for (const step of releaseSteps.slice(0, firstUse)) {
+	if (!/run:\s*pnpm (check|build)\s*$/m.test(step)) continue;
+	const condition = /\n\s*if:\s*(.+)/.exec(step);
+	builds.push(condition ? condition[1].trim() : "");
+}
+const covered =
+	builds.indexOf("") >= 0 ||
+	builds.some((condition) => condition.indexOf("==") >= 0 && builds.indexOf(condition.replace("==", "!=")) >= 0);
+assert.ok(
+	covered,
+	`release.yml uses dist/ but builds it only under ${JSON.stringify(builds)}: some run reaches the release without it`,
+);
+
 console.log(`CI install passed: ${installs} pnpm installs, ${tracked} is the only lockfile any of them needs.`);

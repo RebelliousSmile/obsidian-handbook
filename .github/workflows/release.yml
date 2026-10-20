@@ -77,6 +77,14 @@ jobs:
                   HANDBOOK_CHECK_SKIP: assert:supervisor
               run: pnpm check
 
+            # `pnpm check` is what builds `dist/`: when a green CI run let it be skipped, the release
+            # artifact the next steps load and upload is built here. v2.46.3 was tagged with no release
+            # for want of this step.
+            - name: Build plugin
+              if: steps.ci.outputs.green != '0'
+              working-directory: handbook
+              run: pnpm build
+
             - name: Require final schema archives for release
               working-directory: handbook
               run: node tools/assert-consumer-schema-pins.mjs --final
