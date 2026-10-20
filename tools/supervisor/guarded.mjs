@@ -24,6 +24,13 @@ const TAIL = 30;
 export const LINKED_PROVIDERS = "SUPERVISOR_LINKED_PROVIDERS";
 
 /**
+ * The guard a guarded environment carries. A checkout's supervisor may guard
+ * a validation run in another checkout of the repository (a train worktree):
+ * the guard to remove is the one that was laid, not the one of the module.
+ */
+export const GUARD_MARKER = "SUPERVISOR_GUARD_DIR";
+
+/**
  * The environment of a guarded validation. The guard leads the PATH, under
  * the key the environment already uses (`Path` on Windows), so a shell call
  * meets its shims; its hook is preloaded in every Node child, so a Node tool
@@ -39,15 +46,18 @@ export function guardedEnv(env = process.env) {
 	next[key] = [GUARD_DIR, ...rest].join(delimiter);
 	next.NODE_OPTIONS = withRequire(env.NODE_OPTIONS, join(GUARD_DIR, "hook.cjs"));
 	next.SUPERVISOR_PRESENT = "1";
+	next[GUARD_MARKER] = GUARD_DIR;
 	return next;
 }
 
 /**
  * The inverse of `guardedEnv`: the guard's PATH entry, its hook and the
- * present marker removed, everything else kept. Only for the supervisor
- * harnesses, run by `pnpm check` behind the guard of a real `present`: their
- * worlds push to bare remotes in a temporary directory and talk to a fake gh,
- * and they prove the guard from a baseline where it is absent.
+ * present marker removed, everything else kept. The guard removed is this
+ * module's and the one the environment names, laid by another checkout.
+ * Only for the supervisor harnesses, run by `pnpm check` behind the guard of
+ * a real `present`: their worlds push to bare remotes in a temporary
+ * directory and talk to a fake gh, and they prove the guard from a baseline
+ * where it is absent.
  */
 export function unguardedEnv(env = process.env) {
 	const key = pathKey(env);
@@ -55,12 +65,15 @@ export function unguardedEnv(env = process.env) {
 	for (const [name, value] of Object.entries(env)) {
 		if (name.toUpperCase() !== "PATH" || name === key) next[name] = value;
 	}
-	next[key] = (env[key] ?? "").split(delimiter).filter((dir) => dir && resolve(dir) !== resolve(GUARD_DIR)).join(delimiter);
-	const hook = withRequire(undefined, join(GUARD_DIR, "hook.cjs"));
-	const options = (env.NODE_OPTIONS ?? "").split(hook).join("").trim().replace(/\s+/g, " ");
+	const guards = [GUARD_DIR, env[GUARD_MARKER]].filter(Boolean).map((dir) => resolve(dir));
+	next[key] = (env[key] ?? "").split(delimiter).filter((dir) => dir && !guards.includes(resolve(dir))).join(delimiter);
+	let options = env.NODE_OPTIONS ?? "";
+	for (const guard of guards) options = options.split(withRequire(undefined, join(guard, "hook.cjs"))).join("");
+	options = options.trim().replace(/\s+/g, " ");
 	if (options) next.NODE_OPTIONS = options;
 	else delete next.NODE_OPTIONS;
 	delete next.SUPERVISOR_PRESENT;
+	delete next[GUARD_MARKER];
 	delete next[LINKED_PROVIDERS];
 	return next;
 }

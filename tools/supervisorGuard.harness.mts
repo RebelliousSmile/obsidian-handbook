@@ -10,9 +10,10 @@
  */
 import assert from "assert/strict";
 import { spawnSync } from "child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { delimiter, join, resolve } from "path";
+import { pathToFileURL } from "url";
 import { guardRefusal } from "./supervisor/guard/rules.cjs";
 import { pathKey, withRequire } from "./supervisor/spawn.mjs";
 
@@ -234,12 +235,46 @@ function hook(): void {
 	}
 }
 
+// A supervisor in one checkout guards the validations of another (a train worktree).
+function unguard(): void {
+	const dir = mkdtempSync(join(tmpdir(), "supervisor-unguard-"));
+	try {
+		const other = join(dir, "other", "tools", "supervisor");
+		mkdirSync(other, { recursive: true });
+		for (const file of ["guarded.mjs", "spawn.mjs"]) copyFileSync(resolve("tools/supervisor", file), join(other, file));
+		const keep = join(dir, "keep");
+		// guarded.mjs locates its guard through import.meta: it is loaded by node itself, not bundled.
+		const probe = [
+			"const [laid, own, keep] = process.argv.slice(1);",
+			"const { guardedEnv } = await import(laid);",
+			"const { unguardedEnv } = await import(own);",
+			"const key = Object.keys(process.env).find((name) => name.toUpperCase() === 'PATH') ?? 'PATH';",
+			"const env = unguardedEnv(guardedEnv({ [key]: keep, NODE_OPTIONS: '--max-old-space-size=4096' }));",
+			"console.log(JSON.stringify(env));",
+		].join("\n");
+		const result = run(
+			process.execPath,
+			["--input-type=module", "-e", probe, pathToFileURL(join(other, "guarded.mjs")).href, pathToFileURL(resolve("tools/supervisor/guarded.mjs")).href, keep],
+			{},
+		);
+		assert.equal(result.status, 0, `the probe runs\n${result.stderr}`);
+		const env = JSON.parse(result.stdout) as NodeJS.ProcessEnv;
+		assert.equal(env[pathKey(env)], keep, "the guard laid by another checkout leaves the PATH");
+		assert.equal(env.NODE_OPTIONS, "--max-old-space-size=4096", "its hook leaves NODE_OPTIONS, the other options stay");
+		assert.equal(env.SUPERVISOR_PRESENT, undefined, "the present marker is removed");
+		assert.equal(env.SUPERVISOR_GUARD_DIR, undefined, "the guard marker is removed");
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+}
+
 function main(): void {
 	let failed = 0;
 	for (const [name, check] of [
 		["guard rules refuse what publishes and nothing else", rules],
 		["PATH shims refuse through a shell and fail closed", shims],
 		["child_process hook refuses without a shell", hook],
+		["the harnesses shed a guard laid by another checkout", unguard],
 	] as const) {
 		try {
 			check();
