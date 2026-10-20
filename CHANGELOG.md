@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.2] - 2026-10-20
+
+### Fixed
+
+- A PDF export of an Adrenaline, Masks, Monster of the Week, Monsterhearts, The Sprawl or Urban Shadows note prints again (#116). The packs of `schema-adrenaline` and `schema-pbta` published variable fonts, which the PDF export writes as Type3 glyph procedures that printers refuse; they now publish one static font file per weight, and the on-screen rendering is unchanged. In Masks and Monster of the Week, letters outside the Western European Latin set now fall back to the system font.
+- `pnpm check` refuses a `schema-*` dependency that ships a variable font (`assert:static-pack-fonts`).
+
 ## [2.46.1] - 2026-10-15
 
 ### Changed
