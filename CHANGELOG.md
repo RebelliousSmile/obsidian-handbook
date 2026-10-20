@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.3] - 2026-10-20
+
+### Changed
+
+- Adrenaline character sheet (`pj` block): skill names, with their specialty, and the name of a training are now written in the handwriting font and ink, as on the paper sheet; the training type and its brackets, the thresholds and the social weapons stay printed (#118).
+
 ## [2.46.2] - 2026-10-20
 
 ### Fixed

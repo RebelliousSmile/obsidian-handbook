@@ -675,6 +675,38 @@ try {
 	assert.equal(struckRows.length, 2, "two struck weapons print two struck rows");
 	assert.deepEqual(struckRows.map((row) => textOf(findAll(row, `${PJ}__ref-name`)[0])), [reference.lines[1].name, reference.lines[4].name], "the struck rows are the entered names");
 	assert.equal(findAll(only(struckSheet, `${PJ}__armes-sociales`, "the social weapons block"), `${PJ}__ref-name`).length, reference.lines.length, "a struck weapon stays on its line");
+	// What the player writes is a value (handwritten in values-handwritten mode); what the paper prints is not (#118).
+	const isValue = (element: El): boolean => element.classes.includes(`${PJ}__value`);
+	const competenceRows = findAll(sheet, `${PJ}__competence`);
+	assert.ok(competenceRows.length > 0, "the example prints competences");
+	for (const row of competenceRows) {
+		const name = findAll(row, `${PJ}__metric-name`)[0];
+		assert.ok(isValue(name), `the competence name "${textOf(name)}" is written by the player`);
+	}
+	assert.ok(competenceRows.some((row) => /\(.+\)/.test(textOf(row))), "a competence with its speciality is covered");
+	const formationHeads = findAll(sheet, `${PJ}__formation-head`);
+	assert.ok(formationHeads.length > 0, "the example prints named formations");
+	for (const head of formationHeads) {
+		const name = only(head, `${PJ}__formation-name`, "a named formation writes one name");
+		assert.ok(isValue(name), `the formation name "${textOf(name)}" is written by the player`);
+		const printed = findAll(head, `${PJ}__formation-type`);
+		assert.deepEqual(printed.map(textOf).map((part) => part.slice(-1)), ["(", ")"], "the type and its parentheses frame the name");
+		for (const part of printed) assert.ok(!isValue(part), `the formation type "${textOf(part)}" is printed`);
+		assert.ok(!isValue(findAll(head, `${PJ}__metric-name`)[0]), "only the name inside the formation line is written");
+	}
+	const unnamed = adrenalinePjBlock.render({ ...(adrenalinePjBlock.parse(pjExample) as object), formations: [] } as never, doc) as unknown as El;
+	const unnamedColumns = findAll(unnamed, `${PJ}__formation`);
+	assert.ok(unnamedColumns.length > 0, "the published formation types keep their columns without a formation");
+	for (const column of unnamedColumns) {
+		assert.equal(findAll(column, `${PJ}__formation-name`).length, 0, "a column without a formation writes no name");
+		assert.ok(!/[()]/.test(textOf(findAll(column, `${PJ}__metric-name`)[0])), "a column without a formation prints its type alone");
+	}
+	const thresholdIds = pjSections.reduce<string[]>((all, section) => all.concat(section.blocks.filter((block) => block.thresholdLevels !== undefined).map((block) => block.id)), []);
+	assert.ok(thresholdIds.length > 0, "the contract publishes threshold blocks");
+	for (const id of thresholdIds) for (const name of findAll(only(sheet, `${PJ}__${id}`, `one ${id} block`), `${PJ}__metric-name`)) {
+		assert.ok(!isValue(name), `the threshold label "${textOf(name)}" is printed`);
+	}
+	for (const name of findAll(social, `${PJ}__ref-name`)) assert.ok(!isValue(name), `the social weapon "${textOf(name)}" is printed`);
 	// Ruled lines and weapon lines: the lines drawn are the published `minimumRows`, or the entries when they outnumber it.
 	const rowsPublished = pjSections.reduce<Array<(typeof PJ_PRESENTATION.sections)[number]["blocks"][number]>>((all, section) => all.concat(section.blocks.filter((block) => block.minimumRows !== undefined)), []);
 	assert.ok(rowsPublished.length > 0, "the contract publishes minimumRows on at least one block");

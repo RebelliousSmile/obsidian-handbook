@@ -106,6 +106,15 @@ function metric(doc: Document, parent: HTMLElement, name: string, values: readon
 	return line;
 }
 
+/** A metric whose name the player writes too: returns the empty name, for the caller to fill. */
+function enteredMetric(doc: Document, parent: HTMLElement, entered: string, className: string): HTMLElement {
+	const line = add(parent, doc, "div", "metric");
+	line.classList.add(`${ROOT}__metric-1`, `${ROOT}__${className}`);
+	const name = add(line, doc, "span", "metric-name");
+	line.appendChild(value(doc, entered, "metric-value"));
+	return name;
+}
+
 function circles(doc: Document, parent: HTMLElement, count: number, filled: number): void {
 	for (let index = 0; index < count; index += 1) add(parent, doc, "i", index < filled ? "dot-filled" : "dot").classList.add(`${ROOT}__dot-mark`);
 }
@@ -160,11 +169,17 @@ function renderFormationColumns(doc: Document, box: HTMLElement, block: Adrenali
 			metric(doc, header, humanize(formation.type), [""]);
 			continue;
 		}
-		metric(doc, header, `${humanize(formation.type)} (${formation.nom})`, [text(formation.pourcentage)]);
+		// The type and its parentheses are printed on the paper; the player writes the name between them.
+		const head = enteredMetric(doc, header, text(formation.pourcentage), "formation-head");
+		add(head, doc, "span", "formation-type", `${humanize(formation.type)} (`);
+		head.appendChild(value(doc, formation.nom, "formation-name"));
+		add(head, doc, "span", "formation-type", ")");
 		subhead(doc, column, "Compétences", [suffix]);
 		const list = add(column, doc, "div", "metric-list");
 		for (const competence of formation.competences ?? []) {
-			metric(doc, list, competenceName(competence), [text(competence.pourcentage)]);
+			const name = enteredMetric(doc, list, text(competence.pourcentage), "competence");
+			name.textContent = competenceName(competence);
+			name.classList.add(`${ROOT}__value`);
 		}
 	}
 }
