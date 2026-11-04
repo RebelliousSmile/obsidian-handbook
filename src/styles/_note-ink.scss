@@ -1,0 +1,12 @@
+// Obsidian declares the property colours on `body` (`--metadata-input-text-color:
+// var(--text-normal)`, `--metadata-label-text-color: var(--text-muted)`), so they
+// resolve against the Obsidian theme, never against the note palette a game
+// writes on the note views: dark ink on a dark note. Declared again on the
+// properties of a note, they read the note's own ink, in a forced section too.
+.markdown-source-view .metadata-container,
+.markdown-reading-view .metadata-container,
+.print .metadata-container {
+	--metadata-input-text-color: var(--text-normal);
+	--metadata-label-text-color: var(--text-muted);
+	--metadata-label-text-color-hover: var(--text-muted);
+}
