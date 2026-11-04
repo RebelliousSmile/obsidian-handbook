@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Requires the Otherscape pack of `schema-in-the-mist` that projects the Cairo design (light and dark) and ships a single condensed heading face.
+- Requires the Otherscape pack of `schema-in-the-mist` that projects the Cairo design and ships a single condensed heading face.
+- Otherscape: each variant keeps a single polarity — Cairo light, Metro and Tokyo dark — whatever the Obsidian theme; the colour scheme setting is hidden for them.
 
 ## [2.46.4] - 2026-10-20
 

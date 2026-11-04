@@ -74,3 +74,8 @@ journey
 | 1 | Une carte de thème en Cairo ne porte plus que la présentation du schéma. `present` est au vert sur les deux dépôts avant tout déploiement. |
 | 2 | L'utilisateur valide Cairo, en clair et en sombre, sur les trois points de contrôle. |
 | 3 | schema-in-the-mist v<N+1> et Handbook v<M+1> sont publiés, et un ticket Tokyo existe. |
+
+## Constats et dérives
+
+- **Premier verdict de rendu refusé** (2026-11-04) : les titres portaient le filet de couleur à gauche que Border dessine ; il est neutralisé pour Otherscape (`_headings.scss`). La capture « pas Cairo » montrait en fait Tokyo, l'univers sélectionné dans les réglages.
+- **Une polarité par variante**, décision de l'utilisateur (2026-11-04) : Cairo en clair, Metro et Tokyo en sombre. Le pack déclare `polarities` par variante et ne porte que cette couche ; la projection ne nomme qu'un mode par variante, et le validateur l'impose. Handbook savait déjà tenir une polarité par variante (`effectiveColourScheme`) : aucun code consommateur ne change, le réglage « Jeu de couleurs » disparaît pour ces variantes. Le point de contrôle 2 (`cairo-dark.jpg`) n'a plus d'objet.
