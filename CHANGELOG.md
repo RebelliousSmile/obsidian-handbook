@@ -15,14 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Otherscape: the rules of the Metro, Cairo and Tokyo variants apply again; their selectors looked for the variant class on an ancestor of the body, which never matched (#122).
 - Otherscape: the note paper of the selected variant is no longer overwritten by a white background in light mode (#122).
-- Otherscape Cairo: themes, profiles and character creation cards take the bevelled card the schema publishes, in place of the former shadow and thick side borders (#122).
+- Otherscape Cairo and Tokyo: themes, profiles and character creation cards take the bevelled card the schema publishes, in place of the former shadow and thick side borders (#122).
 - A section forced to a mode (`<!-- handbook-mode: … -->`) no longer shows a hairline of the note paper between two of its blocks.
 - Otherscape: headings no longer show the coloured bar and indent that some themes (such as Border) draw before every heading, in reading view, Live Preview and the PDF export (#122).
 
 ### Changed
 
 - Requires the Otherscape pack of `schema-in-the-mist` that projects the Cairo design and ships a single condensed heading face.
-- Otherscape: each variant keeps a single polarity — Cairo light, Metro and Tokyo dark — whatever the Obsidian theme; the colour scheme setting is hidden for them. Cairo paints the alternate section of a note in its dark slate design.
+- Otherscape: each variant keeps a single polarity — Cairo and Tokyo light, Metro dark — whatever the Obsidian theme; the colour scheme setting is hidden for them. The alternate section of a note takes the other polarity: dark slate for Cairo, dark navy for Tokyo, light paper for Metro.
+- Otherscape Tokyo and Metro follow their mock-ups: band headings, lead paragraph, highlighted subtitle and their own ink, so property values and links stay readable.
 
 ## [2.46.4] - 2026-10-20
 

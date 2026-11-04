@@ -35,7 +35,5 @@
 	.brumes-os-theme--track { display: flex; gap: 0.35rem; align-items: center; font-weight: 700; }
 	.brumes-os-theme--track-mark { color: var(--os-card-accent); }
 
-	&.brumes--variant-tokyo .brumes-os-theme { border-inline-start-width: 0.6rem; box-shadow: 0.45rem 0.2rem 0 color-mix(in srgb, var(--os-card-accent) 35%, transparent); }
-
 	// The narrow fold lives in `_cards.scss`.
 }
