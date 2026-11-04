@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.46.5] - 2026-11-04
+
+### Fixed
+
+- Otherscape: the rules of the Metro, Cairo and Tokyo variants apply again; their selectors looked for the variant class on an ancestor of the body, which never matched (#122).
+- Otherscape: the note paper of the selected variant is no longer overwritten by a white background in light mode (#122).
+- Otherscape Cairo: themes, profiles and character creation cards take the bevelled card the schema publishes, in place of the former shadow and thick side borders (#122).
+- Otherscape: headings no longer show the coloured bar and indent that some themes (such as Border) draw before every heading, in reading view, Live Preview and the PDF export (#122).
+
+### Changed
+
+- Requires the Otherscape pack of `schema-in-the-mist` that projects the Cairo design (light and dark) and ships a single condensed heading face.
+
 ## [2.46.4] - 2026-10-20
 
 ### Fixed

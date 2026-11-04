@@ -1,0 +1,76 @@
+---
+status: in-progress
+---
+
+# Instruction: Train — rendu dans le coffre puis livraison
+
+## Architecture projection
+
+> Tree of the final files. ✅ create · ✏️ modify · ❌ delete
+
+```txt
+obsidian-handbook/
+├── package.json                  ✏️ épingle schema-in-the-mist v<N+1>
+├── CHANGELOG.md                  ✏️ section de la version v<M+1>
+├── manifest.json, versions.json  ✏️ mis à jour par `pnpm version`
+├── src/styles/otherscape/_themes.scss, _cards.scss ✏️ retire les règles Cairo remplacées par la carte du schéma (Tokyo garde les siennes)
+└── supervisor/trains/otherscape-variantes-design.json ✅ topologie du train schema-in-the-mist → Handbook
+```
+
+## User Journey
+
+```mermaid
+flowchart TD
+  A[present : validations des deux dépôts] --> B[Déploiement dans le coffre Otherscape]
+  B --> C{Verdict de rendu de l'utilisateur}
+  C -->|validé| D[ship : publish, converge, release, close]
+  C -->|refusé| E[correction, deux cycles au plus]
+  E --> B
+```
+
+## Test Scope
+
+```mermaid
+---
+title: Test scope
+---
+journey
+  section Setup
+    pnpm supervise present => validations des deux dépôts au vert: 5: cli
+    L'utilisateur met à jour la source du pack dans le coffre => pack Otherscape v<N+1> chargé: 5: system
+  section Happy path
+    Ouvrir les notes de test en Cairo clair puis sombre => les trois points de contrôle correspondent aux maquettes: 5: browser
+  section Edge case - rendu refusé
+    Écart sur un point de contrôle => corriger puis rendre de nouveau, deux cycles au plus: 1: browser
+```
+
+## Tasks to do
+
+### `1)` Présenter et déployer
+
+> Tout se contrôle avant le départ du train.
+
+1. Dans Handbook, retirer les règles Cairo de `_themes.scss` et `_cards.scss`, remplacées par la carte du schéma. Les règles Tokyo restent.
+2. Écrire `supervisor/trains/otherscape-variantes-design.json` (schema-in-the-mist → Handbook) et lancer `pnpm supervise present`.
+3. Déployer `dist/` dans le coffre Otherscape, sans jamais écraser `data.json`. La mise à jour de la source du pack est un geste de l'utilisateur.
+
+### `2)` Verdict de rendu
+
+> On ne demande à l'utilisateur que le verdict de rendu.
+
+1. Comparer le rendu aux trois points de contrôle fixés en phase 4, et présenter les captures.
+
+### `3)` Livrer et suivre
+
+> Après le verdict, le train s'exécute sans autre validation.
+
+1. Lancer `pnpm supervise ship --run` ; le commit du train se termine par les `Closes #` concernés.
+2. Ouvrir le ticket Tokyo : même chemin que Cairo, à partir des maquettes `tokyo-*.jpg`.
+
+## Test acceptance criteria
+
+| Task | Acceptance criteria |
+| ---- | ------------------- |
+| 1 | Une carte de thème en Cairo ne porte plus que la présentation du schéma. `present` est au vert sur les deux dépôts avant tout déploiement. |
+| 2 | L'utilisateur valide Cairo, en clair et en sombre, sur les trois points de contrôle. |
+| 3 | schema-in-the-mist v<N+1> et Handbook v<M+1> sont publiés, et un ticket Tokyo existe. |

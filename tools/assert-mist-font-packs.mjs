@@ -9,16 +9,26 @@ const bytes = Buffer.byteLength(stylesheet);
 assert.ok(bytes < 165_000, `dist/styles.css is ${bytes} bytes; expected below 165,000`);
 assert.ok(!/@font-face\b|data:font\b/i.test(stylesheet), "the plugin stylesheet still embeds font faces");
 
+/* The two Mist packs share the two-face contract; Otherscape's design is a condensed
+   sans-serif, so its pack publishes a single title face and leaves text to the system. */
+const TWO_FACES = [
+	"styles/fonts/averia-serif-libre-latin-700-normal.woff2",
+	"styles/fonts/im-fell-english-latin-400-normal.woff2",
+];
+const PACK_FACES = {
+	"city-of-mist": TWO_FACES,
+	"legend-in-the-mist": TWO_FACES,
+	otherscape: ["styles/fonts/fira-sans-extra-condensed-latin-800-normal.woff2"],
+};
+
 let totalResources = 0;
-for (const id of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
+let expectedResources = 0;
+for (const [id, faces] of Object.entries(PACK_FACES)) {
 	const manifestPath = require.resolve(`schema-in-the-mist/handbook/${id}/pack.json`);
 	const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 	const assets = manifest.pack.assets;
 	const resources = new Set(assets.resources ?? []);
-	assert.deepEqual([...resources].sort(), [
-		"styles/fonts/averia-serif-libre-latin-700-normal.woff2",
-		"styles/fonts/im-fell-english-latin-400-normal.woff2",
-	], `${id}: must publish exactly the two-face WOFF2 contract`);
+	assert.deepEqual([...resources].sort(), faces, `${id}: must publish exactly its declared WOFF2 faces`);
 	const fontsSheet = assets.stylesheets.find((file) => file === "styles/fonts.css");
 	assert.ok(fontsSheet, `${id}: no declared font stylesheet`);
 	assert.ok(resources.size > 0, `${id}: no declared font files`);
@@ -30,7 +40,8 @@ for (const id of ["city-of-mist", "legend-in-the-mist", "otherscape"]) {
 		assert.ok(statSync(join(dirname(manifestPath), assets.root ?? "assets", resource)).size > 0, `${id}: empty font ${resource}`);
 	}
 	totalResources += resources.size;
+	expectedResources += faces.length;
 }
 
-assert.equal(totalResources, 6, "the three Mist packs should carry the two-face WOFF2 contract");
+assert.equal(totalResources, expectedResources, "the Mist packs should carry exactly their declared WOFF2 faces");
 console.log(`Mist font packs: ${totalResources} files; plugin stylesheet: ${bytes} bytes.`);

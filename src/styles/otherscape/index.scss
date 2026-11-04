@@ -3,6 +3,7 @@
 @use "./challenges";
 @use "./character-creation";
 @use "./callouts";
+@use "./headings";
 
 .brumes--otherscape {
 	@include themes.cards;
@@ -10,6 +11,8 @@
 	@include challenges.profiles;
 	@include character-creation.cards;
 	@include cards.narrow;
+
+	@include headings.bare;
 
 	// Callouts
 	@include callouts.global;

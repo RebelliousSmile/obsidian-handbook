@@ -692,4 +692,26 @@ for (const registration of GAME_REGISTRATIONS) {
 }
 assert.equal(matrixCases, 5);
 
+// A theme may make the note leaf transparent and paint what lies behind it with
+// a variable resolved on `body`, where the game's paper is not declared (Border
+// does). A game that writes its note paper paints the leaf with it, and that
+// paint holds against the theme's `!important`.
+const notePaperRule =
+	/body\.brumes--legend-in-the-mist \.workspace-split\.mod-root \.workspace-leaf-content\[data-type="markdown"\] \{\s*background-color: var\(--background-primary\) !important;\s*\}/;
+const paperValues = {
+	base: { note: {}, workspace: {} },
+	light: { note: { "--background-primary": "#F4F0E4" }, workspace: {} },
+	dark: { note: { "--background-primary": "#102B27" }, workspace: {} },
+};
+assert.match(
+	buildGameStyle("legend-in-the-mist", paperValues, false, ["light", "dark"]),
+	notePaperRule,
+	"a game that writes --background-primary paints the note leaf with it",
+);
+assert.doesNotMatch(
+	css,
+	/\.workspace-split\.mod-root \.workspace-leaf-content/,
+	"a game without a note paper leaves the leaf to the theme",
+);
+
 console.log("game styles stay inside notes and rendered block scopes");

@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import postcss from "postcss";
+import selectorParser from "postcss-selector-parser";
 import {
 	GAME_PACKS,
 	GAME_REGISTRATIONS,
@@ -165,5 +168,52 @@ assert.deepEqual(sectionOverride.style, { section: { note: { "--text-normal": "#
 assert.deepEqual(mergeGameStyle(sectionStyle, sectionOverride.style).section, {
 	note: { "--background-primary": "#111", "--text-normal": "#fff" },
 });
+
+// A variant rule applies only when its variant class sits on the element that
+// carries the game mode: the body holds both. `body.brumes--variant-x &` under
+// `.brumes--otherscape` compiled to a descendant of the body and never matched.
+function misplacedVariantSelectors(css: string): string[] {
+	const misplaced: string[] = [];
+	postcss.parse(css).walkRules((rule) => {
+		for (const selector of rule.selectors) {
+			if (!selector.includes("brumes--variant-")) continue;
+			selectorParser((root) => {
+				root.each((complex) => {
+					let compound: string[] = [];
+					const compounds: string[][] = [compound];
+					complex.each((node) => {
+						if (node.type === "combinator") {
+							compound = [];
+							compounds.push(compound);
+						} else if (node.type === "class") compound.push(node.value);
+					});
+					for (const classes of compounds) {
+						if (!classes.some((name) => name.startsWith("brumes--variant-"))) continue;
+						const hasGame = classes.some((name) => /^brumes--(?!variant-|colour-|fonts-|printer-)/.test(name));
+						if (!hasGame) misplaced.push(String(complex).trim());
+					}
+				});
+			}).processSync(selector);
+		}
+	});
+	return misplaced;
+}
+
+assert.deepEqual(
+	misplacedVariantSelectors("body.brumes--variant-cairo .brumes--otherscape .brumes-os-theme { color: red; }"),
+	["body.brumes--variant-cairo .brumes--otherscape .brumes-os-theme"],
+	"a variant class written as an ancestor of the game class is refused",
+);
+assert.deepEqual(misplacedVariantSelectors(".brumes--otherscape.brumes--variant-cairo .brumes-os-theme { color: red; }"), []);
+
+const compiledStyles = (() => {
+	try {
+		return readFileSync(new URL("../dist/styles.css", import.meta.url), "utf8");
+	} catch {
+		throw new Error("dist/styles.css is missing: run the build before this assertion");
+	}
+})();
+assert.ok(compiledStyles.includes("brumes--variant-"), "dist/styles.css carries no variant rule");
+assert.deepEqual(misplacedVariantSelectors(compiledStyles), [], "variant rules that can never match the body");
 
 console.log("Game variant assertions passed.");

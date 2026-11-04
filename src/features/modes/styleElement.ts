@@ -265,6 +265,10 @@ export function buildGameStyle(
 		}
 	}
 
+	if (writesNotePaper(values)) {
+		blocks.push(renderTokenBlock(notePaperSelector(mode), NOTE_PAPER));
+	}
+
 	const section = sectionTokens(values, polarities);
 	if (section) {
 		// A game with one polarity has no other one to alternate with: the
@@ -275,6 +279,32 @@ export function buildGameStyle(
 	}
 
 	return blocks.filter((block) => block.length > 0).join("\n\n");
+}
+
+/**
+ * The note's own paper, painted where the game's `--background-primary` lives.
+ *
+ * Obsidian paints the note with `--background-primary` on `.view-content`,
+ * inside the leaf, where the note layer is declared. Some themes do not: Border
+ * makes the leaf and its content transparent (`!important`) and paints the tab
+ * container behind them with `--background-mod-root-split`, a variable it
+ * resolves on `body` — where `--background-primary` is still the theme's, not
+ * the game's. The note then shows the theme's paper. Painting the leaf itself
+ * puts the game's paper back without naming the theme or its variables.
+ */
+const NOTE_PAPER: GameStyleTokens = {
+	"background-color": "var(--background-primary) !important",
+};
+
+function notePaperSelector(mode: BrumesMode): string {
+	return `body.brumes--${mode} .workspace-split.mod-root .workspace-leaf-content[data-type="markdown"]`;
+}
+
+function writesNotePaper(values: GameStyleValues): boolean {
+	for (const layer of [values.base, values.light, values.dark]) {
+		if (layer.note["--background-primary"]) return true;
+	}
+	return false;
 }
 
 function modeSectionSelector(
