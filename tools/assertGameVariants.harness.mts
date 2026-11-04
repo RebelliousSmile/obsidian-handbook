@@ -12,6 +12,7 @@ import {
 } from "../src/games/registry";
 import {
 	effectiveColourScheme,
+	noteVariantId,
 	publishedSection,
 	resolveGameAppearance,
 } from "../src/games/variants";
@@ -215,5 +216,25 @@ const compiledStyles = (() => {
 })();
 assert.ok(compiledStyles.includes("brumes--variant-"), "dist/styles.css carries no variant rule");
 assert.deepEqual(misplacedVariantSelectors(compiledStyles), [], "variant rules that can never match the body");
+
+// A note's `handbook-variant` wins only when the active game declares it.
+{
+	const registration = {
+		pack: GAME_PACKS[0],
+		variants: [
+			{ id: "cairo", label: "Cairo", style: {}, polarities: [] },
+			{ id: "metro", label: "Metro", style: {}, polarities: [] },
+		],
+		defaultVariantId: "metro",
+	};
+	assert.equal(noteVariantId(registration, { "handbook-variant": "cairo" }), "cairo");
+	assert.equal(noteVariantId(registration, { "handbook-variant": " Cairo " }), "cairo");
+	assert.equal(noteVariantId(registration, { "handbook-variant": "tokyo" }), null);
+	assert.equal(noteVariantId(registration, { "handbook-variant": ["cairo"] }), null);
+	assert.equal(noteVariantId(registration, {}), null);
+	assert.equal(noteVariantId(registration, undefined), null);
+	assert.equal(noteVariantId({ pack: GAME_PACKS[0] }, { "handbook-variant": "cairo" }), null);
+	assert.equal(resolveGameAppearance(registration, noteVariantId(registration, { "handbook-variant": "cairo" }) ?? "metro").variant?.id, "cairo");
+}
 
 console.log("Game variant assertions passed.");

@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.46.5] - 2026-11-04
 
+### Added
+
+- A note can choose the variant it is shown in with the `handbook-variant` property (for instance `handbook-variant: cairo`); it takes precedence over the variant chosen in the settings, which it never changes. A value the active game does not declare is ignored. The body carries a single variant, so every open pane and the PDF export follow the active note.
+
 ### Fixed
 
 - Otherscape: the rules of the Metro, Cairo and Tokyo variants apply again; their selectors looked for the variant class on an ancestor of the body, which never matched (#122).
 - Otherscape: the note paper of the selected variant is no longer overwritten by a white background in light mode (#122).
 - Otherscape Cairo: themes, profiles and character creation cards take the bevelled card the schema publishes, in place of the former shadow and thick side borders (#122).
+- A section forced to a mode (`<!-- handbook-mode: … -->`) no longer shows a hairline of the note paper between two of its blocks.
 - Otherscape: headings no longer show the coloured bar and indent that some themes (such as Border) draw before every heading, in reading view, Live Preview and the PDF export (#122).
 
 ### Changed

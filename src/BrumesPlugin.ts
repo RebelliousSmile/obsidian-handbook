@@ -46,6 +46,7 @@ import {
 import {
 	effectiveColourScheme,
 	GameRegistration,
+	noteVariantId,
 	publishedSection,
 	ResolvedGameAppearance,
 	resolveGameAppearance,
@@ -93,6 +94,8 @@ export default class BrumesPlugin extends Plugin {
 	private assetRefreshSequence = 0;
 	private pendingFontPackId: string | null = null;
 	private schemaCatalogPrompted = false;
+	/** The variant the documents were last dressed in, note property included. */
+	private appliedVariantId: string | null = null;
 
 	async onload() {
 		await prepareGameStorage(this);
@@ -168,6 +171,12 @@ export default class BrumesPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on("file-open", () => {
 				this.refreshNoteBackgrounds();
+				this.refreshNoteVariant();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("active-leaf-change", () => {
+				this.refreshNoteVariant();
 			}),
 		);
 		this.registerEvent(
@@ -178,6 +187,9 @@ export default class BrumesPlugin extends Plugin {
 		this.registerEvent(
 			this.app.metadataCache.on("changed", (file) => {
 				this.refreshNoteBackgrounds(file);
+				if (file.path === this.app.workspace.getActiveFile()?.path) {
+					this.refreshNoteVariant();
+				}
 			}),
 		);
 
@@ -324,9 +336,40 @@ export default class BrumesPlugin extends Plugin {
 		const registration = resolveGameRegistration(this.settings.mode);
 		return resolveGameAppearance(
 			registration,
-			this.settings.gameVariants[registration.pack.id],
+			this.effectiveVariantId(registration),
 			this.overrides.style,
 		);
+	}
+
+	/**
+	 * The variant the active note names in its `handbook-variant` property,
+	 * else the one chosen in the settings. The note's choice is never written
+	 * to the settings. The body carries one variant, so every open pane and
+	 * the PDF export follow the active note.
+	 */
+	private effectiveVariantId(registration: GameRegistration): unknown {
+		const file = this.app.workspace.getActiveFile();
+		const frontmatter = file
+			? this.app.metadataCache.getFileCache(file)?.frontmatter
+			: undefined;
+		return (
+			noteVariantId(registration, frontmatter) ??
+			this.settings.gameVariants[registration.pack.id]
+		);
+	}
+
+	/** Repaint only when the active note changes the variant in force. */
+	private refreshNoteVariant() {
+		const registration = resolveGameRegistration(this.settings.mode);
+		const variant = resolveGameAppearance(
+			registration,
+			this.effectiveVariantId(registration),
+		).variant;
+		if ((variant?.id ?? null) === this.appliedVariantId) {
+			return;
+		}
+		this.applyGameStyle();
+		this.refreshMarkdownViews();
 	}
 
 	/** The polarities offered by the active game and variant, overrides included. */
@@ -355,9 +398,10 @@ export default class BrumesPlugin extends Plugin {
 		const registration = resolveGameRegistration(this.settings.mode);
 		const appearance = resolveGameAppearance(
 			registration,
-			this.settings.gameVariants[registration.pack.id],
+			this.effectiveVariantId(registration),
 			this.overrides.style,
 		);
+		this.appliedVariantId = appearance.variant?.id ?? null;
 		const pack = appearance.pack;
 		const style = appearance.style;
 
@@ -495,7 +539,7 @@ export default class BrumesPlugin extends Plugin {
 		const registration = resolveGameRegistration(this.settings.mode);
 		const appearance = resolveGameAppearance(
 			registration,
-			this.settings.gameVariants[registration.pack.id],
+			this.effectiveVariantId(registration),
 		);
 		this.syncPendingFontStyle(doc, this.pendingFontPackId === registration.pack.id);
 		setBrumesModeClass(registration.pack.id, doc);

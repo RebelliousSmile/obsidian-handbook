@@ -54,6 +54,24 @@ export function findGameVariant(
 	return null;
 }
 
+/** The frontmatter property by which a note chooses the variant it is shown in. */
+export const NOTE_VARIANT_PROPERTY = "handbook-variant";
+
+/**
+ * The variant a note asks for, when the active game declares it. Anything
+ * else (absent, misspelt, another game's variant) leaves the setting in force.
+ */
+export function noteVariantId(
+	registration: GameRegistration,
+	frontmatter: Record<string, unknown> | undefined,
+): string | null {
+	const raw = frontmatter?.[NOTE_VARIANT_PROPERTY];
+	if (typeof raw !== "string") {
+		return null;
+	}
+	return findGameVariant(registration, raw.trim().toLowerCase())?.id ?? null;
+}
+
 export function resolveGameVariant(
 	registration: GameRegistration,
 	id: unknown,

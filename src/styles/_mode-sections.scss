@@ -11,7 +11,10 @@
 	// Full-bleed past the sizer padding and the readable line width: the paper
 	// colour is spread sideways and clipped to the block's own height.
 	box-shadow: 0 0 0 100vmax var(--background-primary);
-	clip-path: inset(0 -100vmax);
+	// One pixel past the bottom: blocks of fractional height leave a sub-pixel
+	// seam where the note paper shows as a hairline. The next block paints over
+	// the overlap, since block backgrounds are drawn in document order.
+	clip-path: inset(0 -100vmax -1px);
 }
 
 .handbook-mode-dark,
