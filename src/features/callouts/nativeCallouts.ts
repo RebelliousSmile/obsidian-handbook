@@ -1,5 +1,6 @@
 import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
 import { PBTA_PACK_CALLOUTS, PBTA_VISUAL_CALLOUTS } from "schema-pbta";
+import { OTHERSCAPE_VISUAL_CALLOUTS } from "schema-in-the-mist";
 import { CalloutDefinition } from "./types";
 
 const PBTA_VISUAL_ICONS: Record<(typeof PBTA_VISUAL_CALLOUTS)[number]["id"], string> = {
@@ -101,6 +102,32 @@ const ADRENALINE_CALLOUTS: CalloutDefinition[] = ADRENALINE_VISUAL_CALLOUTS.map(
 	}),
 );
 
+// Keyed by id as text, like the Adrenaline icons: a schema release that adds a
+// callout must not break the build of a Handbook that has not adopted it yet.
+const OTHERSCAPE_VISUAL_ICONS: Record<string, string> = {
+	"otherscape-renvoi": "bookmark",
+	"otherscape-read-aloud": "mic",
+	"otherscape-chapter": "book-open",
+};
+
+// The schema owns ids, labels and default aliases, and draws them in the pack
+// stylesheet; scoped to Otherscape, `read-aloud` stays free for the other games.
+const OTHERSCAPE_CALLOUTS: CalloutDefinition[] = OTHERSCAPE_VISUAL_CALLOUTS.map(
+	(entry): CalloutDefinition => ({
+		id: entry.id,
+		name: entry.label,
+		aliases: [...entry.aliases],
+		scope: "otherscape",
+		template: entry.template,
+		icon: OTHERSCAPE_VISUAL_ICONS[entry.id] ?? PACK_CALLOUT_DEFAULT_ICON,
+		font: "text",
+		color: { kind: "theme" },
+		native: true,
+		styleKey: entry.id,
+		capability: entry.capability,
+	}),
+);
+
 /**
  * Every native callout, locked: `styleKey`, scope and default aliases come from
  * the old `aliasSupport.ts` constants and from the schema packages. `color`,
@@ -112,6 +139,7 @@ export const SCHEMA_CALLOUT_IDS: readonly string[] = [
 	...PBTA_VISUAL_CALLOUTS.map((definition): string => definition.id),
 	...PBTA_PACK_CALLOUTS.map((definition): string => definition.id),
 	...ADRENALINE_VISUAL_CALLOUTS.map((definition): string => definition.id),
+	...OTHERSCAPE_VISUAL_CALLOUTS.map((definition): string => definition.id),
 ];
 
 export const NATIVE_CALLOUTS: CalloutDefinition[] = [
@@ -202,4 +230,5 @@ export const NATIVE_CALLOUTS: CalloutDefinition[] = [
 	...PBTA_CALLOUTS,
 	...PBTA_PACK_NATIVE_CALLOUTS,
 	...ADRENALINE_CALLOUTS,
+	...OTHERSCAPE_CALLOUTS,
 ];

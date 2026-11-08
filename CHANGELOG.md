@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A note can choose the variant it is shown in with the `handbook-variant` property (for instance `handbook-variant: cairo`); it takes precedence over the variant chosen in the settings, which it never changes. A value the active game does not declare is ignored. The body carries a single variant, so every open pane and the PDF export follow the active note.
+- Otherscape: the `renvoi`, `read-aloud` and `chapter` callouts, whose ids, labels and aliases come from the schema (`OTHERSCAPE_VISUAL_CALLOUTS`), drawn by the pack: a grey cross-reference box, read-aloud text on pale paper, and a chapter head with the Metro emblem (#122).
 
 ### Fixed
 
@@ -23,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Requires the Otherscape pack of `schema-in-the-mist` that projects the Cairo design and ships a single condensed heading face.
-- Otherscape: each variant keeps a single polarity — Cairo and Tokyo light, Metro dark — whatever the Obsidian theme; the colour scheme setting is hidden for them. The alternate section of a note takes the other polarity: dark slate for Cairo, dark navy for Tokyo, light paper for Metro.
+- Otherscape: each variant keeps a single polarity — Metro, Cairo and Tokyo are light — whatever the Obsidian theme; the colour scheme setting is hidden for them. The alternate section of a note takes the dark polarity: dark slate for Cairo, dark navy for Tokyo and Metro. A single-polarity game also forces its ink on the note, so Live Preview no longer shows the Obsidian theme's text colour on the game's paper.
+- Otherscape Metro draws the scenario page of its mock-ups: an H6 kicker above the H1, a lead that crosses a column marker, flat native callouts with a striped tab, and dotted bullets.
 - Otherscape Tokyo and Metro follow their mock-ups: band headings, lead paragraph, highlighted subtitle and their own ink, so property values and links stay readable.
 
 ## [2.46.4] - 2026-10-20

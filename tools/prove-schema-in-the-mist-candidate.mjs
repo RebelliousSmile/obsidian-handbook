@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
+import { sep } from "node:path";
 import { spawnSync } from "node:child_process";
 
 function run(script) { const result = spawnSync(process.execPath, [script], { encoding: "utf8" }); if (result.status !== 0) throw new Error(`${script} failed: ${result.stderr || result.stdout}`); }
@@ -11,7 +12,10 @@ export function proveSchemaInTheMistCandidate({ releaseUrl, integrity, finalTag 
 	if (JSON.parse(readFileSync("package.json", "utf8")).dependencies["schema-in-the-mist"] !== releaseUrl) throw new Error("candidate release URL disagrees with package.json");
 	const lock = readFileSync("pnpm-lock.yaml", "utf8"); const line = lock.split("\n").find((value) => value.includes("resolution: {") && value.includes(releaseUrl));
 	if (!line || !line.includes(`integrity: ${integrity}`)) throw new Error("candidate integrity disagrees with pnpm-lock.yaml");
-	if (JSON.parse(readFileSync("node_modules/schema-in-the-mist/package.json", "utf8")).version !== version) throw new Error("installed schema-in-the-mist version disagrees with candidate release URL");
+	/* A train links the package it is about to publish over the install (supervisor `present`): only a
+	   package resolved from pnpm's store is an ordinary install, the one whose version proves the pin. */
+	const fromStore = realpathSync("node_modules/schema-in-the-mist").startsWith(realpathSync("node_modules/.pnpm") + sep);
+	if (fromStore && JSON.parse(readFileSync("node_modules/schema-in-the-mist/package.json", "utf8")).version !== version) throw new Error("installed schema-in-the-mist version disagrees with candidate release URL");
 	for (const script of ["tools/assert-mist-contract.mjs", "tools/assert-mist-font-packs.mjs", "tools/assert-source-installer.mjs"]) run(script);
 	return { version, releaseUrl, integrity, finalTag, proofs: ["contract", "pack-assets", "source-installer"] };
 }

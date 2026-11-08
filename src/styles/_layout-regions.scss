@@ -63,6 +63,13 @@
 	}
 }
 
+// Chromium skips painting the bullet dot, an absolute `::after` of the
+// zero-width `.list-bullet`, once its list sits in a column box. Relative
+// positioning puts the dot at the same offsets, and Chromium paints it.
+.handbook-layout-flowing .list-bullet::after {
+	position: relative;
+}
+
 // Character sheets use compact, ink-first panels rather than Obsidian's
 // coloured semantic callouts. This keeps their printed playbook structure
 // while retaining accessible callout markup in the source note.

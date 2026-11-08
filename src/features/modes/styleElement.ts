@@ -176,6 +176,19 @@ export function buildGameStyle(
 				),
 			),
 		);
+		// A single polarity is a forced one whenever Obsidian shows the other
+		// theme: the ink derived on `body` would stay the theme's (dark text on
+		// a dark-only game's paper in Live Preview, where nothing redeclares
+		// `color` below the leaf).
+		blocks.push(
+			offPaper(
+				polarities[0],
+				renderTokenBlock(
+					noteSelector(mode),
+					forcedInkTokens(polarities[0]),
+				),
+			),
+		);
 	} else if (colourScheme === "obsidian") {
 		for (const polarity of polarities) {
 			blocks.push(

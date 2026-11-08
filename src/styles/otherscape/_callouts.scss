@@ -10,16 +10,19 @@
 			font-family: "Fira Sans Extra Condensed", sans-serif;
 			text-transform: uppercase;
 			--callout-title-size: 1.5em;
-			--callout-title-color: black;
-			color: black;
+			--callout-title-color: currentColor;
+			color: inherit;
 		}
 
+		// The ink is the callout's: a variant's pack sheet sets it on
+		// `.callout` (and `.callout-title`, `.callout-icon`), never on what
+		// lies inside — `.callout-title-inner` reads `--callout-title-color`.
 		.callout-icon .svg-icon {
-			color: black;
+			color: inherit;
 		}
 
 		.callout-content {
-			color: black;
+			color: inherit;
 		}
 	}
 

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { ADRENALINE_VISUAL_CALLOUTS } from "schema-adrenaline/presentation";
+import { OTHERSCAPE_VISUAL_CALLOUTS } from "schema-in-the-mist";
 import { PBTA_PACK_CALLOUTS, PBTA_VISUAL_CALLOUTS } from "schema-pbta";
 import { log } from "../src/utils/logger";
 import { NATIVE_CALLOUTS } from "../src/features/callouts/nativeCallouts";
@@ -125,6 +126,19 @@ function settingsAliases(id: string): string[] | undefined {
 	assert.equal(adrenaline.every((entry) => isCalloutAvailable(entry, "adrenaline", ["style:adrenaline"])), true);
 	assert.equal(adrenaline.every((entry) => !isCalloutAvailable(entry, "adrenaline", [])), true);
 	assert.equal(adrenaline.every((entry) => !isCalloutAvailable(entry, "city-of-mist", ["style:adrenaline"])), true);
+}
+
+// Otherscape callouts carry the schema's ids and aliases, and need both the
+// Otherscape game and its style capability; `read-aloud` stays scoped.
+{
+	const otherscape = NATIVE_CALLOUTS.filter((entry) => entry.capability === "style:otherscape");
+	assert.deepEqual(
+		otherscape.map((entry) => [entry.id, entry.styleKey, entry.aliases]),
+		OTHERSCAPE_VISUAL_CALLOUTS.map((definition) => [definition.id, definition.id, [...definition.aliases]]),
+	);
+	assert.equal(otherscape.every((entry) => isCalloutAvailable(entry, "otherscape", ["style:otherscape"])), true);
+	assert.equal(otherscape.every((entry) => !isCalloutAvailable(entry, "otherscape", [])), true);
+	assert.equal(otherscape.every((entry) => !isCalloutAvailable(entry, "legend-in-the-mist", ["style:otherscape"])), true);
 }
 
 // Saved settings from before the Adrenaline callouts gain them. A default

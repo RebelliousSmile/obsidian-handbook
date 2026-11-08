@@ -214,8 +214,33 @@ const compiledStyles = (() => {
 		throw new Error("dist/styles.css is missing: run the build before this assertion");
 	}
 })();
-assert.ok(compiledStyles.includes("brumes--variant-"), "dist/styles.css carries no variant rule");
+// The variant rules live in the pack stylesheet the schema publishes; Handbook's
+// own sheet may carry some too. Both must be placed where the body can match them,
+// and the pack sheet must carry some, or the check above proves nothing.
+const otherscapePackStyles = (() => {
+	try {
+		return readFileSync(new URL("../node_modules/schema-in-the-mist/handbook/otherscape/assets/styles/otherscape.css", import.meta.url), "utf8");
+	} catch {
+		throw new Error("schema-in-the-mist publishes no Otherscape stylesheet: run pnpm install before this assertion");
+	}
+})();
+assert.ok(otherscapePackStyles.includes("brumes--variant-"), "the Otherscape pack stylesheet carries no variant rule");
+assert.deepEqual(misplacedVariantSelectors(otherscapePackStyles), [], "pack variant rules that can never match the body");
 assert.deepEqual(misplacedVariantSelectors(compiledStyles), [], "variant rules that can never match the body");
+// A variant inks its callouts on `.callout`: Handbook's base must let the content
+// and the icon inherit it, or a dark alternate's light ink turns black on its surface.
+for (const inner of [".callout-content", ".callout-icon .svg-icon"]) {
+	const selector = `.brumes--otherscape .callout ${inner}`;
+	const bodies: string[] = [];
+	for (const rule of compiledStyles.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+		if (rule[1].split(",").some((part) => part.trim() === selector)) bodies.push(rule[2]);
+	}
+	assert.ok(bodies.length > 0, `Handbook's Otherscape sheet has no ${inner} rule`);
+	for (const body of bodies) {
+		const ink = /(?:^|;)\s*color:\s*([^;]+)/.exec(body);
+		if (ink) assert.equal(ink[1].trim(), "inherit", `Handbook's Otherscape ${inner} forces an ink over the variant's`);
+	}
+}
 
 // A note's `handbook-variant` wins only when the active game declares it.
 {

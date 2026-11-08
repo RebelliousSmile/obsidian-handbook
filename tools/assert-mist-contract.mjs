@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { buildSync } from "esbuild";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join, resolve, sep } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 /* The pin is read, never copied: a producer release is not this repo's to hard-code. What is checked
    is that every place recording the pin agrees with package.json — the bump stays a one-line edit. */
@@ -37,7 +37,14 @@ const installedPackageUrl = import.meta.resolve("schema-in-the-mist/package.json
 const installedPackage = JSON.parse(
 	readFileSync(new URL(installedPackageUrl), "utf8"),
 );
-assert.equal(installedPackage.version, pinnedVersion, "the installed package must be the pinned release");
+/* A train links the package it is about to publish over the install (supervisor `present`, `preview`):
+   its version is the one the train publishes, not the pin yet. Only a package resolved from pnpm's
+   store is an ordinary install, the one that proves the pin. */
+const installedFromStore = realpathSync(dirname(fileURLToPath(installedPackageUrl)))
+	.startsWith(realpathSync(resolve("node_modules/.pnpm")) + sep);
+if (installedFromStore) {
+	assert.equal(installedPackage.version, pinnedVersion, "the installed package must be the pinned release");
+}
 
 const work = mkdtempSync(join(tmpdir(), "handbook-mist-contract-"));
 const stub = join(work, "obsidian-stub.mjs");

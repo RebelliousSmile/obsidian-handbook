@@ -153,6 +153,14 @@ const darkOnlyCss = buildGameStyle(
 assert.match(outsideScreen(darkOnlyCss), /--only-base: base/);
 assert.doesNotMatch(outsideScreen(darkOnlyCss), /--only-dark/, "a dark-only pack prints its dark layer");
 assert.equal(printBlocks(darkOnlyCss), "");
+// Under Obsidian's light theme the editor inherits `color` resolved on `body`
+// from the theme's ink: a single polarity redeclares it on the note, screen only.
+assert.match(
+	darkOnlyCss,
+	/@media screen \{\nbody\.brumes--legend-in-the-mist \.workspace-leaf-content\[data-type="markdown"\][^{]*\{[^}]*color-scheme: dark;[^}]*\n\tcolor: var\(--text-normal\);/,
+	"a single-polarity pack gives the note its own ink",
+);
+assert.doesNotMatch(outsideScreen(darkOnlyCss), /color-scheme: dark/, "the dark ink reaches print");
 
 const workspaceDarkCss = buildGameStyle(
 	"legend-in-the-mist",
