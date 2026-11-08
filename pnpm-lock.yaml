@@ -21,8 +21,8 @@ importers:
         specifier: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.2.0/schema-adrenaline-6.2.0.tgz
         version: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.2.0/schema-adrenaline-6.2.0.tgz
       schema-in-the-mist:
-        specifier: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0/schema-in-the-mist-1.4.0.tgz
-        version: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0/schema-in-the-mist-1.4.0.tgz
+        specifier: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.5.0-rc.1/schema-in-the-mist-1.5.0.tgz
+        version: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.5.0-rc.1/schema-in-the-mist-1.5.0.tgz
       schema-pbta:
         specifier: https://github.com/RebelliousSmile/schema-pbta/releases/download/v13.1.0/schema-pbta-13.1.0.tgz
         version: https://github.com/RebelliousSmile/schema-pbta/releases/download/v13.1.0/schema-pbta-13.1.0.tgz
@@ -1516,9 +1516,9 @@ packages:
     resolution: {integrity: sha512-ROabdSmZm10BdI3Xc3sE0jGz5Ohcskm01Y1rxpg0unahI6WqECc+nG+SuRebcaQyz8gCPTJzAzjbpr7MxCJ6Vg==, tarball: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.2.0/schema-adrenaline-6.2.0.tgz}
     version: 6.2.0
 
-  schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0/schema-in-the-mist-1.4.0.tgz:
-    resolution: {integrity: sha512-jKtcAecEQWGXXDskoCrFGDzKO1UP1oddEhezjCfXWn8Q4XaxGzKKfQbYYzqmUawCNUvR6J1O1QueiMLmZxFG0A==, tarball: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0/schema-in-the-mist-1.4.0.tgz}
-    version: 1.4.0
+  schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.5.0-rc.1/schema-in-the-mist-1.5.0.tgz:
+    resolution: {integrity: sha512-2likHuoZHXY7XccBCNrCaNOiVRmA7dcwnfrFNoA6xZ5xQPFf6DvIz88CzEJLrF3KeNgV+1JgaZAn55T45scHFQ==, tarball: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.5.0-rc.1/schema-in-the-mist-1.5.0.tgz}
+    version: 1.5.0
 
   schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v13.1.0/schema-pbta-13.1.0.tgz:
     resolution: {integrity: sha512-lZumyUvo5f8fbcwQ8RLbT3IlpmxOCmJnP0yRFGUszdpVh6M7ARhw6G8YVEg+CQxXkDmV+7/4TYVCF8H4kpccrw==, tarball: https://github.com/RebelliousSmile/schema-pbta/releases/download/v13.1.0/schema-pbta-13.1.0.tgz}
@@ -3411,7 +3411,7 @@ snapshots:
       smol-toml: 1.8.0
       zod: 4.6.2
 
-  schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0/schema-in-the-mist-1.4.0.tgz:
+  schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.5.0-rc.1/schema-in-the-mist-1.5.0.tgz:
     dependencies:
       smol-toml: 1.8.0
       zod: 4.6.2
