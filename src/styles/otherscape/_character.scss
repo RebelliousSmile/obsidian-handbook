@@ -1,0 +1,42 @@
+// Geometry only: the pack draws the colours, the fonts and the label tabs
+// (`brumes-os-character--*` in its generated CSS). The bands stack above the
+// theme cards, which keep the frame of `_themes.scss`.
+@mixin sheet {
+	.brumes-os-character {
+		display: grid;
+		gap: 0.75rem;
+		max-width: 100%;
+		overflow-wrap: anywhere;
+	}
+	.brumes-os-character--header { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; }
+	.brumes-os-character--header small { margin-inline-start: auto; }
+	.brumes-os-character--band { display: grid; gap: 0.4rem; min-width: 0; }
+	.brumes-os-character--upgrades ul { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
+	.brumes-os-character--upgrades li { display: flex; align-items: center; gap: 0.35em; }
+	.brumes-os-character--combos {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+		gap: 0.5rem 1rem;
+	}
+	.brumes-os-character--combo { display: grid; align-content: start; gap: 0.2rem; min-width: 0; }
+	.brumes-os-character--combo p { margin: 0; }
+	// One tag a line, as the sheet prints them, without the list's own spacing.
+	.brumes-os-character--combo-tags { display: grid; justify-items: start; gap: 0.1rem; margin: 0; padding: 0; list-style: none; }
+	.brumes-os-character--combo-tags li { margin: 0; padding: 0; line-height: 1.25; }
+	.brumes-os-character--items {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.25rem 1rem;
+	}
+	.brumes-os-character--items > ul { display: grid; align-content: start; gap: 0.25rem; }
+	.brumes-os-character--item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; }
+	.brumes-os-character--themes {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+		gap: 1rem;
+	}
+
+	@media (max-width: 520px) {
+		.brumes-os-character--items { grid-template-columns: minmax(0, 1fr); }
+	}
+}

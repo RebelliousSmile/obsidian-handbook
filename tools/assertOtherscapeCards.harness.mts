@@ -10,6 +10,9 @@ import { osCreationToToml } from "../src/features/osCharacterCreation/schema";
 import { parseOsPowerSet } from "../src/features/osChallenges/parser";
 import { powerSetStars, renderOsProfile } from "../src/features/osChallenges/renderer";
 import { osProfileToToml } from "../src/features/osChallenges/schema";
+import { parseOsCharacter } from "../src/features/osCharacter/parser";
+import { renderOsCharacter } from "../src/features/osCharacter/renderer";
+import { osCharacterToToml } from "../src/features/osCharacter/schema";
 import { parseOsTheme, parseOsThemeKit } from "../src/features/osThemes/parser";
 import { renderOsTheme } from "../src/features/osThemes/renderer";
 import { osThemeToToml } from "../src/features/osThemes/schema";
@@ -104,13 +107,21 @@ const bareCard = asEl(renderOsTheme(bare, doc));
 assert.equal(byClass(bareCard, "brumes-os-theme--special").length, 0);
 assert.equal(all(bareCard).filter((element) => element.tagName === "input").length, 0);
 
-/* A played theme reads neither description nor Special, and prints its lists bare. */
-const theme = parseOsTheme(['title_tag = "Debt"', 'theme_type = "noise"', 'description = "x"', 'power_tags = ["a"]', "upgrade = 1", ""].join("\n"));
+/* A played theme reads the description and the Special its card prints, like a kit. */
+const theme = parseOsTheme(['title_tag = "Debt"', 'theme_type = "noise"', 'description = "x"', 'power_tags = ["a"]', "upgrade = 1", "", "[special]", 'name = "Collector"', 'description = "Call in a {favour}."', ""].join("\n"));
 assert.ok(theme);
-assert.equal(theme.description, undefined);
+assert.equal(theme.description, "x");
+assert.deepEqual(theme.special, { name: "Collector", description: "Call in a {favour}." });
 const themeCard = asEl(renderOsTheme(theme, doc));
-assert.deepEqual(headings(themeCard), []);
 assert.equal(text(one(themeCard, "brumes-os-theme--type-name")), OTHERSCAPE_THEME_TYPE_LABELS.noise.fr);
+assert.equal(text(one(themeCard, "brumes-os-theme--special-name")), "Collector");
+assert.match(osThemeToToml(theme), /\[special\]\nname = "Collector"/);
+
+/* Without either, a played theme prints its lists bare. */
+const bareTheme = parseOsTheme(['title_tag = "Debt"', 'theme_type = "noise"', 'power_tags = ["a"]', "upgrade = 1", ""].join("\n"));
+assert.ok(bareTheme);
+assert.equal(bareTheme.description, undefined);
+assert.deepEqual(headings(asEl(renderOsTheme(bareTheme, doc))), []);
 
 /* Power set: typed label, stars, tags & statuses under published headings. */
 const powerSet = parseOsPowerSet([
@@ -196,5 +207,66 @@ assert.deepEqual(
 	["brumes-os-creation--header", "brumes-os-creation--description", "brumes-os-creation--feature-tags", "brumes-os-creation--weakness-tag"],
 );
 assert.ok(itemCard.children.every((cell) => cell.classes.includes("brumes-os-creation--cell")));
+
+/* Character sheet: the published bands, a combo's tags joined by the pack, the loaded items
+   before the unloaded ones (burnt), and each theme card with its description and Special. */
+const character = parseOsCharacter([
+	'name = "Vesper"',
+	"",
+	"[[themes]]",
+	'title_tag = "Debt"',
+	'theme_type = "noise"',
+	'power_tags = ["favours owed"]',
+	'description = "Everyone owes Vesper."',
+	"[themes.special]",
+	'name = "Collector"',
+	'description = "Call in a {favour}."',
+	"",
+	"[[tag_combos]]",
+	'label = "Cash a favour"',
+	'tags = ["Debt", "favours owed"]',
+	"power = 2",
+	'effect = "**Convince** *ally-2*"',
+	"",
+	"[[loadout]]",
+	'name = "burner phone"',
+	"loaded = true",
+	"",
+	"[[loadout]]",
+	'name = "spare drone"',
+	'feature_tags = ["spare drone", "folds flat"]',
+	'weakness_tag = "loud"',
+	"",
+].join("\n"));
+assert.ok(character);
+assert.equal(character.loadout[1].loaded, false, "an item without loaded is not loaded");
+const sheet = asEl(renderOsCharacter(character, doc));
+assert.deepEqual(headings(sheet), [
+	OTHERSCAPE_ZONE_LABELS.character.upgrades.fr,
+	OTHERSCAPE_ZONE_LABELS.character.tag_combos.fr,
+	OTHERSCAPE_ZONE_LABELS.character.loadout.fr,
+	OTHERSCAPE_ZONE_LABELS["theme-kit"].special.fr,
+]);
+assert.equal(byClass(sheet, "brumes-os-character--box").length, 2, "one box per upgrade choice");
+assert.deepEqual(one(sheet, "brumes-os-character--combo-tags").children.map(text), ["Debt", "favours owed"]);
+assert.equal(text(one(sheet, "brumes-os-character--combo-power")), `${OTHERSCAPE_ZONE_LABELS.character.power.fr} 2`);
+const effect = one(sheet, "brumes-os-character--combo-effect");
+assert.deepEqual(effect.children.map((part) => part.tagName), ["strong", "span", "em"], "inline Markdown: strong and emphasis become elements");
+assert.equal(text(effect.children[0]), "Convince");
+const loaded = one(sheet, "brumes-os-character--loaded");
+const unloaded = one(sheet, "brumes-os-character--unloaded");
+const itemTag = (entry: El) => entry.children[0] as unknown as { className: string; textContent: string };
+assert.doesNotMatch(itemTag(loaded.children[0]).className, /brumes-burnt/);
+assert.match(itemTag(unloaded.children[0]).className, /brumes-burnt/);
+assert.deepEqual(unloaded.children[0].children.map(text), ["spare drone", "folds flat", "loud"]);
+assert.equal(text(one(sheet, "brumes-os-theme--special-name")), "Collector");
+assert.equal(byClass(sheet, "brumes-os-theme--description").length, 1);
+assert.match(osCharacterToToml(character), /\[\[loadout\]\]\nname = "burner phone"\nloaded = true/);
+
+/* A bare sheet keeps its name and the published Upgrades, and nothing else. */
+const bareSheet = parseOsCharacter('name = "Nobody"\n');
+assert.ok(bareSheet);
+assert.deepEqual(headings(asEl(renderOsCharacter(bareSheet, doc))), [OTHERSCAPE_ZONE_LABELS.character.upgrades.fr]);
+assert.equal(parseOsCharacter('title = "no name"\n'), null);
 
 console.log("Otherscape card hook assertions passed.");

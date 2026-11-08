@@ -346,6 +346,14 @@ writer.removeGameStyle();
 assert.equal(mainStyles.elements.size, 0);
 assert.equal(detachedStyles.elements.size, 0);
 
+/* The character sheet lays out zones: the pack's sheet paints them. */
+const otherscapeCharacter = readFileSync("src/styles/otherscape/_character.scss", "utf8");
+assert.doesNotMatch(
+	otherscapeCharacter,
+	/theme-(?:light|dark)|brumes--colour-(?:light|dark)|(?:^|[\s;{])(?:color|background(?:-color)?|border-color|fill)\s*:/m,
+	"the Otherscape character sheet is geometry only: colour and polarity belong to the pack",
+);
+
 const adrenalinePage = readFileSync(
 	"src/styles/adrenaline/_page.scss",
 	"utf8",

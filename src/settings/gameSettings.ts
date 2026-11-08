@@ -83,6 +83,7 @@ export function renderOtherscapeSettings(host: SettingsHost, section: SettingGro
 		[t("Power sets"), "os-power-set", "osPowerSetParser"],
 		[t("Character tropes"), "os-character-trope", "osCharacterTropeParser"],
 		[t("Loadout items"), "os-loadout-item", "osLoadoutItemParser"],
+		[t("Characters"), "os-character", "osCharacterParser"],
 	];
 	for (const [name, blockId, flag] of toggles) {
 		addFeatureToggle(

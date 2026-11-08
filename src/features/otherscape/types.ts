@@ -7,6 +7,7 @@ export const OS_BLOCK_IDS = {
 	powerSet: "os-power-set",
 	characterTrope: "os-character-trope",
 	loadoutItem: "os-loadout-item",
+	character: "os-character",
 } as const;
 
 export const OS_FEATURE_FLAGS = {
@@ -16,6 +17,7 @@ export const OS_FEATURE_FLAGS = {
 	powerSet: "osPowerSetParser",
 	characterTrope: "osCharacterTropeParser",
 	loadoutItem: "osLoadoutItemParser",
+	character: "osCharacterParser",
 } as const;
 
 export type OsThemeType = "self" | "mythos" | "noise" | "crew";

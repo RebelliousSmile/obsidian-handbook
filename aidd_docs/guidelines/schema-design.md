@@ -7,7 +7,7 @@
 
 La règle est née quand six blocs fencés lisaient et écrivaient leurs schémas de
 façons différentes. Elle couvre désormais plusieurs propriétaires de contrat :
-Mist Engine publie 14 cibles canoniques dont Handbook rend 12, tandis
+Mist Engine publie 15 cibles canoniques dont Handbook rend 13, tandis
 qu’Adrenaline et PbtA gardent leurs propres intégrations. La question n’est donc
 plus seulement « ce bloc a-t-il un schéma ? », mais aussi « quel dépôt possède
 ce schéma et son corpus ? ».

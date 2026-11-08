@@ -38,8 +38,8 @@ assert.deepEqual(readMeta(document.meta), {
 assert.equal(parseOtherscapeDocument("title_tag = ["), null);
 assert.equal(parseOtherscapeDocument("not toml prose"), null);
 assert.equal(asNonNegativeInteger("2", 3), undefined);
-assert.equal(Object.values(OS_BLOCK_IDS).length, 6);
-assert.equal(Object.values(OS_FEATURE_FLAGS).length, 6);
+// Every Otherscape block has its feature flag: a role, not a count.
+assert.deepEqual(Object.keys(OS_FEATURE_FLAGS).sort(), Object.keys(OS_BLOCK_IDS).sort());
 assert.equal(Object.values(OS_BLOCK_IDS).includes("os-theme-card"), false);
 
 console.log("Otherscape primitive assertions passed.");

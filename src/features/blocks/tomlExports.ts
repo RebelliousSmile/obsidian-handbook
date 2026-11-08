@@ -28,6 +28,8 @@ import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 import { osProfileToToml } from "../osChallenges/schema";
 import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreation/block";
 import { osCreationToToml } from "../osCharacterCreation/schema";
+import { osCharacterBlock } from "../osCharacter/block";
+import { osCharacterToToml } from "../osCharacter/schema";
 import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { pjToToml } from "../adrenalinePj/schema";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
@@ -181,6 +183,13 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		commandId: "copy-os-loadout-item-as-toml",
 		noun: ":Otherscape loadout item",
 		toToml: validatedMistSerializer("otherscape/loadout-item", osCreationToToml),
+		describeFailure: (source) => describeMissingPart(source, "name est requis"),
+	},
+	{
+		block: osCharacterBlock,
+		commandId: "copy-os-character-as-toml",
+		noun: ":Otherscape character",
+		toToml: validatedMistSerializer("otherscape/character", osCharacterToToml),
 		describeFailure: (source) => describeMissingPart(source, "name est requis"),
 	},
 	{

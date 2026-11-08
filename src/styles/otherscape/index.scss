@@ -2,6 +2,7 @@
 @use "./themes";
 @use "./challenges";
 @use "./character-creation";
+@use "./character";
 @use "./callouts";
 @use "./headings";
 
@@ -10,6 +11,7 @@
 	@include cards.record;
 	@include challenges.profiles;
 	@include character-creation.cards;
+	@include character.sheet;
 	@include cards.narrow;
 
 	@include headings.bare;

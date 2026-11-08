@@ -41,6 +41,7 @@ export interface BrumesFeatureSettings {
 	osPowerSetParser: boolean;
 	osCharacterTropeParser: boolean;
 	osLoadoutItemParser: boolean;
+	osCharacterParser: boolean;
 	/** Legacy persisted keys; Adrenaline blocks now follow the installed game. */
 	adrenalinePjParser: boolean;
 	adrenalinePnjParser: boolean;
@@ -85,6 +86,7 @@ export const DEFAULT_SETTINGS: BrumesSettings = {
 		osPowerSetParser: true,
 		osCharacterTropeParser: true,
 		osLoadoutItemParser: true,
+		osCharacterParser: true,
 		adrenalinePjParser: true,
 		adrenalinePnjParser: true,
 		adrenalineMonsterParser: true,

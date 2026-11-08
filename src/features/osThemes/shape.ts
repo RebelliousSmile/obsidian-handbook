@@ -12,6 +12,8 @@ export const osThemeShape: BlockShape = {
 		quest,
 		{ name: "power-tags", holds: "the power tags", optional: true },
 		{ name: "weakness-tags", holds: "the weakness tags", optional: true },
+		{ name: "description", holds: "the prose the card prints under its tags", optional: true },
+		{ name: "special", holds: "the Theme Special the card prints, its box, name and description", heading: osZoneLabel("theme-kit", "special"), optional: true },
 		{ name: "tracks", holds: "the three-place Upgrade and Decay tracks", optional: true },
 	],
 };

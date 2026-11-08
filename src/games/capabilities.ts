@@ -48,6 +48,7 @@ export const GAME_PLUGIN_SUPPORT: Readonly<Record<string, GameSupport>> = {
 			"block:os-power-set",
 			"block:os-character-trope",
 			"block:os-loadout-item",
+			"block:os-character",
 		],
 		styles: ["style:otherscape"],
 	},

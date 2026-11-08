@@ -23,8 +23,8 @@ imprimé par `pnpm dump:dom` demeure une sortie dérivée.
 
 ## Corpus Mist installé
 
-Le manifeste partagé couvre les 14 cibles publiques du contrat Mist Engine.
-Handbook en rend 12 ; `city-of-mist/custom-move` et
+Le manifeste partagé couvre les 15 cibles publiques du contrat Mist Engine.
+Handbook en rend 13 ; `city-of-mist/custom-move` et
 `city-of-mist/theme-kit` restent volontairement sans renderer.
 
 Chaque entrée porte deux verdicts indépendants :
@@ -39,7 +39,7 @@ il produit une projection partielle ou le fallback contrôlé du bloc invalide.
 
 Un nouveau cas Mist se corrige et se publie dans `schema-in-the-mist`, jamais
 dans ce dossier. `pnpm assert:mist-contract` vérifie le manifeste entier, les
-aller-retours sémantiques des codecs et les sorties des 12 exporters Handbook.
+aller-retours sémantiques des codecs et les sorties des 13 exporters Handbook.
 
 ## Corpus local
 

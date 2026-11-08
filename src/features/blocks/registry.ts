@@ -15,6 +15,7 @@ import { BLOCK_SCOPE_CLASS } from "../modes/domModeClass";
 import { osThemeBlock, osThemeKitBlock } from "../osThemes/block";
 import { osChallengeBlock, osPowerSetBlock } from "../osChallenges/block";
 import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreation/block";
+import { osCharacterBlock } from "../osCharacter/block";
 import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
@@ -46,6 +47,7 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	osPowerSetBlock,
 	osCharacterTropeBlock,
 	osLoadoutItemBlock,
+	osCharacterBlock,
 	adrenalinePjBlock,
 	adrenalinePnjBlock,
 	adrenalineMonsterBlock,

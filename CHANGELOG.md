@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.48.0] - 2026-11-08
+
+### Added
+
+- Otherscape character sheet: the `os-character` block draws the four themes of a character as theme cards, under the Upgrades, Tag combos and Loadout bands of the Core Book sheet (#125). A combo prints its tags joined by `+`, its Power and its effect; the loaded items come before the unloaded ones, whose tags stay burnt. Copy as TOML and the Lantern editor follow the `otherscape/character` target.
+- Otherscape Theme: a played theme reads and draws its description and Special, like a Theme Kit.
+
+### Changed
+
+- Adopts the schema-in-the-mist release that publishes the `otherscape/character` target.
+
 ## [2.47.0] - 2026-11-08
 
 ### Added

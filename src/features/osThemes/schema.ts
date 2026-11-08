@@ -37,8 +37,14 @@ export function parseOsThemeDocument(
 	isKit: boolean,
 ): OsThemeData | null {
 	const document = parseOtherscapeDocument(source);
-	if (!document) return null;
+	return document ? readOsTheme(document, isKit) : null;
+}
 
+/** A theme read from its decoded table: a block's whole document, or one entry of a character's `themes`. */
+export function readOsTheme(
+	document: Record<string, unknown>,
+	isKit: boolean,
+): OsThemeData | null {
 	const titleTag = asString(document.title_tag);
 	const declaredType = asString(document.theme_type).toLowerCase();
 	if (!titleTag || !OS_THEME_TYPES.includes(declaredType as OsThemeType)) {
@@ -59,12 +65,12 @@ export function parseOsThemeDocument(
 	if (quest) data.quest = quest;
 	if (meta) data.meta = meta;
 
-	if (isKit) {
-		const description = asString(document.description);
-		const special = readSpecial(document.special);
-		if (description) data.description = description;
-		if (special) data.special = special;
-	} else {
+	const description = asString(document.description);
+	const special = readSpecial(document.special);
+	if (description) data.description = description;
+	if (special) data.special = special;
+
+	if (!isKit) {
 		const upgrade = asNonNegativeInteger(document.upgrade, 3);
 		const decay = asNonNegativeInteger(document.decay, 3);
 		if (upgrade !== undefined) data.upgrade = upgrade;
@@ -79,12 +85,12 @@ export function osThemeToDocument(data: OsThemeData): OsThemeDocument {
 		title_tag: data.titleTag,
 		theme_type: data.themeType,
 	};
-	if (data.isKit && data.description) document.description = data.description;
+	if (data.description) document.description = data.description;
 	if (data.category) document.category = data.category;
 	if (data.powerTags.length) document.power_tags = [...data.powerTags];
 	if (data.weaknessTags.length) document.weakness_tags = [...data.weaknessTags];
 	if (data.quest) document.quest = data.quest;
-	if (data.isKit && data.special) document.special = { ...data.special };
+	if (data.special) document.special = { ...data.special };
 	if (!data.isKit && data.upgrade !== undefined) document.upgrade = data.upgrade;
 	if (!data.isKit && data.decay !== undefined) document.decay = data.decay;
 	if (data.meta) document.meta = data.meta;

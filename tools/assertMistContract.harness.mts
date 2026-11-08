@@ -36,8 +36,17 @@ const cases = loadMistContractCases();
 /* A floor, not an equality: the schema source grows its corpus on its own cadence, and a case it adds
    breaks nothing here. A corpus that shrinks is the regression worth failing on. */
 assert.ok(cases.length >= 31, `the Mist contract corpus shrank to ${cases.length} cases, below the 31 this harness covered`);
-assert.equal(MIST_TARGETS.length, 14, "Mist must expose 14 public targets");
-assert.equal(MIST_BLOCK_IDS.length, 12, "Handbook must keep 12 Mist renderers");
+/* Roles, not numbers: every target the contract publishes a codec for is mapped here, and every
+   mapped renderer is registered. Adding a target to the contract fails the table, not a count. */
+assert.deepEqual(
+	[...MIST_TARGETS].sort(),
+	Object.keys(MIST_ENGINE_CODECS).sort(),
+	"MIST_TARGET_TO_BLOCK must map every target the contract publishes",
+);
+for (const blockId of MIST_BLOCK_IDS) {
+	assert.ok(blocks.has(blockId), `${blockId}: the Mist renderer is registered`);
+	assert.ok(exportsByBlock.has(blockId), `${blockId}: the Mist exporter is registered`);
+}
 
 let canonicalAccepted = 0;
 let canonicalRejected = 0;
@@ -143,8 +152,8 @@ assert.deepEqual(
 	"empty nested lists must survive parsing",
 );
 
-assert.equal(exercisedBlocks.size, 12, "all 12 Mist renderers must be exercised");
-assert.equal(exercisedExports.size, 12, "all 12 Mist exporters must be exercised");
+assert.equal(exercisedBlocks.size, MIST_BLOCK_IDS.length, "every Mist renderer must be exercised");
+assert.equal(exercisedExports.size, MIST_BLOCK_IDS.length, "every Mist exporter must be exercised");
 
 console.log(
 	`Mist contract: ${cases.length} cases, ${MIST_TARGETS.length} targets, ` +

@@ -30,6 +30,7 @@ export const fr: Translations = {
 	"Power Set :Otherscape": "Power set :Otherscape",
 	"Character trope :Otherscape": "Character trope :Otherscape",
 	"Loadout item :Otherscape": "Loadout item :Otherscape",
+	"Character :Otherscape": "Fiche de personnage :Otherscape",
 
 	// Commands
 	"Reload illustrations and personal overrides": "Recharger les illustrations et les réglages personnels",
@@ -71,6 +72,7 @@ export const fr: Translations = {
 	"noun::Otherscape power set": "le power set :Otherscape",
 	"noun::Otherscape character trope": "le character trope :Otherscape",
 	"noun::Otherscape loadout item": "le loadout item :Otherscape",
+	"noun::Otherscape character": "la fiche de personnage :Otherscape",
 	"noun:Adrenaline player character": "le personnage joueur Adrenaline",
 	"noun:Adrenaline non-player character": "le personnage non joueur Adrenaline",
 	"noun:Adrenaline monster": "le monstre Adrenaline",
@@ -207,6 +209,7 @@ export const fr: Translations = {
 	"Power sets": "Power sets",
 	"Character tropes": "Character tropes",
 	"Loadout items": "Loadout items",
+	"Characters": "Fiches de personnage",
 	"Enable the {block} TOML block and its insertion.": "Active le bloc TOML {block} et son insertion.",
 
 	// Settings: advanced

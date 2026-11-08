@@ -25,6 +25,7 @@ export const MIST_TARGET_TO_BLOCK = {
 	"legend-in-the-mist/story-theme": "theme-card",
 	"legend-in-the-mist/theme-kit": "litm-theme-kit",
 	"otherscape/challenge": "os-challenge",
+	"otherscape/character": "os-character",
 	"otherscape/character-trope": "os-character-trope",
 	"otherscape/loadout-item": "os-loadout-item",
 	"otherscape/power-set": "os-power-set",
