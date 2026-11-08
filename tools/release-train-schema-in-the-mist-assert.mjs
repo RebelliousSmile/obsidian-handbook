@@ -43,6 +43,9 @@ async function assertMistCandidate(manifestPath) {
 	const bytes = Buffer.from(await response.arrayBuffer());
 	assert.equal(createHash("sha256").update(bytes).digest("hex"), candidate.sha256);
 	assert.equal(`sha512-${createHash("sha512").update(bytes).digest("base64")}`, candidate.integrity);
+	// The provider proof checks Handbook out fresh: the font assertion reads the production
+	// stylesheet, so it is built first, as the final adoption does.
+	run("pnpm", ["build"]);
 	proveSchemaInTheMistCandidate(candidate);
 	const evidence = {
 		status: "passed",
