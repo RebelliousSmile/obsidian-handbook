@@ -9,8 +9,9 @@ const bytes = Buffer.byteLength(stylesheet);
 assert.ok(bytes < 165_000, `dist/styles.css is ${bytes} bytes; expected below 165,000`);
 assert.ok(!/@font-face\b|data:font\b/i.test(stylesheet), "the plugin stylesheet still embeds font faces");
 
-/* The two Mist packs share the two-face contract; Otherscape's design is a condensed
-   sans-serif, so its pack publishes a single title face and leaves text to the system. */
+/* The two Mist packs share the two-face contract. Otherscape leaves it: its books use
+   seven families, so the pack publishes the OFL faces of the book and the OFL look-alikes
+   of its commercial faces, each behind the book's own face in a `local()` stack. */
 const TWO_FACES = [
 	"styles/fonts/averia-serif-libre-latin-700-normal.woff2",
 	"styles/fonts/im-fell-english-latin-400-normal.woff2",
@@ -18,7 +19,18 @@ const TWO_FACES = [
 const PACK_FACES = {
 	"city-of-mist": TWO_FACES,
 	"legend-in-the-mist": TWO_FACES,
-	otherscape: ["styles/fonts/fira-sans-extra-condensed-latin-800-normal.woff2"],
+	otherscape: [
+		"styles/fonts/barlow-condensed-latin-300-normal.woff2",
+		"styles/fonts/familjen-grotesk-latin-500-normal.woff2",
+		"styles/fonts/fira-sans-extra-condensed-latin-800-normal.woff2",
+		"styles/fonts/ibm-plex-sans-condensed-400-italic.woff2",
+		"styles/fonts/ibm-plex-sans-condensed-400-normal.woff2",
+		"styles/fonts/ibm-plex-sans-condensed-700-normal.woff2",
+		"styles/fonts/sofia-sans-semi-condensed-latin-400-italic.woff2",
+		"styles/fonts/sofia-sans-semi-condensed-latin-400-normal.woff2",
+		"styles/fonts/sofia-sans-semi-condensed-latin-700-normal.woff2",
+		"styles/fonts/space-mono-latin-400-normal.woff2",
+	],
 };
 
 let totalResources = 0;
