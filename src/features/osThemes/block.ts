@@ -7,11 +7,14 @@ import { osThemeKitShape, osThemeShape } from "./shape";
 const themeDocument = (kit: boolean) => [
 	`title_tag = "${kit ? "Back-Alley Ripperdoc" : "The Debt I Never Paid"}"`,
 	'theme_type = "self"',
+	...(kit ? ['description = "Describe who carries this theme."'] : []),
 	'category = "AFFILIATION"',
 	'power_tags = ["knows who to ask", "still has the old key"]',
 	'weakness_tags = ["cannot refuse when they ask"]',
 	'quest = "Settle the debt on my own terms."',
-	...(kit ? [] : ["upgrade = 0", "decay = 0"]),
+	...(kit
+		? ["", "[special]", 'name = "Name the Special"', 'description = "Say what it lets the character do."']
+		: ["upgrade = 0", "decay = 0"]),
 ].join("\n");
 
 export const osThemeBlock: BrumesBlock<OsThemeData> = {

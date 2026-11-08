@@ -8,7 +8,7 @@ export interface CacheSection {
 }
 
 export type PrintMapResult<R extends LineSpan = LineSpan> =
-	| { ok: true; selections: readonly PrintSelection<R>[]; unmatched: readonly R[] }
+	| { ok: true; selections: readonly PrintSelection<R>[]; unmatched: readonly R[]; sourceBlocks: readonly SourceBlock<HTMLElement>[] }
 	| { ok: false; reason: string };
 
 export interface PrintSelection<R extends LineSpan = LineSpan> {
@@ -62,7 +62,7 @@ export function mapPrintRegions<R extends LineSpan>(
 		if (selected) selections.push({ region, blocks: selected });
 		else unmatched.push(region);
 	}
-	return { ok: true, selections, unmatched };
+	return { ok: true, selections, unmatched, sourceBlocks: blocks };
 }
 
 function isCommentOnly(section: CacheSection, lines: readonly string[]): boolean {

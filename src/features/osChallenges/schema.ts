@@ -9,6 +9,7 @@ const POWER_TYPES: PowerType[] = ["self", "mythos", "noise"];
 
 export interface OsProfileDocument {
 	name: string; type?: PowerType; description?: string; scale?: number;
+	rating?: number; optional_rating?: number;
 	tags_and_statuses?: string[]; limits?: OsLimitDocument[];
 	specials?: OsSpecial[]; threats?: OsThreatDocument[];
 	general_consequences?: string[]; meta?: SchemaMeta;
@@ -61,12 +62,21 @@ export function parseOsProfileDocument(source: string, kind: OsProfileData["kind
 	if (description) data.description = description; if (meta) data.meta = meta;
 	if (kind === "challenge") {
 		const scale = asInteger(document.scale); if (scale !== undefined) data.scale = scale;
+		const rating = asInteger(document.rating, 1, 5); if (rating !== undefined) data.rating = rating;
 		data.tagsAndStatuses = asStringList(document.tags_and_statuses);
 		data.limits = readLimits(document.limits);
 	} else {
 		const type = asString(document.type).toLowerCase() as PowerType;
 		if (!POWER_TYPES.includes(type)) return null;
 		data.type = type;
+		data.tagsAndStatuses = asStringList(document.tags_and_statuses);
+		const rating = asInteger(document.rating, 1, 5);
+		if (rating !== undefined) {
+			data.rating = rating;
+			// The parenthesised stars only mean something beside a rating.
+			const optionalRating = asInteger(document.optional_rating, 1, 4);
+			if (optionalRating !== undefined) data.optionalRating = optionalRating;
+		}
 	}
 	return data;
 }
@@ -75,13 +85,19 @@ export function osProfileToDocument(data: OsProfileData): OsProfileDocument {
 	const document: OsProfileDocument = { name: data.name };
 	if (data.description) document.description = data.description;
 	if (data.kind === "challenge") {
+		if (data.rating !== undefined) document.rating = data.rating;
 		if (data.scale !== undefined) document.scale = data.scale;
 		if (data.tagsAndStatuses.length) document.tags_and_statuses = [...data.tagsAndStatuses];
 		if (data.limits.length) document.limits = data.limits.map((limit) => ({
 			name: limit.name, level: limit.level, is_polar: limit.isPolar,
 			is_progress: limit.isProgress, ...(limit.onMax ? { on_max: limit.onMax } : {}),
 		}));
-	} else if (data.type) document.type = data.type;
+	} else {
+		if (data.type) document.type = data.type;
+		if (data.rating !== undefined) document.rating = data.rating;
+		if (data.rating !== undefined && data.optionalRating !== undefined) document.optional_rating = data.optionalRating;
+		if (data.tagsAndStatuses.length) document.tags_and_statuses = [...data.tagsAndStatuses];
+	}
 	if (data.specials.length) document.specials = data.specials.map((entry) => ({ ...entry }));
 	if (data.threats.length) document.threats = data.threats.map((entry) => ({
 		name: entry.name, description: entry.description,

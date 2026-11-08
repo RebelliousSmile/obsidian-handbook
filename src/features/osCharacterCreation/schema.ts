@@ -1,10 +1,10 @@
 import { stringify as stringifyToml } from "smol-toml";
-import { asRecordList, asString, asStringList, readMeta, SchemaMeta } from "../blocks/schemaValues";
+import { asInteger, asRecordList, asString, asStringList, readMeta, SchemaMeta } from "../blocks/schemaValues";
 import { parseOtherscapeDocument } from "../otherscape/document";
 import { OsThemeKitReference } from "../otherscape/types";
 import { OsCharacterTropeData, OsCreationData, OsLoadoutItemData } from "./parser";
 
-interface ReferenceDocument { title_tag: string; category: string; }
+interface ReferenceDocument { title_tag: string; category: string; page?: number; }
 interface TropeDocument { name: string; category?: string; description?: string; theme_kits?: ReferenceDocument[]; choices?: ReferenceDocument[]; loadout?: string[]; meta?: SchemaMeta; }
 interface ItemDocument { name: string; category?: string; description?: string; feature_tags?: string[]; weakness_tag?: string; meta?: SchemaMeta; }
 
@@ -12,7 +12,10 @@ function readReferences(value: unknown): OsThemeKitReference[] {
 	const references: OsThemeKitReference[] = [];
 	for (const entry of asRecordList(value)) {
 		const titleTag = asString(entry.title_tag); const category = asString(entry.category);
-		if (titleTag && category) references.push({ titleTag, category });
+		if (!titleTag || !category) continue;
+		const reference: OsThemeKitReference = { titleTag, category };
+		const page = asInteger(entry.page, 1); if (page !== undefined) reference.page = page;
+		references.push(reference);
 	}
 	return references;
 }
@@ -30,10 +33,14 @@ export function parseOsCreationDocument(source: string, kind: OsCreationData["ki
 	if (category) data.category = category; if (description) data.description = description; if (weaknessTag) data.weaknessTag = weaknessTag; if (meta) data.meta = meta; return data;
 }
 
+function referenceDocuments(references: OsThemeKitReference[]): ReferenceDocument[] {
+	return references.map((reference) => ({ title_tag: reference.titleTag, category: reference.category, ...(reference.page !== undefined ? { page: reference.page } : {}) }));
+}
+
 export function osCreationToDocument(data: OsCreationData): TropeDocument | ItemDocument {
 	const common = { name: data.name, ...(data.category ? { category: data.category } : {}), ...(data.description ? { description: data.description } : {}) };
 	if (data.kind === "character-trope") {
-		return { ...common, ...(data.themeKits.length ? { theme_kits: data.themeKits.map((reference) => ({ title_tag: reference.titleTag, category: reference.category })) } : {}), ...(data.choices.length ? { choices: data.choices.map((reference) => ({ title_tag: reference.titleTag, category: reference.category })) } : {}), ...(data.loadout.length ? { loadout: [...data.loadout] } : {}), ...(data.meta ? { meta: data.meta } : {}) };
+		return { ...common, ...(data.themeKits.length ? { theme_kits: referenceDocuments(data.themeKits) } : {}), ...(data.choices.length ? { choices: referenceDocuments(data.choices) } : {}), ...(data.loadout.length ? { loadout: [...data.loadout] } : {}), ...(data.meta ? { meta: data.meta } : {}) };
 	}
 	return { ...common, ...(data.featureTags.length ? { feature_tags: [...data.featureTags] } : {}), ...(data.weaknessTag ? { weakness_tag: data.weaknessTag } : {}), ...(data.meta ? { meta: data.meta } : {}) };
 }

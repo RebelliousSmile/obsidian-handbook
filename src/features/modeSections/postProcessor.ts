@@ -6,6 +6,7 @@ import type BrumesPlugin from "../../BrumesPlugin";
 import { isPrintExport } from "../layoutRegions/printProcessor";
 import { printModeSections } from "./printProcessor";
 import { warnOnce } from "../layoutRegions/warnOnce";
+import { scheduleRegionBands } from "./regionBands";
 import {
 	ModeSectionParseResult,
 	ModeSectionMode,
@@ -77,6 +78,7 @@ function markBlocks(
 	for (const mode of MODES) {
 		parent.classList.toggle(modeSectionClass(mode), hosted === mode);
 	}
+	scheduleRegionBands(plugin, parent);
 }
 
 function sourceSections(

@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.47.0] - 2026-11-08
+
+### Added
+
+- Layout regions: a `<!-- handbook-layout: break -->` marker sends the next block to the top of the next column, on screen and in the PDF export (the presentation of "Life in the Megacity", Otherscape Core Book p. 24).
+- A mode section that fills a whole column region draws one band over the region instead of one box per block.
+- Otherscape Challenge: the card's tab prints the optional rating (`rating`, 1 to 5 ⊕) after CHALLENGE, as in the Core Book (pp. 302-303); the scale opens the description (`Scale N`).
+- Otherscape Theme Kit reads and draws its description and Special; Character Trope its theme kit references (with page), choices and loadout; both after the Tokyo and Cairo Design references.
+
+### Changed
+
+- Otherscape: the body text, headings, lead and read-aloud take the book's typography through the look-alike fonts the pack publishes (Sofia Sans Semi Condensed, Familjen Grotesk, Space Mono), justified with hyphenation; a reader who owns the book's fonts sees them first.
+- Otherscape Loadout Item: the wide Street Catalog row (item name, description, feature tags, weakness, pp. 252-254) follows the width of the note rather than the window.
+- Otherscape: the six card types keep their English names in the French interface (Challenge, Character Trope, Loadout Item, Power Set, Theme, Theme Kit) until the official French translation is published.
+- Adopts the schema-in-the-mist release that publishes these fields and fonts.
+
 ## [2.46.5] - 2026-11-04
 
 ### Added

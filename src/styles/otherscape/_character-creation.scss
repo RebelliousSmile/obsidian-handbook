@@ -5,4 +5,11 @@
 	.brumes-os-creation--loadout { grid-column: 1 / -1; }
 	.brumes-os-creation h4 { margin: 0.4rem 0; text-transform: uppercase; letter-spacing: 0.08em; }
 	.brumes-os-creation ul { margin-block: 0.3rem; padding-inline-start: 1.25rem; }
+	.brumes-os-creation--theme-kits li,
+	.brumes-os-creation--choices li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; }
+	.brumes-os-creation--kit-category::before { content: "· "; }
+	.brumes-os-creation--kit-page { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+	.brumes-os-creation--choice-list { padding-inline-start: 0; list-style: none; }
+	.brumes-os-creation--choice-box { margin: 0; }
+	.brumes-os-creation--loadout-entry { padding-inline: 0.2em; }
 }

@@ -36,6 +36,20 @@ export function isMarkerBlock(block: HTMLElement): boolean {
 	return block.childElementCount === 0 && (block.textContent ?? "").trim() === "" && !block.hasAttribute("style");
 }
 
+/** Class of a flowing block that opens the next column, after a break marker. */
+export const BREAK_BLOCK = "handbook-layout-break";
+
+/** Whether a rendered block holds the first content line after a break of a multi-column region. */
+export function opensColumn(
+	regions: readonly LayoutRegion[],
+	info: { lineStart: number; lineEnd: number } | null,
+): boolean {
+	if (!info) return false;
+	return regions.some((region) =>
+		region.columns > 1 && region.breaks.some((line) => info.lineStart <= line && line <= info.lineEnd),
+	);
+}
+
 /** Class of the block container once it is the column box of its regions. */
 export const FLOW_HOST = "handbook-layout-flowing";
 

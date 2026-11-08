@@ -8,8 +8,9 @@ import { markPrintPageBreaks } from "../printPageBreaks";
 import { LayoutRegionParseResult, parseLayoutRegions } from "./parser";
 import { isPrintExport, printLayoutRegions } from "./printProcessor";
 import { holdWholeNote, releaseWholeNote } from "./renderWindow";
-import { FLOW_BLOCK, FLOW_HOST, flowColumns, flowsInRegion, isMarkerBlock, MARKER_BLOCK } from "./sectionMapper";
+import { BREAK_BLOCK, FLOW_BLOCK, FLOW_HOST, flowColumns, flowsInRegion, isMarkerBlock, MARKER_BLOCK, opensColumn } from "./sectionMapper";
 import { warnOnce } from "./warnOnce";
+import { scheduleRegionBands } from "../modeSections/regionBands";
 
 const NO_REGION: LayoutRegionParseResult = { diagnostics: [], regions: [] };
 const sourceByParent = new WeakMap<HTMLElement, { text: string; parsed: LayoutRegionParseResult }>();
@@ -53,7 +54,10 @@ function flowBlocks(
 	for (const block of Array.from(parent.children) as HTMLElement[]) {
 		const info = context.getSectionInfo(block);
 		if (info && !parsed) parsed = sourceRegions(plugin, context, parent, info.text);
-		block.classList.toggle(FLOW_BLOCK, flowsInRegion((parsed ?? NO_REGION).regions, info));
+		const regions = (parsed ?? NO_REGION).regions;
+		const flows = flowsInRegion(regions, info);
+		block.classList.toggle(FLOW_BLOCK, flows);
+		block.classList.toggle(BREAK_BLOCK, flows && opensColumn(regions, info));
 		// A section that only holds a marker comment draws nothing: it must not take a line of the column.
 		block.classList.toggle(MARKER_BLOCK, isMarkerBlock(block));
 	}
@@ -66,6 +70,7 @@ function flowBlocks(
 	parent.classList.toggle(FLOW_HOST, flowing);
 	if (flowing) parent.style.setProperty("--handbook-layout-columns", String(columns));
 	else parent.style.removeProperty("--handbook-layout-columns");
+	scheduleRegionBands(plugin, parent);
 }
 
 function sourceRegions(

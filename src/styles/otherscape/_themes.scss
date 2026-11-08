@@ -20,8 +20,20 @@
 	.brumes-os-theme--crew { --os-card-accent: var(--color-accent); }
 
 	.brumes-os-theme--header,
+	.brumes-os-theme--description,
 	.brumes-os-theme--quest,
+	.brumes-os-theme--special,
 	.brumes-os-theme--tracks { grid-column: 1 / -1; }
+	// The pack draws the type icon; without one the slot takes no room.
+	.brumes-os-theme--icon:empty { display: none; }
+	.brumes-os-theme--type { display: flex; flex-wrap: wrap; gap: 0 0.4em; text-transform: uppercase; }
+	.brumes-os-theme--quest,
+	.brumes-os-theme--special > p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.4em; }
+	.brumes-os-theme--quest-label,
+	.brumes-os-theme--special-name { font-weight: 700; }
+	.brumes-os-theme--description p,
+	.brumes-os-theme h4 { margin: 0.35rem 0; }
+	.brumes-os-theme h4 { letter-spacing: 0.08em; text-transform: uppercase; }
 	.brumes-os-theme--type {
 		font-weight: 800;
 		letter-spacing: 0.12em;

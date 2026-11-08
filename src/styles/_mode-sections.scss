@@ -55,3 +55,28 @@
 	margin-inline: calc(var(--size-4-8, 2rem) / -2);
 	padding-inline: calc(var(--size-4-8, 2rem) / 2);
 }
+
+// A section that fills a whole column region gets one band, measured by
+// `regionBands.ts` and carried by its first block: it reaches the foot of the
+// tallest column and bleeds to the full width like the blocks around it. The
+// column box is its containing block, so the band is never split into columns,
+// and its own stacking context keeps the band above the note paper and below
+// the text.
+.handbook-layout-flowing:has(> .handbook-mode-band-run) {
+	position: relative;
+	isolation: isolate;
+}
+
+.handbook-layout-flowing > .handbook-mode-band-run::before {
+	content: "";
+	position: absolute;
+	z-index: -1;
+	top: var(--handbook-band-top, 0);
+	left: 0;
+	width: 100%;
+	height: var(--handbook-band-height, 0);
+	background: inherit;
+	box-shadow: 0 0 0 100vmax var(--background-primary);
+	clip-path: inset(0 -100vmax -1px);
+	pointer-events: none;
+}

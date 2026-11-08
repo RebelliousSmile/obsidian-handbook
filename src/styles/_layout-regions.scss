@@ -35,6 +35,17 @@
 	display: none;
 }
 
+// `<!-- handbook-layout: break -->`: the block after the marker opens the next column.
+.handbook-layout-flowing > .handbook-layout-flow.handbook-layout-break {
+	break-before: column;
+	margin-top: 0;
+	padding-top: 0;
+
+	> :first-child {
+		margin-top: 0;
+	}
+}
+
 // Whatever spans the width after a region keeps a gap from its last block.
 .handbook-layout-flowing > :is(.handbook-layout-flow, .handbook-layout-marker) + :not(.handbook-layout-flow),
 .handbook-layout-flowing > .handbook-layout-flow + .handbook-layout-marker + :not(.handbook-layout-flow) {

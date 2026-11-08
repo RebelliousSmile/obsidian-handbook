@@ -7,5 +7,9 @@
 	.brumes-os-profile--general-consequences { grid-column: 1 / -1; }
 	.brumes-os-profile h4 { margin: 0.45rem 0; letter-spacing: 0.08em; text-transform: uppercase; }
 	.brumes-os-profile ul { margin-block: 0.3rem; }
+	.brumes-os-profile--icon:empty { display: none; }
+	.brumes-os-profile--kind { display: flex; flex-wrap: wrap; gap: 0 0.4em; text-transform: uppercase; }
+	.brumes-os-profile--rating { margin-inline-start: 0.4em; white-space: nowrap; }
+	.brumes-os-profile--power-set .brumes-os-profile--header h3 { display: inline; }
 	.brumes-os-profile--threat { padding: 0.45rem; border-inline-start: 3px solid var(--color-accent); }
 }

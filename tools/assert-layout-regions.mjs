@@ -44,6 +44,8 @@ try {
 		"columns: var(--handbook-layout-columns) 10rem",
 		".handbook-layout-flowing > :not(.handbook-layout-flow)",
 		"column-span: all",
+		".handbook-layout-flowing > .handbook-layout-flow.handbook-layout-break",
+		"break-before: column",
 		"break-after: avoid",
 		"break-inside: avoid",
 		"container-type: inline-size",

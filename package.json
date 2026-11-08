@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-handbook",
-	"version": "2.46.5",
+	"version": "2.47.0",
 	"description": "Game-specific themes and tools for Obsidian tabletop roleplaying vaults.",
 	"main": "dist/main.js",
 	"packageManager": "pnpm@10.5.2",
@@ -35,6 +35,7 @@
 		"e2e:layout-regions:linux": "bash tools/e2e/layout-regions-journey.sh",
 		"assert:game-variants": "node tools/assert-game-variants.mjs",
 		"assert:otherscape-primitives": "node tools/assert-otherscape-primitives.mjs",
+		"assert:otherscape-cards": "node tools/assert-otherscape-cards.mjs",
 		"assert:otherscape-theme": "node tools/assert-otherscape-theme.mjs",
 		"assert:adrenaline-documents": "node tools/assert-adrenaline-documents.mjs",
 		"assert:adrenaline-contract": "node tools/assert-adrenaline-contract.mjs",

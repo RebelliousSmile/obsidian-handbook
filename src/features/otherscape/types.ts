@@ -35,6 +35,8 @@ export interface OsThreat {
 export interface OsThemeKitReference {
 	titleTag: string;
 	category: string;
+	/** The page the kit is printed on, when the trope cites it. */
+	page?: number;
 }
 
 export interface OsAttributed {

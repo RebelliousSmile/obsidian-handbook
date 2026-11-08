@@ -16,6 +16,10 @@ export interface OsProfileData {
 	type?: Exclude<OsThemeType, "crew">;
 	description?: string;
 	scale?: number;
+	/** A Challenge's stars of difficulty, printed on its tab; for a power set, the stars it adds, printed `+⊕`. */
+	rating?: number;
+	/** Further stars printed in parentheses, which only an upgrade threat brings. */
+	optionalRating?: number;
 	tagsAndStatuses: string[];
 	limits: OsLimit[];
 	specials: OsSpecial[];

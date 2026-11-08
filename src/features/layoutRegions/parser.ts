@@ -4,10 +4,14 @@ export interface LayoutRegion {
 	closeLine: number;
 	lineStart: number;
 	lineEnd: number;
+	/** First content line after each column break: the block holding it opens the next column. */
+	breaks: readonly number[];
 }
 
 export type LayoutRegionDiagnostic =
 	| "empty"
+	| "empty-break"
+	| "orphan-break"
 	| "invalid-open"
 	| "orphan-close"
 	| "overlapping-open"
@@ -21,10 +25,12 @@ export interface LayoutRegionParseResult {
 interface OpenRegion {
 	columns: number;
 	line: number;
+	breaks: number[];
 }
 
 const OPEN_MARKER = /^<!-- handbook-layout: columns=([1-9]\d*) -->$/;
 const CLOSE_MARKER = "<!-- /handbook-layout -->";
+const BREAK_MARKER = "<!-- handbook-layout: break -->";
 const LAYOUT_PREFIX = "<!-- handbook-layout:";
 
 /**
@@ -54,7 +60,13 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 				continue;
 			}
 
-			open = { columns: Number(opening[1]), line };
+			open = { columns: Number(opening[1]), line, breaks: [] };
+			continue;
+		}
+
+		if (rawLine === BREAK_MARKER) {
+			if (open === null) diagnostics.push({ line, reason: "orphan-break" });
+			else open.breaks.push(line);
 			continue;
 		}
 
@@ -80,6 +92,7 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 					closeLine: line,
 					lineStart: contentStart,
 					lineEnd: contentEnd,
+					breaks: breakTargets(lines, open, line, diagnostics),
 				});
 			}
 			open = null;
@@ -91,6 +104,37 @@ export function parseLayoutRegions(source: string): LayoutRegionParseResult {
 	}
 
 	return { diagnostics, regions };
+}
+
+/**
+ * A break needs content on both sides: since the last kept break (or the
+ * opening) and before the closing. Repeated breaks count once. Its target is
+ * the first content line after it that is not itself a break.
+ */
+function breakTargets(
+	lines: readonly string[],
+	open: OpenRegion,
+	closeLine: number,
+	diagnostics: { line: number; reason: LayoutRegionDiagnostic }[],
+): number[] {
+	const targets: number[] = [];
+	const isContent = (line: number) => lines[line].trim() !== "" && lines[line] !== BREAK_MARKER;
+	let previous = open.line;
+	for (const breakLine of open.breaks) {
+		let before = false;
+		for (let line = previous + 1; line < breakLine && !before; line++) before = isContent(line);
+		let target: number | null = null;
+		for (let line = breakLine + 1; line < closeLine && target === null; line++) {
+			if (isContent(line)) target = line;
+		}
+		if (!before || target === null) {
+			diagnostics.push({ line: breakLine, reason: "empty-break" });
+			continue;
+		}
+		targets.push(target);
+		previous = breakLine;
+	}
+	return targets;
 }
 
 export function firstContentLine(

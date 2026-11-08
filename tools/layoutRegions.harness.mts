@@ -6,6 +6,7 @@ import {
 	flowColumns,
 	flowsInRegion,
 	mapRegionToBlocks,
+	opensColumn,
 } from "../src/features/layoutRegions/sectionMapper";
 import { wrapInLayoutRegion } from "../src/features/layoutRegions/insertion";
 import { applyContractLayout } from "../src/features/layoutRegions/contractLayout";
@@ -27,8 +28,8 @@ const source = [
 assert.deepEqual(parseLayoutRegions(source), {
 	diagnostics: [],
 	regions: [
-		{ columns: 3, openLine: 1, closeLine: 5, lineStart: 2, lineEnd: 4 },
-		{ columns: 1, openLine: 7, closeLine: 10, lineStart: 8, lineEnd: 9 },
+		{ columns: 3, openLine: 1, closeLine: 5, lineStart: 2, lineEnd: 4, breaks: [] },
+		{ columns: 1, openLine: 7, closeLine: 10, lineStart: 8, lineEnd: 9, breaks: [] },
 	],
 });
 
@@ -65,7 +66,7 @@ const literal = [
 
 assert.deepEqual(parseLayoutRegions(literal), {
 	diagnostics: [],
-	regions: [{ columns: 1, openLine: 5, closeLine: 7, lineStart: 6, lineEnd: 6 }],
+	regions: [{ columns: 1, openLine: 5, closeLine: 7, lineStart: 6, lineEnd: 6, breaks: [] }],
 });
 
 type FakeElement = {
@@ -263,7 +264,55 @@ assert.equal(noProperties.ok && noProperties.selections.length, 1);
 
 // A note without any region has nothing to select and is never refused.
 const plain = mapPrintRegions([], probeSections, probeSource.split(/\r?\n/), asElements(probePrinted(false)));
-assert.deepEqual(plain, { ok: true, selections: [], unmatched: [] });
+assert.equal(plain.ok, true);
+if (plain.ok) assert.deepEqual([plain.selections, plain.unmatched], [[], []]);
+
+// A column break: the first content line after the marker opens the next column.
+const breakSource = [
+	"<!-- handbook-layout: columns=2 -->", "", "# Life in the Megacity", "", "Lead", "",
+	"<!-- handbook-layout: break -->", "", "Body one", "", "Body two", "",
+	"<!-- /handbook-layout -->", "", "<!-- handbook-layout: break -->",
+].join("\n");
+const breakParsed = parseLayoutRegions(breakSource);
+assert.deepEqual(breakParsed.regions.map((entry) => entry.breaks), [[8]]);
+assert.deepEqual(breakParsed.diagnostics, [{ line: 14, reason: "orphan-break" }], "a break outside a region is ignored and reported");
+const breakRegions = breakParsed.regions;
+assert.equal(opensColumn(breakRegions, { lineStart: 8, lineEnd: 8 }), true);
+assert.equal(opensColumn(breakRegions, { lineStart: 4, lineEnd: 4 }), false, "the lead stays in the first column");
+assert.equal(opensColumn(breakRegions, { lineStart: 10, lineEnd: 10 }), false);
+assert.equal(opensColumn(breakRegions, { lineStart: 6, lineEnd: 8 }), true, "a marker drawn with its paragraph still breaks before it");
+assert.equal(opensColumn(breakRegions, null), false);
+assert.equal(opensColumn([{ ...breakRegions[0], columns: 1 }], { lineStart: 8, lineEnd: 8 }), false, "a single-column region has no column to open");
+
+// A break with nothing on one side would open an empty column: ignored and reported.
+const strayBreaks = parseLayoutRegions([
+	"<!-- handbook-layout: columns=2 -->", "<!-- handbook-layout: break -->", "Text",
+	"<!-- handbook-layout: break -->", "<!-- handbook-layout: break -->", "More",
+	"<!-- handbook-layout: break -->", "<!-- /handbook-layout -->",
+].join("\n"));
+assert.deepEqual(strayBreaks.regions.map((entry) => entry.breaks), [[5]]);
+assert.deepEqual(
+	strayBreaks.diagnostics.map((entry) => [entry.line, entry.reason]),
+	[[1, "empty-break"], [4, "empty-break"], [6, "empty-break"]],
+);
+// A break inside a fenced block is literal text.
+assert.deepEqual(
+	parseLayoutRegions(["<!-- handbook-layout: columns=2 -->", "A", "```", "<!-- handbook-layout: break -->", "```", "B", "<!-- /handbook-layout -->"].join("\n"))
+		.regions.map((entry) => entry.breaks),
+	[[]],
+);
+
+// In the PDF export the marker is not printed: the break is found by rank.
+const breakSections: CacheSection[] = [
+	["html", 0], ["heading", 2], ["paragraph", 4], ["html", 6], ["paragraph", 8], ["paragraph", 10], ["html", 12], ["html", 14],
+].map(([type, line]) => ({ type: type as string, lineStart: line as number, lineEnd: line as number }));
+const breakPrinted = [wrapper("h1"), wrapper("p"), wrapper("p"), wrapper("p")];
+const breakMapped = mapPrintRegions(breakRegions, breakSections, breakSource.split(/\r?\n/), asElements(breakPrinted));
+assert.equal(breakMapped.ok, true);
+if (breakMapped.ok) {
+	const opening = breakMapped.sourceBlocks.filter(({ info }) => opensColumn(breakRegions, info)).map(({ block }) => block);
+	assert.deepEqual(opening, [breakPrinted[2]], "the first body paragraph opens the second column in print");
+}
 
 // The insertion writes a pair the parser reads back, around a selection or
 // around nothing yet (an empty region is reported, never rendered).
@@ -280,3 +329,4 @@ assert.deepEqual(
 
 console.log("Layout-region source directives accept only safe, non-literal pairs.");
 console.log("Print export selects regions by rank and refuses any block that disagrees.");
+console.log("A column break opens the next column on screen and in print, and only inside a region.");
