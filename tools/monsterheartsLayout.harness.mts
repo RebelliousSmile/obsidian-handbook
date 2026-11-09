@@ -52,4 +52,33 @@ assert.equal(play.children[0].textContent, "Jouer la Selkie");
 const progression = base.find((node) => node.dataset.region === "monsterhearts-progression");
 assert.deepEqual(progression?.walk().filter((node) => node.tag === "input").map((box) => box.checked), [true, false], "advances are checkboxes");
 
+// The grid is read from the published rows: each row holds its columns, each column
+// the regions the contract places there, in order, when the data renders them.
+const root = render({})[0];
+assert.ok(root, "the playbook renders a root");
+const layoutRows = root.children.filter((node) => node.classes.has("handbook-monsterhearts-layout-row"));
+assert.equal(layoutRows.length, contract.rows.length, "one layout row per published row");
+const renderedIds = new Set(base.map((node) => node.dataset.region));
+layoutRows.forEach((row, rowIndex) => {
+	const columns = row.children.filter((node) => node.classes.has("handbook-monsterhearts-column"));
+	assert.equal(columns.length, contract.rows[rowIndex].length, `row ${rowIndex + 1} has the published columns`);
+	columns.forEach((column, columnIndex) => {
+		assert.deepEqual(
+			column.children.map((node) => node.dataset.region),
+			contract.rows[rowIndex][columnIndex].filter((id) => renderedIds.has(id)),
+			`row ${rowIndex + 1}, column ${columnIndex + 1} holds the published regions in order`,
+		);
+	});
+});
+// Regions the grid leaves out follow the rows, in canonical order.
+const firstTrailing = root.children.findIndex((node) => !node.classes.has("handbook-monsterhearts-layout-row"));
+const trailing = root.children.filter((node) => !node.classes.has("handbook-monsterhearts-layout-row"));
+if (firstTrailing !== -1) assert.equal(firstTrailing, layoutRows.length, "unplaced regions come after every row");
+const placedIds = new Set<string>(["game-identity", ...contract.rows.flat(2)]);
+assert.deepEqual(
+	trailing.map((node) => node.dataset.region),
+	contract.canonicalOrder.filter((id) => !placedIds.has(id) && renderedIds.has(id)),
+	"unplaced regions follow in canonical order",
+);
+
 console.log("Monsterhearts layout assertions passed.");

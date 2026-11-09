@@ -258,7 +258,7 @@ export function renderMonsterheartsLayout(data: MonsterheartsPlaybook, doc: Docu
 		if (region) rendered.set(id, region);
 	}
 	const placed = new Set<RegionId>(["game-identity"]);
-	for (const [rowIndex, columns] of (contract.rows ?? []).entries()) {
+	for (const [rowIndex, columns] of contract.rows.entries()) {
 		const layoutRow = el(doc, "div");
 		layoutRow.classList.add("handbook-monsterhearts-layout-row");
 		layoutRow.dataset.row = String(rowIndex + 1);

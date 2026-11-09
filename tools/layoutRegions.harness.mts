@@ -9,7 +9,6 @@ import {
 	opensColumn,
 } from "../src/features/layoutRegions/sectionMapper";
 import { wrapInLayoutRegion } from "../src/features/layoutRegions/insertion";
-import { applyContractLayout } from "../src/features/layoutRegions/contractLayout";
 
 const source = [
 	"before",
@@ -144,27 +143,6 @@ assert.equal(flowsInRegion(sourceRegions, { lineStart: 5, lineEnd: 5 }), false, 
 assert.equal(flowsInRegion(sourceRegions, { lineStart: 4, lineEnd: 6 }), false, "a block that leaves the region spans the columns");
 assert.equal(flowsInRegion(sourceRegions, { lineStart: 8, lineEnd: 9 }), false, "a single-column region spans the columns");
 assert.equal(flowsInRegion(sourceRegions, null), false, "a block without source lines spans the columns");
-
-// Schema layouts select rendered regions, not source lines. The selected regions
-// may be separated by other content and an optional region may be absent.
-const contractParent = fakeElement("parent");
-const intro = fakeElement("intro");
-const moves = fakeElement("moves");
-moves.dataset.region = "moves";
-const aside = fakeElement("aside");
-const state = fakeElement("state");
-state.dataset.region = "state";
-const gear = fakeElement("gear");
-gear.dataset.region = "gear";
-for (const block of [intro, moves, aside, state, gear]) contractParent.appendChild(block);
-const contractLayout = applyContractLayout(contractParent as unknown as HTMLElement, {
-	regions: ["moves", "state", "gear", "optional"],
-	columns: [["moves"], ["state", "optional"]],
-}) as unknown as FakeElement;
-assert.ok(contractLayout);
-assert.equal(contractLayout.style.values.get("--handbook-layout-columns"), "2");
-assert.deepEqual(contractLayout.children.map((column) => column.children), [[moves], [state]]);
-assert.deepEqual(contractParent.children, [intro, contractLayout, aside, gear]);
 
 // The PDF export: no markers, no section info, one bare wrapper per block.
 // Sections are those Obsidian 1.13.7 reported for the fixture (evidence/print-dom.md).

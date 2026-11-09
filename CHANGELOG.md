@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.48.1] - 2026-11-09
+
+### Changed
+
+- The Monsterhearts playbook reads its grid from the required `rows` of the published presentation contract, with no fallback (#128). The rendering is unchanged.
+
+### Removed
+
+- The generic contract layout engine (`applyContractLayout`), which no block used. Note columns drawn by `handbook-layout` markers are unchanged.
+
 ## [2.48.0] - 2026-11-08
 
 ### Added

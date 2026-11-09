@@ -1,8 +1,8 @@
 ---
-status: pending
+status: done
 ---
 
-# Instruction: Faire consommer et vérifier le contrat par Lantern
+# Instruction: Retirer de Lantern le repli local
 
 ## Architecture projection
 
@@ -10,28 +10,19 @@ status: pending
 
 ```txt
 ../lantern/
-├── src/templates/monsterhearts/playbook/preview/… ✏️ projeter les régions selon le contrat npm
-├── src/templates/monsterhearts/playbook/preview/monsterheartsPlaybookTheme.css ✏️ aligner la grille et son repli sur le contrat
-├── src/templates/monsterhearts/playbook/…test… ✅ prouver ordre, colonnes et repli
-└── package.json ✏️ adopter la version publiée de schema-pbta
-
-../schema-pbta/
-├── tools/validate-cross-tool-contract.ts ✏️ exiger les capacités et versions des deux consommateurs
-├── tools/validate-cross-tool-provider.ts ✏️ vérifier la disponibilité de la disposition publiée
-└── cross-tool-provider.json ✏️ publier la capacité de disposition partagée
-
-.
-└── tools/… ✏️ exécuter le contrôle d’intégration Handbook contre la révision de schéma publiée
+├── src/templates/monsterhearts/playbook/preview/MonsterheartsPlaybookPreview.tsx ✏️ `getMonsterheartsRegionLayout` lit `presentation.rows` sans grille de secours
+├── package.json ✏️ épingle schema-pbta v<N+1>, posée par l'adoption du train
+├── package-lock.json ✏️ suit l'épingle (suivi avec le lockfile pnpm, `trainFiles` de la topologie)
+└── pnpm-lock.yaml ✏️ suit l'épingle
 ```
 
 ## User Journey
 
 ```mermaid
 flowchart TD
-  A[Lantern charge schema-pbta publié] --> B[Lit régions et colonnes]
-  B --> C[Aperçu large en colonnes]
-  C --> D[Aperçu étroit en ordre canonique]
-  D --> E[Contrôle inter-outils vert]
+  A[Aperçu Monsterhearts ouvert dans Lantern] --> B[Lignes et colonnes lues dans rows du contrat v<N+1>]
+  B --> C[Régions non placées après la grille, ordre canonique]
+  C --> D[Même répartition que le rendu Handbook]
 ```
 
 ## Test Scope
@@ -42,59 +33,34 @@ title: Test scope
 ---
 journey
   section Setup
-    schema-pbta publié avec disposition Monsterhearts => Handbook et Lantern installent la même révision: 5: cli
+    relever dans l'aperçu Monsterhearts de `pnpm dev`, lancé dans le checkout Lantern encore inchangé, les régions de chaque ligne et colonne et celles de fin => référence notée dans le scratchpad: 5: browser
+    Lantern lié au paquet v<N+1> du fournisseur, local avant le départ puis final après adoption => typecheck et lint prêts: 5: cli
   section Happy path
-    ouvrir les aperçus larges de Handbook et Lantern => les régions déclarées sont réparties selon le même contrat: 5: system
-  section Edge case - région non assignée
-    une région publiée est omise de la disposition => rendre chaque aperçu => elle reste après la grille dans l’ordre canonique: 5: system
+    lancer la porte check:project du dépôt => typecheck, lint et assert:presentation-coverage passent sans grille de secours: 5: cli
+  section Edge case - rendu inchangé
+    ouvrir le même aperçu par `pnpm supervise preview`, une fois le changement posé par `commit` comme l'exige la commande => comparer à la référence relevée au Setup => mêmes régions par ligne, colonne et fin: 5: browser
 ```
-
-## Wireframe
-
-```txt
-┌───────────────────────────────────────────────────┐
-│ (1) Identité                                       │
-├────────────────────────┬──────────────────────────┤
-│ (2) Colonne A          │ (3) Colonne B            │
-├────────────────────────┴──────────────────────────┤
-│ (4) Régions non déclarées                          │
-└───────────────────────────────────────────────────┘
-```
-
-1. En-tête du playbook.
-2. Première colonne publiée.
-3. Seconde colonne publiée.
-4. Suite canonique commune aux deux consommateurs.
 
 ## Tasks to do
 
-### `1)` Brancher Lantern sur la présentation publiée
+### `1)` Lire la grille obligatoire
 
-> L’aperçu ne maintient plus son propre ordre de colonnes Monsterhearts.
+> L'aperçu ne déclare aucune grille que le contrat ne publie pas.
 
-1. Lire la disposition depuis l’export typé de `schema-pbta`.
-2. Poser les régions de l’aperçu dans l’ordre canonique et les répartir à partir de la déclaration.
-3. Préserver le comportement à une colonne si le contrat ne fournit pas de disposition.
+1. Dans `getMonsterheartsRegionLayout`, remplacer `presentation.rows ?? [[…canonicalOrder…]]` par `presentation.rows`.
+2. Garder le calcul de `trailing` : il applique `fallbacks.unplaced: canonical-order` publié par le contrat.
+3. Laisser `UrbanShadowsPlaybookPreview.tsx` tel quel : il lit déjà `presentation.rows` directement.
 
-### `2)` Fermer le contrat entre dépôts
+### `2)` Adopter le fournisseur
 
-> Rendre impossible une adoption partielle silencieuse.
+> L'épingle suit la publication.
 
-1. Publier la capacité dans le fournisseur cross-tool et relever les versions minimales des consommateurs si nécessaire.
-2. Ajouter les contrôles de version et de capacité côté fournisseur.
-3. Exécuter les validations de schéma, Handbook et Lantern contre la même révision publiée.
-
-### `3)` Préparer l’adoption Monsterhearts
-
-> Le plan éditorial Monsterhearts #44 devient un consommateur de la capacité achevée.
-
-1. Référencer ce contrat dans le plan #44 sans dupliquer la logique de colonnes.
-2. Conserver les décisions stylistiques spécifiques à Monsterhearts dans le pack et les styles Handbook.
+1. Laisser `ship --run` du train adopter schema-pbta v<N+1>, la release candidate puis la finale. Lantern échoue au typecheck tant que son épingle précède la majeure : c'est l'ordre attendu.
+2. Avant le départ du train, rendre verte la porte `check:project` sur l'épingle locale du fournisseur.
 
 ## Test acceptance criteria
 
 | Task | Acceptance criteria |
 | ---- | ------------------- |
-| 1 | Lantern construit son aperçu Monsterhearts à partir de la disposition publiée, sans ordre de colonnes codé localement. |
-| 2 | Les contrôles inter-outils échouent si un consommateur ne déclare pas ou ne supporte pas la capacité requise. |
-| 3 | Le travail #44 peut se concentrer sur l’éditorial Monsterhearts et n’introduit aucun marqueur de colonnes dans le TOML. |
+| 1 | `MonsterheartsPlaybookPreview.tsx` ne construit plus aucune grille par lui-même. L'aperçu Monsterhearts montre, région pour région, la répartition relevée au Setup. |
+| 2 | Lantern est épinglé sur la finale v<N+1> dans ses deux lockfiles, et `check:project` est vert. |
