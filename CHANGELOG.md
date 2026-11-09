@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The Monsterhearts and Urban Shadows playbooks take their dressing from the `styles/playbook.css` sheet published by each schema-pbta pack, the same sheet Lantern reads (#129). The rendering follows the original booklet more closely: Monsterhearts stat names are capitalised as printed ("Hot", "Cold"…), and the Urban Shadows status pips sit centred under each Circle with their label below. Handbook writes its scope in front of every rule of the sheet; the bundle no longer dresses these two playbooks.
+- Monsterhearts stats are named in the interface language (Sexy, Glacial, Impulsif, Ténébreux in French, the words of the French edition); strings and conditions sit in one framed area as in the booklet, each condition on one line with its name in bold.
 
 ### Added
 

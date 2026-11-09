@@ -365,6 +365,11 @@ export const fr: Translations = {
 	"term:power": "Éveillés",
 	"term:wild": "Indomptés",
 	"region:playbook-moves": "Actions d'archétype",
+	// Monsterhearts stats (words of the French edition, booklet La Selkie)
+	"term:hot": "Sexy",
+	"term:cold": "Glacial",
+	"term:volatile": "Impulsif",
+	"term:dark": "Ténébreux",
 	"region:harm-tracker": "Blessures",
 	"region:urban-shadows-scars": "Séquelles",
 	"region:urban-shadows-let-it-out": "Lâcher la Bête",

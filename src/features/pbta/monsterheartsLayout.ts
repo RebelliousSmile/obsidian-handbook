@@ -1,5 +1,6 @@
 import type { MonsterheartsPlaybook } from "schema-pbta";
 import contract from "schema-pbta/packs/monsterhearts/presentation-contract.json";
+import { t } from "../../utils/i18n";
 
 type RegionId = (typeof contract.regions)[number]["id"];
 type Editorial = MonsterheartsPlaybook["editorial"]["opening"];
@@ -9,6 +10,12 @@ function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTM
 	const result = doc.createElement(tag);
 	if (text !== undefined) result.textContent = text;
 	return result;
+}
+
+/** Stats are keys of the document; the interface language names them, the key stays the fallback. */
+function statLabel(key: string): string {
+	const translated = t(`term:${key}`);
+	return translated === `term:${key}` ? key : translated;
 }
 
 /** Region headings come from the published contract, never from literals here. */
@@ -146,7 +153,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 				const dl = el(doc, "dl");
 				for (const name of Object.keys(stats)) {
 					const value = stats[name];
-					dl.appendChild(row(doc, name, value));
+					dl.appendChild(row(doc, statLabel(name), value));
 				}
 				return dl;
 			};
@@ -197,9 +204,13 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 						result.appendChild(dl);
 					}
 				}
+				if (data.conditions?.length) result.appendChild(el(doc, "h4", "Conditions"));
+				// One line per condition, its name in bold: names and effects stay apart from the sub-headings.
 				for (const condition of data.conditions ?? []) {
-					result.appendChild(el(doc, "h4", condition.name));
-					if (condition.description) result.appendChild(el(doc, "p", condition.description));
+					const line = el(doc, "p");
+					line.appendChild(el(doc, "strong", condition.name));
+					if (condition.description) line.appendChild(el(doc, "span", ` : ${condition.description}`));
+					result.appendChild(line);
 				}
 				return result;
 			}
