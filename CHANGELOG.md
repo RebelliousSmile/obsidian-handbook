@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.49.0] - 2026-11-09
+
+### Changed
+
+- The Monsterhearts and Urban Shadows playbooks take their dressing from the `styles/playbook.css` sheet published by each schema-pbta pack, the same sheet Lantern reads (#129). The rendering follows the original booklet more closely: Monsterhearts stat names are capitalised as printed ("Hot", "Cold"…), and the Urban Shadows status pips sit centred under each Circle with their label below. Handbook writes its scope in front of every rule of the sheet; the bundle no longer dresses these two playbooks.
+
+### Added
+
+- `pnpm assert:pbta-playbook-styles` checks that the bundle no longer dresses these playbooks, that both appearance contracts list the shared sheet, that Handbook scopes it, and that the projected DOM carries every hook it targets.
+- `tools/e2e/playbook-capture.ps1` captures the La Selkie and The Aware playbooks in a temporary vault, rendered with the packs of a local schema-pbta checkout.
+
 ## [2.48.1] - 2026-11-09
 
 ### Changed

@@ -131,3 +131,21 @@ profile are removed on every exit. Build first and run with Obsidian closed:
 ```powershell
 pnpm e2e:roller
 ```
+
+## PbtA playbook capture
+
+`playbook-capture.ps1` (Windows) renders the Monsterhearts playbook of La Selkie
+and the Urban Shadows playbook of The Aware in reading view, at 1400 px, with
+the `dist/` build and the packs of a local schema-pbta checkout. It writes
+`handbook-<game>-1400.png` and `handbook-<game>.html` for comparison with the
+original booklet. Everything lives in a temporary vault and an isolated
+Obsidian profile, removed on exit: the user's vaults, their `data.json` and
+their vault list are never touched.
+
+```powershell
+rtk proxy pnpm build
+pwsh tools/e2e/playbook-capture.ps1 -Game all -SchemaRoot ../schema-pbta
+```
+
+`-OutputDir` defaults to `%TEMP%\handbook-playbook-capture`, `-Port` to 9241.
+Requires Python 3 with `websocket-client`.

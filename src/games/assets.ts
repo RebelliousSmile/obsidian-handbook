@@ -339,8 +339,8 @@ export async function resolveGameAssets(
 				if (new TextEncoder().encode(source).byteLength > MAX_PACK_STYLESHEET_BYTES) {
 					throw new Error(`stylesheet exceeds ${MAX_PACK_STYLESHEET_BYTES} bytes`);
 				}
-				validatePackCss(source, pack, stylesheet);
-				css.push(await rewritePackUrls(source, stylesheet, root, pack, plugin));
+				const scoped = validatePackCss(source, pack, stylesheet);
+				css.push(await rewritePackUrls(scoped, stylesheet, root, pack, plugin));
 			} catch (error) {
 				state.missingStylesheets.push({
 					path: `${folder}/${stylesheet}`,
@@ -356,18 +356,38 @@ export async function resolveGameAssets(
 	return state;
 }
 
-function validatePackCss(source: string, pack: GamePack, stylesheet: string): void {
+/**
+ * A pack sheet stays inside `body.brumes--<id>`. A host-neutral sheet, shared
+ * with Lantern, cannot name the host: its selectors start at the playbook
+ * root `.handbook-<id>-playbook`, and Handbook writes the scope in front of
+ * them here. Any other selector still refuses the whole sheet.
+ */
+export function validatePackCss(source: string, pack: GamePack, stylesheet: string): string {
 	const root = postcss.parse(source, { from: `pack:${pack.id}/${stylesheet}` });
+	const scope = `body.brumes--${pack.id}`;
+	const playbookRoot = `.handbook-${pack.id}-playbook`;
+	let prefixed = false;
 	root.walkAtRules((rule) => {
 		if (rule.name === "import") throw new Error("@import is not allowed");
 	});
 	root.walkRules((rule) => {
-		for (const selector of rule.selectors) {
-			if (!selector.trim().startsWith(`body.brumes--${pack.id}`)) {
-				throw new Error(`selector escapes pack scope: ${selector}`);
+		rule.selectors = rule.selectors.map((raw) => {
+			const selector = raw.trim();
+			if (selector.startsWith(scope)) return selector;
+			if (startsWithClass(selector, playbookRoot)) {
+				prefixed = true;
+				return `${scope} ${selector}`;
 			}
-		}
+			throw new Error(`selector escapes pack scope: ${selector}`);
+		});
 	});
+	return prefixed ? root.toString() : source;
+}
+
+function startsWithClass(selector: string, className: string): boolean {
+	if (!selector.startsWith(className)) return false;
+	const next = selector.charAt(className.length);
+	return next === "" || /[\s.:[>+~#]/.test(next);
 }
 
 async function rewritePackUrls(
