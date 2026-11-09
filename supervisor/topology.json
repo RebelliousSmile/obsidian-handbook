@@ -115,6 +115,16 @@
 					"npm",
 					"run",
 					"assert:presentation-coverage"
+				],
+				[
+					"npm",
+					"run",
+					"assert:pbta-playbook-styles"
+				],
+				[
+					"npm",
+					"run",
+					"assert:template-chunks"
 				]
 			],
 			"convergence": [
