@@ -261,6 +261,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	},
 	"urban-shadows-advancement": (doc, id, data) => {
 		const circles = data.advancementCircles ?? [];
+		const marked = data.markedCircles ?? [];
 		const first = data.advancement ?? [];
 		const later = data.laterAdvancement ?? [];
 		if (!circles.length && !first.length && !later.length) return null;
@@ -275,7 +276,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 			for (const key of circles) {
 				const cell = el(doc, "label");
 				cell.appendChild(el(doc, "span", statLabel(key)));
-				cell.appendChild(checkbox(doc, false, statLabel(key)));
+				cell.appendChild(checkbox(doc, marked.indexOf(key) >= 0, statLabel(key)));
 				grid.appendChild(cell);
 			}
 			result.appendChild(grid);

@@ -62,13 +62,18 @@ const corruption = regions(full).find((node) => node.dataset.region === "urban-s
 assert.equal(corruption.walk().filter((node) => node.dataset.filled === undefined && node.attributes["aria-label"]?.startsWith("Corruption ")).length, complete.corruption.track ?? 0, "corruption track follows corruption.track");
 
 // Stats are split by the keys the document names as Circles; each Circle carries three pips.
-const rich = { ...complete, stats: { blood: 1, heart: 0, mortalis: 2, night: -1 }, statuses: { mortalis: 2, night: 5 }, advancementCircles: ["mortalis", "night"] };
+const rich = { ...complete, stats: { blood: 1, heart: 0, mortalis: 2, night: -1 }, statuses: { mortalis: 2, night: 5 }, advancementCircles: ["mortalis", "night"], markedCircles: ["night"] };
 const split = render(rich);
 const marksOf = (id: string) => regions(split).find((node) => node.dataset.region === id)?.walk().filter((node) => node.dataset.mark);
 assert.deepEqual(marksOf("urban-shadows-stats")?.map((node) => node.children[1].textContent), ["blood", "heart"]);
 assert.deepEqual(marksOf("urban-shadows-circles")?.map((node) => node.children[1].textContent), ["mortalis", "night"]);
 const pips = marksOf("urban-shadows-circles")?.map((mark) => mark.walk().filter((node) => node.dataset.filled !== undefined).map((pip) => pip.dataset.filled));
 assert.deepEqual(pips, [["true", "true", "false"], ["true", "true", "true"]], "three pips a Circle, status clamped to three");
+
+// The advancement track keeps every circle it prints; only the marked ones are ticked.
+const track = regions(split).find((node) => node.dataset.region === "urban-shadows-advancement")?.walk().find((node) => node.classes.has("handbook-urban-shadows-circle-marks"));
+const trackBoxes = track?.walk().filter((node) => node.type === "checkbox") ?? [];
+assert.deepEqual(trackBoxes.map((box) => box.checked), [false, true], "markedCircles ticks its circles, the others stay on the track unticked");
 
 // Blank witness: a region without data is not emitted, nothing throws.
 const empty = ids(render(blank));
