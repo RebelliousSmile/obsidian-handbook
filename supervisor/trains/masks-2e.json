@@ -1,0 +1,481 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "masks-2e",
+	"title": "Masks 2E: playbook layout and NPC card",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 93,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/93"
+	},
+	"items": [
+		{
+			"repo": "schema-pbta",
+			"issue": 45,
+			"url": "https://github.com/RebelliousSmile/schema-pbta/issues/45",
+			"title": "Masks 2E: presentation contract, playbook and NPC card, pack",
+			"baseSha": "c2e3d5b53b78afe6296603785137916921e38c65",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 94,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/94",
+			"title": "Masks 2E: playbook layout and NPC card",
+			"baseSha": "3b6a3e88a3e5ea7f95d7caaab0b8d5f7b7ff1c98",
+			"dependsOn": [
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {
+		"schema-pbta": {
+			"runs": [
+				{
+					"step": "digest",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "digest",
+						"provider_commit": "9aab1fc317b5e5fae75b2b228dc907ff5bbe807e"
+					},
+					"id": 37816773130,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37816773130",
+					"conclusion": "failure",
+					"at": "2026-10-08T17:28:01.844Z"
+				},
+				{
+					"step": "digest",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "digest",
+						"provider_commit": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff"
+					},
+					"id": 37817202191,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37817202191",
+					"conclusion": "success",
+					"at": "2026-10-08T17:31:24.113Z"
+				},
+				{
+					"step": "stage",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "stage",
+						"provider_commit": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff",
+						"config": "release-train/candidates/schema-pbta-v11.0.0-rc.1.json"
+					},
+					"id": 37817403339,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37817403339",
+					"conclusion": "success",
+					"at": "2026-10-08T17:32:51.629Z"
+				},
+				{
+					"step": "release-train",
+					"workflow": "release-train.yml",
+					"inputs": {
+						"provider_commit": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff",
+						"config": "release-train/schema-pbta-v11.0.0.json"
+					},
+					"id": 37817765611,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37817765611",
+					"conclusion": "success",
+					"at": "2026-10-08T17:35:39.051Z"
+				},
+				{
+					"step": "promote",
+					"workflow": "release.yml",
+					"inputs": {
+						"mode": "promote",
+						"provider_commit": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff",
+						"config": "release-train/schema-pbta-v11.0.0.json"
+					},
+					"id": 37817932225,
+					"url": "https://github.com/RebelliousSmile/schema-pbta/actions/runs/37817932225",
+					"conclusion": "success",
+					"at": "2026-10-08T17:36:56.586Z"
+				}
+			],
+			"candidate": {
+				"tag": "v11.0.0-rc.1",
+				"url": "https://github.com/RebelliousSmile/schema-pbta/releases/download/v11.0.0-rc.1/schema-pbta-11.0.0.tgz",
+				"sha256": "0799f23fcfd36f6564843bdd14b6c72c4a775e9d8dabee0f2a2a356ea8881f42",
+				"integrity": "sha512-DSeSsHHa7cce6nhM5gle9cidPkCmBDMHEVT2ekdvIVAUh9+m3R034lOlqCO5/rdghpzTrnfC3xyFv860jlsDUg==",
+				"commit": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff",
+				"packed": "e60846a9931381113165cfac3a267235ab71b797461ba51f6c16bb44b34ae076"
+			},
+			"final": {
+				"tag": "v11.0.0",
+				"url": "https://github.com/RebelliousSmile/schema-pbta/releases/download/v11.0.0/schema-pbta-11.0.0.tgz",
+				"sha256": "0799f23fcfd36f6564843bdd14b6c72c4a775e9d8dabee0f2a2a356ea8881f42",
+				"integrity": "sha512-DSeSsHHa7cce6nhM5gle9cidPkCmBDMHEVT2ekdvIVAUh9+m3R034lOlqCO5/rdghpzTrnfC3xyFv860jlsDUg=="
+			}
+		}
+	},
+	"presentation": {
+		"presentedAt": "2026-10-08T17:31:06.791Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:336fea496ce73abec8a577356f8e3c27f149ff107e9ef2a492acd6f26e30a61b",
+		"repos": [
+			{
+				"repo": "schema-pbta",
+				"role": "provider",
+				"sha": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff",
+				"baseSha": "c2e3d5b53b78afe6296603785137916921e38c65",
+				"commits": [
+					{
+						"sha": "6e042fe57f3da5fa5bc710ddefd29f7e40d111ff",
+						"subject": "fix(check): skip a nested checkout when snapshotting the generated files"
+					},
+					{
+						"sha": "9aab1fc317b5e5fae75b2b228dc907ff5bbe807e",
+						"subject": "fix(handbook): align the Masks moves and moment of truth on the printed sheet"
+					},
+					{
+						"sha": "24c5d380581965445a2c01cb9ba1ba7c68663b68",
+						"subject": "fix(masks): draw the moves like the printed sheet"
+					},
+					{
+						"sha": "ec257017d38a85e86fce2226abb79e2d2187f638",
+						"subject": "fix(masks): put the drives text on the soft ground and underline move names only"
+					},
+					{
+						"sha": "d31757e09e1cb7cff6d943c95c60a2a578d877af",
+						"subject": "fix(masks): restyle the drives strip and the move titles, rule the potential line"
+					},
+					{
+						"sha": "130eea8c348730bcb5b65ef5cd6f4cefd68b4490",
+						"subject": "fix(masks): draw the potential boxes under the advances banner"
+					},
+					{
+						"sha": "b44ba41ab0da488879ebe9b32982964dc53522fd",
+						"subject": "fix(masks): fit the booklet in a narrow column"
+					},
+					{
+						"sha": "9106d9de228545bf3bfafb881203e34c4cffeb93",
+						"subject": "fix(masks): draw the booklet regions like the printed sheet"
+					},
+					{
+						"sha": "68de54ed95b95e980752f73d9972dd2f2698dd2f",
+						"subject": "fix(masks): draw the two faces of the booklet as one card"
+					},
+					{
+						"sha": "059a400961bf2569df6b038de2aca25d7ec52f3c",
+						"subject": "feat(masks): identity face first, orange and blue of the printed booklet"
+					},
+					{
+						"sha": "958dd96736a806c81725f3447cae4f21ff5a5d94",
+						"subject": "fix(masks): put each identity field on its own line"
+					},
+					{
+						"sha": "c993d9c6cc1fe8cab2f5557a236f6084cae8828f",
+						"subject": "fix(masks): lay the playbook out in columns and keep to the play phase"
+					},
+					{
+						"sha": "ec60f71ea1ee709e8c3f8141ae643c8e83cb50f7",
+						"subject": "feat(masks): publish the Masks 2E playbook and NPC presentation contract"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |   10 +\n LICENSES/HANDBOOK-ASSETS.md                        |   12 +-\n README.md                                          |    3 +-\n corpus/contract/cases.json                         |   15 +-\n .../invalid/masks-npc-attributes-field.toml        |   10 +\n .../invalid/masks-npc-condition-object.toml        |   19 +\n .../contract/invalid/masks-npc-missing-self.toml   |    5 +\n .../invalid/masks-npc-resistance-negative.toml     |   19 +\n .../invalid/masks-npc-self-missing-value.toml      |    9 +\n .../masks-playbook-condition-unknown-field.toml    |   42 +\n .../invalid/masks-playbook-drive-empty-label.toml  |   41 +\n .../masks-playbook-moment-unlocked-text.toml       |   41 +\n .../masks-playbook-potential-max-negative.toml     |   41 +\n .../masks-playbook-stat-range-missing-max.toml     |   41 +\n corpus/contract/valid/masks-npc-blank.toml         |    9 +\n corpus/contract/valid/masks-npc-complete.toml      |   19 +\n corpus/contract/valid/masks-playbook-blank.toml    |   19 +\n corpus/contract/valid/masks-playbook-complete.toml |   24 +-\n .../invalid/masks-npc-layout-duplicate-id.json     |    7 +\n .../masks-npc-layout-row-mixes-context.json        |   47 +\n .../invalid/masks-npc-layout-row-too-wide.json     |   35 +\n .../invalid/masks-npc-layout-unplaced-region.json  |   36 +\n .../masks-playbook-layout-duplicate-id.json        |    7 +\n .../masks-playbook-layout-header-absent.json       |   21 +\n .../masks-playbook-layout-header-differs.json      |    7 +\n ...masks-playbook-layout-region-without-field.json |    7 +\n .../masks-playbook-layout-unplaced-region.json     |   16 +\n .../invalid/masks-playbook-layout-wrong-face.json  |   30 +\n .../presentation/valid/masks-appearance-base.json  |   11 +\n .../valid/masks-npc-layout-stacked.json            |   42 +\n .../masks-playbook-layout-swapped-columns.json     |   18 +\n .../refus/masks/masks-npc/attributs-presents.json  |    1 +\n corpus/refus/masks/masks-npc/condition-objet.json  |    1 +\n corpus/refus/masks/masks-npc/moves-objets.json     |    1 +\n .../refus/masks/masks-npc/resistance-negative.json |    1 +\n corpus/refus/masks/masks-npc/self-absent.json      |    1 +\n corpus/refus/masks/masks-npc/self-sans-valeur.json |    1 +\n .../masks-playbook/condition-champ-inconnu.json    |    1 +\n .../masks/masks-playbook/drive-libelle-vide.json   |    1 +\n .../masks-playbook/moment-debloque-texte.json      |    1 +\n .../masks/masks-playbook/plage-sans-maximum.json   |    1 +\n .../masks-playbook/potentiel-max-negatif.json      |    1 +\n corpus/temoins/masks/masks-npc/npc-complet.json    |    1 +\n corpus/temoins/masks/masks-npc/npc-minimal.json    |    1 +\n .../masks-playbook/playbook-livret-vierge.json     |    1 +\n .../masks-playbook/playbook-pretire-complet.json   |    1 +\n cross-tool-provider.json                           |    4 +-\n docs/compatibility.md                              |   13 +\n examples/masks/masks-npc/the-cartographer.toml     |   26 +\n examples/masks/masks-playbook/the-ember.toml       |   31 +-\n handbook.json                                      |    4 +-\n handbook/masks/README.md                           |   15 +-\n handbook/masks/assets/fonts/OFL-ComicNeue.txt      |   93 +\n handbook/masks/assets/fonts/OFL-CrimsonPro.txt     |   93 +\n handbook/masks/assets/fonts/OFL-JosefinSans.txt    |   93 +\n handbook/masks/assets/fonts/OFL-Staatliches.txt    |   93 +\n handbook/masks/assets/fonts/README.md              |   16 +-\n .../masks/assets/fonts/comic-neue-400-normal.woff2 |  Bin 0 -> 24156 bytes\n .../masks/assets/fonts/comic-neue-700-normal.woff2 |  Bin 0 -> 23612 bytes\n .../assets/fonts/crimson-pro-wght-italic.woff2     |  Bin 0 -> 90444 bytes\n .../assets/fonts/crimson-pro-wght-normal.woff2     |  Bin 0 -> 85960 bytes\n .../assets/fonts/josefin-sans-wght-normal.woff2    |  Bin 0 -> 47488 bytes\n .../assets/fonts/staatliches-400-normal.woff2      |  Bin 0 -> 23316 bytes\n handbook/masks/assets/images/hero-burst.svg        |    2 +-\n handbook/masks/assets/images/skyline-band.svg      |    1 +\n handbook/masks/assets/images/star-bullet.svg       |    1 +\n handbook/masks/assets/styles/callouts.css          |  228 ++-\n handbook/masks/assets/styles/layout.css            |  457 +++++\n handbook/masks/assets/styles/page.css              |   75 +\n handbook/masks/pack.json                           |  129 +-\n handbook/masks/preview/index.html                  |  124 +-\n handbook/masks/preview/preview.toml                |    2 +\n handbook/masks/styles/base.css                     |   93 +-\n package-lock.json                                  |    4 +-\n package.json                                       |    4 +-\n packs/masks/appearance-contract.json               |   26 +\n packs/masks/npc-presentation-contract.json         |  134 ++\n packs/masks/pack-contract.json                     |    2 +-\n packs/masks/presentation-contract.json             |  187 +++\n packs/masks/styles/theme-tokens.css                |    7 +\n packs/monster-of-the-week/pack-contract.json       |    2 +-\n packs/monsterhearts/pack-contract.json             |    2 +-\n packs/salvage-run/pack-contract.json               |    2 +-\n packs/the-sprawl/pack-contract.json                |    2 +-\n packs/urban-shadows/pack-contract.json             |    2 +-\n schemas/v11/masks/front.schema.json                |  351 ++++\n schemas/v11/masks/game-definition.schema.json      | 1774 ++++++++++++++++++++\n schemas/v11/masks/masks-npc.schema.json            |  127 ++\n schemas/v11/masks/masks-playbook.schema.json       |  934 +++++++++++\n schemas/v11/masks/move.schema.json                 |  134 ++\n schemas/v11/masks/npc.schema.json                  |  221 +++\n schemas/v11/masks/playbook.schema.json             |  648 +++++++\n schemas/v11/monster-of-the-week/front.schema.json  |  351 ++++\n .../game-definition.schema.json                    | 1774 ++++++++++++++++++++\n .../monster-of-the-week-playbook.schema.json       |  805 +++++++++\n schemas/v11/monster-of-the-week/move.schema.json   |  134 ++\n schemas/v11/monster-of-the-week/npc.schema.json    |  221 +++\n .../v11/monster-of-the-week/playbook.schema.json   |  648 +++++++\n .../v11/monsterhearts/game-definition.schema.json  | 1774 ++++++++++++++++++++\n .../monsterhearts-playbook.schema.json             |  954 +++++++++++\n schemas/v11/monsterhearts/move.schema.json         |  134 ++\n schemas/v11/monsterhearts/playbook.schema.json     |  648 +++++++\n .../v11/salvage-run/game-definition.schema.json    | 1774 ++++++++++++++++++++\n schemas/v11/salvage-run/move.schema.json           |  134 ++\n .../salvage-run/salvage-run-playbook.schema.json   |  648 +++++++\n schemas/v11/the-sprawl/game-definition.schema.json | 1774 ++++++++++++++++++++\n schemas/v11/the-sprawl/move.schema.json            |  134 ++\n schemas/v11/the-sprawl/playbook.schema.json        |  648 +++++++\n .../v11/the-sprawl/the-sprawl-playbook.schema.json |  786 +++++++++\n .../v11/urban-shadows/game-definition.schema.json  | 1774 ++++++++++++++++++++\n schemas/v11/urban-shadows/move.schema.json         |  134 ++\n schemas/v11/urban-shadows/playbook.schema.json     |  648 +++++++\n .../urban-shadows-playbook.schema.json             | 1015 +++++++++++\n src/codecs/toml.ts                                 |    7 +\n src/contract-version.ts                            |    6 +-\n src/index.ts                                       |   24 +\n src/presentation/callouts.ts                       |    7 +\n src/presentation/collections.ts                    |    6 +\n src/presentation/index.ts                          |   14 +\n src/presentation/masks-appearance.ts               |   48 +\n src/presentation/masks-npc.ts                      |  105 ++\n src/presentation/masks-playbook.ts                 |  136 ++\n src/presentation/stat-ranges.ts                    |    4 +-\n src/zod/constants.ts                               |    2 +\n src/zod/masks-npc.ts                               |   34 +\n src/zod/masks-playbook.ts                          |   34 +-\n tools/gen-presentation-contracts.ts                |    6 +\n tools/render-handbook-preview.ts                   |  148 ++\n tools/validate-generated-fresh.ts                  |    3 +-\n tools/validate-handbook-catalog-fixtures.ts        |   65 +-\n tools/validate-handbook-packs.ts                   |  131 +-\n tools/validate-pack-coverage.ts                    |   13 +-\n tools/validate-pack-manifest.ts                    |   35 +-\n tools/validate-package.ts                          |   35 +-\n tools/validate-presentation-appearance.ts          |   32 +-\n tools/validate-presentation-contract.ts            |   94 +-\n tools/validate-reference-fixtures.ts               |   44 +\n tools/validate-references.ts                       |   58 +\n tools/validate-version-compat.ts                   |    2 +-\n 139 files changed, 24641 insertions(+), 198 deletions(-)",
+				"packed": {
+					"sha256": "e60846a9931381113165cfac3a267235ab71b797461ba51f6c16bb44b34ae076",
+					"files": 518
+				},
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"check"
+						],
+						"status": 0,
+						"tail": "✓ 6 packs own 7 specialised targets; 5 generic targets are shared.\n  read as a portable playbook, so generic downstream: salvage-run-playbook\n  generic targets no pack documents yet: move, playbook, npc, front\n\n> schema-pbta@11.0.0 validate:cross-tool:provider\n> tsx tools/validate-cross-tool-provider.ts\n\n✓ cross-tool-provider.json declares contract 11, a live corpus and 6 pack manifests; the shared schema accepts 2 foreign descriptors.\n\n> schema-pbta@11.0.0 validate:cross-tool:pins\n> tsx tools/validate-cross-tool-pins.ts\n\n✓ 5 cross-tool checkouts are pinned and the .github/workflows/ci.yml contract job runs them.\n\n> schema-pbta@11.0.0 validate:release-train\n> tsx tools/validate-release-train.ts\n\n✓ release train stages v8.4.2 from v8.4.2-rc.1 for lantern and handbook\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n⚠️  No example files found in: examples\\monsterhearts\\playbook\n⚠️  No example files found in: examples\\urban-shadows\\playbook\n⚠️  No example files found in: examples\\the-sprawl\\playbook\n⚠️  No example files found in: examples\\masks\\playbook\n⚠️  No example files found in: examples\\monster-of-the-week\\playbook",
+						"durationMs": 77641
+					}
+				],
+				"evidence": {
+					"key": "d27bca89bd35bf32924962c88c8e18856e9079f05e6c70510fca78c5f96f9907",
+					"provedAt": "2026-10-08T17:31:05.485Z"
+				}
+			},
+			{
+				"repo": "lantern",
+				"role": "consumer",
+				"sha": "80935325b2a5d890b2a8442bdb222492105d7f9a",
+				"baseSha": null,
+				"commits": [],
+				"diffstat": "",
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"lint"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 lint\n> eslint .\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 6933,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"typecheck"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 typecheck\n> tsc -b\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 14235,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 assert:release-train\n> node tools/release-train-protocol.harness.mjs\n\nRelease-train protocol-1 and protocol-2 consumer proofs verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 612,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-identity"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 assert:release-identity\n> node tools/assert-release-identity.mjs && node tools/release-identity.harness.mjs\n\nRelease metadata verified for v0.23.0.\nRelease identity fixtures verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 501,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train-matrix:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 assert:release-train-matrix:unit\n> node tools/release-train-matrix.harness.mjs\n\nRelease train matrix covers 13 real manifests and rejects mutable, duplicate, or fixture inputs.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 468,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:consumer-schema-pins:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 assert:consumer-schema-pins:unit\n> node tools/consumer-schema-pins.harness.mjs\n\nConsumer pin checks reject candidate URLs, lock drift, redirects, and wrong published bytes.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 435,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:workspace"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:134318:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:133828:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:133967:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:27669:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:133961:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:134047:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-4rPRwI/workspace.mjs:134320:31",
+						"durationMs": 2178,
+						"reused": "2026-10-08T17:27:48.405Z"
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:presentation-coverage"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.23.0 assert:presentation-coverage\n> node tools/assert-presentation-coverage.mjs\n\nnote: monsterhearts: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"urban-shadows-creation\" is in no row (fallback \"unplaced\")\npresentation coverage: every published region is drawn and editable\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"_ai-driven-dev-registry\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 443,
+						"reused": "2026-10-08T17:27:48.405Z"
+					}
+				],
+				"evidence": {
+					"key": "232a2f375a40121d8a51af3c996c6dc24f4e8a732fe2bbca028587b674132455",
+					"provedAt": "2026-10-08T17:27:48.405Z"
+				},
+				"linkedProviders": [
+					"schema-pbta"
+				]
+			},
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "1f7c24dd4fac546ea3dbef4bf1f39c144e30d4f3",
+				"baseSha": "3b6a3e88a3e5ea7f95d7caaab0b8d5f7b7ff1c98",
+				"commits": [
+					{
+						"sha": "1f7c24dd4fac546ea3dbef4bf1f39c144e30d4f3",
+						"subject": "fix(masks): label the unlock box of the Moment of Truth"
+					},
+					{
+						"sha": "a2a3059d869075a0488f606e8103a2182fd99a95",
+						"subject": "feat(masks): always draw the illustration frame, fed by a path or an https link"
+					},
+					{
+						"sha": "fb9e3df2c9b0ab3642197a29f7e0fe5fd2c1b99a",
+						"subject": "fix(masks): draw the backstory and the relationships when filled"
+					},
+					{
+						"sha": "1cbb16acf66c1f0478f1330b3d6fe81c09574cce",
+						"subject": "fix(masks): draw the playbook in the face columns, play phase only"
+					},
+					{
+						"sha": "36690cb7b5282020378c1f5cafd5dabdf1e339f0",
+						"subject": "feat(masks): draw the Masks 2E booklet and add the pbta-npc block"
+					}
+				],
+				"diffstat": "CHANGELOG.md                               |  10 ++\n aidd_docs/guidelines/schema-design.md      |   8 +\n aidd_docs/memory/internal/pbta-coverage.md |   6 +-\n manifest.json                              |   2 +-\n package.json                               |   3 +-\n src/features/blocks/registry.ts            |   2 +\n src/features/blocks/tomlExports.ts         |   9 ++\n src/features/callouts/nativeCallouts.ts    |   7 +\n src/features/pbta/block.ts                 |   5 +\n src/features/pbta/coverage.ts              |  10 +-\n src/features/pbta/masksLayout.ts           | 241 +++++++++++++++++++++++++++++\n src/features/pbta/masksNpc.ts              | 152 ++++++++++++++++++\n src/features/pbta/npc.ts                   | 118 ++++++++++++++\n src/features/pbta/renderer.ts              |   2 +-\n src/features/pbta/shape.ts                 |   9 ++\n src/games/capabilities.ts                  |   2 +-\n src/settings/pbtaCoverageModal.ts          |  12 +-\n tools/assert-masks-layout.mjs              |  16 ++\n tools/assert-pbta-contract.mjs             |   1 +\n tools/assertMasksLayout.harness.mts        | 209 +++++++++++++++++++++++++\n tools/customPacks.harness.mts              |   3 +-\n tools/pbtaContractCorpus.mts               |   3 +\n tools/pbtaPackCoverage.harness.mts         |  23 +--\n versions.json                              |   3 +-\n 24 files changed, 831 insertions(+), 25 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "ok   publish --run completes the schema-in-the-mist manifest, lands its convergence file and validates it (24003 ms; 7 supervise in 20491 ms, 990 git calls)\nok   the convergence step of each provider is pure: it lands what is missing and leaves a person only what it cannot know (2621 ms; 0 supervise in 0 ms, 0 git calls)\nok   preview plans from what the train's providers publish, and installs their packs without touching data.json (6093 ms; 5 supervise in 2064 ms, 55 git calls)\nok   present replaces a consumer's installed provider by its package, then puts the link back (5470 ms; 4 supervise in 1815 ms, 51 git calls)\nok   present validates a consumer against the package of the provider and writes its fingerprint, the same for the same content (13867 ms; 8 supervise in 9037 ms, 307 git calls)\nok   a consumer that reads a file the provider leaves out of its package is red at present, and the file is named (7919 ms; 5 supervise in 3699 ms, 115 git calls)\nok   behind a provider that cannot be packed, the validations of its consumers are not started, and the reason is named (7725 ms; 5 supervise in 3568 ms, 113 git calls)\nok   commit lands a provider and its consumers in one command, never the train records (6303 ms; 4 supervise in 3425 ms, 148 git calls)\nok   commit --only lands one repository alone, whatever its role (5268 ms; 5 supervise in 2450 ms, 86 git calls)\nok   a train runs from worktrees while other work stays dirty in the usual checkouts (5192 ms; 3 supervise in 2220 ms, 86 git calls)\nok   the supervisor neither runs nor lands a change to its own code (6013 ms; 7 supervise in 3053 ms, 100 git calls)\nok   ship --run takes an uncommitted change to a closed train in one command, without reading a line (31240 ms; 5 supervise in 27417 ms, 1339 git calls)\nok   ship without --run shows every step of the cycle and commits, presents and dispatches nothing (7957 ms; 7 supervise in 4348 ms, 165 git calls)\nok   a red validation stops ship --run after present: the commits are landed, nothing is published (8937 ms; 5 supervise in 5331 ms, 199 git calls)\nok   ship --run again after an interrupted publication resumes at the missing step, without a second commit or presentation (34796 ms; 6 supervise in 31223 ms, 1506 git calls)\nok   ship refuses to run on supervisor code nobody published, before any step (5874 ms; 5 supervise in 2135 ms, 55 git calls)\nok   ship refuses a repository engaged by another open train, by name, and commits nothing (7742 ms; 5 supervise in 2483 ms, 67 git calls)\nok   a red validation leaves its whole output in a file the report names, and every validation says how long it took (7671 ms; 5 supervise in 3747 ms, 115 git calls)\nok   behind a provider whose build is red, the validations of its consumers are reported not run, with the reason (7205 ms; 5 supervise in 3469 ms, 113 git calls)\n\nSupervisor scenarios passed.\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-eWAowG\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-eWAowG\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-eWAowG\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-eWAowG\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-eWAowG\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-eWAowG\\harness.cjs:306:5)",
+						"durationMs": 1357584,
+						"reused": "2026-10-08T17:16:36.915Z"
+					}
+				],
+				"evidence": {
+					"key": "76cf4a80e31d21786a5bb6509572501a0ce71963ee24c4e0ebf8d1fd6ef65c25",
+					"provedAt": "2026-10-08T17:16:36.915Z"
+				},
+				"linkedProviders": [
+					"schema-pbta"
+				]
+			}
+		],
+		"trainFiles": {
+			"schema-pbta": [
+				"release-train/"
+			],
+			"lantern": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"package-lock.json",
+				"release-train.matrix.json",
+				"CHANGELOG.md",
+				"release-train/"
+			],
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"schema-pbta: release candidate of schema-pbta",
+			"schema-pbta: final release of schema-pbta, same bytes as the candidate",
+			"lantern: release",
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-10-08T17:38:50.006Z",
+		"repos": [
+			{
+				"repo": "schema-pbta",
+				"sha": "2c406c104388dbb838ced41468f88d6729aa599b"
+			},
+			{
+				"repo": "lantern",
+				"sha": "f47f145fdca1ea182a2a2986e9414431962bd6e3"
+			},
+			{
+				"repo": "obsidian-handbook",
+				"sha": "99d680e66b251dc78fb595e7167c3a6c9e102466"
+			}
+		],
+		"checks": [
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-train-matrix"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:presentation-coverage"
+				],
+				"status": 0
+			},
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			}
+		],
+		"notes": [
+			"schema-pbta: no convergence tool of its own; its convergence rests on the final v11.0.0 pinned by both consumers and on their convergence commands"
+		]
+	},
+	"consumerReleases": [
+		{
+			"repo": "lantern",
+			"version": "0.23.0",
+			"tag": "v0.23.0",
+			"sha": "f47f145fdca1ea182a2a2986e9414431962bd6e3",
+			"url": "https://github.com/RebelliousSmile/lantern/releases/tag/v0.23.0"
+		},
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.39.0",
+			"tag": "v2.39.0",
+			"sha": "99d680e66b251dc78fb595e7167c3a6c9e102466",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.39.0"
+		}
+	],
+	"closedAt": "2026-10-08T17:46:32.501Z"
+}

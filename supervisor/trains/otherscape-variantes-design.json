@@ -1,0 +1,751 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "otherscape-variantes-design",
+	"title": "Otherscape: give the variants back their design (Cairo first)",
+	"status": "closed",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 121,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/121"
+	},
+	"items": [
+		{
+			"repo": "schema-in-the-mist",
+			"issue": 26,
+			"url": "https://github.com/RebelliousSmile/schema-in-the-mist/issues/26",
+			"title": "Otherscape: project the Cairo design (light and dark) and publish its condensed title face",
+			"baseSha": "4f68091b6f8a1c70f12f73ad0275beccd25a0862",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 122,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/122",
+			"title": "Otherscape: scope variant rules to the body, keep the note paper, adopt the Cairo projection",
+			"baseSha": "e8438d433eb8502379fec147e93937c5190a713c",
+			"dependsOn": [
+				"schema-in-the-mist"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {
+		"schema-in-the-mist": {
+			"runs": [
+				{
+					"step": "candidate",
+					"workflow": "release-candidate.yml",
+					"inputs": {
+						"tag": "v1.4.0-rc.1"
+					},
+					"id": 42491563205,
+					"url": "https://github.com/RebelliousSmile/schema-in-the-mist/actions/runs/42491563205",
+					"conclusion": "success",
+					"at": "2026-11-08T14:47:54.340Z"
+				},
+				{
+					"step": "assert",
+					"command": [
+						"npm",
+						"run",
+						"release-train:assert",
+						"--",
+						"release-trains/v1.4.0.json",
+						"--output",
+						"C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\\supervisor\\trains\\otherscape-variantes-design.evidence\\schema-in-the-mist-v1.4.0.provenance.json"
+					],
+					"conclusion": "failure",
+					"at": "2026-11-08T14:49:49.370Z"
+				},
+				{
+					"step": "assert",
+					"command": [
+						"npm",
+						"run",
+						"release-train:assert",
+						"--",
+						"release-trains/v1.4.0.json",
+						"--output",
+						"C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\\supervisor\\trains\\otherscape-variantes-design.evidence\\schema-in-the-mist-v1.4.0.provenance.json"
+					],
+					"conclusion": "failure",
+					"at": "2026-11-08T14:57:06.563Z"
+				},
+				{
+					"step": "assert",
+					"command": [
+						"npm",
+						"run",
+						"release-train:assert",
+						"--",
+						"release-trains/v1.4.0.json",
+						"--output",
+						"C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\\supervisor\\trains\\otherscape-variantes-design.evidence\\schema-in-the-mist-v1.4.0.provenance.json"
+					],
+					"conclusion": "success",
+					"at": "2026-11-08T15:08:03.611Z"
+				},
+				{
+					"step": "promote",
+					"command": [
+						"npm",
+						"run",
+						"release-train:promote",
+						"--",
+						"release-trains/v1.4.0.json",
+						"--evidence",
+						"C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\\supervisor\\trains\\otherscape-variantes-design.evidence\\schema-in-the-mist-v1.4.0.provenance.json"
+					],
+					"conclusion": "success",
+					"at": "2026-11-08T15:08:22.110Z"
+				}
+			],
+			"candidate": {
+				"tag": "v1.4.0-rc.1",
+				"url": "https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0-rc.1/schema-in-the-mist-1.4.0.tgz",
+				"sha256": "6c00071eb9a1f381c0d407ebc000b2bd98878db859151b8c508ae2baefa4593e",
+				"integrity": "sha512-jKtcAecEQWGXXDskoCrFGDzKO1UP1oddEhezjCfXWn8Q4XaxGzKKfQbYYzqmUawCNUvR6J1O1QueiMLmZxFG0A==",
+				"commit": "abb267d61872faf00663f77a0de34cec5cd0b813",
+				"packed": "f3e2f6ca827aaf386f84664fae522ff44aa1e13f12c1cb08c77455ce9cb88a38"
+			},
+			"final": {
+				"tag": "v1.4.0",
+				"url": "https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.4.0/schema-in-the-mist-1.4.0.tgz",
+				"sha256": "6c00071eb9a1f381c0d407ebc000b2bd98878db859151b8c508ae2baefa4593e",
+				"integrity": "sha512-jKtcAecEQWGXXDskoCrFGDzKO1UP1oddEhezjCfXWn8Q4XaxGzKKfQbYYzqmUawCNUvR6J1O1QueiMLmZxFG0A=="
+			}
+		}
+	},
+	"presentation": {
+		"presentedAt": "2026-11-08T15:06:08.538Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:6f29db436a95ebef872dcb8b712e6d8018ffd68f5b7a8d4cff6194adff815875",
+		"repos": [
+			{
+				"repo": "schema-in-the-mist",
+				"role": "provider",
+				"sha": "e52c0de5c2476349a8c63d29eafca6b0866494a9",
+				"baseSha": "4f68091b6f8a1c70f12f73ad0275beccd25a0862",
+				"commits": [
+					{
+						"sha": "e52c0de5c2476349a8c63d29eafca6b0866494a9",
+						"subject": "chore(release-train): name the Lantern commit that reads the Mist candidate manifest"
+					},
+					{
+						"sha": "ece0dae30788141c6b6a48deb772d78d694c94fc",
+						"subject": "chore(release-train): add the v1.4.0 manifest"
+					},
+					{
+						"sha": "95e68d5364472d8579524678437cde33b9d158b2",
+						"subject": "chore(release-train): name the Handbook commit that builds before the proof"
+					},
+					{
+						"sha": "149d091928d479765e304c485a3e23f1f822431f",
+						"subject": "chore(release-train): add the v1.4.0 manifest"
+					},
+					{
+						"sha": "abb267d61872faf00663f77a0de34cec5cd0b813",
+						"subject": "feat(otherscape): draw the Metro scenario page and publish its callouts"
+					},
+					{
+						"sha": "9bd3e7214090f68486de2d4a2783f7cb3b836603",
+						"subject": "feat(otherscape): project Tokyo and fit Metro to their mock-ups"
+					},
+					{
+						"sha": "684e640d5b2071bd7c14259b0ef38ffc029b0db4",
+						"subject": "fix(otherscape): give Cairo its own ink in the alternate section"
+					},
+					{
+						"sha": "339c9ca5766d8a1409001cc3ce0164c76406df51",
+						"subject": "fix(otherscape): flat Cairo paper, rounded bevelled heading bands, alternate ink"
+					},
+					{
+						"sha": "c0f573dda87c9a5298bc739d686c08c11064468a",
+						"subject": "feat(otherscape): project the Cairo alternate section and smaller band headings"
+					},
+					{
+						"sha": "a9a9107557d0bd95785e03c7b831be4bc01693a7",
+						"subject": "feat(otherscape): hold each variant to a single polarity"
+					},
+					{
+						"sha": "7731d1a8cda7e7efc7f44af908aa16f019f8db59",
+						"subject": "feat(otherscape): project the Cairo design and ship one condensed title face"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  24 ++\n appearance/game-pack.schema.json                   |  24 ++\n handbook/README.md                                 |   6 +-\n handbook/otherscape/assets/metro-emblem.svg        |   1 +\n handbook/otherscape/assets/styles/fonts.css        |  22 +-\n .../averia-serif-libre-latin-700-normal.woff2      | Bin 38712 -> 0 bytes\n ...ira-sans-extra-condensed-latin-800-normal.woff2 | Bin 0 -> 25172 bytes\n .../fonts/im-fell-english-latin-400-normal.woff2   | Bin 59880 -> 0 bytes\n handbook/otherscape/assets/styles/otherscape.css   | 475 ++++++++++++++++++++-\n handbook/otherscape/pack.json                      | 349 ++++++++++-----\n package-lock.json                                  |   4 +-\n package.json                                       |   2 +-\n release-trains/v1.4.0.json                         |  34 ++\n schemas/appearance/game-pack.schema.json           |  24 ++\n schemas/city-of-mist/custom-move.schema.json       |   2 +-\n schemas/city-of-mist/danger.schema.json            |   2 +-\n schemas/city-of-mist/theme-card.schema.json        |   2 +-\n schemas/city-of-mist/theme-kit.schema.json         |   2 +-\n schemas/legend-in-the-mist/challenge.schema.json   |   2 +-\n schemas/legend-in-the-mist/journey.schema.json     |   2 +-\n schemas/legend-in-the-mist/story-theme.schema.json |   2 +-\n schemas/legend-in-the-mist/theme-kit.schema.json   |   2 +-\n schemas/otherscape/challenge.schema.json           |   2 +-\n schemas/otherscape/character-trope.schema.json     |   2 +-\n schemas/otherscape/design/components.json          |   8 +-\n schemas/otherscape/design/handbook-projection.json | 386 ++++++++++++++++-\n schemas/otherscape/design/tokens.json              | 247 ++++++++++-\n schemas/otherscape/loadout-item.schema.json        |   2 +-\n schemas/otherscape/power-set.schema.json           |   2 +-\n schemas/otherscape/theme-kit.schema.json           |   2 +-\n schemas/otherscape/theme.schema.json               |   2 +-\n schemas/v1/city-of-mist/custom-move.schema.json    |   2 +-\n schemas/v1/city-of-mist/danger.schema.json         |   2 +-\n schemas/v1/city-of-mist/theme-card.schema.json     |   2 +-\n schemas/v1/city-of-mist/theme-kit.schema.json      |   2 +-\n .../v1/legend-in-the-mist/challenge.schema.json    |   2 +-\n schemas/v1/legend-in-the-mist/journey.schema.json  |   2 +-\n .../v1/legend-in-the-mist/story-theme.schema.json  |   2 +-\n .../v1/legend-in-the-mist/theme-kit.schema.json    |   2 +-\n schemas/v1/otherscape/challenge.schema.json        |   2 +-\n schemas/v1/otherscape/character-trope.schema.json  |   2 +-\n schemas/v1/otherscape/loadout-item.schema.json     |   2 +-\n schemas/v1/otherscape/power-set.schema.json        |   2 +-\n schemas/v1/otherscape/theme-kit.schema.json        |   2 +-\n schemas/v1/otherscape/theme.schema.json            |   2 +-\n src/callouts.ts                                    |  41 ++\n src/contract-version.ts                            |   2 +-\n src/index.ts                                       |   1 +\n tools/build-otherscape-handbook-design.ts          | 346 ++++++++++++++-\n tools/validate-handbook-packs.ts                   |  50 ++-\n tools/validate-otherscape-design.ts                |  69 ++-\n tools/validate-package.ts                          |   8 +-\n 52 files changed, 1964 insertions(+), 215 deletions(-)",
+				"packed": {
+					"sha256": "f3e2f6ca827aaf386f84664fae522ff44aa1e13f12c1cb08c77455ce9cb88a38",
+					"files": 205,
+					"contents": {
+						"LICENSES/CODE-LICENSE.md": "5970ca186b785021bfb706e39c2f10697999d84a6337ebec97fe28a4affc2bc9",
+						"LICENSES/DOCS-LICENSE.md": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+						"README.md": "4bae51de50860df08d5af0001215c22aab21d0bf7f4bd94f0d95c493c75c75b7",
+						"corpus/README.md": "cfbd041b199aaaeeb4ac8edc1aa901596f93676fe0406b545e39849e185514c9",
+						"corpus/contract/cases.json": "32bcba66a61192e7bc9d25ee36263810a2f585e17f998c4ea4d6eb875b9a668d",
+						"corpus/contract/invalid/city-of-mist--custom-move.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/city-of-mist--danger.toml": "9fd6194eafa5656dceab878c83caf8f7fee341851f6b86d6007a889b04fa727d",
+						"corpus/contract/invalid/city-of-mist--theme-card.toml": "b6eac1e4d9c61e1e479929c93bc920278d4b1c2f4061c15e3bd0fd590f398f45",
+						"corpus/contract/invalid/city-of-mist--theme-kit.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/legend-in-the-mist--challenge.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/legend-in-the-mist--journey.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/legend-in-the-mist--story-theme.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/legend-in-the-mist--theme-kit.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/otherscape--challenge.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/otherscape--character-trope.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/otherscape--loadout-item.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/otherscape--power-set.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/otherscape--theme-kit.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/invalid/otherscape--theme.toml": "80d99a1c5a18330e3ba3af3b7cfe5986d809511f81a3ebcdfb34542d30ec981b",
+						"corpus/contract/source-conversion-cases.json": "c9c2fe63d506caff712d5b45c3689a03051d2f26bd8b23fe12766919610ff744",
+						"corpus/contract/source-conversion/concise/city-of-mist--danger.toml": "85464814c92bc3ae8d954089d5088c587bfdf5700d1a4c13c35acadcf6b21def",
+						"corpus/contract/source-conversion/concise/city-of-mist--theme-card.toml": "398881bf69aa87423d59cc501a5ce0039e008fe98a058ce88946312df71314e8",
+						"corpus/contract/source-conversion/concise/legend-in-the-mist--challenge.toml": "ff893d15cb5fdb9b397baea169636d011c11fb88a156f3ffa4acea757035ad27",
+						"corpus/contract/source-conversion/concise/legend-in-the-mist--journey.toml": "730a20845c2751d0e836225f59439d887cc8c90cc19e2ce3d51dd3e1672e5c0c",
+						"corpus/contract/source-conversion/concise/legend-in-the-mist--story-theme.toml": "eee33ca0958ad25ec99d7ddc662d0de855e35b03ac1e8295db436539362965fd",
+						"corpus/contract/source-conversion/concise/legend-in-the-mist--theme-kit.toml": "24ce788a9460f1a2b5282a89f7eee314d1e7b94efc52b72d95c42660a67fe091",
+						"corpus/contract/source-conversion/raw-fallback/city-of-mist--danger--comment.toml": "58c7ce3f8f59f3c38cfb26dc9b1fc856f6f1da84a28e168982aee7de359cd74e",
+						"corpus/contract/source-conversion/raw-fallback/city-of-mist--theme-card--unknown-field.toml": "9432107ada5964bc272a198e3ee930163eabd5af83ee2890bb39fca9b6ba1e8e",
+						"corpus/contract/source-conversion/raw-fallback/legend-in-the-mist--challenge--nested-unknown.toml": "28a1b4973fe34b48a67eef5acf4ea1f9f5fc993653273764bf89e00a1b4e2a68",
+						"corpus/contract/source-conversion/raw-fallback/legend-in-the-mist--journey--meta-unknown.toml": "42af2d824ddaef35acffc52be3e0c262c98563071175893799f70f7374c3a00b",
+						"corpus/contract/source-conversion/raw-fallback/legend-in-the-mist--story-theme--unknown-field.toml": "983442f67c08a650c91c6fa3cea06e8bd58d94d8419cb7a56dc1a963a777b45d",
+						"corpus/contract/source-conversion/raw-fallback/legend-in-the-mist--theme-kit--comment.toml": "03a6a4cdb49a0732bf018eb093f74e41c5b49943c85831a330aecd6de77a7d70",
+						"corpus/contract/valid/city-of-mist--custom-move.toml": "b7d778d335033ec7463da1399caa51f2824c66b533f986adade54c05bae9af2e",
+						"corpus/contract/valid/city-of-mist--danger-extensions.toml": "9f11d5ae57fdd8b0c68770f2aa11a5dee7be281d6adac7435ea8a33340cbe5e2",
+						"corpus/contract/valid/city-of-mist--danger.toml": "6a9d37e855af9808cdf306062c497ce83fd22bd2edbaaa65ddb2adf8729cc7b8",
+						"corpus/contract/valid/city-of-mist--theme-card-handbook-fields.toml": "6f730c3906f71c0813150a8e4fca0aa30b9a93c6dfd74fc5c09ab5943cd4a1c3",
+						"corpus/contract/valid/city-of-mist--theme-card.toml": "c674ca2de9abd963fb43034c7b5042941fb7957e19ec61b7badd9da4dec43aa2",
+						"corpus/contract/valid/city-of-mist--theme-kit.toml": "53d26abb1db11491915df65c5ec8a2fe10aedb5eda2e6b5495cfe4d35abd3f7e",
+						"corpus/contract/valid/legend-in-the-mist--challenge-secrets.toml": "aeb6204ddeca6e09d2a810cb56cadda8f7e29554207171cebefbb0d28cef3bbd",
+						"corpus/contract/valid/legend-in-the-mist--challenge.toml": "2a9150d94da4955967e2a31d7d08be15b5e5ad7e98887f2d68845c094fb1e009",
+						"corpus/contract/valid/legend-in-the-mist--journey.toml": "730a20845c2751d0e836225f59439d887cc8c90cc19e2ce3d51dd3e1672e5c0c",
+						"corpus/contract/valid/legend-in-the-mist--story-theme.toml": "eee33ca0958ad25ec99d7ddc662d0de855e35b03ac1e8295db436539362965fd",
+						"corpus/contract/valid/legend-in-the-mist--theme-kit.toml": "24ce788a9460f1a2b5282a89f7eee314d1e7b94efc52b72d95c42660a67fe091",
+						"corpus/contract/valid/otherscape--challenge.toml": "fbeeade5ee654ebb4f205509d6cf2fd92a1dcff0bb8452a70df894f3763bcc63",
+						"corpus/contract/valid/otherscape--character-trope.toml": "78a53a616146dd0caa79159113df82fae910c4340708fc926eb8811e196c62ed",
+						"corpus/contract/valid/otherscape--loadout-item.toml": "b3fdb32980beb873a3d53035bb2cbc787434ea1cf89313c2efba5cad04c222c4",
+						"corpus/contract/valid/otherscape--power-set.toml": "653cddc78f8eae5344f37cfc1c26f50bbba08040f5a30dcf506eac55597476e4",
+						"corpus/contract/valid/otherscape--theme-kit.toml": "8def7370944f8ddd73adeaf5c321959a7fe17018285072480b4ac06b4e159abf",
+						"corpus/contract/valid/otherscape--theme.toml": "987eb8f1e42c4af0fbaba52bcf1d7396c40aec3a72e94bb77645fb87e09abec7",
+						"cross-tool-provider.json": "a61fe6532f94094648c2ad21cd70135b4f0695609cd909e2e9456a5ae0a4087a",
+						"dist/callouts.d.ts": "b7ed90a2e5231e1690f0289e9de20a8830282fff266f40991e56bb2f0d55b6ea",
+						"dist/callouts.d.ts.map": "e4c1e0544568f4ca83ce57e265d10e60fc3f166b52a4ddc1f8555a5362ededb3",
+						"dist/callouts.js": "c61ef3e10d2fd07e05bdfd3a1aa83e28595074a6a92c9dd6868ec3dfc61e3d4a",
+						"dist/callouts.js.map": "d9fd54251f878e904f0e0eb823978c735096c684a1783ab01f45ffaba11a2f66",
+						"dist/codecs/json.d.ts": "68ec2e762cd31b9fdb6d6338f52332e3c1cbafa3b5f458b02f4c3f40533aa5d2",
+						"dist/codecs/json.d.ts.map": "9c5397f9f3d93883341a1ecbf61fe2d25af79f617496f82dbdaa649d88fa0fe8",
+						"dist/codecs/json.js": "219a6f82d46c58eff00f34c9774f7f566f1b01e2046a0dfe62d7e51db7a772ed",
+						"dist/codecs/json.js.map": "50019be2e3b6fc00387c0bd2e391858b9c4a44ea340dcdd68d90a6ad9b243690",
+						"dist/codecs/source.d.ts": "faffac4d133d71b8a55f60fe5a9d1a94b094df9f6eeee807921e5f0df07cd884",
+						"dist/codecs/source.d.ts.map": "3be1a2ffc90cd9e8042a79e8a7c3ca9bd1941e20bf435eec3634c68de80bfe77",
+						"dist/codecs/source.js": "900be38c6b2522479a0b44164b27d0cba4ce9adc582a3d28104235320844e889",
+						"dist/codecs/source.js.map": "fad08d7baa10cbf28ef26ddd8131ffe9d9f2fdb32ceb8effcdb997d1781045df",
+						"dist/codecs/toml.d.ts": "04b8f01976943274f7cd3d9af975a8726cc6c1aa493daadc8ff352a07a1fe5f1",
+						"dist/codecs/toml.d.ts.map": "c89ba63e86ca935ac5ccf88ce9bba12627ad4acca692c88cb3f84c7fd29e19f9",
+						"dist/codecs/toml.js": "29e6833740c527c337034973eccf5abdc99fe93ab10c2998a6f110368826cb5e",
+						"dist/codecs/toml.js.map": "8a7ba998b1cbaf3c8d2b99917137de034e5cb92536863903d68334ada364e8e2",
+						"dist/contract-version.d.ts": "0d9fd3f64d0f56d71f9a947caf8071c13942922704c534f9684642b8519b17a6",
+						"dist/contract-version.d.ts.map": "c8bf753680fbd4d33546c9679e5727a7c00d120c3f2378acd49a033a5441426f",
+						"dist/contract-version.js": "2224fd5b2b285f072c86efd9d97a718c5093a76927fd50090291ecbd83f1ea9f",
+						"dist/contract-version.js.map": "85a788c21843d6dbb5014744148032fbc9c05859f44462e173e345f84a8bbe09",
+						"dist/index.d.ts": "8807c1d34e70ac43b8b831cc49e03febd326ec92807f356b65d39cfe4326605f",
+						"dist/index.d.ts.map": "73ae820523f8b88912b4c2fa36439f652235daf958ae3342f80a85d8e50a06dc",
+						"dist/index.js": "1a7c2394cbd38658222e7f7acb399bf65ce74db49cf3fc3a42fbb64ece0dc611",
+						"dist/index.js.map": "67851360c12d2b675f8342a719d46e38de09a1dbc2deee0946ba851bff4cc85d",
+						"dist/zod/city-of-mist/custom-move.d.ts": "fe76e71febf2aba32f23cbea6f203794e1f185e3e74cb54a2be78b8ad0dee839",
+						"dist/zod/city-of-mist/custom-move.d.ts.map": "00d4fde80c01549248aed7a5ccd80549263f27f0cf8b5f8f7b318f405d706593",
+						"dist/zod/city-of-mist/custom-move.js": "2636bf0eb7c01ea25c138b5fe889140ae0f2f1ae6dccb84922ed9286434d565a",
+						"dist/zod/city-of-mist/custom-move.js.map": "c3682eb88a63115beb0702cfaa58a8ad7cf6b6c9508fd4968a7ad4dc5a553dac",
+						"dist/zod/city-of-mist/danger.d.ts": "53d60e075b3340907b3246a2c52acb41f7ab9456f95f8bb664f61d765f826128",
+						"dist/zod/city-of-mist/danger.d.ts.map": "95e13b0b315464cb04eb5763e9bb1ddde9d3bec06337edcb353e868d36bf5abe",
+						"dist/zod/city-of-mist/danger.js": "3105db69b0cfe2d8e28efc8448723c15a4c0004b598be931070458e92c73fce9",
+						"dist/zod/city-of-mist/danger.js.map": "c0f378d9f676400237091e114886308a0cfdeb374dd47f3a46f1408d22817eae",
+						"dist/zod/city-of-mist/theme-card.d.ts": "778bc42a9472dfde12393b761ab9e9eaacdf803ed5a3a2fb1e636e070a70e331",
+						"dist/zod/city-of-mist/theme-card.d.ts.map": "319addeb119880054f38a30adc63141a6ed6c44150c87c53239b76cdbcf134d9",
+						"dist/zod/city-of-mist/theme-card.js": "7cc56fc2f940e41a21356124b89b25a2fd37f4204ec09db697066b6df0e72119",
+						"dist/zod/city-of-mist/theme-card.js.map": "7dc01c36ce83486f408eb056abec679d32ea0087efdef96777164fbe54f21414",
+						"dist/zod/city-of-mist/theme-kit.d.ts": "821d9e24e8a48d2e8b4e0f9d4fddf35d09f3f9b607ce089abaf8ebb6cd9d9ac3",
+						"dist/zod/city-of-mist/theme-kit.d.ts.map": "9c7b968338409c1cff8caf326aa9112a98e3f9135fbe1d62ec1310f2beadd9ad",
+						"dist/zod/city-of-mist/theme-kit.js": "39793ea2c77e27e3f339b5a8480aa7e0e3d7c9f0a2c59e0d77d7aff88988ba7d",
+						"dist/zod/city-of-mist/theme-kit.js.map": "b410d21571cbec2734604062c561ed237d55378a26087b5bab9ca3abf36cb1a5",
+						"dist/zod/common/publication.d.ts": "bd8ff638ea4a93ddcd9621954959eb2c61a3b23108d3d13a674079d0d5de706b",
+						"dist/zod/common/publication.d.ts.map": "fa37f067852d29776089463a19917c8bdfbf1db0e68a07bb2b39963531c79f24",
+						"dist/zod/common/publication.js": "f487c0342a887999f4f614735d11a9df806b70273280267996913b37f49b38d1",
+						"dist/zod/common/publication.js.map": "85533895c411284d98f7dce54036b4afe2e498ce54c227a6622434f2cd6f1742",
+						"dist/zod/constants.d.ts": "865330fe033cf4a63703550133a3a2d4f1d2038f9f1012633fb7a228d85f80c2",
+						"dist/zod/constants.d.ts.map": "1e21ae4eea97e3b124f7d62ba8004d162967aa72546d1469791a85fc85c8e276",
+						"dist/zod/constants.js": "a3d4ae3065b1a42801b8e89dafe7014b1a7eb9dea107dfce3c5a5f9b78c5233f",
+						"dist/zod/constants.js.map": "a9e6f1334b510f49feb22c536c0d74a15ad0434c0e84d2294b078d97ed837e51",
+						"dist/zod/legend-in-the-mist/challenge.d.ts": "d0574f0625867959b831c530690530bddfd52cdc8155ef2739937ec20e0e3ddc",
+						"dist/zod/legend-in-the-mist/challenge.d.ts.map": "9e7fdb4233ab9ce600519069336f499fc6f2871864ac548b650d978f0910e738",
+						"dist/zod/legend-in-the-mist/challenge.js": "7d30fa7d96fdc57afb9142ce132e876885f2b1b4c707d39cd8729fc4c1f175db",
+						"dist/zod/legend-in-the-mist/challenge.js.map": "f3f44080ff78c6587bc038cec11c03734aee78ab78f6e39932eb104db4377387",
+						"dist/zod/legend-in-the-mist/journey.d.ts": "843f995a94c5688565283184b874cb55ca8025f1992c3609f150706ec90a23af",
+						"dist/zod/legend-in-the-mist/journey.d.ts.map": "b7059410dfa101e24b55571b9deb7f27f1213bacfc4d5e290fc3fc8149b549df",
+						"dist/zod/legend-in-the-mist/journey.js": "4a4ac578792facba1649ce172bc3087d6f6dfbe4716f7b849a43bbc49ccbec1b",
+						"dist/zod/legend-in-the-mist/journey.js.map": "a678977f14a7a858f57804d129e951f1e0e6b14290d972dd724c6d16d0a05a92",
+						"dist/zod/legend-in-the-mist/story-theme.d.ts": "1bf0ff71e1adbb23153681be537c3131bfcbfa3413dbd1acdc8b5e01def67b7f",
+						"dist/zod/legend-in-the-mist/story-theme.d.ts.map": "18de0e9b3dab1ecef4e728d7122845ee357c9135e5021ed2aeb9741c6005865e",
+						"dist/zod/legend-in-the-mist/story-theme.js": "ef251985583ba9b4531078b8b88eeb547020ae68bd3bff0069a4e5b6b58c4130",
+						"dist/zod/legend-in-the-mist/story-theme.js.map": "af869854c7b0941d525f5bc711ba97ecb4915f27a81ca9b110decbbe573160b3",
+						"dist/zod/legend-in-the-mist/theme-kit.d.ts": "3bbbbfba6c73ef4225f53aec957fcd0437a9e75c20ea8dec9f1a31b9c587141f",
+						"dist/zod/legend-in-the-mist/theme-kit.d.ts.map": "c59cfedeeb622adf3cc53f4560e846bbe24f864bbc251590803c78a826b197c5",
+						"dist/zod/legend-in-the-mist/theme-kit.js": "b3e4b9bbbb1a44684f8927b1305ff4ebac87c53464451b20900b87e1071971bb",
+						"dist/zod/legend-in-the-mist/theme-kit.js.map": "60544df313d14788b427dc2c61c115c5f9511b5b086c7c2c53e9bc297c9cdab7",
+						"dist/zod/otherscape/challenge.d.ts": "90f622574c357ed7d3ecb7acb28b9376dc2ce4d80ab0bd9c017f2db2fedec041",
+						"dist/zod/otherscape/challenge.d.ts.map": "26f1688b14899f185fe27fd41ca13e0f799ccd3e594cf34361be76e3ed3408f7",
+						"dist/zod/otherscape/challenge.js": "1ed7174bc1cd5b9ca4ac226ea514d4ed0c20d6d3d0d31b3adf697cf411bc85a6",
+						"dist/zod/otherscape/challenge.js.map": "dcd53e643640c0945dbd24f07206786695f98e591e4caa2a4d893abe773d1955",
+						"dist/zod/otherscape/character-trope.d.ts": "451fe1e647e9c94c68220c18377db0cd53d2bded5272b6d17d1e96e3deab7c83",
+						"dist/zod/otherscape/character-trope.d.ts.map": "e59b65b92f1c73db9497c0718a206feab39d684120e18b38bc7c21550837e94e",
+						"dist/zod/otherscape/character-trope.js": "1f94573181384f9c1a0edaaea327c353b879eb220a6baf86edb164c32f023968",
+						"dist/zod/otherscape/character-trope.js.map": "d14dec1068d6008e8745dcb7587a3408e1003467608fe20fe5ab1d58f8227030",
+						"dist/zod/otherscape/loadout-item.d.ts": "cb45aac1a71c04d043053f840f9f02fadcb5b556e82c19a7d3a7f0ef665ff2b6",
+						"dist/zod/otherscape/loadout-item.d.ts.map": "88dee3339490f057dc1bb8bf60c3be58ddeb98ef756a958389da0c2ecd2c2128",
+						"dist/zod/otherscape/loadout-item.js": "24e1b0d001091ec6edf95afb843874d8dbdfe863c5bdb974163c9878b21a23a3",
+						"dist/zod/otherscape/loadout-item.js.map": "1237445f82b0a0f710a3f5964f2175d6dd008f25c6d13bd2407ee61a43be156c",
+						"dist/zod/otherscape/power-set.d.ts": "62307e015a301e9f870a51f88c6aa1be2694fd72535c797297c5e3ff82446f0a",
+						"dist/zod/otherscape/power-set.d.ts.map": "313dde6fb445e340f7a1b6a46ec0175d79f11477094bf60a17a21c4812a97050",
+						"dist/zod/otherscape/power-set.js": "b6c726d46e7fd1004c8e1092f6e81b992ea95095a0d1abe4cc5bccf2afd975de",
+						"dist/zod/otherscape/power-set.js.map": "53e7e119e9df542ce0ba0935d8e3ce28b2b62517f3cad7477893b72d587654cc",
+						"dist/zod/otherscape/theme-kit.d.ts": "c6ee1aa0d50c9dc6cf7b4721403500b9b8c0b681133261781c1bb9e175fb9c6c",
+						"dist/zod/otherscape/theme-kit.d.ts.map": "7472a85ef65bb3d88759d58ae7606886d96cb55268860b4c0ace8d45b96bc59a",
+						"dist/zod/otherscape/theme-kit.js": "fb88b92179c0891cdd2154cb620f5c4c8fe70b37ab89cb03aaa9ba98f9c14204",
+						"dist/zod/otherscape/theme-kit.js.map": "cc3d927ddffd710840c656749579758c2e415b94f8339dee1dcba7abdc5b4e7d",
+						"dist/zod/otherscape/theme.d.ts": "18d2c28ee514d38a929f5ecd36b8f1683820f8f1454116513504df59e43b2a72",
+						"dist/zod/otherscape/theme.d.ts.map": "db7a5049d36c22cf069355975c4ee43f150d32c14b5aaeed0d4add7d00da7ca2",
+						"dist/zod/otherscape/theme.js": "71352c77f00f274b5f4845fd65274634e44ec55811031e8dfc2795661c998045",
+						"dist/zod/otherscape/theme.js.map": "9df84672abfa36b9fd2716c8a47e43168bbdedf6228e69a3098b5a7f7d72b4a8",
+						"handbook/LICENSES/Averia.LICENSE.txt": "919001091eae8621dfb9f8d8630b574cb7e177d154d43bd03acb1a91d37bffb5",
+						"handbook/LICENSES/BebasNeue.LICENSE.txt": "1ad713665104ebc1ad80176b6b14f2d7dbc91aeed4180855a9514bb350b52e31",
+						"handbook/LICENSES/Caveat.LICENSE.txt": "163a2b400e16916ad3196296c946c526d0efce6baf22a2164269ffc62fb9f671",
+						"handbook/LICENSES/CourierPrime.LICENSE.txt": "4b214c66d2635dbdadac3af741fc4e18ca40d67d87240efbde128e398062f371",
+						"handbook/LICENSES/Fira.LICENSE.txt": "8dc6df134d761827c7642f7c095ad2a16fb02e8f28ba110a330a717f78be28a1",
+						"handbook/LICENSES/IMFellEnglish.LICENSE.txt": "f51eb66dbfe065ecfad1195f6f2d45aebb3ac390f9b65f2544ebf03eca1ae14c",
+						"handbook/LICENSES/IMFellGreatPrimer.LICENSE.txt": "f51eb66dbfe065ecfad1195f6f2d45aebb3ac390f9b65f2544ebf03eca1ae14c",
+						"handbook/LICENSES/Labrada.LICENSE.txt": "95a4a37477b9e425c18457a8a4b7a134849eaa311b42c33cf5f2d082dcf648d9",
+						"handbook/LICENSES/ParaType.LICENSE.txt": "0ab52081e12038cb3eec000539b43def6456f1794d1eb722fe7e8d447b705ecc",
+						"handbook/LICENSES/PragRoman.LICENSE.txt": "3acf04021db9309fd19b2d3d29e56f939cebfa11dcd6be62862e9cea7e7500bf",
+						"handbook/LICENSES/Roboto.LICENSE.txt": "ee94f8704aa81e9a3bf4271e8320e99d975a3ee08ea45a088b494b918476ec12",
+						"handbook/LICENSES/SonOfOak.LICENSE.txt": "5cf0e6ff35260c8dbbb5943e0fd7e31951301f6c14012f29799e5c8d0c9e2a1d",
+						"handbook/README.md": "aefac9acd907b9d566a5d9ccd566e4b4c9f0877c2fa04f773d7147b2160d1d40",
+						"handbook/city-of-mist/assets/callout-edge.svg": "e533872a82a82ceab6703168bf6badc6363e38e4f1284fa2135ed061a8d83e99",
+						"handbook/city-of-mist/assets/iceberg-character.svg": "4ca144715bd34f088ace3f5db6d8acd7495b4f360d8f7cf9eefd74ca855f33b5",
+						"handbook/city-of-mist/assets/iceberg-group.svg": "50004d1e74c8134895897a5cbbad8c5546766a10786d0eea0e9f587ace829f30",
+						"handbook/city-of-mist/assets/iceberg-location.svg": "705fb6156daca3e2ac6efc7b12b32696b7c0b898c7ff731729db894b991ab883",
+						"handbook/city-of-mist/assets/styles/city-of-mist.css": "fbd2609c15bbd15e895f0f7fa582129547de2f839c744826190e905694064506",
+						"handbook/city-of-mist/assets/styles/fonts.css": "07b98dbaf9b088b2f71516da6f4329e5a1b25eb49ccca08bf67450554833c2a5",
+						"handbook/city-of-mist/assets/styles/fonts/averia-serif-libre-latin-700-normal.woff2": "23166bf0013be1ca9b713dad081abe7eb7d47f712391ef6b917ba54ef8adeba6",
+						"handbook/city-of-mist/assets/styles/fonts/im-fell-english-latin-400-normal.woff2": "248300df1647bec49155a5cada1d65f719ae633ef48564d1f19b135a8a5b7f5f",
+						"handbook/city-of-mist/pack.json": "482793d582520651463bcc2df000b507a1a7b8e657695481cf230160060ffede",
+						"handbook/legend-in-the-mist/assets/card-might-adventure.svg": "f7ea3908e36506e8dfb3dc430402a7085f6c684ba9b6bfb67f90ba2159a5d316",
+						"handbook/legend-in-the-mist/assets/card-might-greatness.svg": "b58b6f2856e9325b96e932be586d2436fc9e7d60d15f5456c80be8096255e910",
+						"handbook/legend-in-the-mist/assets/card-might-origin.svg": "46bb130d20f19be20d9ba844283f5b368fe009cbfbabccf7da4db51db697c66f",
+						"handbook/legend-in-the-mist/assets/checkbox-minus.svg": "e055d121b192a25626227d80f3834988ab8e6bdaa59e13fe9bd02d79f245bdb4",
+						"handbook/legend-in-the-mist/assets/checkbox-plus.svg": "a5cd7a5e3d90448c2d866e78e25b6255c43a798d1f6deb0034f60bb4d1053682",
+						"handbook/legend-in-the-mist/assets/checkbox-tilde.svg": "e62c22e00c81f4cc20b2ae0d184893bb9c967afe7c0fc9af04992daad5c506df",
+						"handbook/legend-in-the-mist/assets/heading-2-rule.svg": "f401d1e9f73d994025667b1acde7c2594a066ff4b04e6f4f82753ff482494def",
+						"handbook/legend-in-the-mist/assets/inline-title-rule.svg": "d6bc88dd0b44fb1c5867b5a0e7eea39dd22514c0e21c44428cdcc7b8a6307e27",
+						"handbook/legend-in-the-mist/assets/limit-mark-empty.svg": "45fdb169d5844178c2aec3d17e105e9e2fb123183b2b7f4866cba19f9bfa4211",
+						"handbook/legend-in-the-mist/assets/limit-mark.svg": "1b220a982d9a1151ed423827dc8295b21c66d900eb31002cdaa7a369d939e93b",
+						"handbook/legend-in-the-mist/assets/mountain-might-adventure.svg": "125b3d9f95ec4d9a98377622a1e1148b90077f65614e8bc53d5fc507f5d38337",
+						"handbook/legend-in-the-mist/assets/mountain-might-greatness.svg": "1cb6a4b26150adabd4f2d9d1f0e8d765dcbf9bd28b44230dd46d7c06a6caa85b",
+						"handbook/legend-in-the-mist/assets/mountain-might-origin.svg": "d4e0a5d8bc8e6ffe1da16cbe28900aa31928544c7d1c631e4094f6ba73d88777",
+						"handbook/legend-in-the-mist/assets/separator.svg": "0b018736b5a4f2465fb61ad7feede6f183a55cb491d78567b9f2c40db446b272",
+						"handbook/legend-in-the-mist/assets/styles/fonts.css": "07b98dbaf9b088b2f71516da6f4329e5a1b25eb49ccca08bf67450554833c2a5",
+						"handbook/legend-in-the-mist/assets/styles/fonts/averia-serif-libre-latin-700-normal.woff2": "23166bf0013be1ca9b713dad081abe7eb7d47f712391ef6b917ba54ef8adeba6",
+						"handbook/legend-in-the-mist/assets/styles/fonts/im-fell-english-latin-400-normal.woff2": "248300df1647bec49155a5cada1d65f719ae633ef48564d1f19b135a8a5b7f5f",
+						"handbook/legend-in-the-mist/assets/theme-card-adventure.webp": "11a2dd46bdac63c8a07ad8790dff622f99efc2bc6d06cd2eefb8d83c4d9b11d1",
+						"handbook/legend-in-the-mist/assets/theme-card-greatness.webp": "2aba5cead56045ac27ddb2cf24fc05d8ca50a727d523094358a953b73e38681a",
+						"handbook/legend-in-the-mist/assets/theme-card-origin.webp": "082d2a25be951161a29d11204054f1e975ec625ed9ee11fae4af981e1e90b371",
+						"handbook/legend-in-the-mist/assets/theme-card.webp": "82c500069c3f8fce2c3d0823a0682e05c11226f2edb28f30ed10f4d5b224fc99",
+						"handbook/legend-in-the-mist/assets/weakness-mark.svg": "fa94c700191e2a48a029147f26021cbfb63276f669039c7537b3552bf8c4bf50",
+						"handbook/legend-in-the-mist/pack.json": "6385d3daea9f8fa02d2a032991952a98ee11d3e3b1c4baff1375029ffa5bd8d2",
+						"handbook/otherscape/assets/metro-emblem.svg": "71f24e1aa4b24e5b4f7dae6e961d5142501f1384b88243c3d94cef8c3ce8c8b5",
+						"handbook/otherscape/assets/styles/fonts.css": "8943348586a03d2c8b805fac89e9b33537045e77261ba45f1d664afad1f55a24",
+						"handbook/otherscape/assets/styles/fonts/fira-sans-extra-condensed-latin-800-normal.woff2": "5c81db2825481545da2706950118fef390534d5e032dcd2ba269a7a851e1767f",
+						"handbook/otherscape/assets/styles/otherscape.css": "ae7c8e0e643e687405589f74b95cd6083a16b4bea6a0c0a2ad71f7f5e743a124",
+						"handbook/otherscape/pack.json": "5126c9519bfc4dcc32e9b5df161e4a235c24b1ef75d5256a0468eb0dfea41a42",
+						"package.json": "0af787eb3fb47ca09704b17b0525b08996cad7e587994b5fc2de1a8ff8a62022",
+						"schemas/appearance/README.md": "4902fe197d48da39d93373df00a392c3b66b2a7169e514b5513c56f286a17288",
+						"schemas/appearance/game-pack.schema.json": "3f5bdbd632079302143c70a7bfa7a805749c02632a610fcff625324ec0e713fb",
+						"schemas/v1/city-of-mist/custom-move.schema.json": "59bcf0f5a3f0362f6dbf53134dd7ad09c2f543fa2eee0c6c8060699cc24c8883",
+						"schemas/v1/city-of-mist/danger.schema.json": "0bd5e5185916c1afd3ae78e48cfbd0492b844df324bb715fcd2ac64fb5e99fc2",
+						"schemas/v1/city-of-mist/theme-card.schema.json": "3fca6915c86b1e27e2d5b9a8500c7173641870366afaf21ed129896b0a6bbe58",
+						"schemas/v1/city-of-mist/theme-kit.schema.json": "7ebda7c8092dc776a84ca3e705fc2028218dc77d3e4d258c3f4314af38fd244d",
+						"schemas/v1/legend-in-the-mist/challenge.schema.json": "3088dd2f93b5a059454abd276af9252be1b45cb83b2dc59dbe6d671fd5dc20c8",
+						"schemas/v1/legend-in-the-mist/journey.schema.json": "d4f57c6a36f5c1f0d672ab0a44ca8991e84735539235e3c05f48563e20aa8d0d",
+						"schemas/v1/legend-in-the-mist/story-theme.schema.json": "e22c5bd2982625cf27e97de297a104322ab974ac2424651f643592d2d286f108",
+						"schemas/v1/legend-in-the-mist/theme-kit.schema.json": "91fc925f7e6a55707d6709f58875ae100f513077dfcf699a84f5198fc69c55a2",
+						"schemas/v1/otherscape/challenge.schema.json": "86e1f7d3eb47cddba90073780ab81c732bf7b6e065bcab4f85e92459fabbeafd",
+						"schemas/v1/otherscape/character-trope.schema.json": "324222584e36b5329914ad6ff6a9e9cc8fc75377e5f0eff0e1fb4cf23a0818f4",
+						"schemas/v1/otherscape/loadout-item.schema.json": "766627de0095ce582a3dcf3061827242b0f67170faa2eb88853921d5e33f3cb5",
+						"schemas/v1/otherscape/power-set.schema.json": "f28008c4c21d86364f6b02430f83eaa588bc9b4d35664533815c0867fb29a874",
+						"schemas/v1/otherscape/theme-kit.schema.json": "3c14f1af752580c799447bcdfcec42d008508af820b45a9e21fd697ecfada80d",
+						"schemas/v1/otherscape/theme.schema.json": "65ff6f1d647edffe31f473104a881445b0940c9394124c70a61fdf145dda543b"
+					}
+				},
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"check"
+						],
+						"status": 0,
+						"tail": "npm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 15727
+					}
+				],
+				"evidence": {
+					"key": "9420104d24f30f87facd3d81563ccbe621e3bc4692dd8a3e27bda77540c159b6",
+					"provedAt": "2026-11-08T15:05:09.461Z"
+				}
+			},
+			{
+				"repo": "lantern",
+				"role": "consumer",
+				"sha": "8f0dfd3641a0aeefcfb4abf3c76d9c37ffd489bf",
+				"baseSha": null,
+				"commits": [],
+				"diffstat": "",
+				"linkedProviders": [
+					"schema-in-the-mist"
+				],
+				"validations": [
+					{
+						"command": [
+							"npm",
+							"run",
+							"lint"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 lint\n> eslint .\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 6506
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"typecheck"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 typecheck\n> tsc -b\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 13462
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:release-train\n> node tools/release-train-protocol.harness.mjs\n\nRelease-train protocol-1 and protocol-2 consumer proofs verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 674
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-identity"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:release-identity\n> node tools/assert-release-identity.mjs && node tools/release-identity.harness.mjs\n\nRelease metadata verified for v0.29.3.\nRelease identity fixtures verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 489
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:release-train-matrix:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:release-train-matrix:unit\n> node tools/release-train-matrix.harness.mjs\n\nRelease train matrix covers 23 real manifests and rejects mutable, duplicate, or fixture inputs.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 476
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:consumer-schema-pins:unit"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:consumer-schema-pins:unit\n> node tools/consumer-schema-pins.harness.mjs\n\nConsumer pin checks reject candidate URLs, lock drift, redirects, and wrong published bytes.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 408
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:workspace"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:158855:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:158362:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:158504:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:29403:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:158498:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:158584:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-1pDzBx/workspace.mjs:158857:31",
+						"durationMs": 2003
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:block-templates"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:block-templates\n> node tools/assert-block-templates.mjs\n\nmasks.npc: masks-npc ok (8 regions)\nmonster-of-the-week.monster: monster-of-the-week-monster ok (7 regions)\nmonster-of-the-week.threat: monster-of-the-week-threat ok (8 regions)\nmonster-of-the-week.team: monster-of-the-week-team ok (10 regions)\nthe-sprawl.mission: the-sprawl-mission ok (9 regions)\nthe-sprawl.threat: the-sprawl-threat ok (4 regions)\nthe-sprawl.resource: the-sprawl-resource ok (3 regions)\nthe-sprawl.corporation: the-sprawl-corporation ok (5 regions)\nthe-sprawl.matrix: the-sprawl-matrix ok (5 regions)\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 2077
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:adrenaline-examples"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:adrenaline-examples\n> node tools/assert-adrenaline-examples.mjs\n\nassert:adrenaline-examples: 3 templates start from a published example\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 400
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:adrenaline-coverage"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:adrenaline-coverage\n> node tools/assert-adrenaline-coverage.mjs\n\nassert:adrenaline-coverage: 38 published forms drawn across 3 sheets, 22 layout properties read, 3 card tokens read, 49 document keys named by an editor\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 656
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:adrenaline-pj"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:adrenaline-pj\n> node tools/assert-adrenaline-pj.mjs\n\nassert:adrenaline-pj: round trips lossless; 99 of 100 schema leaves have a field (1 declared not editable); the nature selector offers and shows 2 natures; typing through the panels writes the key each field names; 1866 PJ fields used, 249 PNJ fields used, 203 creature fields used, each written to a declared path and exported without error\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 29832
+					},
+					{
+						"command": [
+							"npm",
+							"run",
+							"assert:presentation-coverage"
+						],
+						"status": 0,
+						"tail": "\n> lantern@0.29.3 assert:presentation-coverage\n> node tools/assert-presentation-coverage.mjs\n\ncovered: masks/npc, masks/playbook, monster-of-the-week/monster, monster-of-the-week/team, monster-of-the-week/threat, monster-of-the-week/playbook, monsterhearts/playbook, the-sprawl/corporation, the-sprawl/matrix, the-sprawl/mission, the-sprawl/resource, the-sprawl/threat, the-sprawl/playbook, urban-shadows/playbook\nnote: monsterhearts: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"urban-shadows-creation\" is in no row (fallback \"unplaced\")\npresentation coverage: every published playbook region is drawn and editable, every published block has its template\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
+						"durationMs": 424
+					}
+				],
+				"evidence": {
+					"key": "b33c21228ccc01da8b1c6e3ab51e8a7d1d004c7dd2fd712b11657747a51c3d31",
+					"provedAt": "2026-11-08T15:06:07.365Z"
+				}
+			},
+			{
+				"repo": "obsidian-handbook",
+				"role": "coordinator",
+				"sha": "996b99c769f8519f950dbdb45ab4335da0a79120",
+				"baseSha": "e8438d433eb8502379fec147e93937c5190a713c",
+				"commits": [
+					{
+						"sha": "996b99c769f8519f950dbdb45ab4335da0a79120",
+						"subject": "fix(release-train): build Handbook before the Mist candidate proof"
+					},
+					{
+						"sha": "147f356624c8df43fab551a0733eea00c3857391",
+						"subject": "chore(deps): adopt schema-in-the-mist v1.4.0-rc.1"
+					},
+					{
+						"sha": "9d0e384df015c781484c09d77c98c1ba532f7ab9",
+						"subject": "feat(otherscape): adopt the Metro scenario page and the Otherscape callouts"
+					},
+					{
+						"sha": "b23db54c575be814d3d6639cd3d33fd10936e261",
+						"subject": "fix(styles): give note properties the ink of the note"
+					},
+					{
+						"sha": "005479308c1fdc385252045d657585a90df50a9c",
+						"subject": "fix(otherscape): drop the Tokyo card rules the schema now draws"
+					},
+					{
+						"sha": "2429b5eb046cfdf83682f3e7780870c7d7fa5cba",
+						"subject": "feat(variants): let a note choose its variant with handbook-variant"
+					},
+					{
+						"sha": "4740a77c6486fce4feff6cc3467cb14cc70a7031",
+						"subject": "docs(otherscape): record the Cairo band and alternate ink fixes (v2.46.5)"
+					},
+					{
+						"sha": "4d76fd526706cc8c03549fa4ebabf8c7bf21d86f",
+						"subject": "docs(otherscape): record the Cairo alternate section and heading sizes (v2.46.5)"
+					},
+					{
+						"sha": "89b324d6fd657ce3d29af315fdf3d5b8e04a2b85",
+						"subject": "docs(otherscape): record the single polarity per variant (v2.46.5)"
+					},
+					{
+						"sha": "283ab0da8d63d05ce74ecfcf46d841998ed735b6",
+						"subject": "fix(otherscape): apply the variant rules and keep the note paper (v2.46.5)"
+					}
+				],
+				"diffstat": "CHANGELOG.md                                       |  23 ++++\n .../phase-1.md                                     |  63 ++++++++++\n .../phase-2.md                                     |  74 ++++++++++++\n .../phase-3.md                                     |  88 ++++++++++++++\n .../phase-4.md                                     | 128 +++++++++++++++++++++\n .../phase-5.md                                     |  88 ++++++++++++++\n .../2026_11_04_otherscape-variantes-design/plan.md |  40 +++++++\n manifest.json                                      |   2 +-\n package.json                                       |   4 +-\n pnpm-lock.yaml                                     |  12 +-\n src/BrumesPlugin.ts                                |  50 +++++++-\n src/features/callouts/nativeCallouts.ts            |  29 +++++\n src/features/modes/styleElement.ts                 |  43 +++++++\n src/games/variants.ts                              |  18 +++\n src/styles/_layout-regions.scss                    |   7 ++\n src/styles/_mode-sections.scss                     |   5 +-\n src/styles/_note-ink.scss                          |  12 ++\n src/styles/otherscape/_callouts.scss               |  11 +-\n src/styles/otherscape/_cards.scss                  |   1 -\n src/styles/otherscape/_challenges.scss             |   1 -\n src/styles/otherscape/_character-creation.scss     |   1 -\n src/styles/otherscape/_headings.scss               |  17 +++\n src/styles/otherscape/_themes.scss                 |   3 -\n src/styles/otherscape/index.scss                   |   3 +\n src/styles/styles.scss                             |   1 +\n tools/assert-mist-contract.mjs                     |  15 ++-\n tools/assert-mist-font-packs.mjs                   |  23 +++-\n tools/assertCallouts.harness.mts                   |  14 +++\n tools/assertGameVariants.harness.mts               |  96 ++++++++++++++++\n tools/assertStyleScope.harness.mts                 |  30 +++++\n tools/prove-schema-in-the-mist-candidate.mjs       |   8 +-\n tools/release-train-schema-in-the-mist-assert.mjs  |   3 +\n versions.json                                      |   3 +-\n 33 files changed, 880 insertions(+), 36 deletions(-)",
+				"validations": [
+					{
+						"command": [
+							"pnpm",
+							"check"
+						],
+						"status": 0,
+						"tail": "\n> obsidian-handbook@2.46.5 assert:style-scope C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-style-scope.mjs\n\ngame styles stay inside notes and rendered block scopes\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.46.5 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\n> check: assert:urban-shadows-layout\n\n> obsidian-handbook@2.46.5 assert:urban-shadows-layout C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-urban-shadows-layout.mjs\n\nUrban Shadows layout assertions passed.\n\n> check: assert:supervisor skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-bnKXaF\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-bnKXaF\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-bnKXaF\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-bnKXaF\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-bnKXaF\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-bnKXaF\\harness.cjs:306:5)",
+						"durationMs": 53002,
+						"reused": "2026-11-08T14:56:08.509Z"
+					}
+				],
+				"evidence": {
+					"key": "0f9a29bef9e494c45a11d4a1a2e54e94a4cb44310c0bd05a88dc5a9a3d8e5901",
+					"provedAt": "2026-11-08T14:56:08.509Z"
+				},
+				"linkedProviders": [
+					"schema-in-the-mist"
+				]
+			}
+		],
+		"trainFiles": {
+			"schema-in-the-mist": [
+				"release-trains/"
+			],
+			"lantern": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"package-lock.json",
+				"release-train.matrix.json",
+				"CHANGELOG.md",
+				"release-train/"
+			],
+			"obsidian-handbook": [
+				"package.json",
+				"pnpm-lock.yaml",
+				"manifest.json",
+				"versions.json",
+				"CHANGELOG.md",
+				"release-train/",
+				"supervisor/trains/"
+			]
+		},
+		"publications": [
+			"schema-in-the-mist: release candidate of schema-in-the-mist",
+			"schema-in-the-mist: final release of schema-in-the-mist, same bytes as the candidate",
+			"lantern: release",
+			"obsidian-handbook: release"
+		]
+	},
+	"convergence": {
+		"status": "passed",
+		"at": "2026-11-08T15:09:00.713Z",
+		"repos": [
+			{
+				"repo": "schema-in-the-mist",
+				"sha": "f686b540de2e4fcb354431b1795ef8b09bb73ab4"
+			},
+			{
+				"repo": "lantern",
+				"sha": "389ed54aa14e22793104d33ed25b01df6023f284"
+			},
+			{
+				"repo": "obsidian-handbook",
+				"sha": "fd5436b259a4ea75e3d179d9278331eae0449ce3"
+			}
+		],
+		"checks": [
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../obsidian-handbook"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-inputs"
+				],
+				"status": 0
+			},
+			{
+				"repo": "lantern",
+				"command": [
+					"npm",
+					"run",
+					"assert:release-train-matrix"
+				],
+				"status": 0
+			},
+			{
+				"repo": "obsidian-handbook",
+				"command": [
+					"pnpm",
+					"run",
+					"assert:consumer-schema-pins",
+					"--",
+					"../lantern/package.json",
+					"--final"
+				],
+				"status": 0
+			},
+			{
+				"repo": "schema-in-the-mist",
+				"command": [
+					"npm",
+					"run",
+					"release-train:converge",
+					"--",
+					"release-trains/v1.4.0.json",
+					"--candidate-evidence",
+					"C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\\supervisor\\trains\\otherscape-variantes-design.evidence\\schema-in-the-mist-v1.4.0.provenance.json"
+				],
+				"status": 0
+			},
+			{
+				"repo": "schema-in-the-mist",
+				"command": [
+					"npm",
+					"run",
+					"release-train:validate",
+					"--",
+					"--require-complete",
+					"v1.4.0"
+				],
+				"status": 0
+			}
+		],
+		"notes": []
+	},
+	"consumerReleases": [
+		{
+			"repo": "lantern",
+			"version": "0.29.3",
+			"tag": "v0.29.3",
+			"sha": "389ed54aa14e22793104d33ed25b01df6023f284",
+			"url": "https://github.com/RebelliousSmile/lantern/releases/tag/v0.29.3"
+		},
+		{
+			"repo": "obsidian-handbook",
+			"version": "2.46.5",
+			"tag": "v2.46.5",
+			"sha": "fd5436b259a4ea75e3d179d9278331eae0449ce3",
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/releases/tag/v2.46.5"
+		}
+	],
+	"closedAt": "2026-11-08T15:17:34.996Z"
+}
