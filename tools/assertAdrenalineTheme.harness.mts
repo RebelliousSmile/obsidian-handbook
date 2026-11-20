@@ -1197,7 +1197,9 @@ assert.doesNotMatch(scss, /(?:^|[\s:(])(black|white|red|yellow)(?:[\s;,)])/i);
 
 const oldHost = readGamePluginManifest(manifestSource, "2.6.0");
 assert.equal(oldHost.manifest, undefined);
-assert.match(oldHost.error, /requires Handbook 2\.7\.0/);
+/* The refusal names the version the pack asks for, read from the pack and never restated here. */
+const requiredVersion = (manifestSource as { minimumHandbookVersion: string }).minimumHandbookVersion;
+assert.ok(oldHost.error?.includes(`requires Handbook ${requiredVersion}`), oldHost.error);
 
 // A creature or a PNJ may enter a numeric value as a plain number or as the {minimum,current,maximum} triplet
 // (they gain no XP, so their score does not evolve): the same document, entered either way, gives the same card.

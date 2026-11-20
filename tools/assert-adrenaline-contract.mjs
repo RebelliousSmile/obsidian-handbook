@@ -29,7 +29,7 @@ assert.equal(redirectEntry.includes("release-assets.githubusercontent.com"), fal
 /* The published JSON Schemas the plugin reads are bundled with it: left external, Node would load them without a JSON import attribute. */
 const requireFromProject = createRequire(resolve("package.json"));
 const publishedSchemas = Object.fromEntries(
-	["monstre", "pnj", "pj"].map((sheet) => [`schema-adrenaline/schemas/${sheet}.schema.json`, requireFromProject.resolve(`schema-adrenaline/schemas/${sheet}.schema.json`)]),
+	["monstre", "pnj", "pj", "relations"].map((sheet) => [`schema-adrenaline/schemas/${sheet}.schema.json`, requireFromProject.resolve(`schema-adrenaline/schemas/${sheet}.schema.json`)]),
 );
 const bundle = "tools/.assert-adrenaline-contract.mjs";
 const stub = "tools/.obsidian-stub.mjs";
