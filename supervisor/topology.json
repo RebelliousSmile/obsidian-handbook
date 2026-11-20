@@ -124,6 +124,31 @@
 				[
 					"npm",
 					"run",
+					"assert:template-exports"
+				],
+				[
+					"npm",
+					"run",
+					"assert:export-pages"
+				],
+				[
+					"npm",
+					"run",
+					"assert:pbta-notes"
+				],
+				[
+					"npm",
+					"run",
+					"assert:otherscape-fields"
+				],
+				[
+					"npm",
+					"run",
+					"assert:editor-literals"
+				],
+				[
+					"npm",
+					"run",
 					"assert:template-chunks"
 				]
 			],

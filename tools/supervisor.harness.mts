@@ -7,7 +7,7 @@
  * what it printed, what it wrote, and which git and gh calls it made.
  */
 import assert from "assert/strict";
-import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "fs";
 import { basename, delimiter, join, resolve } from "path";
 import Ajv from "ajv";
 import { packageArchive } from "./fixtures/supervisor/package-files.mjs";
@@ -2103,6 +2103,120 @@ scenario("behind a provider that cannot be packed, the validations of its consum
 	}
 	assert.equal(packedOf(world), undefined, "a fingerprint was written for a package that was not listed");
 	assertInstallRestored(world, install);
+});
+
+// The order of publication a consumer is built in, and the build output a package must not carry over.
+
+/**
+ * Two providers each publishing `dist/index.js`, and a consumer that installed
+ * both as pnpm does: a link to a pinned copy. The consumer reads `pinned` in
+ * what it has installed and `train` in what it is linked to.
+ */
+function installBoth(world: World, providers: string[]): Array<{ link: string; pinned: string }> {
+	for (const id of providers) {
+		const manifest = JSON.parse(readFileSync(resolve(world.dir(id), "package.json"), "utf8"));
+		world.land(id, { "package.json": `${JSON.stringify({ ...manifest, files: ["dist"] }, null, "\t")}\n`, "dist/index.js": "module.exports = 'train';\n" }, "a package that publishes dist");
+	}
+	const manifest = JSON.parse(readFileSync(resolve(world.dir("lantern"), "package.json"), "utf8"));
+	const dependencies = Object.fromEntries(providers.map((id) => [id, "1.0.0"]));
+	world.land("lantern", { "package.json": `${JSON.stringify({ ...manifest, dependencies }, null, "\t")}\n`, ".gitignore": "node_modules\n" }, "install the providers");
+	return providers.map((id) => {
+		const pinned = resolve(world.dir("lantern"), `node_modules/.pnpm/${id}@1.0.0/node_modules`, id);
+		mkdirSync(resolve(pinned, "dist"), { recursive: true });
+		writeFileSync(resolve(pinned, "package.json"), JSON.stringify({ name: id, version: "1.0.0" }));
+		writeFileSync(resolve(pinned, "dist/index.js"), "module.exports = 'pinned';\n");
+		const link = resolve(world.dir("lantern"), "node_modules", id);
+		symlinkSync(pinned, link, "junction");
+		return { link, pinned };
+	});
+}
+
+/** A consumer whose build with the new Mist needs the new Pbta: it fails when Mist is released first. */
+const NEEDS_BOTH = nodeCommand("const fs = require('fs'); const read = (name) => fs.readFileSync('node_modules/' + name + '/dist/index.js', 'utf8'); if (read('schema-in-the-mist').includes('train') && !read('schema-pbta').includes('train')) { console.error('the new mist needs the new pbta'); process.exit(7); }");
+
+function lanternEntry(world: World): any {
+	return readRecord(world).presentation.repos.find((entry: any) => entry.repo === "lantern");
+}
+
+scenario("present refuses providers published in an order a consumer cannot be built in, and names the provider and the line to add", (world) => {
+	let installs: Array<{ link: string; pinned: string }> = [];
+	presentedTrain(world, ["schema-in-the-mist", "schema-pbta"], { present: false, before: () => { installs = installBoth(world, ["schema-in-the-mist", "schema-pbta"]); } });
+	const topology = testTopology(world, { lantern: [NEEDS_BOTH] });
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
+	assert.match(result.stdout, /- lantern: with the package of schema-in-the-mist and schema-pbta as installed, .+ exited 7, which is what the proof of schema-in-the-mist meets when schema-in-the-mist is published before schema-pbta;/);
+	assert.ok(result.stdout.includes("add it to the `dependsOn` of the schema-in-the-mist item of train"), result.stdout);
+	assert.ok(result.stdout.includes("(whole output: lantern-1-order-1.log)"), result.stdout);
+	assert.match(readFileSync(resolve(logsDir(world), "lantern-1-order-1.log"), "utf8"), /the new mist needs the new pbta/);
+	assert.equal(readRecord(world).presentation.presentable, false);
+	assert.ok(!("evidence" in lanternEntry(world)), "a proof was written for an order that does not hold");
+	assert.deepEqual(dispatches(world), [], "a candidate was started");
+	for (const install of installs) assert.equal(readFileSync(resolve(install.link, "dist/index.js"), "utf8"), "module.exports = 'pinned';\n", "the installed package was not put back");
+	assert.equal(git(world.dir("lantern"), "status", "--porcelain"), "", "the consumer checkout was changed");
+});
+
+scenario("present accepts the same providers once the order holds, and keeps the proof for the same order", (world) => {
+	presentedTrain(world, ["schema-pbta", "schema-in-the-mist"], { present: false, before: () => { installBoth(world, ["schema-in-the-mist", "schema-pbta"]); } });
+	const topology = testTopology(world, { lantern: [NEEDS_BOTH] });
+	const first = world.supervise(["present"], { topology });
+	assert.equal(first.status, 0, `${first.stdout}\n${first.stderr}`);
+	assert.ok(existsSync(resolve(logsDir(world), "lantern-1-order-1.log")), "the order was not replayed");
+	assert.ok(!existsSync(resolve(logsDir(world), "lantern-1-order-2.log")), "the whole set is the full validation, not a prefix");
+	assert.ok(lanternEntry(world).evidence, "a proof was not written for an order that holds");
+	ok(world.supervise(["present"], { topology }), "second present");
+	assert.ok(lanternEntry(world).validations.every((validation: any) => validation.reused), "an unchanged presentation ran its validations again");
+});
+
+scenario("present asks nothing of providers a consumer does not need in order", (world) => {
+	presentedTrain(world, ["schema-in-the-mist", "schema-pbta"], { present: false, before: () => { installBoth(world, ["schema-in-the-mist", "schema-pbta"]); } });
+	const independent = nodeCommand("const fs = require('fs'); for (const name of ['schema-in-the-mist', 'schema-pbta']) fs.readFileSync('node_modules/' + name + '/dist/index.js');");
+	const topology = testTopology(world, { lantern: [independent] });
+	const result = world.supervise(["present"], { topology });
+	assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+	assert.doesNotMatch(result.stdout, /dependsOn/);
+	assert.ok(lanternEntry(world).evidence);
+});
+
+scenario("present refuses a package that carries build output git ignores and this build did not write, names it, and deletes nothing", (world) => {
+	const old = (Date.now() - 3600_000) / 1000;
+	let stale: string[] = [];
+	presentedTrain(world, ["schema-in-the-mist"], {
+		present: false,
+		before: () => {
+			const manifest = JSON.parse(readFileSync(resolve(world.dir("schema-in-the-mist"), "package.json"), "utf8"));
+			world.land("schema-in-the-mist", {
+				"package.json": `${JSON.stringify({ ...manifest, files: ["dist", "kept"], scripts: { build: "build" } }, null, "\t")}\n`,
+				".gitignore": "dist\n",
+				"kept/data.json": "{}\n",
+			}, "a package with ignored build output");
+			world.write("schema-in-the-mist", { "dist/index.js": "module.exports = 'leftover';\n", "dist/old.js": "module.exports = 'old';\n" });
+			stale = ["dist/index.js", "dist/old.js", "kept/data.json"].map((file) => resolve(world.dir("schema-in-the-mist"), file));
+			for (const file of stale) utimesSync(file, old, old);
+		},
+	});
+	const topology = testTopology(world);
+	const built = (): void => world.updateState((state) => {
+		state.localEffects = { ...state.localEffects, "schema-in-the-mist build": [{ write: { path: "dist/index.js", content: "module.exports = 'built';\n" } }] };
+	});
+
+	// The build rewrites dist/index.js; dist/old.js is a leftover the build did not write. The tracked file is old too, and is not named.
+	built();
+	const refused = world.supervise(["present"], { topology });
+	assert.equal(refused.status, 1, `${refused.stdout}\n${refused.stderr}`);
+	assert.match(refused.stdout, /- schema-in-the-mist: its package holds 1 build output file\(s\) that git ignores and this build did not write: dist\/old\.js; /);
+	assert.doesNotMatch(refused.stdout.split("\n").filter((line) => line.startsWith("- schema-in-the-mist: its package")).join("\n"), /kept\/data\.json/, "a tracked file was named as a leftover");
+	assert.ok(refused.stdout.includes("Delete the output directory by hand"), refused.stdout);
+	assert.ok(refused.stdout.includes("the stale build output in the package of schema-in-the-mist was refused"), refused.stdout);
+	assert.ok(existsSync(stale[1]), "the supervisor deleted a leftover");
+	assert.equal(packedOf(world), undefined, "a fingerprint was written for a package that was refused");
+	assert.deepEqual(dispatches(world), [], "a candidate was started");
+
+	// A person deletes it; the same present is then green, the fresh file and the old tracked one included.
+	rmSync(stale[1]);
+	built();
+	const accepted = world.supervise(["present"], { topology });
+	assert.equal(accepted.status, 0, `${accepted.stdout}\n${accepted.stderr}`);
+	assert.equal(packedOf(world).files, 3, "package.json, dist/index.js and kept/data.json");
 });
 
 // The commit of a provider and its consumers.

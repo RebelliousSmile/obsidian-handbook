@@ -20,7 +20,10 @@
  * A consumer adopts the candidate without being validated again: `present`
  * proved it against the package of the provider, and the archive is held to
  * that package, file by file, before the first pin is rewritten
- * (`archiveFiles.mjs`).
+ * (`archiveFiles.mjs`). The order in which the providers go out is proved the
+ * same way: `present` replays the consumer against each prefix of `providerOrder`
+ * (`present.mjs`), so a missing `dependsOn` is refused before the train leaves,
+ * never found here.
  *
  * A step a provider rehearses (`rehearse.mjs`) is run only once its rehearsal
  * is green: a manifest its own workflow would refuse is neither landed nor

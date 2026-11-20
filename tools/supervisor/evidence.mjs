@@ -27,14 +27,15 @@ function treeOf(dir, repo, sha) {
 
 /**
  * `links` are the providers the repository is validated against, each with the
- * fingerprint of its package (`sha256`). Returns the key, or `null` when one
- * of them has none.
+ * fingerprint of its package (`sha256`), in the order `publish` releases them.
+ * Returns the key, or `null` when one of them has none.
  */
 export function evidenceKey({ dir, repo, sha, links, validations, node = process.version }) {
 	if (links.some((link) => !link.sha256)) return null;
 	const subject = {
 		tree: treeOf(dir, repo, sha),
-		providers: links.map((link) => ({ repo: link.repo, sha256: link.sha256 })).sort((left, right) => left.repo.localeCompare(right.repo)),
+		// The links in the order `publish` releases their providers: a consumer validated against several of them was also replayed in that order (`present.mjs`).
+		providers: links.map((link) => ({ repo: link.repo, sha256: link.sha256 })),
 		validations,
 		node,
 	};

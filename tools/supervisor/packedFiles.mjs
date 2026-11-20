@@ -12,13 +12,18 @@
  * It is local: a checkout with other line endings gives another one, so it is
  * compared between two presentations of one machine, never with an archive.
  *
+ * A file of the package that git ignores is build output. One that this build
+ * did not write is a leftover of an older build, and it would be published as
+ * it stands: `staleFiles` names them, and `present` refuses the package.
+ *
  * The contents are what an archive is held to (`archiveFiles.mjs`): for each
  * file, the sha256 of its bytes with CRLF read as LF, the same in a checkout
  * on Windows and in the archive a runner packed.
  */
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { git } from "./git.mjs";
 import { runGuarded } from "./guarded.mjs";
 
 /** Always npm, whatever the provider installs with: the candidate is packed by `npm pack`. */
@@ -85,4 +90,32 @@ export function packedFiles(dir, run = (command) => runGuarded(dir, command, "pr
 	} catch (error) {
 		return { result, error: `${PACK_COMMAND.join(" ")} lists a file that cannot be read: ${error.message}` };
 	}
+}
+
+/** How far before the start of the build a file's time may fall and still be this build's: a coarse file system clock lags the one `Date.now` reads. */
+const CLOCK_SLACK_MS = 2000;
+
+/**
+ * The files of `files` that git ignores and that were last written before
+ * `since` (a `Date.now()` taken before the build): build output this build did
+ * not write. A file git tracks is not build output, and a file the build wrote
+ * is newer than it. Nothing is removed.
+ *
+ * @returns {{ stale: string[] } | { error: string }}
+ */
+export function staleFiles(dir, files, since) {
+	if (files.length === 0) return { stale: [] };
+	const check = git(dir, ["check-ignore", "-z", "--stdin"], { input: files.join("\0") });
+	// Exit 1: none of the paths is ignored.
+	if (check.status > 1) return { error: `git check-ignore exited ${check.status}: ${check.stderr.trim()}` };
+	const ignored = new Set(check.stdout.split("\0").filter(Boolean));
+	const stale = files.filter((file) => {
+		if (!ignored.has(file)) return false;
+		try {
+			return statSync(join(dir, file)).mtimeMs < since - CLOCK_SLACK_MS;
+		} catch {
+			return false;
+		}
+	});
+	return { stale };
 }

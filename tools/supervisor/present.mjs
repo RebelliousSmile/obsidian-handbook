@@ -31,10 +31,11 @@ import { basename } from "node:path";
 import { evidenceKey, isGreen, reusableValidations } from "./evidence.mjs";
 import { LINKED_PROVIDERS } from "./guarded.mjs";
 import { formatDuration, trainLogs } from "./logs.mjs";
-import { packedFiles } from "./packedFiles.mjs";
+import { packedFiles, staleFiles } from "./packedFiles.mjs";
 import { checkProducerPins } from "./producerPin.mjs";
 import { packageManager, packageJson } from "./preview.mjs";
 import { planProviderLinks, withProviderLinks } from "./providerLinks.mjs";
+import { providerOrder } from "./publish.mjs";
 import { releaseExists } from "./gh.mjs";
 import { tagCommit, versionAt } from "./consumerRelease.mjs";
 import { TRAINS_PATH } from "./train.mjs";
@@ -179,6 +180,8 @@ function packProviders(root, topology, train, repos, logs, failures) {
 	for (const repo of repos.filter((candidate) => candidate.role === "provider" && train.items.some((item) => item.repo === candidate.id))) {
 		const dir = repoDir(root, repo);
 		const scripts = packageJson(dir)?.scripts ?? {};
+		// What the build or the packaging writes is newer than this instant; a build output file older than it is a leftover.
+		const buildStart = Date.now();
 		if (scripts.build && !prepackBuilds(scripts)) {
 			const build = logs.run(repo.id, "build", dir, [packageManager(dir), "run", "build"], "present");
 			if (build.status !== 0) {
@@ -193,6 +196,18 @@ function packProviders(root, topology, train, repos, logs, failures) {
 			packed.set(repo.id, { failed: "packaging" });
 			continue;
 		}
+		const leftovers = staleFiles(dir, pack.files, buildStart);
+		if (leftovers.error) {
+			failures.push(`${repo.id}: the package could not be checked for stale build output: ${leftovers.error}`);
+			packed.set(repo.id, { failed: "packaging" });
+			continue;
+		}
+		if (leftovers.stale.length > 0) {
+			const shown = leftovers.stale.slice(0, 8).join(", ") + (leftovers.stale.length > 8 ? `, and ${leftovers.stale.length - 8} more` : "");
+			failures.push(`${repo.id}: its package holds ${leftovers.stale.length} build output file(s) that git ignores and this build did not write: ${shown}; they would be published as they stand. Delete the output directory by hand (the supervisor deletes nothing), then present again`);
+			packed.set(repo.id, { failed: "stale" });
+			continue;
+		}
 		packed.set(repo.id, { files: pack.files, sha256: pack.sha256, contents: pack.contents });
 	}
 	return packed;
@@ -201,11 +216,45 @@ function packProviders(root, topology, train, repos, logs, failures) {
 /** Why the validations of a consumer are not started: the providers it would be linked to that could not be built or packed. */
 function brokenProviders(links, packed) {
 	const steps = [];
-	for (const step of ["build", "packaging"]) {
+	for (const [step, what] of [["build", "the build of"], ["packaging", "the packaging of"], ["stale", "the stale build output in the package of"]]) {
 		const ids = links.filter((link) => packed.get(link.repo)?.failed === step).map((link) => link.repo);
-		if (ids.length > 0) steps.push(`the ${step} of ${ids.join(", ")} failed`);
+		if (ids.length > 0) steps.push(`${what} ${ids.join(", ")} ${step === "stale" ? "was refused" : "failed"}`);
 	}
 	return steps.join("; ");
+}
+
+/**
+ * `publish` releases the providers one after the other, and a consumer is
+ * built against the package of the provider being released and of those
+ * released before it, the later ones as they are installed. Validated with all
+ * the packages at once, an order that does not hold would only show there,
+ * minutes into the publication. A consumer linked to several providers is
+ * replayed on each strict prefix of them, in publication order: the packages
+ * of the first `size` providers, the others untouched. The first prefix that
+ * does not pass names the provider whose proof would fail and the line to add.
+ * A consumer that needs only one provider, or whose providers do not need each
+ * other, passes every prefix and is not asked for anything.
+ *
+ * @returns {string | null} the reason, or null when the order holds.
+ */
+function replayInOrder(dir, repo, published, packed, logs, trainId) {
+	for (let size = 1; size < published.length; size++) {
+		const failed = withProviderLinks(dir, published.slice(0, size), (replaced) => {
+			const linked = replaced.map((link) => link.repo);
+			const env = { [LINKED_PROVIDERS]: linked.map((id) => `${id}@${packed.get(id).sha256}`).join(",") };
+			for (const command of repo.validations ?? []) {
+				const result = logs.run(repo.id, `order-${size}`, dir, command, "present", { env });
+				if (result.status !== 0) return { result, linked };
+			}
+			return null;
+		});
+		if (!failed) continue;
+		const last = published[size - 1].repo;
+		const later = published.slice(size).map((link) => link.repo);
+		const whole = failed.result.log ? ` (whole output: ${basename(failed.result.log)})` : "";
+		return `${repo.id}: with the package of ${failed.linked.join(", ")} and ${later.join(", ")} as installed, \`${failed.result.command.join(" ")}\` exited ${failed.result.status}, which is what the proof of ${last} meets when ${last} is published before ${later.join(" or ")}; if ${last} needs the new package of one of them, add it to the \`dependsOn\` of the ${last} item of train ${trainId} (\`pnpm supervise link --depends-on\`), then present again${whole}`;
+	}
+	return null;
 }
 
 /**
@@ -220,6 +269,8 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 	checkProducerPins(root, topology, repos);
 	const buildFailures = [];
 	const packed = packProviders(root, topology, train, repos, logs, buildFailures);
+	const publication = providerOrder(topology, train).map((provider) => provider.id);
+	const orderFailures = [];
 	const entries = repos.map((repo) => {
 		const dir = repoDir(root, repo);
 		const item = train.items.find((entry) => entry.repo === repo.id) ?? null;
@@ -234,7 +285,11 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 		const entry = { repo: repo.id, role: repo.role, sha, baseSha: base, commits, diffstat };
 		const own = packed.get(repo.id);
 		if (own?.sha256) entry.packed = { sha256: own.sha256, files: own.files.length, contents: own.contents };
-		const links = repo.role === "provider" ? [] : planProviderLinks(root, topology, train, repo);
+		// The links in the order `publish` releases their providers: the order the replay below walks, and the one the proof is keyed on.
+		const links = (repo.role === "provider" ? [] : planProviderLinks(root, topology, train, repo))
+			.map((link, index) => ({ link, index, rank: publication.indexOf(link.repo) }))
+			.sort((a, b) => (a.rank < 0 ? publication.length : a.rank) - (b.rank < 0 ? publication.length : b.rank) || a.index - b.index)
+			.map((sorted) => sorted.link);
 		const broken = brokenProviders(links, packed);
 		// Behind a provider that does not build or pack, a consumer's validations cannot pass: they are not started.
 		if (broken) {
@@ -260,10 +315,12 @@ export function presentTrain(root, topology, train, logs = trainLogs(root, topol
 				return { command: result.command, status: result.status, tail: result.tail, durationMs: result.durationMs };
 			});
 		});
-		if (key !== null && isGreen(entry.validations)) entry.evidence = { key, provedAt: new Date().toISOString() };
+		const unordered = isGreen(entry.validations) ? replayInOrder(dir, repo, published, packed, logs, train.id) : null;
+		if (unordered) orderFailures.push(unordered);
+		else if (key !== null && isGreen(entry.validations)) entry.evidence = { key, provedAt: new Date().toISOString() };
 		return entry;
 	});
-	const reasons = [...buildFailures];
+	const reasons = [...buildFailures, ...orderFailures];
 	reasons.push(...leftChanged(root, repos));
 	for (const entry of entries) {
 		if (entry.validations.length === 0) reasons.push(`${entry.repo}: no local validation is configured in the topology`);
