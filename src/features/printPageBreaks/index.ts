@@ -30,6 +30,7 @@ const PAGE_BLOCKS = [
 	"figure",
 	".brumes-adrenaline-pj",
 	".brumes-adrenaline-pnj",
+	".brumes-adrenaline-relations",
 	".brumes-adrenaline-monstre",
 ];
 

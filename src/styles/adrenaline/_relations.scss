@@ -1,0 +1,234 @@
+// Feuille de relations Adrenaline : une page A4, trois sections publiées (en-tête, autres personnages, PNJ).
+// Toutes les couleurs sont des jetons du pack : aucune valeur en dur ici.
+
+@mixin sheet {
+	.brumes-adrenaline-relations {
+		position: relative;
+		isolation: isolate;
+		box-sizing: border-box;
+		container-type: inline-size;
+		width: min(100%, 68rem);
+		margin-inline: auto;
+		padding: 12px;
+		background: var(--adrenaline-card-surface, var(--background-primary));
+		color: var(--text-normal);
+		font-family: var(--font-text-theme);
+		font-size: 12px;
+		line-height: 1.3;
+		overflow-wrap: anywhere;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+
+		*,
+		*::before,
+		*::after { box-sizing: border-box; }
+	}
+
+	// Petites capitales : libellés, titres et numéros.
+	.brumes-adrenaline-relations__write-label,
+	.brumes-adrenaline-relations__card-label,
+	.brumes-adrenaline-relations__npc-modifier,
+	.brumes-adrenaline-relations__npc-number,
+	.brumes-adrenaline-relations :is(h4.brumes-adrenaline-relations__section-title, h5.brumes-adrenaline-relations__block-title) {
+		font-family: var(--font-header-theme);
+		font-weight: 800;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		font-style: normal;
+		text-decoration: none;
+	}
+	.brumes-adrenaline-relations__write-label,
+	.brumes-adrenaline-relations__card-label,
+	.brumes-adrenaline-relations__npc-modifier { font-size: 9px; }
+	.brumes-adrenaline-relations__write-label { color: var(--adrenaline-rule); white-space: nowrap; }
+	.brumes-adrenaline-relations__card-label,
+	.brumes-adrenaline-relations h4.brumes-adrenaline-relations__section-title {
+		background: var(--adrenaline-band);
+		color: var(--adrenaline-band-ink);
+	}
+
+	// Grain de papier sous la feuille, même jeton que la page.
+	.brumes-adrenaline-relations--surface-paper-sheet::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: var(--adrenaline-page-texture, none) center / cover;
+		opacity: var(--adrenaline-page-texture-opacity, 0);
+		pointer-events: none;
+	}
+	.brumes-adrenaline-relations--outer-rule { border: 1px solid var(--adrenaline-rule); }
+
+	// Sections : bandeau de titre et corps.
+	.brumes-adrenaline-relations__section,
+	.brumes-adrenaline-relations__block { min-width: 0; }
+	.brumes-adrenaline-relations__section:not(.brumes-adrenaline-relations__section--entete) { border: 1px solid var(--adrenaline-rule); }
+	.brumes-adrenaline-relations h4.brumes-adrenaline-relations__section-title {
+		margin: 0;
+		padding: 3px 8px;
+		font-size: 12px;
+		text-align: center;
+	}
+	.brumes-adrenaline-relations h5.brumes-adrenaline-relations__block-title {
+		margin: 0 0 4px;
+		padding-bottom: 2px;
+		font-size: 10px;
+		border-bottom: 1px solid var(--adrenaline-track-mark);
+		color: var(--adrenaline-rule);
+	}
+	.brumes-adrenaline-relations__section-body {
+		display: grid;
+		gap: 10px;
+		min-width: 0;
+	}
+	.brumes-adrenaline-relations__section:not(.brumes-adrenaline-relations__section--entete) > .brumes-adrenaline-relations__section-body { padding: 9px 10px 11px; }
+	// Une section publie ses colonnes pour ses blocs-grilles (fiches, PNJ) : chaque bloc occupe la largeur entière.
+	.brumes-adrenaline-relations__section-body > .brumes-adrenaline-relations__block { grid-column: 1 / -1; }
+	.brumes-adrenaline-relations__columns-1 { grid-template-columns: minmax(0, 1fr); }
+	.brumes-adrenaline-relations__columns-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.brumes-adrenaline-relations__columns-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+	// Valeurs manuscrites.
+	.brumes-adrenaline-relations--values-handwritten :is(.brumes-adrenaline-relations__value, .brumes-adrenaline-relations__npc-name) {
+		color: var(--adrenaline-handwritten-ink);
+		font-family: "Adrenaline Handwriting", var(--font-text-theme);
+		font-size: 1.15em;
+		line-height: 1.1;
+	}
+	.brumes-adrenaline-relations__value { min-width: 0; }
+
+	// Ligne d'écriture : libellé, champ pointillé.
+	.brumes-adrenaline-relations__write-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 5px;
+		min-width: 0;
+	}
+	.brumes-adrenaline-relations__write-field {
+		flex: 1 1 7em;
+		min-width: 0;
+		min-height: 1.25em;
+		border-bottom: 1px dotted var(--adrenaline-field-border);
+	}
+
+	// En-tête : trois cartes sur une rangée (personnage, joueur, partie).
+	.brumes-adrenaline-relations__card-row {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 8px;
+	}
+	.brumes-adrenaline-relations__card {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		border: 1px solid var(--adrenaline-field-border);
+	}
+	.brumes-adrenaline-relations__card-label {
+		padding: 2px 6px;
+		font-size: 9px;
+		text-align: center;
+	}
+	.brumes-adrenaline-relations__card-value {
+		min-height: 1.9em;
+		padding: 3px 6px;
+		text-align: center;
+	}
+
+	// Autres personnages : quatre fiches côte à côte.
+	.brumes-adrenaline-relations__tie {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+		padding: 6px;
+		border: 1px solid var(--adrenaline-field-border);
+	}
+	.brumes-adrenaline-relations__form-pc-ties {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
+	}
+	.brumes-adrenaline-relations__form-pc-ties > :not(.brumes-adrenaline-relations__tie) { grid-column: 1 / -1; }
+
+	// Compteur de tests de Drame.
+	.brumes-adrenaline-relations__counter {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 42px;
+		border: 1px solid var(--adrenaline-field-border);
+	}
+	.brumes-adrenaline-relations__counter > .brumes-adrenaline-relations__card-label { align-self: stretch; display: flex; align-items: center; padding: 2px 6px; }
+	.brumes-adrenaline-relations__counter-value {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 20px;
+		border-left: 1px solid var(--adrenaline-field-border);
+	}
+
+	// PNJ : deux colonnes de cinq fiches, remplies colonne par colonne.
+	.brumes-adrenaline-relations__npc-columns {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+		align-items: start;
+	}
+	.brumes-adrenaline-relations__npc-column {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		min-width: 0;
+	}
+	.brumes-adrenaline-relations__npc {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		min-width: 0;
+		padding: 5px 6px 6px;
+		border: 1px solid var(--adrenaline-field-border);
+	}
+	.brumes-adrenaline-relations__npc-head {
+		display: grid;
+		grid-template-columns: 26px minmax(0, 1fr);
+		align-items: end;
+		gap: 6px;
+	}
+	.brumes-adrenaline-relations__npc-number {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 22px;
+		border: 1px solid var(--adrenaline-field-border);
+		color: var(--adrenaline-rule);
+		font-size: 12px;
+	}
+	.brumes-adrenaline-relations__npc-name {
+		min-height: 1.25em;
+		border-bottom: 1px dotted var(--adrenaline-field-border);
+	}
+	.brumes-adrenaline-relations__npc-modifier {
+		padding: 0 4px;
+		border: 1px solid var(--adrenaline-field-border);
+		color: var(--adrenaline-rule);
+	}
+	.brumes-adrenaline-relations__modifier--bonus { color: var(--adrenaline-handwritten-ink); }
+	.brumes-adrenaline-relations__modifier--malus { border-style: dashed; }
+
+	// Note de fin de bloc.
+	.brumes-adrenaline-relations__block-note {
+		grid-column: 1 / -1;
+		margin: 0;
+		font-size: 0.78em;
+		font-style: italic;
+		line-height: 1.1;
+		text-align: center;
+	}
+
+	// Sous une largeur de feuille étroite, les rangées se replient avant de s'écraser.
+	@container (max-width: 34rem) {
+		.brumes-adrenaline-relations__card-row,
+		.brumes-adrenaline-relations__form-pc-ties,
+		.brumes-adrenaline-relations__npc-columns { grid-template-columns: minmax(0, 1fr); }
+	}
+}

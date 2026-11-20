@@ -142,6 +142,7 @@ async function run(): Promise<void> {
 					"block:adrenaline-pj",
 					"block:adrenaline-pnj",
 					"block:adrenaline-monstre",
+					"block:adrenaline-relations",
 					"style:adrenaline",
 				],
 			}),

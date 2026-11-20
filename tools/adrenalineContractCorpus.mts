@@ -13,7 +13,7 @@ export interface AdrenalineContractCase {
 	source: string;
 }
 
-const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre"]);
+const targets = new Set<AdrenalineDocumentTarget>(["pj", "pnj", "monstre", "relations"]);
 
 /** The contract major the project declares: read from its own dependency, never written down here. */
 export function declaredContractMajor(manifest: { dependencies?: Record<string, string>; devDependencies?: Record<string, string> }): number {

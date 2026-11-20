@@ -1,5 +1,7 @@
 import { renderProse } from "../blocks/proseTags";
 import { metaSourceLine } from "../blocks/schemaValues";
+import { OTHERSCAPE_CHARACTER_PAGES } from "schema-in-the-mist";
+import { renderSessionNotes } from "../blocks/sessionNotes";
 import { BlockZone, renderZones } from "../blocks/shape";
 import { renderTagSpan } from "../blocks/tagSpan";
 import { osZoneLabel } from "../otherscape/labels";
@@ -164,5 +166,9 @@ export function renderOsCharacter(data: OsCharacterData, doc: Document): HTMLEle
 			return cards;
 		},
 	});
+	// The notes page the contract publishes comes last; a blank one draws nothing.
+	const notesPage = OTHERSCAPE_CHARACTER_PAGES.find((page) => "notes_field" in page);
+	const notes = notesPage ? renderSessionNotes(doc, notesPage.label.fr, data.sessionNotes) : null;
+	if (notes) root.appendChild(notes);
 	return root;
 }

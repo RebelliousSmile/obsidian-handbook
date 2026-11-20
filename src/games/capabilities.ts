@@ -53,6 +53,7 @@ export const GAME_PLUGIN_SUPPORT: Readonly<Record<string, GameSupport>> = {
 		blocks: [
 			"block:adrenaline-pj",
 			"block:adrenaline-pnj",
+			"block:adrenaline-relations",
 			"block:adrenaline-monstre",
 		],
 		styles: ["style:adrenaline"],

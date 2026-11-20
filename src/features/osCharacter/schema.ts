@@ -15,6 +15,7 @@ interface OsCharacterDocument {
 	themes?: OsThemeDocument[];
 	tag_combos?: TagComboDocument[];
 	loadout?: LoadoutItemDocument[];
+	session_notes?: string;
 	meta?: SchemaMeta;
 }
 
@@ -66,6 +67,7 @@ export function parseOsCharacterDocument(source: string): OsCharacterData | null
 		tagCombos: readTagCombos(document.tag_combos),
 		loadout: readLoadout(document.loadout),
 	};
+	if (typeof document.session_notes === "string" && document.session_notes.trim() !== "") data.sessionNotes = document.session_notes;
 	const meta = readMeta(document.meta);
 	if (meta) data.meta = meta;
 	return data;
@@ -86,6 +88,7 @@ export function osCharacterToDocument(data: OsCharacterData): OsCharacterDocumen
 			return entry;
 		});
 	}
+	if (data.sessionNotes) document.session_notes = data.sessionNotes;
 	if (data.meta) document.meta = data.meta;
 	return document;
 }

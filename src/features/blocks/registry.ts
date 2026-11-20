@@ -18,6 +18,7 @@ import { osCharacterTropeBlock, osLoadoutItemBlock } from "../osCharacterCreatio
 import { osCharacterBlock } from "../osCharacter/block";
 import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
+import { adrenalineRelationsBlock } from "../adrenalineRelations/block";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { pbtaMoveBlock, pbtaPlaybookBlock } from "../pbta/block";
 import { pbtaNpcBlock } from "../pbta/npc";
@@ -50,6 +51,7 @@ export const BRUMES_BLOCKS: BrumesBlock<unknown>[] = [
 	adrenalinePjBlock,
 	adrenalinePnjBlock,
 	adrenalineMonsterBlock,
+	adrenalineRelationsBlock,
 	pbtaPlaybookBlock,
 	pbtaMoveBlock,
 	pbtaNpcBlock,

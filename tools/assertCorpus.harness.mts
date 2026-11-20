@@ -45,7 +45,7 @@ const CORPUS = join(process.cwd(), "corpus");
 const failures: string[] = [];
 const mistCases = loadMistContractCases();
 const adrenalineCases = loadAdrenalineContractCases();
-const ADRENALINE_BLOCK_IDS = ["adrenaline-pj", "adrenaline-pnj", "adrenaline-monstre"];
+const ADRENALINE_BLOCK_IDS = ["adrenaline-pj", "adrenaline-pnj", "adrenaline-monstre", "adrenaline-relations"];
 const pbtaCases = loadPbtaRenderCases();
 const PBTA_BLOCK_IDS = Object.values(PBTA_TARGET_TO_BLOCK);
 

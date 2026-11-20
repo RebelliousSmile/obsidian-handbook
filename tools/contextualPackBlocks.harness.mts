@@ -39,7 +39,7 @@ class FakeMenu {
 }
 
 const style = { base: { note: {}, workspace: {} }, light: { note: {}, workspace: {} }, dark: { note: {}, workspace: {} } };
-const all = ["block:adrenaline-pj", "block:adrenaline-pnj", "block:adrenaline-monstre"];
+const all = ["block:adrenaline-pj", "block:adrenaline-pnj", "block:adrenaline-monstre", "block:adrenaline-relations"];
 
 function install(requires: string[]): void {
 	initGameRegistry([{
@@ -52,9 +52,9 @@ install(all);
 const settings = normalizeSettings({ mode: "adrenaline" });
 const fullMenu = new FakeMenu();
 const fullEditor = new FakeEditor();
-assert.equal(contributeBlockInsertions(fullMenu as unknown as Menu, fullEditor as unknown as Editor, settings), 3);
-assert.deepEqual(fullMenu.items.map((item) => item.title), ["Fiche PJ Adrenaline", "Fiche PNJ Adrenaline", "Fiche monstre Adrenaline"]);
-assert.deepEqual(fullMenu.items.map((item) => item.icon), ["user-round", "contact-round", "skull"]);
+assert.equal(contributeBlockInsertions(fullMenu as unknown as Menu, fullEditor as unknown as Editor, settings), 4);
+assert.deepEqual(fullMenu.items.map((item) => item.title), ["Fiche PJ Adrenaline", "Fiche PNJ Adrenaline", "Fiche monstre Adrenaline", "Feuille de relations Adrenaline"]);
+assert.deepEqual(fullMenu.items.map((item) => item.icon), ["user-round", "contact-round", "skull", "users-round"]);
 fullMenu.items[0].action?.();
 assert.match(fullEditor.inserted, /^```adrenaline-pj/m);
 
@@ -64,8 +64,8 @@ assert.equal(contributeTomlExports(new FakeMenu() as unknown as Menu, new FakeEd
 install(all.filter((capability) => capability !== "block:adrenaline-pnj"));
 const partialSettings = normalizeSettings({ mode: "adrenaline" });
 const partialMenu = new FakeMenu();
-assert.equal(contributeBlockInsertions(partialMenu as unknown as Menu, new FakeEditor() as unknown as Editor, partialSettings), 2);
-assert.deepEqual(partialMenu.items.map((item) => item.title), ["Fiche PJ Adrenaline", "Fiche monstre Adrenaline"]);
+assert.equal(contributeBlockInsertions(partialMenu as unknown as Menu, new FakeEditor() as unknown as Editor, partialSettings), 3);
+assert.deepEqual(partialMenu.items.map((item) => item.title), ["Fiche PJ Adrenaline", "Fiche monstre Adrenaline", "Feuille de relations Adrenaline"]);
 
 const pnjSource = "```adrenaline-pnj\nnom = \"Absent\"\n```";
 assert.equal(contributeTomlExports(new FakeMenu() as unknown as Menu, new FakeEditor(pnjSource) as unknown as Editor, partialSettings), 0);

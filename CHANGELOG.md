@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.51.0] - 2026-11-20
+
+### Added
+
+- The Adrenaline relationship sheet (schema-adrenaline 6.4.0): the `adrenaline-relations` block draws the published one-page sheet, with its header, the four other-character cards and the ten numbered NPC cards. The attitude modifier is the published level's. The block has its TOML copy command and its `assert:adrenaline-relations` proof.
+- `assert:session-notes`: the session notes the Adrenaline, Otherscape and PbtA sheets carry are read, kept in the copied TOML and never drawn by Handbook.
+
+### Changed
+
+- Handbook adopts schema-pbta 15.0.1 (Urban Shadows move checkbox centring).
+
 ## [2.50.0] - 2026-11-20
 
 ### Removed

@@ -17,7 +17,7 @@ assert.equal(parsed.manifest.version, declared.version, "pack version must come 
 assert.equal(parsed.manifest.pack.id, "adrenaline");
 assert.deepEqual(
 	[...parsed.manifest.requires].sort(),
-	["block:adrenaline-pj", "block:adrenaline-pnj", "block:adrenaline-monstre", "style:adrenaline"].sort(),
+	["block:adrenaline-pj", "block:adrenaline-pnj", "block:adrenaline-monstre", "block:adrenaline-relations", "style:adrenaline"].sort(),
 	"source pack must publish the exact Adrenaline block capabilities",
 );
 

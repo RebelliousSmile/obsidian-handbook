@@ -2,6 +2,7 @@
 @use "./short-sheet";
 @use "./pnj";
 @use "./monstre";
+@use "./relations";
 @use "./callouts";
 @use "./page";
 @use "./content";
@@ -13,6 +14,7 @@
 	@include short-sheet.sheet;
 	@include pnj.sheet;
 	@include monstre.sheet;
+	@include relations.sheet;
 
 	// Callouts
 	@include callouts.global;

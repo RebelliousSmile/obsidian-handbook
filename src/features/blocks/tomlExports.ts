@@ -34,6 +34,8 @@ import { adrenalinePjBlock } from "../adrenalinePj/block";
 import { pjToToml } from "../adrenalinePj/schema";
 import { adrenalinePnjBlock } from "../adrenalinePnj/block";
 import { pnjToToml } from "../adrenalinePnj/schema";
+import { adrenalineRelationsBlock } from "../adrenalineRelations/block";
+import { relationsToToml } from "../adrenalineRelations/schema";
 import { adrenalineMonsterBlock } from "../adrenalineMonstre/block";
 import { monsterToToml } from "../adrenalineMonstre/schema";
 import {
@@ -203,6 +205,14 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		toToml: pnjToToml,
 		sourceIsToml: true,
 		describeFailure: (source) => describeMissingPart(source, "nom is required"),
+	},
+	{
+		block: adrenalineRelationsBlock,
+		commandId: "copy-adrenaline-relations-as-toml",
+		noun: "Adrenaline relations sheet",
+		toToml: relationsToToml,
+		sourceIsToml: true,
+		describeFailure: (source) => describeMissingPart(source, "personnage is required"),
 	},
 	{
 		block: adrenalineMonsterBlock,

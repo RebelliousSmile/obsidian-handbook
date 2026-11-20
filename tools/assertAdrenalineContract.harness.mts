@@ -23,7 +23,7 @@ class El {
 }
 const doc = { createElement: (tag: string) => new El(tag) };
 const text = (element: El): string => element.textContent + element.children.map(text).join("");
-const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre" } as const;
+const blockIds = { pj: "adrenaline-pj", pnj: "adrenaline-pnj", monstre: "adrenaline-monstre", relations: "adrenaline-relations" } as const;
 
 /* The major is read from the dependency the project declares; an upstream minor or patch is adopted without a code change, a lower major is refused, and a higher one is a train ahead of the pin. */
 const declared = declaredContractMajor({ dependencies: { "schema-adrenaline": "https://example.test/releases/download/v7.1.0/schema-adrenaline-7.1.0.tgz" } });
@@ -72,7 +72,7 @@ for (const entry of cases) {
 	assert.notEqual(reread, null, `${entry.path}: Handbook export rereads`);
 	assert.equal(text(block.render(reread, doc as unknown as Document) as unknown as El), before, `${entry.path}: rendering is stable`);
 }
-assert.deepEqual(new Set(cases.map((entry) => entry.target)), new Set(["pj", "pnj", "monstre"]));
+assert.deepEqual(new Set(cases.map((entry) => entry.target)), new Set(["pj", "pnj", "monstre", "relations"]));
 const pjSource = readFileSync("node_modules/schema-adrenaline/examples/adrenaline/pj/survivante-complete.toml", "utf8");
 const pjBlock = BRUMES_BLOCKS.find((entry) => entry.id === "adrenaline-pj");
 assert.ok(pjBlock);

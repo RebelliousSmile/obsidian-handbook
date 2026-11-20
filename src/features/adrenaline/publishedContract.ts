@@ -1,6 +1,7 @@
 import monstreSchema from "schema-adrenaline/schemas/monstre.schema.json";
 import pjSchema from "schema-adrenaline/schemas/pj.schema.json";
 import pnjSchema from "schema-adrenaline/schemas/pnj.schema.json";
+import relationsSchema from "schema-adrenaline/schemas/relations.schema.json";
 import { logScope } from "../../utils/logger";
 
 /**
@@ -10,7 +11,7 @@ import { logScope } from "../../utils/logger";
  * contract refuses. Nothing is restated here, so a contract that moves is
  * followed and one that has not moved yet is not anticipated.
  */
-export type AdrenalineSheet = "pj" | "pnj" | "monstre";
+export type AdrenalineSheet = "pj" | "pnj" | "monstre" | "relations";
 
 /** The part of JSON Schema (draft 7) the published schemas use, and a little more so that a contract that moves is still read. */
 interface JsonSchema {
@@ -40,6 +41,7 @@ const SCHEMAS: Record<AdrenalineSheet, JsonSchema> = {
 	pj: pjSchema,
 	pnj: pnjSchema as unknown as JsonSchema,
 	monstre: monstreSchema as unknown as JsonSchema,
+	relations: relationsSchema,
 };
 const log = logScope("Adrenaline");
 
@@ -61,6 +63,12 @@ export function publishedEquipmentKeys(sheet: AdrenalineSheet): string[] {
 export function publishedAsList(sheet: AdrenalineSheet, pointer: string): boolean {
 	const found = pointer.slice(1).split("/").reduce<JsonSchema | undefined>((schema, key) => schema?.properties?.[key], SCHEMAS[sheet]);
 	return found?.type === "array";
+}
+
+/** How many items the contract lets a list hold (`maxItems`), by JSON pointer; undefined when it publishes no bound. A sheet prints that many slots. */
+export function publishedMaxItems(sheet: AdrenalineSheet, pointer: string): number | undefined {
+	const found = pointer.slice(1).split("/").reduce<JsonSchema | undefined>((schema, key) => schema?.properties?.[key], SCHEMAS[sheet]);
+	return found?.type === "array" ? found.maxItems : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

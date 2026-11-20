@@ -1,7 +1,8 @@
-import { PJ_PRESENTATION, type AdrenalinePresentationBlock, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
+import { PJ_PRESENTATION, type AdrenalinePresentationBlock, type AdrenalinePresentationPage, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
 import { adrenalineSourceDocument, asRecord, readCurrentValue, type AdrenalineDocument, type Competence, type EquipmentWeapon, type Formation } from "../adrenaline/document";
 import { publishedAsList } from "../adrenaline/publishedContract";
 import { renderZones } from "../blocks/shape";
+import { renderSessionNotes } from "../blocks/sessionNotes";
 import { logScope } from "../../utils/logger";
 import { AdrenalinePjData } from "./parser";
 import { pjToDocument } from "./schema";
@@ -565,5 +566,10 @@ export function renderAdrenalinePj(data: AdrenalinePjData, doc: Document): HTMLE
 	const builders: Record<string, () => HTMLElement | null> = {};
 	for (const section of PJ_PRESENTATION.sections) builders[section.id] = () => renderSection(doc, section, data, source);
 	renderZones(root, adrenalinePjShape, builders);
+	// The notes page the contract publishes comes last, drawn from the field it names; a blank one draws nothing.
+	const pages: readonly AdrenalinePresentationPage[] = PJ_PRESENTATION.pages;
+	const notesPage = pages.find((page) => page.notesPath);
+	const notes = notesPage?.notesPath ? renderSessionNotes(doc, notesPage.label.fr, at(source, notesPage.notesPath)) : null;
+	if (notes) root.appendChild(notes);
 	return root;
 }

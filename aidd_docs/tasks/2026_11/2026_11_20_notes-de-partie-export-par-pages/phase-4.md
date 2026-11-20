@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Instruction: Page « Notes de partie » sur la fiche Adrenaline PJ

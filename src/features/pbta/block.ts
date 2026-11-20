@@ -1,4 +1,5 @@
 import {
+	getPbtaPlaybookPages,
 	parseMoveToml,
 	stringifyMoveToml,
 	type MasksPlaybook,
@@ -7,6 +8,7 @@ import {
 	type TheSprawlPlaybook,
 	type UrbanShadowsPlaybook,
 } from "schema-pbta";
+import { renderSessionNotes } from "../blocks/sessionNotes";
 import type { BrumesBlock } from "../blocks/types";
 import { renderPbtaMove, renderPbtaPlaybook } from "./renderer";
 import { renderMasksLayout } from "./masksLayout";
@@ -49,7 +51,12 @@ export const pbtaPlaybookBlock: BrumesBlock<ResolvedPbtaPlaybook> = {
 	parse: parsePbtaPlaybookToml,
 	render: (data, doc, context) => {
 		const layout = context?.packId ? PLAYBOOK_LAYOUTS[context.packId]?.[data.target] : undefined;
-		return layout ? layout(data, doc, context?.resolveImage) : renderPbtaPlaybook(data, doc);
+		const sheet = layout ? layout(data, doc, context?.resolveImage) : renderPbtaPlaybook(data, doc);
+		// The notes page the pack publishes for this target comes last; a blank one draws nothing.
+		const notesPage = getPbtaPlaybookPages(data.target)?.find((page) => page.notes_field);
+		const notes = notesPage ? renderSessionNotes(doc, notesPage.label.fr, data.data.sessionNotes) : null;
+		if (notes) sheet.appendChild(notes);
+		return sheet;
 	},
 	template: (settings) => `\`\`\`pbta-playbook\nslug = "new-playbook"\nname = "New playbook"\ngame = "${settings.mode}"\ndescription = "Describe this playbook."\nmoves = []\n\n[stats]\n\`\`\`\n`,
 };

@@ -25,6 +25,8 @@ export interface OsCharacterData {
 	themes: OsThemeData[];
 	tagCombos: OsTagCombo[];
 	loadout: OsCharacterLoadoutItem[];
+	/** The player's own page, kept as typed: it is theirs to fill and to empty. */
+	sessionNotes?: string;
 	meta?: SchemaMeta;
 }
 
