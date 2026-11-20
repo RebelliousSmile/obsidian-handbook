@@ -1,3 +1,7 @@
+---
+status: implemented
+---
+
 # External bundled fonts (#40)
 
 1. Extract each embedded face from the licensed SCSS into WOFF2 files and a declarative stylesheet per game. Preserve family, weight, style, display and Unicode range. Carry the upstream font notices with the assets.

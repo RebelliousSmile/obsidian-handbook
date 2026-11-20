@@ -1,6 +1,6 @@
 ---
 objective: "Sur la fiche PJ Adrenaline (mode values-handwritten), le nom des compétences et le nom de formation saisis par le joueur s'écrivent en manuscrit, dans Handbook comme dans Lantern ; le tableau des armes sociales reste imprimé."
-status: pending
+status: implemented
 ---
 
 # Plan: Noms de compétences et de formation en manuscrit (#118)

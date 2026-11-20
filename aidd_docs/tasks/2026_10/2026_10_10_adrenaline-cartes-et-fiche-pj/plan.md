@@ -1,6 +1,6 @@
 ---
 objective: "Les cartes compactes PNJ et créature d'Adrenaline suivent la maquette, la fiche PJ suit la fiche papier à jour, et chaque écart est porté par le contrat publié avant d'être dessiné par Lantern et Handbook."
-status: pending
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->

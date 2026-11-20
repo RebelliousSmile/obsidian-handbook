@@ -1,6 +1,6 @@
 ---
 objective: "La fiche PJ Zombiology se rend fidèlement à pj.jpg dans Handbook et dans Lantern, à partir d'un schema-adrenaline publié, sans colonnes imposées aux notes, et les traces intermédiaires sont supprimées après validation."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Fiche PJ Zombiology fidèle à sa maquette, via le superviseur

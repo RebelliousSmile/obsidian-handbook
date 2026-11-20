@@ -1,6 +1,6 @@
 ---
 objective: "The three Zombiology sheets load and match approved references in isolated Obsidian, consume only a canonical published Adrenaline presentation contract, and pass rendering, capability, TOML, and frozen-install proofs."
-status: blocked
+status: implemented
 ---
 
 # Plan: Reprendre et valider les fiches Zombiology

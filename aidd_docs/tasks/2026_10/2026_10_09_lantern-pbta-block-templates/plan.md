@@ -1,6 +1,6 @@
 ---
 objective: "Chaque bloc déclaré par un pack PbtA (Sprawl, Monster of the Week, Masks) a son modèle Lantern, listé sous le pack dans la barre latérale."
-status: pending
+status: implemented
 ---
 
 # Plan: Modèles de bloc PbtA dans Lantern (lantern#58)

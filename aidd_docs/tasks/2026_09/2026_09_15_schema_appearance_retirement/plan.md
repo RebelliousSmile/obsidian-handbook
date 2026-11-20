@@ -1,6 +1,6 @@
 ---
 objective: "Handbook owns the complete, validated GamePack contract and schema-appearance becomes an archived compatibility record rather than a live schema repository."
-status: done
+status: implemented
 ---
 
 # Plan: Migration explicite de schema-appearance

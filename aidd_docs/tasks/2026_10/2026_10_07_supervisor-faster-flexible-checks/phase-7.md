@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 ---
 
 # Instruction: Skill ship-train, documentation et mémoire alignées
@@ -120,7 +120,7 @@ journey
 | 2 | faite | `references/bounds.md` : sections « Validation scripts » et « Supervisor code », limites de boucle inchangées |
 | 3 | faite | `actions/05-ship.md`, `actions/06-repair.md`, `references/supervisor.md`, `SKILL.md`, `evals/ship-train-scenarios.md` (S5 réécrit, S18 à S23 ajoutés) |
 | 4 | faite | `doc/supervisor.fr.md` (cinq passages), `CLAUDE.md` (deux règles), `ci-and-release.md`, `supervisor-windows.md` |
-| 5 | en attente | un train réel livré après ces phases |
+| 5 | faite le 2026-11-09 | mesure inscrite au tableau Decisions du plan |
 
 Écarts et constats :
 
@@ -130,7 +130,7 @@ journey
 - La skill vit hors de tout dépôt (`~/.claude/skills/ship-train/`) : ses changements ne sont dans aucun commit.
 - Le harnais du superviseur compare l'état du checkout avant et après son passage : éditer un fichier suivi pendant `pnpm check` le fait rougir sur « the harness left files in the Handbook checkout ».
 
-Le `status` reste `pending` jusqu'à la tâche 5.
+
 
 ## Test acceptance criteria
 
@@ -144,3 +144,10 @@ Le `status` reste `pending` jusqu'à la tâche 5.
 | 3 | Chaque nouvelle classe a un cas d'évaluation, et tous les cas passent. |
 | 4 | `doc/supervisor.fr.md` ne décrit aucun comportement que le code n'a plus ; `pnpm check` passe. |
 | 5 | Le plan porte le nombre de cycles et leurs durées pour le train de mesure, face à ceux du dernier train PbtA. |
+
+## Relevé (2026-11-09)
+
+- Tâche 5 faite : mesure au tableau Decisions du plan.
+- `doc/supervisor.en.md` ne dit plus « by a person » et décrit `--fresh` : l’écart du relevé précédent est fermé.
+- `--fresh` et la reprise des preuves (`reused`) ajoutés à `references/supervisor.md` de la skill.
+- Cas d’évaluation joués le 2026-11-09 par un agent indépendant, à sec : 20/23, puis 22/23, puis 23/23 après correction de la skill (`evals/ship-train-scenarios.md`, section Results log). Le critère de la tâche 3 est tenu.

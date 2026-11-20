@@ -1,6 +1,6 @@
 ---
 objective: "Monsterhearts playbooks use a compact, recognisable editorial layout and pack-published typography without changing their schema data or affecting other PbtA packs."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Give PbtA playbooks a Monsterhearts editorial layout

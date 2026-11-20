@@ -1,6 +1,6 @@
 ---
 objective: "Dans le coffre Otherscape, la variante Cairo reproduit ses maquettes de `_sources/Design` en clair comme en sombre (typographie condensée, fond texturé, titres à bandeau, encarts, cartes), et les règles propres aux variantes de Handbook s'appliquent."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Otherscape — rendre aux variantes leur design (Cairo d'abord)

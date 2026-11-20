@@ -1,6 +1,6 @@
 ---
 objective: "Une retouche faite dans schema-in-the-mist, schema-pbta ou schema-adrenaline se voit dans un coffre Obsidian de test par une seule commande, sans release, tag ni changement de pin Handbook."
-status: in-progress
+status: implemented
 ---
 
 # Plan: boucle locale commune `dev:schema`

@@ -1,6 +1,6 @@
 ---
 objective: "L'issue schema-adrenaline#40 est fermée sur preuves : chaque critère d'acceptation est vérifié au rendu, et les écarts réels restants (retrait des listes, filet de h4, preuves manquantes) sont corrigés par un train du superviseur."
-status: closed-on-audit
+status: implemented
 ---
 
 # Plan: Clore schema-adrenaline#40 (callouts, titres et listes Zombiology)

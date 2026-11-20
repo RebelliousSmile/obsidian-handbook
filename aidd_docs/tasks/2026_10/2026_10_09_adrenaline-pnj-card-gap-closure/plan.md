@@ -1,6 +1,6 @@
 ---
 objective: "L'issue schema-adrenaline#41 est fermée sur preuves : les cinq questions ouvertes sont tranchées, chaque critère d'acceptation est vérifié au rendu de l'exemple « Agent de sécurité », et les écarts réels restants sont corrigés par un train du superviseur."
-status: pending
+status: implemented
 ---
 
 # Plan: Clore schema-adrenaline#41 (fiche PNJ Zombiology)

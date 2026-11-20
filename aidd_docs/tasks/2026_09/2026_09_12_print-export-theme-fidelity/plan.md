@@ -1,6 +1,6 @@
 ---
 objective: "Les exports PDF préservent le style et la polarité active de chaque pack, dont les règles propres sont fournies par son schéma après Handbook."
-status: pending
+status: implemented
 ---
 
 # Plan: Fidélité des exports et contrat CSS des packs

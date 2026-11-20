@@ -1,6 +1,6 @@
 ---
 objective: "An Urban Shadows vault renders dark sections, a blank character booklet, headings and callouts like the Urban Shadows 2E core book, from a contract and an appearance published by schema-pbta."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Urban Shadows 2E — sections sombres, livret de PJ, titres et callouts

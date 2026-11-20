@@ -1,6 +1,6 @@
 ---
 objective: "L'issue schema-adrenaline#42 est fermée sur preuves : les six questions ouvertes sont tranchées, chaque critère d'acceptation est vérifié au rendu de l'exemple « Infecté Zy-2 », et les écarts réels restants sont corrigés par un train du superviseur."
-status: pending
+status: implemented
 ---
 
 # Plan: Clore schema-adrenaline#42 (fiche monstre Zombiology)
