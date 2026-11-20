@@ -15,7 +15,9 @@
 			"url": "https://github.com/RebelliousSmile/schema-pbta/issues/53",
 			"title": "Publish schema-pbta 15.0.1 (Urban Shadows move checkbox centring)",
 			"baseSha": "208fcb54acf1b3811acd9f7c51747bf98650fc30",
-			"dependsOn": ["schema-adrenaline"],
+			"dependsOn": [
+				"schema-adrenaline"
+			],
 			"expectedEvidence": [
 				"closing commit on origin/main",
 				"contract corpus and codecs updated for the change"
@@ -66,13 +68,10 @@
 	],
 	"publication": {},
 	"presentation": {
-		"presentedAt": "2026-11-20T19:00:03.277Z",
-		"presentable": false,
-		"reasons": [
-			"lantern: with the package of schema-pbta and schema-adrenaline as installed, `npm run typecheck` exited 2, which is what the proof of schema-pbta meets when schema-pbta is published before schema-adrenaline; if schema-pbta needs the new package of one of them, add it to the `dependsOn` of the schema-pbta item of train feuille-relations (`pnpm supervise link --depends-on`), then present again (whole output: lantern-2-order-1.log)",
-			"obsidian-handbook: with the package of schema-pbta and schema-adrenaline as installed, `pnpm check` exited 1, which is what the proof of schema-pbta meets when schema-pbta is published before schema-adrenaline; if schema-pbta needs the new package of one of them, add it to the `dependsOn` of the schema-pbta item of train feuille-relations (`pnpm supervise link --depends-on`), then present again (whole output: obsidian-handbook-1-order-1.log)"
-		],
-		"digest": "sha256:cd44ae3b3dda2d2389b3d78f47e5248049eb16b5d510afa719af4a7535cb8aa1",
+		"presentedAt": "2026-11-20T19:05:03.332Z",
+		"presentable": true,
+		"reasons": [],
+		"digest": "sha256:d48da427a416c31f105da6415896a6870b27767667dcf65620e874e9219faaee",
 		"repos": [
 			{
 				"repo": "schema-pbta",
@@ -1127,7 +1126,8 @@
 						],
 						"status": 0,
 						"tail": "npm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 118033
+						"durationMs": 118033,
+						"reused": "2026-11-20T18:56:10.714Z"
 					}
 				],
 				"evidence": {
@@ -1160,7 +1160,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 lint\n> eslint .\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 6564
+						"durationMs": 6435
 					},
 					{
 						"command": [
@@ -1170,7 +1170,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 typecheck\n> tsc -b\n\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 14299
+						"durationMs": 14293
 					},
 					{
 						"command": [
@@ -1180,7 +1180,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:release-train\n> node tools/release-train-protocol.harness.mjs\n\nRelease-train protocol-1 and protocol-2 consumer proofs verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 578
+						"durationMs": 607
 					},
 					{
 						"command": [
@@ -1190,7 +1190,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:release-identity\n> node tools/assert-release-identity.mjs && node tools/release-identity.harness.mjs\n\nRelease metadata verified for v0.34.0.\nRelease identity fixtures verified.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 510
+						"durationMs": 506
 					},
 					{
 						"command": [
@@ -1200,7 +1200,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:release-train-matrix:unit\n> node tools/release-train-matrix.harness.mjs\n\nRelease train matrix covers 31 real manifests and rejects mutable, duplicate, or fixture inputs.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 436
+						"durationMs": 422
 					},
 					{
 						"command": [
@@ -1210,7 +1210,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:consumer-schema-pins:unit\n> node tools/consumer-schema-pins.harness.mjs\n\nConsumer pin checks reject candidate URLs, lock drift, redirects, and wrong published bytes.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 425
+						"durationMs": 442
 					},
 					{
 						"command": [
@@ -1219,8 +1219,8 @@
 							"assert:workspace"
 						],
 						"status": 0,
-						"tail": "\n> lantern@0.34.0 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:166589:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:166104:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:166246:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:29265:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:166240:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:166326:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-RKpzyY/workspace.mjs:166591:31",
-						"durationMs": 1949
+						"tail": "\n> lantern@0.34.0 assert:workspace\n> node tools/assert-workspace.mjs\n\nWorkspace migrations and game-pack preferences covered.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nWorkspace persistence failed: Error: Quota exceeded\n    at window.localStorage.setItem (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:166589:9)\n    at persistSnapshot (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:166104:25)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:166246:36\n    at setState (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:29265:60)\n    at setAndPersist (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:166240:9)\n    at Object.updateTabDoc (file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:166326:11)\n    at file:///C:/Users/fxgui/AppData/Local/Temp/lantern-workspace-5khTD8/workspace.mjs:166591:31",
+						"durationMs": 1960
 					},
 					{
 						"command": [
@@ -1230,7 +1230,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:block-templates\n> node tools/assert-block-templates.mjs\n\nmasks.npc: masks-npc ok (8 regions)\nthe-sprawl.mission: the-sprawl-mission ok (9 regions)\nthe-sprawl.threat: the-sprawl-threat ok (4 regions)\nthe-sprawl.resource: the-sprawl-resource ok (3 regions)\nthe-sprawl.corporation: the-sprawl-corporation ok (5 regions)\nthe-sprawl.matrix: the-sprawl-matrix ok (5 regions)\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 2071
+						"durationMs": 2096
 					},
 					{
 						"command": [
@@ -1240,7 +1240,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:adrenaline-examples\n> node tools/assert-adrenaline-examples.mjs\n\nassert:adrenaline-examples: 4 templates start from a published example\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 416
+						"durationMs": 411
 					},
 					{
 						"command": [
@@ -1250,7 +1250,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:adrenaline-coverage\n> node tools/assert-adrenaline-coverage.mjs\n\nassert:adrenaline-coverage: 42 published forms drawn across 4 sheets, 23 layout properties read, 3 card tokens read, 55 document keys named by an editor\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 557
+						"durationMs": 580
 					},
 					{
 						"command": [
@@ -1260,7 +1260,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:adrenaline-pj\n> node tools/assert-adrenaline-pj.mjs\n\nassert:adrenaline-pj: round trips lossless; 100 of 101 schema leaves have a field (1 declared not editable); the nature selector offers and shows 2 natures; typing through the panels writes the key each field names; 1870 PJ fields used, 249 PNJ fields used, 203 creature fields used, each written to a declared path and exported without error\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 28136
+						"durationMs": 28119
 					},
 					{
 						"command": [
@@ -1270,7 +1270,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:presentation-coverage\n> node tools/assert-presentation-coverage.mjs\n\ncovered: masks/npc, masks/playbook, monsterhearts/playbook, the-sprawl/corporation, the-sprawl/matrix, the-sprawl/mission, the-sprawl/resource, the-sprawl/threat, the-sprawl/playbook, urban-shadows/playbook\nnote: monsterhearts: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"game-identity\" is in no row (fallback \"unplaced\")\nnote: urban-shadows: region \"urban-shadows-creation\" is in no row (fallback \"unplaced\")\npresentation coverage: every published playbook region is drawn and editable, every published block has its template\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 449
+						"durationMs": 426
 					},
 					{
 						"command": [
@@ -1280,7 +1280,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:pbta-playbook-styles\n> node tools/assert-pbta-playbook-styles.mjs\n\nPbtA playbook styles assertions passed.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 2035
+						"durationMs": 2012
 					},
 					{
 						"command": [
@@ -1290,7 +1290,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:template-exports\n> node tools/assert-template-exports.mjs\n\n31 templates: TOML and PNG proofs ok\npreview drawn in the browser pass only: city.customMove\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 2399
+						"durationMs": 2419
 					},
 					{
 						"command": [
@@ -1300,7 +1300,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:export-pages\n> node tools/assert-export-pages.mjs\n\n7 template(s) declaring pages: page, choice, archive and PDF proofs ok\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 2366
+						"durationMs": 2297
 					},
 					{
 						"command": [
@@ -1310,7 +1310,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:pbta-notes\n> node tools/assert-pbta-notes.mjs\n\n5 PbtA booklet(s): published pages, notes in the TOML, none without them, one notes page\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 2183
+						"durationMs": 2194
 					},
 					{
 						"command": [
@@ -1320,7 +1320,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:otherscape-fields\n> node tools/assert-otherscape-fields.mjs\n\nassert:otherscape-fields: 6 samples and 6 corpus files round trip through the schema; description, Special, rating, optional rating, tags and statuses, pages and the character sheet are read; 6 refused corpus files are refused; half-done edits are not written\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 900
+						"durationMs": 841
 					},
 					{
 						"command": [
@@ -1330,7 +1330,7 @@
 						],
 						"status": 0,
 						"tail": "\n> lantern@0.34.0 assert:editor-literals\n> node tools/assert-editor-literals.mjs\n\nEditor literals ok: 200 editor files, 3 allow-listed.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.",
-						"durationMs": 472
+						"durationMs": 465
 					},
 					{
 						"command": [
@@ -1339,17 +1339,25 @@
 							"assert:template-chunks"
 						],
 						"status": 0,
-						"tail": "\u001b[2mdist/\u001b[22m\u001b[36massets/definition-DWPKsbGE.js                                            \u001b[39m\u001b[1m\u001b[2m   46.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  10.59 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/definition-CEW52d7_.js                                            \u001b[39m\u001b[1m\u001b[2m   64.96 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  14.33 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/index-DU3-gsUO.js                                                 \u001b[39m\u001b[1m\u001b[2m  373.11 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip: 100.35 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/vendor-CskX2UMT.js                                                \u001b[39m\u001b[1m\u001b[33m1,516.88 kB\u001b[39m\u001b[22m\u001b[2m │ gzip: 404.93 kB\u001b[22m\n\u001b[32m✓ built in 7.47s\u001b[39m\nTemplate chunks verified: 373110 byte entry, 31 lazy modules, 61 served JavaScript files, 6 served assets.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\u001b[33mnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\u001b[39m\n\u001b[33m\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\u001b[39m",
-						"durationMs": 25862
+						"tail": "\u001b[2mdist/\u001b[22m\u001b[36massets/definition-DWPKsbGE.js                                            \u001b[39m\u001b[1m\u001b[2m   46.53 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  10.59 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/definition-CEW52d7_.js                                            \u001b[39m\u001b[1m\u001b[2m   64.96 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip:  14.33 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/index-DU3-gsUO.js                                                 \u001b[39m\u001b[1m\u001b[2m  373.11 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip: 100.35 kB\u001b[22m\n\u001b[2mdist/\u001b[22m\u001b[36massets/vendor-CskX2UMT.js                                                \u001b[39m\u001b[1m\u001b[33m1,516.88 kB\u001b[39m\u001b[22m\u001b[2m │ gzip: 404.93 kB\u001b[22m\n\u001b[32m✓ built in 7.28s\u001b[39m\nTemplate chunks verified: 373110 byte entry, 31 lazy modules, 61 served JavaScript files, 6 served assets.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-concurrent-requests\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"max-socket\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"onlybuiltdependencies\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"store-dir\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"symlink\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\nnpm warn Unknown env config \"verify-deps-before-run\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.\n\u001b[33mnode_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js (74:0): A comment\n\n\"/** Anchors a pattern source. The interpolation lives here rather than at the call site because\n * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it\n * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */\"\n\nin \"node_modules/.pnpm/zod@4.6.5/node_modules/zod/v4/core/regexes.js\" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.\u001b[39m\n\u001b[33m\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\u001b[39m",
+						"durationMs": 25621
 					}
-				]
+				],
+				"evidence": {
+					"key": "00fdcfdf7b5d026d936e9a8d55107ff8fb9e8521dd50276a0c825a38712482e6",
+					"provedAt": "2026-11-20T19:04:03.753Z"
+				}
 			},
 			{
 				"repo": "obsidian-handbook",
 				"role": "coordinator",
-				"sha": "f0a947651caff4864708daa4b5a3d96bdc5369b1",
+				"sha": "dca4e01b8ee860fec9099fbcbd4acbf18b26aaa1",
 				"baseSha": "8a92c04c16a744b29211b223467ca055cc5e32cd",
 				"commits": [
+					{
+						"sha": "dca4e01b8ee860fec9099fbcbd4acbf18b26aaa1",
+						"subject": "chore(train): publish schema-adrenaline before schema-pbta in feuille-relations"
+					},
 					{
 						"sha": "f0a947651caff4864708daa4b5a3d96bdc5369b1",
 						"subject": "chore(train): record the feuille-relations presentation"
@@ -1367,7 +1375,7 @@
 						"subject": "feat(adrenaline): draw the relationship sheet and read the session notes"
 					}
 				],
-				"diffstat": "CHANGELOG.md                                       |   11 +\n .../phase-1.md                                     |   78 +\n .../phase-2.md                                     |  104 ++\n .../phase-3.md                                     |   88 +\n .../phase-4.md                                     |   77 +\n .../plan.md                                        |   42 +\n .../phase-3.md                                     |    2 +-\n .../phase-4.md                                     |    2 +-\n .../phase-6.md                                     |    2 +-\n .../plan.md                                        |    6 +-\n .../2026_11_20_notes-de-partie-suites/phase-1.md   |   99 +\n .../2026_11_20_notes-de-partie-suites/phase-2.md   |   82 +\n .../2026_11_20_notes-de-partie-suites/phase-3.md   |   84 +\n .../2026_11_20_notes-de-partie-suites/phase-4.md   |   84 +\n .../2026_11_20_notes-de-partie-suites/plan.md      |   51 +\n manifest.json                                      |    2 +-\n package.json                                       |    4 +-\n src/features/adrenaline/publishedContract.ts       |   10 +-\n src/features/adrenalinePj/renderer.ts              |    8 +-\n src/features/adrenalineRelations/block.ts          |   16 +\n src/features/adrenalineRelations/parser.ts         |   38 +\n src/features/adrenalineRelations/renderer.ts       |  258 +++\n src/features/adrenalineRelations/schema.ts         |  114 ++\n src/features/adrenalineRelations/shape.ts          |   14 +\n src/features/adrenalineRelations/template.ts       |   18 +\n src/features/blocks/registry.ts                    |    2 +\n src/features/blocks/sessionNotes.ts                |   25 +\n src/features/blocks/tomlExports.ts                 |   10 +\n src/features/osCharacter/parser.ts                 |    2 +\n src/features/osCharacter/renderer.ts               |    6 +\n src/features/osCharacter/schema.ts                 |    3 +\n src/features/pbta/block.ts                         |    9 +-\n src/features/printPageBreaks/index.ts              |    1 +\n src/games/capabilities.ts                          |    1 +\n src/styles/_session-notes.scss                     |   18 +\n src/styles/adrenaline/_relations.scss              |  234 +++\n src/styles/adrenaline/index.scss                   |    2 +\n src/styles/styles.scss                             |    1 +\n supervisor/trains/feuille-relations.json           | 1407 ++++++++++++++\n supervisor/trains/notes-de-partie.json             | 1956 ++++++++++++++++++++\n tools/adrenalineContractCorpus.mts                 |    2 +-\n tools/assert-adrenaline-contract.mjs               |    2 +-\n tools/assert-adrenaline-relations.mjs              |   16 +\n tools/assert-session-notes.mjs                     |   16 +\n tools/assertAdrenalineContract.harness.mts         |    4 +-\n tools/assertAdrenalineRelations.harness.mts        |  107 ++\n tools/assertAdrenalineSource.harness.mts           |    2 +-\n tools/assertAdrenalineTheme.harness.mts            |    4 +-\n tools/assertCorpus.harness.mts                     |    2 +-\n tools/assertSessionNotes.harness.mts               |  118 ++\n tools/contextualPackBlocks.harness.mts             |   12 +-\n tools/customPacks.harness.mts                      |    1 +\n versions.json                                      |    3 +-\n 53 files changed, 5237 insertions(+), 23 deletions(-)",
+				"diffstat": "CHANGELOG.md                                       |   11 +\n .../phase-1.md                                     |   78 +\n .../phase-2.md                                     |  104 ++\n .../phase-3.md                                     |   88 +\n .../phase-4.md                                     |   77 +\n .../plan.md                                        |   42 +\n .../phase-3.md                                     |    2 +-\n .../phase-4.md                                     |    2 +-\n .../phase-6.md                                     |    2 +-\n .../plan.md                                        |    6 +-\n .../2026_11_20_notes-de-partie-suites/phase-1.md   |   99 +\n .../2026_11_20_notes-de-partie-suites/phase-2.md   |   82 +\n .../2026_11_20_notes-de-partie-suites/phase-3.md   |   84 +\n .../2026_11_20_notes-de-partie-suites/phase-4.md   |   84 +\n .../2026_11_20_notes-de-partie-suites/plan.md      |   51 +\n manifest.json                                      |    2 +-\n package.json                                       |    4 +-\n src/features/adrenaline/publishedContract.ts       |   10 +-\n src/features/adrenalinePj/renderer.ts              |    8 +-\n src/features/adrenalineRelations/block.ts          |   16 +\n src/features/adrenalineRelations/parser.ts         |   38 +\n src/features/adrenalineRelations/renderer.ts       |  258 +++\n src/features/adrenalineRelations/schema.ts         |  114 ++\n src/features/adrenalineRelations/shape.ts          |   14 +\n src/features/adrenalineRelations/template.ts       |   18 +\n src/features/blocks/registry.ts                    |    2 +\n src/features/blocks/sessionNotes.ts                |   25 +\n src/features/blocks/tomlExports.ts                 |   10 +\n src/features/osCharacter/parser.ts                 |    2 +\n src/features/osCharacter/renderer.ts               |    6 +\n src/features/osCharacter/schema.ts                 |    3 +\n src/features/pbta/block.ts                         |    9 +-\n src/features/printPageBreaks/index.ts              |    1 +\n src/games/capabilities.ts                          |    1 +\n src/styles/_session-notes.scss                     |   18 +\n src/styles/adrenaline/_relations.scss              |  234 +++\n src/styles/adrenaline/index.scss                   |    2 +\n src/styles/styles.scss                             |    1 +\n supervisor/trains/feuille-relations.json           | 1422 ++++++++++++++\n supervisor/trains/notes-de-partie.json             | 1956 ++++++++++++++++++++\n tools/adrenalineContractCorpus.mts                 |    2 +-\n tools/assert-adrenaline-contract.mjs               |    2 +-\n tools/assert-adrenaline-relations.mjs              |   16 +\n tools/assert-session-notes.mjs                     |   16 +\n tools/assertAdrenalineContract.harness.mts         |    4 +-\n tools/assertAdrenalineRelations.harness.mts        |  107 ++\n tools/assertAdrenalineSource.harness.mts           |    2 +-\n tools/assertAdrenalineTheme.harness.mts            |    4 +-\n tools/assertCorpus.harness.mts                     |    2 +-\n tools/assertSessionNotes.harness.mts               |  118 ++\n tools/contextualPackBlocks.harness.mts             |   12 +-\n tools/customPacks.harness.mts                      |    1 +\n versions.json                                      |    3 +-\n 53 files changed, 5252 insertions(+), 23 deletions(-)",
 				"linkedProviders": [
 					"schema-adrenaline",
 					"schema-pbta"
@@ -1379,10 +1387,14 @@
 							"check"
 						],
 						"status": 0,
-						"tail": "\n> obsidian-handbook@2.51.0 assert:style-scope C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-style-scope.mjs\n\ngame styles stay inside notes and rendered block scopes\n\n> check: assert:tag-widget\n\n> obsidian-handbook@2.51.0 assert:tag-widget C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-tag-widget.mjs\n\nTag syntax stays active and its widget creates a detached span.\n\n> check: assert:urban-shadows-layout\n\n> obsidian-handbook@2.51.0 assert:urban-shadows-layout C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/assert-urban-shadows-layout.mjs\n\nUrban Shadows layout assertions passed.\n\n> check: assert:supervisor skipped, the supervisor and its harness are unchanged since a green run (HANDBOOK_CHECK_FORCE=1 to replay)\n\nHandbook core check passed.\n[Brumes:Games] Could not migrate game plugins to \".config-obsidian/handbook/packs\"; the legacy source is left untouched. Error: planned copy failure\n    at Object.copy (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-DmOIUh\\harness.cjs:223:37)\n    at copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-DmOIUh\\harness.cjs:110:19)\n    at async copyDirectory (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-DmOIUh\\harness.cjs:106:5)\n    at async migratePacks (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-DmOIUh\\harness.cjs:120:5)\n    at async prepareGameStorage (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-DmOIUh\\harness.cjs:161:5)\n    at async run (C:\\Users\\fxgui\\AppData\\Local\\Temp\\handbook-game-storage-DmOIUh\\harness.cjs:306:5)",
-						"durationMs": 63309
+						"tail": "\n> obsidian-handbook@2.51.0 check C:\\Users\\fxgui\\Documents\\Code\\Perso\\obsidian\\obsidian-handbook\n> node tools/check.mjs\n\n\ncheck: this exact content already passed; nothing replayed (HANDBOOK_CHECK_FORCE=1 to replay).",
+						"durationMs": 786
 					}
-				]
+				],
+				"evidence": {
+					"key": "cc2e76d6f8574740cf8cbdce2c27d5c26e4a0175d30e4bd9737f4e51bbdf77b3",
+					"provedAt": "2026-11-20T19:05:02.096Z"
+				}
 			}
 		],
 		"trainFiles": {
