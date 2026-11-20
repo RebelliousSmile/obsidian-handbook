@@ -1,0 +1,68 @@
+{
+	"$schema": "../train.schema.json",
+	"id": "feuille-relations",
+	"title": "Adrenaline relationship sheet, session notes follow-ups and provider releases",
+	"status": "open",
+	"coordinationIssue": {
+		"repo": "obsidian-handbook",
+		"number": 140,
+		"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/140"
+	},
+	"items": [
+		{
+			"repo": "schema-pbta",
+			"issue": 53,
+			"url": "https://github.com/RebelliousSmile/schema-pbta/issues/53",
+			"title": "Publish schema-pbta 15.0.1 (Urban Shadows move checkbox centring)",
+			"baseSha": "208fcb54acf1b3811acd9f7c51747bf98650fc30",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "schema-adrenaline",
+			"issue": 51,
+			"url": "https://github.com/RebelliousSmile/schema-adrenaline/issues/51",
+			"title": "Publish schema-adrenaline 6.4.0 (relationship sheet)",
+			"baseSha": "3017f9d936152ef6414055204d2f369f92e1bb72",
+			"dependsOn": [],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"contract corpus and codecs updated for the change"
+			]
+		},
+		{
+			"repo": "lantern",
+			"issue": 81,
+			"url": "https://github.com/RebelliousSmile/lantern/issues/81",
+			"title": "Éditer la feuille de relations Adrenaline (schéma relations, 6.4.0)",
+			"baseSha": "ff7143ec076ffaf745b5b32cf2f405c3d0b3eca3",
+			"dependsOn": [
+				"schema-adrenaline",
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		},
+		{
+			"repo": "obsidian-handbook",
+			"issue": 139,
+			"url": "https://github.com/RebelliousSmile/obsidian-handbook/issues/139",
+			"title": "Rendre la feuille de relations Adrenaline (block:adrenaline-relations)",
+			"baseSha": "8a92c04c16a744b29211b223467ca055cc5e32cd",
+			"dependsOn": [
+				"schema-adrenaline",
+				"schema-pbta"
+			],
+			"expectedEvidence": [
+				"closing commit on origin/main",
+				"pnpm check green on the closing commit"
+			]
+		}
+	],
+	"publication": {}
+}
