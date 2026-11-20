@@ -2,7 +2,7 @@ import type { TheSprawlCorporation, TheSprawlResource, TheSprawlThreat } from "s
 import corporation from "schema-pbta/packs/the-sprawl/corporation-presentation-contract.json";
 import resource from "schema-pbta/packs/the-sprawl/resource-presentation-contract.json";
 import threat from "schema-pbta/packs/the-sprawl/threat-presentation-contract.json";
-import { el, keyValue, paragraphs, plainList, renderCard, section, type MotwCardContract } from "./motwShared";
+import { el, keyValue, paragraphs, plainList, renderCard, section, type CardPresentationContract } from "./cardShared";
 import { hourTrack } from "./sprawlPrimitives";
 
 const TYPE = "Type";
@@ -13,25 +13,25 @@ const THREAT_TYPES: Record<TheSprawlThreat["threatType"], string> = {
 	"current-event": "Événement en cours",
 };
 
-function labelOf(contract: MotwCardContract, id: string): string {
+function labelOf(contract: CardPresentationContract, id: string): string {
 	return contract.regions.find((region) => region.id === id)?.label ?? "";
 }
 
-function lines(doc: Document, contract: MotwCardContract, id: string, list: readonly string[] | undefined): HTMLElement | null {
+function lines(doc: Document, contract: CardPresentationContract, id: string, list: readonly string[] | undefined): HTMLElement | null {
 	if (!list?.length) return null;
 	const result = section(doc, contract, id);
 	result.appendChild(plainList(doc, list));
 	return result;
 }
 
-function clock(doc: Document, contract: MotwCardContract, id: string, marked: number | undefined): HTMLElement | null {
+function clock(doc: Document, contract: CardPresentationContract, id: string, marked: number | undefined): HTMLElement | null {
 	if (marked === undefined) return null;
 	const result = section(doc, contract, id);
 	result.appendChild(hourTrack(doc, labelOf(contract, id), marked));
 	return result;
 }
 
-function context(doc: Document, contract: MotwCardContract, id: string, description: string | undefined): HTMLElement | null {
+function context(doc: Document, contract: CardPresentationContract, id: string, description: string | undefined): HTMLElement | null {
 	if (!description) return null;
 	const result = section(doc, contract, id);
 	paragraphs(doc, result, description);

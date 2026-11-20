@@ -7,14 +7,10 @@ export const PBTA_TARGET_TO_BLOCK = {
 	move: "pbta-move",
 	playbook: "pbta-playbook",
 	"masks-playbook": "pbta-playbook",
-	"monster-of-the-week-playbook": "pbta-playbook",
 	"monsterhearts-playbook": "pbta-playbook",
 	"urban-shadows-playbook": "pbta-playbook",
 	"the-sprawl-playbook": "pbta-playbook",
 	"masks-npc": "pbta-npc",
-	"monster-of-the-week-team": "pbta-team",
-	"monster-of-the-week-monster": "pbta-monster",
-	"monster-of-the-week-threat": "pbta-threat",
 	"the-sprawl-matrix": "sprawl-matrix",
 	"the-sprawl-mission": "sprawl-mission",
 	"the-sprawl-threat": "sprawl-card",
@@ -24,7 +20,6 @@ export const PBTA_TARGET_TO_BLOCK = {
 
 export const PBTA_SPECIALIZED_PLAYBOOK_TARGETS = [
 	"masks-playbook",
-	"monster-of-the-week-playbook",
 	"monsterhearts-playbook",
 	"urban-shadows-playbook",
 	"the-sprawl-playbook",
@@ -34,9 +29,6 @@ export const PBTA_SPECIALIZED_NPC_TARGETS = ["masks-npc"] as const;
 
 /** Documents of their own, one block each: a team, a monster and a threat, then the Sprawl matrix, mission and cards. */
 export const PBTA_SPECIALIZED_CARD_TARGETS = [
-	"monster-of-the-week-team",
-	"monster-of-the-week-monster",
-	"monster-of-the-week-threat",
 	"the-sprawl-matrix",
 	"the-sprawl-mission",
 	"the-sprawl-threat",

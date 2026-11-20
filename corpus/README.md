@@ -8,14 +8,14 @@ contrat. Il ne recopie plus les documents Mist : le package immuable
 | --- | --- | --- |
 | Mist Engine | `schema-in-the-mist/corpus/contract/cases.json` installé | `canonical` pour le codec strict, `handbook` pour la projection tolérante |
 | Adrenaline | `schema-adrenaline/corpus/cases.json` installé | `accept|reject` strict, puis projection Handbook tolérante |
-| PbtA | `schema-pbta/corpus/contract/cases.json` installé | codec strict, puis cas TOML acceptés des capacités `move`, `playbook` et des cinq playbooks spécialisés v4 |
+| PbtA | `schema-pbta/corpus/contract/cases.json` installé | codec strict, puis cas TOML acceptés des capacités `move`, `playbook` et des playbooks spécialisés |
 
 `pnpm assert:corpus` combine les deux sources et exige qu’un bloc enregistré
 ait un document qu’il sait lire ainsi qu’une commande de copie TOML. Il échoue
 si un fichier local reprend l’id d’un format Mist, Adrenaline ou PbtA, afin que les corpus ne
 puissent plus dériver.
 
-Les TOML `masks-playbook`, `monster-of-the-week-playbook`, `monsterhearts-playbook`,
+Les TOML `masks-playbook`, `monsterhearts-playbook`,
 `urban-shadows-playbook` et `the-sprawl-playbook` du package v4 sont les sources
 canoniques des aperçus spécialisés. Le format `playbook` reste une donnée
 d'interchange : il n'est pas une seconde fiche de personnage canonique. Le HTML

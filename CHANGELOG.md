@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.50.0] - 2026-11-20
+
+### Removed
+
+- Monster of the Week, Salvage Run and Apocalypse World, retired from schema-pbta v15: the `pbta-team`, `pbta-monster` and `pbta-threat` blocks (with their TOML copy commands, capabilities and the `assert:motw-layout` proof) and the aliases that read a Salvage Run playbook. The card layout the Sprawl blocks share keeps living, renamed `cardShared`.
+
+### Changed
+
+- Handbook adopts the session notes of schema-adrenaline, schema-in-the-mist and schema-pbta: an Adrenaline sheet carrying `notesDePartie` no longer logs an unknown key, and the copied TOML keeps the notes. The notes page is Lantern's: Handbook does not draw it.
+
 ## [2.49.0] - 2026-11-09
 
 ### Changed

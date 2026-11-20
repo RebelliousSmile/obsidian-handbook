@@ -44,14 +44,6 @@ import {
 } from "../pbta/block";
 import { pbtaNpcBlock, pbtaNpcToToml } from "../pbta/npc";
 import {
-	pbtaMonsterBlock,
-	pbtaMonsterToToml,
-	pbtaTeamBlock,
-	pbtaTeamToToml,
-	pbtaThreatBlock,
-	pbtaThreatToToml,
-} from "../pbta/motwBlocks";
-import {
 	sprawlCardBlock,
 	sprawlCardToToml,
 	sprawlMatrixBlock,
@@ -247,33 +239,6 @@ export const TOML_EXPORTS: TomlExport<unknown>[] = [
 		sourceIsToml: true,
 		describeFailure: (source) =>
 			describeMissingPart(source, "it must match the canonical schema-pbta npc contract"),
-	},
-	{
-		block: pbtaTeamBlock,
-		commandId: "copy-pbta-team-as-toml",
-		noun: "PbtA team",
-		toToml: pbtaTeamToToml,
-		sourceIsToml: true,
-		describeFailure: (source) =>
-			describeMissingPart(source, "it must match the canonical schema-pbta team contract"),
-	},
-	{
-		block: pbtaMonsterBlock,
-		commandId: "copy-pbta-monster-as-toml",
-		noun: "PbtA monster",
-		toToml: pbtaMonsterToToml,
-		sourceIsToml: true,
-		describeFailure: (source) =>
-			describeMissingPart(source, "it must match the canonical schema-pbta monster contract"),
-	},
-	{
-		block: pbtaThreatBlock,
-		commandId: "copy-pbta-threat-as-toml",
-		noun: "PbtA threat",
-		toToml: pbtaThreatToToml,
-		sourceIsToml: true,
-		describeFailure: (source) =>
-			describeMissingPart(source, "it must match the canonical schema-pbta threat contract"),
 	},
 	{
 		block: sprawlMatrixBlock,

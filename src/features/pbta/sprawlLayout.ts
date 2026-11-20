@@ -1,6 +1,6 @@
 import type { TheSprawlPlaybook } from "schema-pbta";
 import contract from "schema-pbta/packs/the-sprawl/presentation-contract.json";
-import { checks, el, keyValue, paragraphs, plainList, section, type MotwEntry } from "./motwShared";
+import { checks, el, keyValue, paragraphs, plainList, section, type CheckEntry } from "./cardShared";
 import { hexagons, hourTrack, signed } from "./sprawlPrimitives";
 
 type RegionId = (typeof contract.regions)[number]["id"];
@@ -10,16 +10,16 @@ type Renderer = (doc: Document, id: RegionId, data: TheSprawlPlaybook) => HTMLEl
 
 const LABELS = { cred: "Cred", xp: "Expérience", harm: "Blessures", link: "Lien" };
 
-function moveEntry(move: Move, starting: readonly string[]): MotwEntry {
+function moveEntry(move: Move, starting: readonly string[]): CheckEntry {
 	if ("ref" in move) return { label: move.ref, checked: move.checked === true || starting.indexOf(move.ref) >= 0 };
 	return { label: move.name, note: move.description, checked: move.checked === true };
 }
 
-function gearEntry(gear: Gear): MotwEntry {
+function gearEntry(gear: Gear): CheckEntry {
 	return { label: gear.quantity !== undefined && gear.quantity > 1 ? `${gear.name} ×${gear.quantity}` : gear.name, note: gear.description };
 }
 
-function withChecks(doc: Document, id: RegionId, entries: readonly MotwEntry[]): HTMLElement | null {
+function withChecks(doc: Document, id: RegionId, entries: readonly CheckEntry[]): HTMLElement | null {
 	if (entries.length === 0) return null;
 	const result = section(doc, contract, id);
 	result.appendChild(checks(doc, entries));
@@ -44,7 +44,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"sprawl-gear": (doc, id, data) => {
 		const entries = [
 			...(data.gear ?? []).map(gearEntry),
-			...(data.missionGear ?? []).map((label): MotwEntry => ({ label })),
+			...(data.missionGear ?? []).map((label): CheckEntry => ({ label })),
 		];
 		return withChecks(doc, id, entries);
 	},
@@ -73,8 +73,8 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"sprawl-directives": (doc, id, data) => {
 		const choices = data.directiveChoices ?? [];
 		const chosen = choices.map((choice) => choice.label);
-		const entries: MotwEntry[] = [
-			...data.directives.filter((label) => chosen.indexOf(label) < 0).map((label): MotwEntry => ({ label })),
+		const entries: CheckEntry[] = [
+			...data.directives.filter((label) => chosen.indexOf(label) < 0).map((label): CheckEntry => ({ label })),
 			...choices,
 		];
 		return withChecks(doc, id, entries);

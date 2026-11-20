@@ -2,14 +2,12 @@ import { PBTA_DOCUMENT_CODECS } from "schema-pbta";
 import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../../games/capabilities";
 import { PBTA_PROJECTED_TARGETS } from "./specializedPlaybooks";
 import { PBTA_NPC_PROJECTED_TARGETS } from "./npc";
-import { PBTA_MOTW_PROJECTED_TARGETS } from "./motwBlocks";
 import { PBTA_SPRAWL_PROJECTED_TARGETS } from "./sprawlBlocks";
 
 /** Every specialised target Handbook resolves from a document alone: playbooks, non-player characters, teams, monsters, threats and the Sprawl sheets. */
 export const PBTA_ALL_PROJECTED_TARGETS: readonly string[] = [
 	...PBTA_PROJECTED_TARGETS,
 	...PBTA_NPC_PROJECTED_TARGETS,
-	...PBTA_MOTW_PROJECTED_TARGETS,
 	...PBTA_SPRAWL_PROJECTED_TARGETS,
 ];
 
@@ -27,15 +25,15 @@ export const PBTA_GENERIC_TARGETS: readonly string[] = [
 
 /**
  * Specialised targets whose schema is the portable playbook under another name. A document cannot
- * name them: an Apocalypse World game is described by the portable playbook, its specifics carried by
- * its game definition, so reading it as a generic playbook is correct and not a gap.
+ * name them: a game described by the portable playbook, its specifics carried by
+ * its game definition, reads as a generic playbook, which is correct and not a gap.
  *
  * Declared here because the plugin ships no corpus and cannot measure it at runtime. The assertion
  * proves this list against the shared corpus, so it cannot outlive the aliases it names. Declared, and
  * not merely measured: a specialised schema too loose to reject the portable playbook is
  * indistinguishable from an alias by measurement, and belongs in neither list until it is fixed.
  */
-export const PBTA_ALIAS_TARGETS: readonly string[] = ["salvage-run-playbook"];
+export const PBTA_ALIAS_TARGETS: readonly string[] = [];
 
 /**
  * A pack that opts into any of these speaks the PbtA contract. The list is not restated here:
@@ -106,8 +104,8 @@ export function pbtaCoverageReport(installed: readonly PbtaCoverageInput[]): Pbt
 /**
  * One line per finding, in the order a reader needs them. Empty means nothing to report.
  *
- * An alias is not a finding: a game whose playbook is the portable one — an Apocalypse World game,
- * carried by its game definition rather than by its schema — is read correctly as a generic playbook.
+ * An alias is not a finding: a game whose playbook is the portable one, carried by its game
+ * definition rather than by its schema, is read correctly as a generic playbook.
  * It is reported separately, as information.
  *
  * A target the schema source added and this build does not resolve yet is a finding, not a failure:

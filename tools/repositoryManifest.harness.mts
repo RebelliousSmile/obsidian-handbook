@@ -11,14 +11,14 @@ const valid = {
 	repository: "RebelliousSmile/schema-pbta",
 	name: "Schema PbtA",
 	packs: [
-		{ id: "apocalypse-world", version: "1.0.0", path: "handbook/apocalypse-world/pack.json" },
-		{ id: "monster-of-the-week", version: "1.2.0", path: "handbook/monster-of-the-week/pack.json" },
+		{ id: "masks", version: "1.0.0", path: "handbook/masks/pack.json" },
+		{ id: "monsterhearts", version: "1.2.0", path: "handbook/monsterhearts/pack.json" },
 	],
 };
 
 const parsed = readSchemaRepositoryManifest(valid);
 check("a multi-pack catalogue reads", parsed.manifest?.packs.length === 2);
-check("catalogue order is preserved", parsed.manifest?.packs[1]?.id === "monster-of-the-week");
+check("catalogue order is preserved", parsed.manifest?.packs[1]?.id === "monsterhearts");
 check("unknown versions are rejected", readSchemaRepositoryManifest({ ...valid, manifestVersion: 2 }).error !== undefined);
 check("escaping paths are rejected", readSchemaRepositoryManifest({ ...valid, packs: [{ id: "escape", version: "1.0.0", path: "../pack.json" }] }).error !== undefined);
 check("duplicate ids are rejected", readSchemaRepositoryManifest({ ...valid, packs: [valid.packs[0], { ...valid.packs[0], path: "other/pack.json" }] }).error !== undefined);

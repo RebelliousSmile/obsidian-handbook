@@ -62,9 +62,10 @@ export function documentToPj(value: unknown): AdrenalinePjData | null {
 	// A note written before contract 5.0.0 still draws: its ranges become the number the sheet prints.
 	const document = upgradeLegacyPj(written);
 	if (contractRefusal("pj", document)) return null;
+	// `notesDePartie` is the player's own page in Lantern: published, kept in the copied TOML, never drawn here.
 	warnUnknownKeys(
 		document,
-		["nom", "identite", "caracteristiques", "sante", "protections", "formations", "equipement", "parametresDuJeu", "etatDePartie", "meta"],
+		["nom", "identite", "caracteristiques", "sante", "protections", "formations", "equipement", "parametresDuJeu", "etatDePartie", "notesDePartie", "meta"],
 		"pj",
 	);
 	// The contract asks for a name of at least one character: a name that is only blanks is a name, kept as entered.

@@ -18,7 +18,6 @@ const doc = { createElement: (tagName: string) => new El(tagName) };
 function text(node: El): string { return node.textContent + node.children.map(text).join(""); }
 const requiredMechanicalField: Record<string, { data: string; rendered: string }> = {
 	"masks-playbook": { data: "momentOfTruth", rendered: "momentOfTruth" },
-	"monster-of-the-week-playbook": { data: "improvements", rendered: "improvements" },
 	"monsterhearts-playbook": { data: "strings", rendered: "Strings" },
 	"urban-shadows-playbook": { data: "corruption", rendered: "corruption" },
 	"the-sprawl-playbook": { data: "directives", rendered: "directives" },

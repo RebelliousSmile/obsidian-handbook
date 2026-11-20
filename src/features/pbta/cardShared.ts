@@ -1,16 +1,16 @@
 /** What the three Monster of the Week cards and the booklet share: the hooks of a region, the boxes, the lists. */
-export interface MotwContract {
+export interface PresentationContract {
 	regions: ReadonlyArray<{ id: string; label: string; primitive: string }>;
 	canonicalOrder: readonly string[];
 }
 
 /** A card contract also places its regions in rows of columns and keeps some outside the frame. */
-export interface MotwCardContract extends MotwContract {
+export interface CardPresentationContract extends PresentationContract {
 	rows: ReadonlyArray<ReadonlyArray<readonly string[]>>;
 	outsideCard: readonly string[];
 }
 
-export type MotwEntry = { label: string; checked?: boolean; note?: string };
+export type CheckEntry = { label: string; checked?: boolean; note?: string };
 
 export function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: string): HTMLElement {
 	const result = doc.createElement(tag);
@@ -18,12 +18,12 @@ export function el(doc: Document, tag: keyof HTMLElementTagNameMap, text?: strin
 	return result;
 }
 
-export function regionOf(contract: MotwContract, id: string): MotwContract["regions"][number] {
-	return contract.regions.find((region) => region.id === id) as MotwContract["regions"][number];
+export function regionOf(contract: PresentationContract, id: string): PresentationContract["regions"][number] {
+	return contract.regions.find((region) => region.id === id) as PresentationContract["regions"][number];
 }
 
 /** Headings come from the published contract, never from literals here. */
-export function section(doc: Document, contract: MotwContract, id: string, withHeading = true): HTMLElement {
+export function section(doc: Document, contract: PresentationContract, id: string, withHeading = true): HTMLElement {
 	const region = regionOf(contract, id);
 	const result = el(doc, "section");
 	result.classList.add("handbook-motw-region");
@@ -44,7 +44,7 @@ export function checkbox(doc: Document, checked: boolean, label: string): HTMLIn
 }
 
 /** A line to tick per entry; the entry the document holds is ticked. */
-export function checks(doc: Document, entries: readonly MotwEntry[]): HTMLElement {
+export function checks(doc: Document, entries: readonly CheckEntry[]): HTMLElement {
 	const list = el(doc, "ul");
 	list.classList.add("handbook-motw-checks");
 	for (const entry of entries) {
@@ -90,82 +90,13 @@ export function keyValue(doc: Document, entries: ReadonlyArray<readonly [string,
 	return dl;
 }
 
-/** The harm boxes of a creature and its armour: the part its monster sheet and its threat page print alike. */
-export function harmRegion(
-	doc: Document,
-	contract: MotwContract,
-	id: string,
-	data: { harmCapacity?: number; harmMarked?: number; armour?: number; armourNote?: string },
-	labels: { harm: string; armour: string },
-): HTMLElement | null {
-	if (data.harmCapacity === undefined && data.armour === undefined) return null;
-	const result = section(doc, contract, id);
-	if (data.harmCapacity !== undefined) {
-		const list = el(doc, "ul");
-		list.appendChild(boxesLine(doc, labels.harm, data.harmCapacity, data.harmMarked ?? 0));
-		result.appendChild(list);
-	}
-	if (data.armour !== undefined) {
-		result.appendChild(el(doc, "p", data.armourNote ? `${labels.armour} ${data.armour} — ${data.armourNote}` : `${labels.armour} ${data.armour}`));
-	}
-	return result;
-}
-
-/** Headings of the stat block both creature documents print. */
-export interface MotwStatBlock {
-	motivation: string;
-	description?: string;
-	powers?: string[];
-	attacks?: string[];
-	harmCapacity?: number;
-	harmMarked?: number;
-	armour?: number;
-	armourNote?: string;
-	weaknesses?: string[];
-}
-
-/** The regions a monster sheet and a threat page draw alike; `prefix` is the part of the id before the field. */
-export function statBlockRegion(
-	doc: Document,
-	contract: MotwContract,
-	prefix: string,
-	id: string,
-	data: MotwStatBlock,
-	labels: { harm: string; armour: string },
-): HTMLElement | null {
-	switch (id.slice(prefix.length)) {
-		case "motivation": {
-			const result = section(doc, contract, id);
-			result.appendChild(el(doc, "p", data.motivation));
-			return result;
-		}
-		case "powers":
-		case "attacks":
-		case "weaknesses": {
-			const lines = data[id.slice(prefix.length) as "powers" | "attacks" | "weaknesses"];
-			if (!lines?.length) return null;
-			const result = section(doc, contract, id);
-			result.appendChild(plainList(doc, lines));
-			return result;
-		}
-		case "harm": return harmRegion(doc, contract, id, data, labels);
-		case "context": {
-			if (!data.description) return null;
-			const result = section(doc, contract, id);
-			paragraphs(doc, result, data.description);
-			return result;
-		}
-	}
-	return null;
-}
-
 /**
  * Places the regions a card draws in the rows and columns of its contract; the ones the contract
  * keeps outside the frame, then any it did not place, follow in canonical order.
  */
 export function renderCard(
 	doc: Document,
-	contract: MotwCardContract,
+	contract: CardPresentationContract,
 	classes: readonly string[],
 	draw: (id: string) => HTMLElement | null,
 ): HTMLElement {

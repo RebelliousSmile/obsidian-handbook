@@ -154,7 +154,6 @@ function renderEditorial(data: Record<string, unknown>, doc: Document): HTMLElem
 /** The mechanical fields each specialised target prints, asserted against the shared corpus. */
 export const PBTA_SPECIALIZED_FIELDS: Record<Exclude<ResolvedPbtaPlaybook["target"], "playbook">, string[]> = {
 	"masks-playbook": ["momentOfTruth", "momentUnlocked", "potential", "potentialMax", "influence", "influenceOptions", "conditions", "drives"],
-	"monster-of-the-week-playbook": ["improvements", "luck", "ratings", "heroName", "luckMax", "luckMarked", "harmMax", "harmMarked", "unstable", "experienceMax", "experienceMarked", "specialWeapon", "statChoices", "look", "introductions", "history", "advancements", "notes"],
 	"monsterhearts-playbook": ["strings", "ascendants", "conditions", "advances"],
 	"urban-shadows-playbook": ["corruption", "endMove", "statuses", "harm", "scars", "advancementCircles", "markedCircles", "laterAdvancement", "letItOut", "intimacy", "debts", "extras"],
 	"the-sprawl-playbook": ["directives", "directiveChoices", "missionGear", "cred", "characterName", "look", "cyberware", "xp", "xpMax", "links", "contacts", "hoursMarked"],

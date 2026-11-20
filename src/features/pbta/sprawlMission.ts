@@ -1,6 +1,6 @@
 import type { TheSprawlMission } from "schema-pbta";
 import contract from "schema-pbta/packs/the-sprawl/mission-presentation-contract.json";
-import { el, keyValue, paragraphs, plainList, renderCard, section } from "./motwShared";
+import { el, keyValue, paragraphs, plainList, renderCard, section } from "./cardShared";
 import { hourTrack } from "./sprawlPrimitives";
 
 type Countdown = NonNullable<TheSprawlMission["investigation"]>;

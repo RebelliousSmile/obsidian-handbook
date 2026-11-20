@@ -11,7 +11,6 @@ import { initGameRegistry } from "../src/games/registry";
 import { EMPTY_STYLE } from "../src/games/types";
 import { PBTA_PROJECTED_TARGETS } from "../src/features/pbta/specializedPlaybooks";
 import { PBTA_NPC_PROJECTED_TARGETS } from "../src/features/pbta/npc";
-import { PBTA_MOTW_PROJECTED_TARGETS } from "../src/features/pbta/motwBlocks";
 import { PBTA_SPRAWL_PROJECTED_TARGETS } from "../src/features/pbta/sprawlBlocks";
 import { PBTA_SPECIALIZED_FIELDS } from "../src/features/pbta/renderer";
 import { PORTABLE_GAME_PLUGIN_SUPPORT } from "../src/games/capabilities";
@@ -27,7 +26,7 @@ import {
 const cases = loadPbtaContractCases();
 const targets = Object.keys(PBTA_DOCUMENT_CODECS);
 const projectedPlaybooks = PBTA_PROJECTED_TARGETS as readonly string[];
-const projected = [...projectedPlaybooks, ...(PBTA_NPC_PROJECTED_TARGETS as readonly string[]), ...PBTA_MOTW_PROJECTED_TARGETS, ...PBTA_SPRAWL_PROJECTED_TARGETS];
+const projected = [...projectedPlaybooks, ...(PBTA_NPC_PROJECTED_TARGETS as readonly string[]), ...PBTA_SPRAWL_PROJECTED_TARGETS];
 /* A pack owns `<pack.id>-<type>`: the id is what precedes the last dash. */
 const ownerOf = (target: string): string => target.slice(0, target.lastIndexOf("-"));
 
@@ -149,7 +148,7 @@ assert.deepEqual(
 );
 /* Symmetrically, an alias must stay silent: it is the correct reading, not a gap. */
 assert.deepEqual(
-	describePbtaCoverage({ ...installed, unresolved: [], aliases: ["salvage-run-playbook"] }),
+	describePbtaCoverage({ ...installed, unresolved: [], aliases: ["former-alias-playbook"] }),
 	[],
 	"an alias is reported as a finding",
 );

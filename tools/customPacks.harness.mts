@@ -470,10 +470,10 @@ async function run(): Promise<void> {
 		check("the PbtA non-player character is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-npc")!, settings));
 		check("the PbtA move is available from manifest capabilities", isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === "pbta-move")!, settings));
 		check("the unknown PbtA game flags one game document", contents.blocks.filter((block) => block.handout).map((block) => block.id).join(",") === "pbta-playbook");
-		for (const id of ["pbta-team", "pbta-monster", "pbta-threat", "sprawl-matrix", "sprawl-mission", "sprawl-card"]) {
+		for (const id of ["sprawl-matrix", "sprawl-mission", "sprawl-card"]) {
 			check(`the ${id} block is available from manifest capabilities`, isAvailableBlock(BRUMES_BLOCKS.find((block) => block.id === id)!, settings));
 		}
-		check("the unknown PbtA game exposes all nine code blocks", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-monster,pbta-move,pbta-npc,pbta-playbook,pbta-team,pbta-threat,sprawl-card,sprawl-matrix,sprawl-mission");
+		check("the unknown PbtA game exposes every code block of the schema", contents.blocks.map((block) => block.id).sort().join(",") === "pbta-move,pbta-npc,pbta-playbook,sprawl-card,sprawl-matrix,sprawl-mission");
 		check("the unknown PbtA game exposes the four visual callouts of the schema", contents.callouts.filter((callout) => callout.capability === "style:pbta").length === 4);
 	}
 

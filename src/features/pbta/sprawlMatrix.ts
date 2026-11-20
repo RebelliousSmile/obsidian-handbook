@@ -1,6 +1,6 @@
 import type { TheSprawlMatrix } from "schema-pbta";
 import contract from "schema-pbta/packs/the-sprawl/matrix-presentation-contract.json";
-import { boxesLine, checks, el, renderCard, section } from "./motwShared";
+import { boxesLine, checks, el, renderCard, section } from "./cardShared";
 import { hexagons } from "./sprawlPrimitives";
 
 const LABELS = { holds: "Retenues", resistance: "Résistance", firewall: "Pare-feu", stealth: "Furtivité", processor: "Processeur" };

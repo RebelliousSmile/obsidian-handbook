@@ -1,4 +1,4 @@
-import { el } from "./motwShared";
+import { el } from "./cardShared";
 
 /** The six segments the Sprawl prints for an hour track; the contract caps `hoursMarked` at the same number. */
 export const SPRAWL_HOUR_SEGMENTS = 6;
