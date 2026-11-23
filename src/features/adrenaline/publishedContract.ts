@@ -22,6 +22,7 @@ interface JsonSchema {
 	additionalProperties?: boolean | JsonSchema;
 	items?: JsonSchema;
 	enum?: unknown[];
+	default?: unknown;
 	const?: unknown;
 	minimum?: number;
 	maximum?: number;
@@ -69,6 +70,12 @@ export function publishedAsList(sheet: AdrenalineSheet, pointer: string): boolea
 export function publishedMaxItems(sheet: AdrenalineSheet, pointer: string): number | undefined {
 	const found = pointer.slice(1).split("/").reduce<JsonSchema | undefined>((schema, key) => schema?.properties?.[key], SCHEMAS[sheet]);
 	return found?.type === "array" ? found.maxItems : undefined;
+}
+
+/** The default the contract publishes for a number, by JSON pointer; undefined when it publishes none. */
+export function publishedDefaultNumber(sheet: AdrenalineSheet, pointer: string): number | undefined {
+	const found = pointer.slice(1).split("/").reduce<JsonSchema | undefined>((schema, key) => schema?.properties?.[key], SCHEMAS[sheet]);
+	return typeof found?.default === "number" ? found.default : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

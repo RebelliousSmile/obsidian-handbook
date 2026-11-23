@@ -27,6 +27,8 @@ export interface AdrenalineRelationsData {
 	personnage: string;
 	joueur?: string;
 	partie?: string;
+	/** How many places of other characters the sheet prints; absent, the default of the contract. */
+	nombreDAutresPersonnages?: number;
 	autresPersonnages?: RelationOtherCharacter[];
 	testsDeDrame?: number;
 	pnjs?: RelationNpc[];

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- The Adrenaline relationship sheet (schema-adrenaline 6.4.0): the `adrenaline-relations` block draws the published one-page sheet, with its header, the four other-character cards and the ten numbered NPC cards. The attitude modifier is the published level's. The block has its TOML copy command and its `assert:adrenaline-relations` proof.
+- The Adrenaline relationship sheet (schema-adrenaline 6.4.0): the `adrenaline-relations` block draws the published one-page sheet, with its header, the other-character cards (four by default on one row, up to six by rows of four: the sheet sets `nombreDAutresPersonnages`, and a filled card is never dropped) and the ten numbered NPC cards. The attitude modifier is the published level's. The block has its TOML copy command and its `assert:adrenaline-relations` proof.
 - `assert:session-notes`: the session notes the Adrenaline, Otherscape and PbtA sheets carry are read, kept in the copied TOML and never drawn by Handbook.
 
 ### Changed

@@ -65,7 +65,7 @@ export function documentToRelations(value: unknown): AdrenalineRelationsData | n
 	const document = asRecord(value);
 	if (!document) return null;
 	if (contractRefusal("relations", document)) return null;
-	warnUnknownKeys(document, ["personnage", "joueur", "partie", "autresPersonnages", "testsDeDrame", "pnjs", "meta"], "relations");
+	warnUnknownKeys(document, ["personnage", "joueur", "partie", "nombreDAutresPersonnages", "autresPersonnages", "testsDeDrame", "pnjs", "meta"], "relations");
 	const personnage = entered(document.personnage);
 	if (!personnage) return null;
 	const data: AdrenalineRelationsData = { personnage };
@@ -73,6 +73,7 @@ export function documentToRelations(value: unknown): AdrenalineRelationsData | n
 	const partie = entered(document.partie);
 	if (joueur) data.joueur = joueur;
 	if (partie) data.partie = partie;
+	if (typeof document.nombreDAutresPersonnages === "number") data.nombreDAutresPersonnages = document.nombreDAutresPersonnages;
 	if (Array.isArray(document.autresPersonnages)) {
 		data.autresPersonnages = document.autresPersonnages.reduce<RelationOtherCharacter[]>((all, item) => {
 			const other = readOtherCharacter(item);
@@ -102,6 +103,7 @@ export function relationsToDocument(data: AdrenalineRelationsData): AdrenalineDo
 	const document: AdrenalineDocument = { personnage: data.personnage };
 	if (data.joueur) document.joueur = data.joueur;
 	if (data.partie) document.partie = data.partie;
+	if (data.nombreDAutresPersonnages !== undefined) document.nombreDAutresPersonnages = data.nombreDAutresPersonnages;
 	if (data.autresPersonnages) document.autresPersonnages = data.autresPersonnages;
 	if (data.testsDeDrame !== undefined) document.testsDeDrame = data.testsDeDrame;
 	if (data.pnjs) document.pnjs = data.pnjs;

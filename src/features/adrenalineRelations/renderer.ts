@@ -5,7 +5,7 @@ import {
 	type AdrenalinePresentationSection,
 } from "schema-adrenaline/presentation";
 import { adrenalineSourceDocument, asRecord, type AdrenalineDocument } from "../adrenaline/document";
-import { publishedMaxItems } from "../adrenaline/publishedContract";
+import { publishedDefaultNumber, publishedMaxItems } from "../adrenaline/publishedContract";
 import { renderZones } from "../blocks/shape";
 import { logScope } from "../../utils/logger";
 import { AdrenalineRelationsData } from "./parser";
@@ -101,11 +101,16 @@ function renderNameCard(doc: Document, box: HTMLElement, block: AdrenalinePresen
 	}
 }
 
-/** One slot per `maxItems` of the contract: the sheet prints its places whether the document fills them or not. */
+/**
+ * One slot per place the sheet prints: the count the document sets at `countPath`, else the default the contract publishes,
+ * never fewer than the entries the document holds. The places are laid out by rows of the section columns.
+ */
 function renderPcTies(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const pointer = block.paths[0];
 	const entries = entriesAt(source, pointer);
-	const slots = slotCount(pointer, entries.length);
+	const entered = block.countPath === undefined ? undefined : at(source, block.countPath);
+	const printed = typeof entered === "number" ? entered : block.countPath === undefined ? undefined : publishedDefaultNumber("relations", block.countPath);
+	const slots = printed === undefined ? slotCount(pointer, entries.length) : Math.max(entries.length, printed);
 	for (let index = 0; index < slots; index += 1) {
 		const entry = entries[index] ?? {};
 		const tie = add(box, doc, "div", "tie");

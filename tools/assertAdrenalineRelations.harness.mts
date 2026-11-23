@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION } from "schema-adrenaline/presentation";
-import { contractRefusal, publishedMaxItems } from "../src/features/adrenaline/publishedContract";
+import { contractRefusal, publishedDefaultNumber, publishedMaxItems } from "../src/features/adrenaline/publishedContract";
 import { renderAdrenalineRelations } from "../src/features/adrenalineRelations/renderer";
 import { documentToRelations, parseRelationsDocument, relationsToToml } from "../src/features/adrenalineRelations/schema";
 import { adrenalineRelationsShape } from "../src/features/adrenalineRelations/shape";
@@ -44,6 +44,9 @@ assert.deepEqual(adrenalineRelationsShape.zones.map((zone) => zone.name), sectio
 /* The slots are the bounds of the published schema. */
 const otherSlots = publishedMaxItems("relations", "/autresPersonnages");
 const npcSlots = publishedMaxItems("relations", "/pnjs");
+const defaultSlots = publishedDefaultNumber("relations", "/nombreDAutresPersonnages");
+assert.ok(defaultSlots && otherSlots && defaultSlots <= 4 && defaultSlots <= otherSlots, "the contract publishes how many places print by default, on one row of four");
+assert.equal(RELATIONS_PRESENTATION.sections[1].blocks[0].countPath, "/nombreDAutresPersonnages", "the places of the other characters follow the count the contract names");
 assert.ok(otherSlots && otherSlots > 0, "the schema bounds the other characters");
 assert.ok(npcSlots && npcSlots > 0, "the schema bounds the NPCs");
 
@@ -52,7 +55,7 @@ const base = "node_modules/schema-adrenaline/corpus";
 const minimal = documentToRelations(read(join(base, "temoins/relations/temoin.json")));
 assert.ok(minimal, "the minimal witness is read");
 const minimalRoot = renderAdrenalineRelations(minimal, doc);
-assert.equal(withClass(minimalRoot, "tie").length, otherSlots, "one place per other character the contract allows");
+assert.equal(withClass(minimalRoot, "tie").length, defaultSlots, "a sheet that sets no count prints the default places");
 assert.equal(withClass(minimalRoot, "npc").length, npcSlots, "one card per NPC the contract allows");
 assert.equal(withClass(minimalRoot, "npc--empty").length, npcSlots, "a sheet without NPCs prints only empty cards");
 assert.equal(withClass(minimalRoot, "npc-column").length, 2, "the NPC cards are laid out in two columns");
@@ -62,7 +65,15 @@ assert.ok(withClass(minimalRoot, "card-value").some((node) => node.textContent =
 const full = documentToRelations(read(join(base, "temoins/relations/pleine-capacite.json")));
 assert.ok(full, "the full-capacity witness is read");
 const fullRoot = renderAdrenalineRelations(full, doc);
-assert.equal(withClass(fullRoot, "tie").length, otherSlots, "the full sheet keeps the places of the contract");
+assert.equal(withClass(fullRoot, "tie").length, otherSlots, "the full sheet prints every place the contract allows");
+
+/* The count the document sets is the number of places, whatever the contract's maximum. */
+const few = documentToRelations(read(join(base, "temoins/relations/deux-autres-pj.json")));
+assert.ok(few, "the two-character witness is read");
+assert.equal(withClass(renderAdrenalineRelations(few, doc), "tie").length, 2, "a count of two prints two places");
+const tooMany = documentToRelations({ ...few, autresPersonnages: [{ nom: "A" }, { nom: "B" }, { nom: "C" }] });
+assert.equal(withClass(renderAdrenalineRelations(tooMany!, doc), "tie").length, 3, "an entered place is never dropped under the count");
+assert.equal(relationsToToml(few).indexOf("nombreDAutresPersonnages = 2") >= 0, true, "the count survives a copy to TOML");
 assert.equal(withClass(fullRoot, "npc").length, npcSlots, "the full sheet keeps the NPC cards of the contract");
 assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no card of a full sheet is empty");
 
