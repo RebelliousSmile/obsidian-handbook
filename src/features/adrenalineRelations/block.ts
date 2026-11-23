@@ -11,6 +11,6 @@ export const adrenalineRelationsBlock: BrumesBlock<AdrenalineRelationsData> = {
 	icon: "users-round",
 	shape: adrenalineRelationsShape,
 	parse: parseAdrenalineRelations,
-	render: renderAdrenalineRelations,
+	render: (data, doc) => renderAdrenalineRelations(data, doc),
 	template: relationsTemplate,
 };
