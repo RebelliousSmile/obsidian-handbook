@@ -96,21 +96,25 @@
 		font-size: 1.15em;
 		line-height: 1.1;
 	}
+	// Un champ réglé garde la hauteur de ligne de son lignage, même en écriture manuscrite.
+	.brumes-adrenaline-relations--values-handwritten .brumes-adrenaline-relations__write-field { line-height: 1.5em; }
 	.brumes-adrenaline-relations__value { min-width: 0; }
 
-	// Ligne d'écriture : libellé, champ pointillé.
+	// Ligne d'écriture : libellé, champ réglé. Le pointillé se répète à chaque ligne de texte (une ligne = 1.5em),
+	// donc un texte qui passe à la ligne reste posé sur son lignage, et le libellé s'aligne sur la première ligne.
 	.brumes-adrenaline-relations__write-line {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: 5px;
+		align-items: baseline;
+		gap: 0 5px;
 		min-width: 0;
 	}
 	.brumes-adrenaline-relations__write-field {
 		flex: 1 1 7em;
 		min-width: 0;
-		min-height: 1.25em;
-		border-bottom: 1px dotted var(--adrenaline-field-border);
+		min-height: 1.5em;
+		line-height: 1.5em;
+		background: radial-gradient(circle at 1px calc(1.5em - 1px), var(--adrenaline-field-border) 0.55px, transparent 0.85px) 0 0 / 4px 1.5em repeat;
 	}
 
 	// En-tête : trois cartes sur une rangée (personnage, joueur, partie).
