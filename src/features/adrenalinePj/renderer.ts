@@ -1,8 +1,7 @@
-import { PJ_PRESENTATION, type AdrenalinePresentationBlock, type AdrenalinePresentationPage, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
+import { PJ_PRESENTATION, type AdrenalinePresentationBlock, type AdrenalinePresentationSection } from "schema-adrenaline/presentation";
 import { adrenalineSourceDocument, asRecord, readCurrentValue, type AdrenalineDocument, type Competence, type EquipmentWeapon, type Formation } from "../adrenaline/document";
 import { publishedAsList } from "../adrenaline/publishedContract";
 import { renderZones } from "../blocks/shape";
-import { renderSessionNotes } from "../blocks/sessionNotes";
 import { logScope } from "../../utils/logger";
 import { AdrenalinePjData } from "./parser";
 import { pjToDocument } from "./schema";
@@ -442,6 +441,29 @@ function renderNarrative(doc: Document, box: HTMLElement, block: AdrenalinePrese
 	for (const pointer of block.paths) add(box, doc, "p", "narrative", text(at(source, pointer))).classList.add(`${ROOT}__value`);
 }
 
+type ResolveImage = (path: string) => string | null;
+
+/**
+ * The portrait, drawn like the one of a Monsterhearts playbook: a figure, the picture when the
+ * reference resolves (a file of the vault, or an https address), the name as caption. A sheet that
+ * holds no portrait prints none: the section is collapsible and prints only what is entered.
+ */
+function renderPortrait(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument, name: string, resolveImage?: ResolveImage): void {
+	const frame = add(box, doc, "figure", "portrait");
+	const reference = text(at(source, block.paths[0])).trim();
+	const address = reference ? resolveImage?.(reference) ?? (/^https:\/\//i.test(reference) ? reference : null) : null;
+	if (address) {
+		const image = doc.createElement("img");
+		image.src = address;
+		image.alt = `Portrait de ${name}`;
+		frame.appendChild(image);
+	} else {
+		frame.classList.add(`${ROOT}__portrait--empty`);
+		add(frame, doc, "span", "portrait-missing", "Portrait à ajouter");
+	}
+	add(frame, doc, "figcaption", "portrait-name", name);
+}
+
 function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const form = block.form ?? "(none)";
 	// The fallback marks its box: the warning below is given once per form, the mark on every block.
@@ -456,13 +478,13 @@ function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresent
 /* The cartouche prints its own banner label; formation columns print one subhead per column. */
 // The Malus column prints its labels on the band of each frame, as the paper sheet does.
 // The reference table prints its own first column head, which carries the block label.
-const TITLED_ELSEWHERE = new Set(["name-card", "game-parameters", "formation-columns", "shock-circles", "circle-row", "malus-scale"]);
+const TITLED_ELSEWHERE = new Set(["name-card", "game-parameters", "formation-columns", "shock-circles", "circle-row", "malus-scale", "portrait"]);
 
 function titledElsewhere(block: AdrenalinePresentationBlock, sectionLabel: string): boolean {
 	return TITLED_ELSEWHERE.has(block.form ?? "") || block.label === sectionLabel;
 }
 
-function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionLabel: string, data: AdrenalinePjData, source: AdrenalineDocument, withNotes = true): HTMLElement {
+function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionLabel: string, data: AdrenalinePjData, source: AdrenalineDocument, withNotes = true, resolveImage?: ResolveImage): HTMLElement {
 	const box = node(doc, "div", block.id);
 	box.classList.add(`${ROOT}__block`, `${ROOT}__form-${block.form ?? "none"}`, `${ROOT}__layout-${block.layout}`);
 	if (block.columns) box.classList.add(`${ROOT}__block-columns-${block.columns}`);
@@ -492,6 +514,7 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionL
 		case "reference-table": renderReferenceTable(doc, box, block, source); break;
 		case "compact-rows": renderPointerRows(doc, box, block, source); break;
 		case "narrative": renderNarrative(doc, box, block, source); break;
+		case "portrait": renderPortrait(doc, box, block, source, data.nom, resolveImage); break;
 		default: renderUnknown(doc, box, block, source);
 	}
 	if (withNotes) for (const note of block.notes ?? []) add(box, doc, "p", "block-note", note);
@@ -525,7 +548,7 @@ function liftsNotes(section: AdrenalinePresentationSection, block: AdrenalinePre
 	return section.layout === "columns" && columns > 1 && block.placement !== undefined && (block.placement.columnSpan ?? 1) < columns;
 }
 
-function renderSection(doc: Document, section: AdrenalinePresentationSection, data: AdrenalinePjData, source: AdrenalineDocument): HTMLElement | null {
+function renderSection(doc: Document, section: AdrenalinePresentationSection, data: AdrenalinePjData, source: AdrenalineDocument, resolveImage?: ResolveImage): HTMLElement | null {
 	const blocks = [...section.blocks].sort((a, b) => a.order - b.order).filter((block) => !section.collapsible || entered(block, source));
 	// A collapsible section prints nothing when nothing is entered in it.
 	if (section.collapsible && blocks.length === 0) return null;
@@ -542,14 +565,14 @@ function renderSection(doc: Document, section: AdrenalinePresentationSection, da
 			const subtitle = (block.subtitlePaths ?? []).map((pointer) => { const raw = text(at(source, pointer)); return PARAMETER_VALUES[raw] ?? raw; }).filter(Boolean).join(" · ");
 			body.appendChild(renderBrand(doc, subtitle));
 		}
-		body.appendChild(renderBlock(doc, block, section.label, data, source, !liftsNotes(section, block)));
+		body.appendChild(renderBlock(doc, block, section.label, data, source, !liftsNotes(section, block), resolveImage));
 	}
 	// Dans une section à colonnes, la note d'un bloc court sur toute la largeur de la section, centrée.
 	for (const block of blocks) if (liftsNotes(section, block)) for (const note of block.notes ?? []) add(body, doc, "p", "block-note", note);
 	return container;
 }
 
-export function renderAdrenalinePj(data: AdrenalinePjData, doc: Document): HTMLElement {
+export function renderAdrenalinePj(data: AdrenalinePjData, doc: Document, context?: { packId: string; resolveImage?: ResolveImage }): HTMLElement {
 	const root = doc.createElement("article");
 	const appearance = PJ_PRESENTATION.appearance;
 	root.classList.add(
@@ -564,12 +587,7 @@ export function renderAdrenalinePj(data: AdrenalinePjData, doc: Document): HTMLE
 	if (appearance.outerRule) root.classList.add(`${ROOT}--outer-rule`);
 	const source = adrenalineSourceDocument(data) ?? pjToDocument(data);
 	const builders: Record<string, () => HTMLElement | null> = {};
-	for (const section of PJ_PRESENTATION.sections) builders[section.id] = () => renderSection(doc, section, data, source);
+	for (const section of PJ_PRESENTATION.sections) builders[section.id] = () => renderSection(doc, section, data, source, context?.resolveImage);
 	renderZones(root, adrenalinePjShape, builders);
-	// The notes page the contract publishes comes last, drawn from the field it names; a blank one draws nothing.
-	const pages: readonly AdrenalinePresentationPage[] = PJ_PRESENTATION.pages;
-	const notesPage = pages.find((page) => page.notesPath);
-	const notes = notesPage?.notesPath ? renderSessionNotes(doc, notesPage.label.fr, at(source, notesPage.notesPath)) : null;
-	if (notes) root.appendChild(notes);
 	return root;
 }

@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.52.0] - 2026-11-23
+
+### Changed
+
+- The Adrenaline player sheet: the name, game parameters and XP header stays at the top of the first page, and the back of the sheet is the Identity section alone. The game notes are no longer a separate page drawn after the sheet: they sit in the Identity section, under the identity card, the portrait and the three texts.
+- The player sheet draws the character portrait beside the identity card, as the Monsterhearts playbook does: the picture when the reference is a file of the vault or an https address, the character name as caption. A sheet with no portrait prints none.
+
 ## [2.51.1] - 2026-11-23
 
 ### Fixed
