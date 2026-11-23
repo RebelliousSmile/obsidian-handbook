@@ -77,15 +77,17 @@ assert.equal(relationsToToml(few).indexOf("nombreDAutresPersonnages = 2") >= 0, 
 assert.equal(withClass(fullRoot, "npc").length, npcSlots, "the full sheet keeps the NPC cards of the contract");
 assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no card of a full sheet is empty");
 
-/* The attitude modifier comes from the published levels, not from the document. */
+/* The attitude is worded by the published levels, and the modifier it sets is not printed: its room goes to the links. */
 for (const level of ATTITUDE_LEVELS) {
-	const data = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", attitude: level.key }] });
+	const data = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", attitude: level.key, reliesA: [2, 3] }] });
 	assert.ok(data, `attitude ${level.key}: the document is read`);
-	const modifiers = withClass(renderAdrenalineRelations(data, doc), "npc-modifier");
-	assert.equal(modifiers.length, 1, `attitude ${level.key}: one modifier is printed`);
-	const text = modifiers[0].textContent;
-	if (level.nature === "aucun") assert.ok(text.indexOf(String(level.count)) < 0, `attitude ${level.key}: no count when there is no modifier`);
-	else assert.ok(text.indexOf(String(level.count)) >= 0, `attitude ${level.key}: the printed count is the one the contract publishes (${level.count})`);
+	const root = renderAdrenalineRelations(data, doc);
+	assert.equal(withClass(root, "npc-modifier").length, 0, `attitude ${level.key}: no modifier is printed`);
+	const rows = withClass(root, "npc-row");
+	assert.equal(rows.length, 1, `attitude ${level.key}: the attitude and its links share one line`);
+	const text = rows[0].textContent;
+	assert.ok(text.indexOf(level.label) >= 0, `attitude ${level.key}: the published label is printed`);
+	assert.ok(text.indexOf("2, 3") >= 0, `attitude ${level.key}: the links are on the attitude line`);
 }
 const noAttitude = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran" }] });
 assert.ok(noAttitude, "an NPC without attitude is read");

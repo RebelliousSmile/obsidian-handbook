@@ -30,8 +30,6 @@ const FIELD_LABELS: Record<string, string> = {
 	notes: "Notes",
 };
 const LINK_LABELS: Record<string, string> = { familial: "Familial", amitie: "Amitié", travail: "Travail" };
-/* The nature of a modifier, as the sheet words it; the count is the one `ATTITUDE_LEVELS` publishes. */
-const NATURE_LABELS: Record<string, string> = { bonus: "bonus", malus: "malus", aucun: "aucun" };
 
 function node(doc: Document, tag: string, className: string, text?: string): HTMLElement {
 	const result = doc.createElement(tag);
@@ -126,18 +124,11 @@ function renderCounter(doc: Document, box: HTMLElement, block: AdrenalinePresent
 	line.appendChild(value(doc, shown(at(source, block.paths[0])), "counter-value"));
 }
 
-/** The modifier an attitude sets, read from the levels the presentation publishes and never from the document. */
+/** The attitude as the presentation words it, read from the levels it publishes; the modifier it sets is not printed. */
 function attitudeText(doc: Document, line: HTMLElement, key: unknown, levels: readonly AdrenalineAttitudeLevel[]): void {
 	if (typeof key !== "string") return;
 	const level = levels.find((candidate) => candidate.key === key);
-	if (!level) {
-		line.appendChild(value(doc, key, "write-field"));
-		return;
-	}
-	const text = value(doc, level.label, "write-field");
-	line.appendChild(text);
-	const nature = NATURE_LABELS[level.nature] ?? level.nature;
-	add(line, doc, "span", "npc-modifier", level.nature === "aucun" ? nature : `${nature} ${level.count}`).classList.add(`${ROOT}__modifier--${level.nature}`);
+	line.appendChild(value(doc, level ? level.label : key, "write-field"));
 }
 
 function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Record<string, unknown>, levels: readonly AdrenalineAttitudeLevel[]): void {
@@ -196,7 +187,9 @@ function renderNpcEntries(doc: Document, box: HTMLElement, block: AdrenalinePres
 					head.appendChild(value(doc, shown(entry?.nom), "npc-name"));
 					continue;
 				}
-				for (const key of row) renderNpcField(doc, card, key, entry ?? {}, levels);
+				// A row of several fields is one line of the card: each field takes its share of it.
+				const line = row.length > 1 ? add(card, doc, "div", "npc-row") : card;
+				for (const key of row) renderNpcField(doc, line, key, entry ?? {}, levels);
 			}
 		}
 	}

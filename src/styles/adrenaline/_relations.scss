@@ -28,7 +28,6 @@
 	// Petites capitales : libellés, titres et numéros.
 	.brumes-adrenaline-relations__write-label,
 	.brumes-adrenaline-relations__card-label,
-	.brumes-adrenaline-relations__npc-modifier,
 	.brumes-adrenaline-relations__npc-number,
 	.brumes-adrenaline-relations :is(h4.brumes-adrenaline-relations__section-title, h5.brumes-adrenaline-relations__block-title) {
 		font-family: var(--font-header-theme);
@@ -39,8 +38,7 @@
 		text-decoration: none;
 	}
 	.brumes-adrenaline-relations__write-label,
-	.brumes-adrenaline-relations__card-label,
-	.brumes-adrenaline-relations__npc-modifier { font-size: 9px; }
+	.brumes-adrenaline-relations__card-label { font-size: 9px; }
 	.brumes-adrenaline-relations__write-label { color: var(--adrenaline-rule); white-space: nowrap; }
 	.brumes-adrenaline-relations__card-label,
 	.brumes-adrenaline-relations h4.brumes-adrenaline-relations__section-title {
@@ -211,13 +209,13 @@
 		min-height: 1.25em;
 		border-bottom: 1px dotted var(--adrenaline-field-border);
 	}
-	.brumes-adrenaline-relations__npc-modifier {
-		padding: 0 4px;
-		border: 1px solid var(--adrenaline-field-border);
-		color: var(--adrenaline-rule);
+	// Une ligne à plusieurs champs : l'attitude prend la place, les numéros « relié à » (courts) le reste.
+	.brumes-adrenaline-relations__npc-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+		gap: 0 10px;
+		align-items: baseline;
 	}
-	.brumes-adrenaline-relations__modifier--bonus { color: var(--adrenaline-handwritten-ink); }
-	.brumes-adrenaline-relations__modifier--malus { border-style: dashed; }
 
 	// Note de fin de bloc.
 	.brumes-adrenaline-relations__block-note {
