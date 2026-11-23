@@ -1,6 +1,6 @@
 ---
 objective: "La feuille de relations d'Adrenaline (`relations`, schema-adrenaline 6.4.0) se rend dans Handbook et s'édite dans Lantern, et les deux consommateurs adoptent par un train les versions publiées de schema-adrenaline et de schema-pbta."
-status: in-progress
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->

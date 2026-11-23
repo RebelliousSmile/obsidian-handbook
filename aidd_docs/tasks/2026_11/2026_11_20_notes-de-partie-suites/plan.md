@@ -1,6 +1,6 @@
 ---
 objective: "Les six suites du train `notes-de-partie` sont traitées : le superviseur détecte avant le départ un ordre de fournisseurs faux et un paquet présenté périmé, `present` joue les harnais de Lantern, l'aperçu Masques suit l'ordre d'export, les notes ont leur contrôle de couverture, l'export PDF et le TOML sans notes sont constatés, et la question d'affichage des notes dans Handbook est tranchée."
-status: in-progress
+status: implemented
 ---
 
 <!-- Fill or omit these sections; never add, rename, or reorder one. -->
