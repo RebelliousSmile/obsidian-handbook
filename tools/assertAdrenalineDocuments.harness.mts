@@ -170,4 +170,13 @@ assert.ok(drawnLegacy, "a sheet written with ranges is drawn");
 assert.deepEqual(drawnLegacy.parametresDuJeu?.px, range(12), "the experience points keep their range in the data read");
 assert.deepEqual(upgradeLegacyPj(upgradedLegacy), upgradedLegacy, "a conforming sheet is left as it is");
 
+/* A text with line breaks is written as a TOML multi-line string and reads back the same. */
+const multiline = { nom: "Ada", notesDePartie: "Séance 1.\r\n\r\nRetenir : la \"radio\" \ le toit.\n\"\"\"fin\"\"\"", etats: "un\ndeux", ligne: "sans saut" };
+const written = stringifyAdrenalineDocument(multiline);
+assert.ok(written.indexOf('notesDePartie = """\n') >= 0, "a text with line breaks is written between triple quotes");
+assert.ok(!/\[nr]/.test(written.replace(/\\/g, "").replace(/\\"/g, "")), "no line break is written as an escape");
+assert.ok(written.indexOf('ligne = "sans saut"') >= 0, "a one-line text keeps its plain string");
+assert.deepEqual(parseToml(written), { ...multiline, notesDePartie: multiline.notesDePartie.replace(/\r\n/g, "\n") }, "the text reads back unchanged, CRLF aside");
+assert.equal(stringifyAdrenalineDocument(parseAdrenalineDocument(written) as never), written, "writing the document read again changes nothing");
+
 console.log("Adrenaline document assertions passed.");

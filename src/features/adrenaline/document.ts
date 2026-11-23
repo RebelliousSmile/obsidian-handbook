@@ -182,8 +182,30 @@ export function parseAdrenalineDocument(source: string): AdrenalineDocument | nu
 	}
 }
 
+/**
+ * A text that holds line breaks is written as a TOML multi-line string (`"""`), so it stays readable
+ * and editable by hand instead of showing `\n` escapes. Only `key = "..."` lines are rewritten; the
+ * text reads back unchanged, except that CRLF becomes LF.
+ */
+export function multilineTomlStrings(source: string): string {
+	return source.replace(/^([ \t]*[A-Za-z0-9_-]+ = )("(?:[^"\\\n]|\\.)*")$/gm, (line, head: string, quoted: string) => {
+		if (!/\\[nr]/.test(quoted)) return line;
+		let text: unknown;
+		try {
+			text = JSON.parse(quoted);
+		} catch {
+			return line;
+		}
+		if (typeof text !== "string") return line;
+		const body = text.replace(/\r\n?/g, "\n").replace(/\\/g, "\\\\").replace(/"""/g, '""\\"');
+		// eslint-disable-next-line no-control-regex
+		if (/[\u0000-\u0008\u000b-\u001f\u007f]/.test(body)) return line;
+		return `${head}"""\n${body}"""`;
+	});
+}
+
 export function stringifyAdrenalineDocument(value: AdrenalineDocument): string {
-	return `${stringifyToml(value).replace(/\s+$/, "")}\n`;
+	return `${multilineTomlStrings(stringifyToml(value)).replace(/\s+$/, "")}\n`;
 }
 
 export function readCharacteristics(value: unknown, keys: readonly CharacteristicKey[] = CHARACTERISTIC_KEYS): Characteristics | undefined {
