@@ -204,10 +204,13 @@
 	// Dans une rangée partagée, le champ garde une base courte : le libellé et son champ tiennent côte à côte, sans passer à la ligne.
 	.brumes-adrenaline-relations__npc-row .brumes-adrenaline-relations__write-field { flex-basis: 3em; }
 
-	// Repère de genre, à droite du nom d'un autre personnage : petit, sans prendre la place de l'écriture.
+	// Repère de genre, à droite du nom d'un autre personnage : un encadré rempli, comme le badge de dés des cartes.
 	.brumes-adrenaline-relations__gender-mark {
 		flex: 0 0 auto;
-		color: var(--adrenaline-rule);
+		padding: 0 0.35rem;
+		border-radius: 0.2rem;
+		background: var(--adrenaline-dice-badge-bg);
+		color: var(--adrenaline-dice-badge-ink);
 		font-family: var(--font-header-theme);
 		font-size: 9px;
 		font-weight: 800;
