@@ -159,6 +159,7 @@ class El {
 	dataset: Record<string, string> = {};
 	classes: string[] = [];
 	classList = { add: (...names: string[]) => this.classes.push(...names) };
+	style = { setProperty: (_name: string, _value: string) => undefined };
 	constructor(tagName: string) {
 		this.tagName = tagName;
 	}

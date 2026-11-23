@@ -34,6 +34,7 @@ class El {
 	attributes: Record<string, string> = {};
 	classes: string[] = [];
 	classList = { add: (...names: string[]) => this.classes.push(...names) };
+	style = { setProperty: (_name: string, _value: string) => undefined };
 	setAttribute(name: string, value: string): void { this.attributes[name] = value; }
 	constructor(tagName: string) { this.tagName = tagName; }
 	appendChild(child: El): El { this.children.push(child); return child; }

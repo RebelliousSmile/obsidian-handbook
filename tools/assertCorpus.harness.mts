@@ -72,6 +72,7 @@ class El {
 	};
 	classes: string[] = [];
 	attributes: Record<string, string> = {};
+	style = { setProperty: (_name: string, _value: string) => undefined };
 
 	setAttribute(name: string, value: string): void {
 		this.attributes[name] = value;
