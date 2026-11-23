@@ -302,6 +302,10 @@ $ink-roles: box-ticked, dot-filled;
 	// Un champ après une liste réglée (équipement favori) : un peu d'air sous la dernière ligne.
 	.brumes-adrenaline-pj__ruled-list + .brumes-adrenaline-pj__write-line { margin-block-start: 6px; }
 	.brumes-adrenaline-pj__field-rows .brumes-adrenaline-pj__write-field { flex: 1 1 0; }
+	// Une liste (signes particuliers) : une entrée par ligne pointillée, le libellé reste en face de la première.
+	.brumes-adrenaline-pj__write-line--stacked { align-items: flex-start; }
+	.brumes-adrenaline-pj__write-stack { display: flex; flex-direction: column; flex: 1 1 0; gap: 2px; min-width: 0; }
+	.brumes-adrenaline-pj__write-stack > .brumes-adrenaline-pj__write-field { flex: none; }
 	.brumes-adrenaline-pj__characteristic { border: 0; gap: 3px; }
 	.brumes-adrenaline-pj__characteristic .brumes-adrenaline-pj__metric-value { border: 1px solid var(--adrenaline-field-border); }
 

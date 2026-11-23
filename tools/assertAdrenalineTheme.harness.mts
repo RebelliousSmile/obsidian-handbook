@@ -1046,6 +1046,16 @@ try {
 	const oneField = identityOf("[identite]\nnationalite = \"Belge\"");
 	assert.equal(findAll(oneField, `${PJ}__form-identity-fields`).length, 1, "one field entered: the table is printed");
 	assert.match(textOf(only(oneField, `${PJ}__form-identity-fields`, "the table")), /Belge/, "one field entered: it is in the table");
+	// Particular signs: a list prints one entry per dotted line under a single label, never joined on one line.
+	const signs = identityOf('[identite]\nsignesParticuliers = ["Cicatrice à la joue", "Tatouage au poignet", "Boîte"]');
+	const signsLine = findAll(only(signs, `${PJ}__form-identity-fields`, "the signs table"), `${PJ}__write-line--stacked`);
+	assert.equal(signsLine.length, 1, "several signs: one stacked line carries them");
+	assert.deepEqual(findAll(signsLine[0], `${PJ}__write-field`).map(textOf), ["Cicatrice à la joue", "Tatouage au poignet", "Boîte"], "several signs: one dotted line per entry");
+	assert.equal(findAll(signsLine[0], `${PJ}__write-label`).length, 1, "several signs: a single label");
+	assert.ok(textOf(signsLine[0]).indexOf("·") < 0, "several signs: nothing joined by a dot");
+	const oneSign = identityOf('[identite]\nsignesParticuliers = ["Cicatrice à la joue"]');
+	assert.equal(findAll(oneSign, `${PJ}__write-line--stacked`).length, 0, "one sign: a plain write line");
+	assert.match(textOf(only(oneSign, `${PJ}__form-identity-fields`, "the table")), /Cicatrice à la joue/, "one sign: it is printed");
 	// Constraints: only what is entered is printed, with the label the contract publishes.
 	const constraintsBlock = publishedBlocks.find((candidate) => candidate.form === "compact-rows");
 	assert.ok(constraintsBlock && constraintsBlock.pointerRows, "the contract publishes compact rows");

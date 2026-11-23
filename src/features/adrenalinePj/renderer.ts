@@ -96,6 +96,17 @@ function writeLine(doc: Document, parent: HTMLElement, label: string, content: s
 	return line;
 }
 
+/** A label and a list written one entry per dotted line; a single entry is a plain write line. */
+function writeLines(doc: Document, parent: HTMLElement, label: string, items: readonly string[]): HTMLElement {
+	if (items.length < 2) return writeLine(doc, parent, label, items[0] ?? "");
+	const line = add(parent, doc, "div", "write-line");
+	line.classList.add(`${ROOT}__write-line--stacked`);
+	add(line, doc, "b", "write-label", label);
+	const stack = add(line, doc, "div", "write-stack");
+	for (const item of items) stack.appendChild(value(doc, item, "write-field"));
+	return line;
+}
+
 /** A name, a bordered handwritten value. */
 function metric(doc: Document, parent: HTMLElement, name: string, values: readonly string[], hint?: string): HTMLElement {
 	const line = add(parent, doc, "div", "metric");
@@ -199,8 +210,10 @@ function renderIdentityFields(doc: Document, box: HTMLElement, block: Adrenaline
 	for (const row of fieldRows(block)) {
 		for (const key of row) {
 			const raw = identity[key];
-			const shown = Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string").join(" · ") : key === "age" ? text(raw, " ans") : text(raw);
-			const line = writeLine(doc, box, IDENTITY_LABELS[key] ?? key, shown);
+			const label = IDENTITY_LABELS[key] ?? key;
+			const line = Array.isArray(raw)
+				? writeLines(doc, box, label, raw.filter((item): item is string => typeof item === "string" && item.trim() !== ""))
+				: writeLine(doc, box, label, key === "age" ? text(raw, " ans") : text(raw));
 			if (row.length === 1) line.classList.add(`${ROOT}__field-across`);
 		}
 	}
