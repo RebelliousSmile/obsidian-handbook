@@ -115,6 +115,30 @@
 		background: radial-gradient(circle at 1px calc(1.5em - 1px), var(--adrenaline-field-border) 0.55px, transparent 0.85px) 0 0 / 4px 1.5em repeat;
 	}
 
+	// Fiche d'un autre personnage ou d'un PNJ : le libellé ouvre la première ligne, le texte passe ensuite sous lui à pleine largeur.
+	// Une hauteur de ligne fixe (`--tie-line`) aligne le libellé flottant, le texte et le pointillé.
+	.brumes-adrenaline-relations__tie,
+	.brumes-adrenaline-relations__npc {
+		--tie-line: 20px;
+	}
+	.brumes-adrenaline-relations__tie .brumes-adrenaline-relations__write-line,
+	.brumes-adrenaline-relations__npc .brumes-adrenaline-relations__write-line { display: block; }
+	.brumes-adrenaline-relations__tie .brumes-adrenaline-relations__write-label,
+	.brumes-adrenaline-relations__npc .brumes-adrenaline-relations__write-label {
+		float: left;
+		margin-right: 5px;
+		line-height: var(--tie-line);
+	}
+	.brumes-adrenaline-relations__tie .brumes-adrenaline-relations__write-field,
+	.brumes-adrenaline-relations__npc .brumes-adrenaline-relations__write-field,
+	.brumes-adrenaline-relations--values-handwritten .brumes-adrenaline-relations__tie .brumes-adrenaline-relations__write-field,
+	.brumes-adrenaline-relations--values-handwritten .brumes-adrenaline-relations__npc .brumes-adrenaline-relations__write-field {
+		display: block;
+		min-height: var(--tie-line);
+		line-height: var(--tie-line);
+		background: radial-gradient(circle at 1px calc(var(--tie-line) - 1px), var(--adrenaline-field-border) 0.55px, transparent 0.85px) 0 0 / 4px var(--tie-line) repeat;
+	}
+
 	// En-tête : trois cartes sur une rangée (personnage, joueur, partie).
 	.brumes-adrenaline-relations__card-row {
 		display: grid;
