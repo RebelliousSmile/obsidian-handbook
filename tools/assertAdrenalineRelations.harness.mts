@@ -10,8 +10,8 @@ import { relationsTemplate } from "../src/features/adrenalineRelations/template"
 
 /*
  * The relations sheet: drawn from the presentation the contract publishes, one printed place per
- * `maxItems` of the schema, the attitude modifier read from `ATTITUDE_LEVELS` and never from the
- * document, a refused document named by the contract. The witnesses and refusals are the ones the
+ * `maxItems` of the schema, the attitude worded by `ATTITUDE_LEVELS` and never read from the
+ * document, no modifier printed, a refused document named by the contract. The witnesses and refusals are the ones the
  * producer publishes, so a field renamed or a bound moved upstream fails here.
  */
 class El {
@@ -85,7 +85,7 @@ for (const level of ATTITUDE_LEVELS) {
 	assert.equal(withClass(root, "npc-modifier").length, 0, `attitude ${level.key}: no modifier is printed`);
 	const rows = withClass(root, "npc-row");
 	assert.equal(rows.length, withClass(root, "npc").length, `attitude ${level.key}: on each card the attitude and its links share one line`);
-	const text = rows[0].textContent;
+	const text = rows[0].walk().map((node) => node.textContent).join(" ");
 	assert.ok(text.indexOf(level.label) >= 0, `attitude ${level.key}: the published label is printed`);
 	assert.ok(text.indexOf("2, 3") >= 0, `attitude ${level.key}: the links are on the attitude line`);
 }
