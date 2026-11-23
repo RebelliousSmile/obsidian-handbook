@@ -84,7 +84,7 @@ for (const level of ATTITUDE_LEVELS) {
 	const root = renderAdrenalineRelations(data, doc);
 	assert.equal(withClass(root, "npc-modifier").length, 0, `attitude ${level.key}: no modifier is printed`);
 	const rows = withClass(root, "npc-row");
-	assert.equal(rows.length, 1, `attitude ${level.key}: the attitude and its links share one line`);
+	assert.equal(rows.length, withClass(root, "npc").length, `attitude ${level.key}: on each card the attitude and its links share one line`);
 	const text = rows[0].textContent;
 	assert.ok(text.indexOf(level.label) >= 0, `attitude ${level.key}: the published label is printed`);
 	assert.ok(text.indexOf("2, 3") >= 0, `attitude ${level.key}: the links are on the attitude line`);
