@@ -26,7 +26,7 @@ const FIELD_LABELS: Record<string, string> = {
 	attitude: "Attitude",
 	lien: "Lien",
 	reliesA: "Relié à",
-	ceQuiLuiEstArrive: "Ce qui lui est arrivé",
+	ceQuiLuiEstArrive: "Résumé",
 	notes: "Notes",
 };
 const LINK_LABELS: Record<string, string> = { familial: "Familial", amitie: "Amitié", travail: "Travail" };
