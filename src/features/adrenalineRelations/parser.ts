@@ -19,7 +19,7 @@ export interface RelationNpc {
 	lien?: { type: RelationLinkType; description?: string };
 	/** Numbers of the other NPCs this one is tied to; one that matches no NPC is shown as it is. */
 	reliesA?: number[];
-	ceQuiLuiEstArrive?: string;
+	resume?: string;
 	notes?: string;
 }
 

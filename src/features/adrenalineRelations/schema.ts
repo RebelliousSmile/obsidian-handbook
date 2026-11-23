@@ -44,7 +44,7 @@ function readNpc(value: unknown): RelationNpc | undefined {
 	const record = asRecord(value);
 	const nom = entered(record?.nom);
 	if (!record || !nom || typeof record.numero !== "number") return undefined;
-	warnUnknownKeys(record, ["numero", "nom", "attitude", "lien", "reliesA", "ceQuiLuiEstArrive", "notes"], "relations.pnjs");
+	warnUnknownKeys(record, ["numero", "nom", "attitude", "lien", "reliesA", "resume", "notes"], "relations.pnjs");
 	const result: RelationNpc = { numero: record.numero, nom };
 	if (typeof record.attitude === "string" && ATTITUDES.indexOf(record.attitude) >= 0) result.attitude = record.attitude as RelationAttitude;
 	const link = asRecord(record.lien);
@@ -54,9 +54,9 @@ function readNpc(value: unknown): RelationNpc | undefined {
 		if (description) result.lien.description = description;
 	}
 	if (Array.isArray(record.reliesA)) result.reliesA = record.reliesA.filter((item): item is number => typeof item === "number");
-	const happened = entered(record.ceQuiLuiEstArrive);
+	const happened = entered(record.resume);
 	const notes = entered(record.notes);
-	if (happened) result.ceQuiLuiEstArrive = happened;
+	if (happened) result.resume = happened;
 	if (notes) result.notes = notes;
 	return result;
 }

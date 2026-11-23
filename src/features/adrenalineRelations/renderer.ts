@@ -26,7 +26,7 @@ const FIELD_LABELS: Record<string, string> = {
 	attitude: "Attitude",
 	lien: "Lien",
 	reliesA: "Relié à",
-	ceQuiLuiEstArrive: "Résumé",
+	resume: "Résumé",
 	notes: "Notes",
 };
 const LINK_LABELS: Record<string, string> = { familial: "Familial", amitie: "Amitié", travail: "Travail" };
@@ -152,7 +152,7 @@ function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Re
 			writeLine(doc, card, label, numbers.join(", "));
 			break;
 		}
-		case "ceQuiLuiEstArrive":
+		case "resume":
 		case "notes":
 			writeLine(doc, card, label, shown(entry[key]));
 			break;
