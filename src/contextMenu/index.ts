@@ -8,7 +8,8 @@ import {
 	contributeTomlExports,
 	hasTomlExportAtCursor,
 } from "../features/blocks/tomlExports";
-import { contributeRenderedTomlPaste, hasRenderedTomlPaste } from "../features/blocks/pasteToml";
+import { contributeRenderedTomlPaste, hasRenderedTomlPaste, recentRenderedTomlSource } from "../features/blocks/pasteToml";
+import { contributeTomlSource } from "../features/blocks/copyAsToml";
 import {
 	contributeTagInsertion,
 	hasTagInsertion,
@@ -72,6 +73,11 @@ export function registerBrumesContextMenu(plugin: BrumesPlugin): EventRef {
 				const tomlMenu = addSubmenu(submenu, "TOML", "file-code");
 				contributeRenderedTomlPaste(tomlMenu, plugin);
 				if (hasTomlExport) contributeTomlExports(tomlMenu, editor, plugin.settings);
+				else {
+					// A right click on the rendered card: the cursor is not in its source, so the card itself is what is copied.
+					const rendered = recentRenderedTomlSource(plugin);
+					if (rendered) contributeTomlSource(tomlMenu, rendered.source, rendered.spec);
+				}
 			}
 		},
 	);

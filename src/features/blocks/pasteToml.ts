@@ -34,6 +34,12 @@ function recentRenderedTomlContext(plugin: BrumesPlugin): RenderedTomlContext | 
 	return context;
 }
 
+/** The source and contract of the card just right-clicked, for the actions that read it. */
+export function recentRenderedTomlSource(plugin: BrumesPlugin): { source: string; spec: TomlExport<unknown> } | null {
+	const context = recentRenderedTomlContext(plugin);
+	return context ? { source: context.renderedSource, spec: context.spec } : null;
+}
+
 /** Whether the menu being opened belongs to a card that can receive a pasted document. */
 export function hasRenderedTomlPaste(plugin: BrumesPlugin): boolean {
 	return recentRenderedTomlContext(plugin) !== null;
