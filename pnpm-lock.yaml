@@ -18,8 +18,8 @@ importers:
         specifier: 7.1.6
         version: 7.1.6
       schema-adrenaline:
-        specifier: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.3.0/schema-adrenaline-6.3.0.tgz
-        version: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.3.0/schema-adrenaline-6.3.0.tgz
+        specifier: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.4.0-rc.1/schema-adrenaline-6.4.0.tgz
+        version: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.4.0-rc.1/schema-adrenaline-6.4.0.tgz
       schema-in-the-mist:
         specifier: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz
         version: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz
@@ -1512,9 +1512,9 @@ packages:
     engines: {node: '>=20.19.0'}
     hasBin: true
 
-  schema-adrenaline@https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.3.0/schema-adrenaline-6.3.0.tgz:
-    resolution: {integrity: sha512-/6BqCRO4n0NpWmYv77oTD5CY2udwgdY21fHj7qgXWrMLdLN3XtaMMxbJM9408SDoRrmA2CJQHgsUwvyY+KsNZw==, tarball: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.3.0/schema-adrenaline-6.3.0.tgz}
-    version: 6.3.0
+  schema-adrenaline@https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.4.0-rc.1/schema-adrenaline-6.4.0.tgz:
+    resolution: {integrity: sha512-D0N1qxCWDeqln0giy0aD+iYyxT9PjPiXvjvksMq2W/m4WZgHJlfU7zZJi3Qiiwx9qq3OHtTXguc/ICWLVFEQGQ==, tarball: https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.4.0-rc.1/schema-adrenaline-6.4.0.tgz}
+    version: 6.4.0
 
   schema-in-the-mist@https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz:
     resolution: {integrity: sha512-OQTxEOvYS0J276UXon3Acu907x7/723Xt+ZFjHuG3neNXpi4PnBuFE9c3m5sAHGFoEERrJRV+KcaUc89DEKuLw==, tarball: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz}
@@ -3406,7 +3406,7 @@ snapshots:
     optionalDependencies:
       '@parcel/watcher': 2.6.0
 
-  schema-adrenaline@https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.3.0/schema-adrenaline-6.3.0.tgz:
+  schema-adrenaline@https://github.com/RebelliousSmile/schema-adrenaline/releases/download/v6.4.0-rc.1/schema-adrenaline-6.4.0.tgz:
     dependencies:
       smol-toml: 1.8.0
       zod: 4.6.2
