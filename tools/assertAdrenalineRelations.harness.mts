@@ -113,7 +113,7 @@ assert.ok(heads.length > 0 && heads.every((head) => head.children.length >= 3 &&
 assert.equal(withClass(renderAdrenalineRelations(drama, doc), "npc").every((card) => card.walk().every((node) => node.textContent !== "Touché")), true, "the tick carries no label");
 
 /* The three fields of another character carry fixed labels, whatever the gender, and the gender itself is not printed. */
-const gendered = documentToRelations({ personnage: "Claire", autresPersonnages: [{ nom: "A", genre: "masculin", ceQuOnMeDoit: "un secret" }, { nom: "B", genre: "feminin" }, { nom: "C", genre: "neutre" }, { nom: "D" }] });
+const gendered = documentToRelations({ personnage: "Claire", nombreDAutresPersonnages: 5, autresPersonnages: [{ nom: "A", genre: "masculin", ceQuOnMeDoit: "un secret" }, { nom: "B", genre: "feminin" }, { nom: "C", genre: "neutre" }, { nom: "D" }] });
 assert.ok(gendered, "other characters with a gender are read");
 const tieText = (index: number): string => withClass(renderAdrenalineRelations(gendered, doc), "tie")[index].walk().map((node) => node.textContent).join("|");
 assert.ok(tieText(0).indexOf("Secrets") >= 0 && tieText(0).indexOf("me doit") < 0, "the label of the secrets does not follow the gender");
