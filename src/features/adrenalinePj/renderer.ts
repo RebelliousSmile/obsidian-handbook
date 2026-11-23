@@ -458,13 +458,13 @@ type ResolveImage = (path: string) => string | null;
 
 /**
  * The portrait, drawn like the one of a Monsterhearts playbook: a figure, the picture when the
- * reference resolves (a file of the vault, or an https address), the name as caption. A sheet that
+ * reference resolves (a file of the vault, or an http or https address), the name as caption. A sheet that
  * holds no portrait prints none: the section is collapsible and prints only what is entered.
  */
 function renderPortrait(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument, name: string, resolveImage?: ResolveImage): void {
 	const frame = add(box, doc, "figure", "portrait-frame");
 	const reference = text(at(source, block.paths[0])).trim();
-	const address = reference ? resolveImage?.(reference) ?? (/^https:\/\//i.test(reference) ? reference : null) : null;
+	const address = reference ? resolveImage?.(reference) ?? (/^https?:\/\//i.test(reference) ? reference : null) : null;
 	if (address) {
 		const image = doc.createElement("img");
 		image.src = address;

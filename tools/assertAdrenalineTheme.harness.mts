@@ -1056,6 +1056,22 @@ try {
 	const oneSign = identityOf('[identite]\nsignesParticuliers = ["Cicatrice à la joue"]');
 	assert.equal(findAll(oneSign, `${PJ}__write-line--stacked`).length, 0, "one sign: a plain write line");
 	assert.match(textOf(only(oneSign, `${PJ}__form-identity-fields`, "the table")), /Cicatrice à la joue/, "one sign: it is printed");
+	// Portrait: an absolute address, http or https, draws the picture; anything else leaves the frame empty.
+	const portraitOf = (reference: string): El => {
+		const parsed = adrenalinePjBlock.parse(`portrait = ${JSON.stringify(reference)}
+${minimalSource}
+[identite]
+nationalite = "Belge"
+`);
+		assert.ok(parsed, `the portrait variant parses: ${reference}`);
+		return only(adrenalinePjBlock.render(parsed as never, doc) as unknown as El, `${PJ}__portrait-frame`, `the portrait frame of ${reference}`);
+	};
+	for (const address of ["https://assets.example.org/a.jpg", "http://assets.example.org/a.jpg"]) {
+		const frame = portraitOf(address);
+		assert.equal(frame.children.filter((child) => child.tagName === "img").length, 1, `${address}: the picture is drawn`);
+		assert.equal((frame.children.find((child) => child.tagName === "img") as unknown as { src: string }).src, address, `${address}: the picture keeps its address`);
+	}
+	assert.equal(portraitOf("ftp://assets.example.org/a.jpg").children.filter((child) => child.tagName === "img").length, 0, "an address that is neither http nor https draws no picture");
 	// Constraints: only what is entered is printed, with the label the contract publishes.
 	const constraintsBlock = publishedBlocks.find((candidate) => candidate.form === "compact-rows");
 	assert.ok(constraintsBlock && constraintsBlock.pointerRows, "the contract publishes compact rows");

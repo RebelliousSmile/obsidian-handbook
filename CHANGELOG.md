@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The Adrenaline player sheet: the particular signs are printed one per line under their label, instead of joined by dots on a single wrapped line.
+- The player sheet portrait also draws from an `http://` address, not only from `https://` or a file of the vault.
 
 ## [2.52.0] - 2026-11-23
 
