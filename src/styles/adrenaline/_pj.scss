@@ -126,7 +126,7 @@ $ink-roles: box-ticked, dot-filled;
 		flex-direction: column;
 		gap: 4px;
 	}
-	@include placement.placement("brumes-adrenaline-pj", 1 2 3, 3, 1 2 3 4 5, 2);
+	@include placement.placement("brumes-adrenaline-pj", 1 2 3, 2 3, 1 2 3 4 5, 2);
 
 	// Sous-titre de bloc : bordeaux, filet.
 	.brumes-adrenaline-pj h5.brumes-adrenaline-pj__block-title {

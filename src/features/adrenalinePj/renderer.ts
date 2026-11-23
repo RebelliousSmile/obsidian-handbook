@@ -63,7 +63,7 @@ function currentPart(value: unknown): number | undefined {
 
 /** True when the document enters nothing at this place. */
 function isBlank(found: unknown): boolean {
-	if (found === undefined || found === null || found === "") return true;
+	if (found === undefined || found === null || (typeof found === "string" && found.trim() === "")) return true;
 	if (Array.isArray(found)) return found.length === 0;
 	const record = asRecord(found);
 	return record ? Object.keys(record).length === 0 : false;
