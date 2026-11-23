@@ -122,6 +122,13 @@ assert.ok(duLabel(2).indexOf("Ce qu'iel me doit") >= 0, "a neutral character: wh
 assert.ok(duLabel(3).indexOf("Ce qu'iel me doit") >= 0, "a character without gender: the default wording");
 assert.ok(duLabel(0).indexOf("masculin") < 0, "the gender is not printed");
 
+/* The gender is marked beside the name of another character, with the published text, and nowhere else. */
+const marked = (index: number): string[] => withClass(renderAdrenalineRelations(gendered, doc), "tie")[index].walk().filter((node) => node.classes.indexOf(`${ROOT}__gender-mark`) >= 0).map((node) => node.textContent);
+const mark = sections[1].blocks[0].genderMark;
+assert.ok(mark && mark.key === "nom" && mark.genderKey === "genre", "the contract publishes the gender mark beside the name");
+assert.deepEqual([0, 1, 2, 3].map(marked), [[mark.marks.masculin], [mark.marks.feminin], [mark.marks.neutre], []], "each gender prints its mark, an absent gender prints none");
+assert.ok(withClass(renderAdrenalineRelations(gendered, doc), "tie")[0].walk().filter((node) => node.classes.indexOf(`${ROOT}__write-line`) >= 0)[0].children.slice(-1)[0].classes.indexOf(`${ROOT}__gender-mark`) >= 0, "the mark closes the line of the name");
+
 /* A link to a number no NPC carries is shown as typed and does not break the sheet. */
 const orphan = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", reliesA: [7] }] });
 assert.ok(orphan, "an orphan link is still read");

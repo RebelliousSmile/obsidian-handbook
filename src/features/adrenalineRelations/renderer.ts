@@ -113,6 +113,15 @@ function tieLabel(block: AdrenalinePresentationBlock, key: string, entry: Record
 	return FIELD_LABELS[key] ?? humanize(key);
 }
 
+/** The short mark of the gender printed beside a field of another character: the published text for their gender, nothing without one. */
+function genderMark(block: AdrenalinePresentationBlock, key: string, entry: Record<string, unknown>): string {
+	const mark = block.genderMark;
+	if (!mark || mark.key !== key) return "";
+	const gender = entry[mark.genderKey];
+	const marks: Record<string, string> = mark.marks;
+	return typeof gender === "string" && marks[gender] !== undefined ? marks[gender] : "";
+}
+
 /**
  * One slot per place the sheet prints: the count the document sets at `countPath`, else the default the contract publishes,
  * never fewer than the entries the document holds. The section columns are the most places a row holds: the places fill
@@ -129,7 +138,11 @@ function renderPcTies(doc: Document, box: HTMLElement, block: AdrenalinePresenta
 		const entry = entries[index] ?? {};
 		const tie = add(box, doc, "div", "tie");
 		for (const row of fieldRows(block)) {
-			for (const key of row) writeLine(doc, tie, tieLabel(block, key, entry), shown(entry[key]));
+			for (const key of row) {
+				const line = writeLine(doc, tie, tieLabel(block, key, entry), shown(entry[key]));
+				const mark = genderMark(block, key, entry);
+				if (mark) add(line, doc, "span", "gender-mark", mark);
+			}
 		}
 	}
 }
