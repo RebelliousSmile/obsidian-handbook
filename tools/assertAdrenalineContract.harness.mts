@@ -17,6 +17,7 @@ class El {
 	dataset: Record<string, string> = {};
 	classes: string[] = [];
 	classList = { add: (...names: string[]) => this.classes.push(...names) };
+	style = { setProperty: (_name: string, _value: string) => undefined };
 	constructor(public tagName: string) {}
 	setAttribute(name: string, value: string): void { this.dataset[`attr-${name}`] = value; }
 	appendChild(child: El): El { this.children.push(child); return child; }
