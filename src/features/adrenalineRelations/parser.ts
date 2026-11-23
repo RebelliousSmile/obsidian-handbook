@@ -2,13 +2,16 @@ import { AdrenalineMeta } from "../adrenaline/document";
 import { parseRelationsDocument } from "./schema";
 
 export type RelationAttitude = "hostile" | "inamicale" | "indifferente" | "amicale" | "loyale";
+export type RelationGender = "masculin" | "feminin" | "neutre";
 export type RelationLinkType = "familial" | "amitie" | "travail";
 
 export interface RelationOtherCharacter {
 	nom: string;
+	/** Not printed: the published label of what they owe follows it. */
+	genre?: RelationGender;
 	ceQueJeSais?: string;
 	ceQueJeLuiDois?: string;
-	ceQuIlMeDoit?: string;
+	ceQuOnMeDoit?: string;
 }
 
 export interface RelationNpc {
@@ -21,6 +24,8 @@ export interface RelationNpc {
 	reliesA?: number[];
 	resume?: string;
 	notes?: string;
+	/** A drama test was made on this NPC: one or several per sheet, the tick is on each NPC. */
+	testDeDrame?: boolean;
 }
 
 export interface AdrenalineRelationsData {
@@ -30,7 +35,6 @@ export interface AdrenalineRelationsData {
 	/** How many places of other characters the sheet prints; absent, the default of the contract. */
 	nombreDAutresPersonnages?: number;
 	autresPersonnages?: RelationOtherCharacter[];
-	testsDeDrame?: number;
 	pnjs?: RelationNpc[];
 	meta?: AdrenalineMeta;
 }

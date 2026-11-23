@@ -1,6 +1,7 @@
 import {
 	RELATIONS_PRESENTATION,
 	type AdrenalineAttitudeLevel,
+	type AdrenalinePresentation,
 	type AdrenalinePresentationBlock,
 	type AdrenalinePresentationSection,
 } from "schema-adrenaline/presentation";
@@ -19,15 +20,17 @@ const reportedFields = new Set<string>();
 
 /* Labels the published presentation leaves to the consumer: the field names and the enum values of the sheet. */
 const FIELD_LABELS: Record<string, string> = {
+	numero: "N°",
 	nom: "Nom",
 	ceQueJeSais: "Ce que je sais",
 	ceQueJeLuiDois: "Ce que je lui dois",
-	ceQuIlMeDoit: "Ce qu'il me doit",
+	ceQuOnMeDoit: "Ce qu'iel me doit",
 	attitude: "Attitude",
 	lien: "Lien",
 	reliesA: "Relié à",
 	resume: "Résumé",
 	notes: "Notes",
+	testDeDrame: "Test de drame",
 };
 const LINK_LABELS: Record<string, string> = { familial: "Familial", amitie: "Amitié", travail: "Travail" };
 
@@ -99,6 +102,17 @@ function renderNameCard(doc: Document, box: HTMLElement, block: AdrenalinePresen
 	}
 }
 
+/** The label of a field of another character: the published wording that follows their gender when there is one, else the plain label. */
+function tieLabel(block: AdrenalinePresentationBlock, key: string, entry: Record<string, unknown>): string {
+	const worded = (block.genderedLabels ?? []).find((candidate) => candidate.key === key);
+	if (worded) {
+		const gender = entry[worded.genderKey];
+		const labels: Record<string, string> = worded.labels;
+		return typeof gender === "string" && labels[gender] !== undefined ? labels[gender] : worded.labels.default;
+	}
+	return FIELD_LABELS[key] ?? humanize(key);
+}
+
 /**
  * One slot per place the sheet prints: the count the document sets at `countPath`, else the default the contract publishes,
  * never fewer than the entries the document holds. The places are laid out by rows of the section columns.
@@ -113,60 +127,92 @@ function renderPcTies(doc: Document, box: HTMLElement, block: AdrenalinePresenta
 		const entry = entries[index] ?? {};
 		const tie = add(box, doc, "div", "tie");
 		for (const row of fieldRows(block)) {
-			for (const key of row) writeLine(doc, tie, FIELD_LABELS[key] ?? humanize(key), shown(entry[key]));
+			for (const key of row) writeLine(doc, tie, tieLabel(block, key, entry), shown(entry[key]));
 		}
 	}
 }
 
-function renderCounter(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const line = add(box, doc, "div", "counter");
-	add(line, doc, "span", "card-label", block.label);
-	line.appendChild(value(doc, shown(at(source, block.paths[0])), "counter-value"));
+/** The attitude as the presentation words it, read from the levels it publishes; the modifier it sets is not printed. */
+function attitudeLabel(key: unknown, levels: readonly AdrenalineAttitudeLevel[]): string {
+	if (typeof key !== "string") return "";
+	const level = levels.find((candidate) => candidate.key === key);
+	return level ? level.label : key;
 }
 
-/** The attitude as the presentation words it, read from the levels it publishes; the modifier it sets is not printed. */
-function attitudeText(doc: Document, line: HTMLElement, key: unknown, levels: readonly AdrenalineAttitudeLevel[]): void {
-	if (typeof key !== "string") return;
-	const level = levels.find((candidate) => candidate.key === key);
-	line.appendChild(value(doc, level ? level.label : key, "write-field"));
+/** What an NPC field prints, whether on a card line or in a table cell. */
+function npcFieldText(key: string, entry: Record<string, unknown>, levels: readonly AdrenalineAttitudeLevel[]): string {
+	switch (key) {
+		case "attitude":
+			return attitudeLabel(entry.attitude, levels);
+		case "lien": {
+			const link = asRecord(entry.lien);
+			const type = typeof link?.type === "string" ? LINK_LABELS[link.type] ?? link.type : "";
+			return [type, shown(link?.description)].filter(Boolean).join(" · ");
+		}
+		case "reliesA":
+			return (Array.isArray(entry.reliesA) ? entry.reliesA.filter((item): item is number => typeof item === "number") : []).join(", ");
+		default:
+			if (!(key in FIELD_LABELS) && !reportedFields.has(key)) {
+				reportedFields.add(key);
+				log.warn(`Relations NPC field "${key}" has no dedicated rendering; it is shown as plain text.`);
+			}
+			return shown(entry[key]);
+	}
+}
+
+/** The box a drama test is ticked in: filled when the document says a test was made on the NPC. */
+function tickBox(doc: Document, parent: HTMLElement, done: boolean): HTMLElement {
+	const box = add(parent, doc, "span", "tick", done ? "✓" : "");
+	if (done) box.classList.add(`${ROOT}__tick--on`);
+	return box;
 }
 
 function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Record<string, unknown>, levels: readonly AdrenalineAttitudeLevel[]): void {
 	const label = FIELD_LABELS[key] ?? humanize(key);
-	switch (key) {
-		case "attitude": {
-			const line = add(card, doc, "div", "write-line");
-			add(line, doc, "b", "write-label", label);
-			if (entry.attitude === undefined) line.appendChild(value(doc, "", "write-field"));
-			else attitudeText(doc, line, entry.attitude, levels);
-			break;
-		}
-		case "lien": {
-			const link = asRecord(entry.lien);
-			const type = typeof link?.type === "string" ? LINK_LABELS[link.type] ?? link.type : "";
-			writeLine(doc, card, label, [type, shown(link?.description)].filter(Boolean).join(" · "));
-			break;
-		}
-		case "reliesA": {
-			const numbers = Array.isArray(entry.reliesA) ? entry.reliesA.filter((item): item is number => typeof item === "number") : [];
-			writeLine(doc, card, label, numbers.join(", "));
-			break;
-		}
-		case "resume":
-		case "notes":
-			writeLine(doc, card, label, shown(entry[key]));
-			break;
-		default:
-			if (!reportedFields.has(key)) {
-				reportedFields.add(key);
-				log.warn(`Relations NPC field "${key}" has no dedicated rendering; it is shown as a plain line.`);
+	if (key === "testDeDrame") {
+		const line = add(card, doc, "div", "write-line");
+		add(line, doc, "b", "write-label", label);
+		tickBox(doc, line, entry.testDeDrame === true);
+		return;
+	}
+	writeLine(doc, card, label, npcFieldText(key, entry, levels));
+}
+
+/** The NPCs as a table: a column per row of `fieldRows`, headed by its field, and a row per slot. */
+function renderNpcTable(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	const pointer = block.paths[0];
+	const entries = entriesAt(source, pointer);
+	const slots = slotCount(pointer, entries.length);
+	const levels = block.attitudeLevels ?? [];
+	const table = add(box, doc, "table", "npc-table");
+	const head = add(add(table, doc, "thead", "npc-table-head"), doc, "tr", "npc-table-row");
+	for (const row of fieldRows(block)) {
+		const cell = add(head, doc, "th", "npc-table-cell");
+		cell.classList.add(`${ROOT}__npc-table-cell--${row.join("-")}`);
+		cell.textContent = row.map((key) => FIELD_LABELS[key] ?? humanize(key)).join(" · ");
+	}
+	const body = add(table, doc, "tbody", "npc-table-body");
+	for (let index = 0; index < slots; index += 1) {
+		const entry = entries[index];
+		const line = add(body, doc, "tr", "npc-table-row");
+		if (!entry) line.classList.add(`${ROOT}__npc--empty`);
+		for (const row of fieldRows(block)) {
+			const cell = add(line, doc, "td", "npc-table-cell");
+			cell.classList.add(`${ROOT}__npc-table-cell--${row.join("-")}`);
+			for (const key of row) {
+				if (key === "testDeDrame") tickBox(doc, cell, entry?.testDeDrame === true);
+				else cell.appendChild(value(doc, npcFieldText(key, entry ?? {}, levels), key === "numero" ? "npc-number" : "write-field"));
 			}
-			writeLine(doc, card, label, shown(entry[key]));
+		}
 	}
 }
 
 /** One card per slot, filled column by column: the first half down the left column, the rest down the next. */
 function renderNpcEntries(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+	if (block.display === "table") {
+		renderNpcTable(doc, box, block, source);
+		return;
+	}
 	const pointer = block.paths[0];
 	const entries = entriesAt(source, pointer);
 	const slots = slotCount(pointer, entries.length);
@@ -206,7 +252,7 @@ function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresent
 }
 
 /* These forms print their own labels; any other block prints its title unless it repeats its section's. */
-const TITLED_ELSEWHERE = new Set(["name-card", "counter"]);
+const TITLED_ELSEWHERE = new Set(["name-card"]);
 
 function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionLabel: string, source: AdrenalineDocument): HTMLElement {
 	const box = node(doc, "div", block.id);
@@ -216,7 +262,6 @@ function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionL
 	switch (block.form) {
 		case "name-card": renderNameCard(doc, box, block, source); break;
 		case "pc-ties": renderPcTies(doc, box, block, source); break;
-		case "counter": renderCounter(doc, box, block, source); break;
 		case "npc-entries": renderNpcEntries(doc, box, block, source); break;
 		default: renderUnknown(doc, box, block, source);
 	}
@@ -235,9 +280,9 @@ function renderSection(doc: Document, section: AdrenalinePresentationSection, so
 	return container;
 }
 
-export function renderAdrenalineRelations(data: AdrenalineRelationsData, doc: Document): HTMLElement {
+export function renderAdrenalineRelations(data: AdrenalineRelationsData, doc: Document, presentation: AdrenalinePresentation = RELATIONS_PRESENTATION): HTMLElement {
 	const root = doc.createElement("article");
-	const appearance = RELATIONS_PRESENTATION.appearance;
+	const appearance = presentation.appearance;
 	root.classList.add(
 		adrenalineRelationsShape.root,
 		`${ROOT}--variant-${appearance.variant}`,
@@ -250,7 +295,7 @@ export function renderAdrenalineRelations(data: AdrenalineRelationsData, doc: Do
 	if (appearance.outerRule) root.classList.add(`${ROOT}--outer-rule`);
 	const source = adrenalineSourceDocument(data) ?? relationsToDocument(data);
 	const builders: Record<string, () => HTMLElement | null> = {};
-	for (const section of RELATIONS_PRESENTATION.sections) builders[section.id] = () => renderSection(doc, section, source);
+	for (const section of presentation.sections) builders[section.id] = () => renderSection(doc, section, source);
 	renderZones(root, adrenalineRelationsShape, builders);
 	return root;
 }

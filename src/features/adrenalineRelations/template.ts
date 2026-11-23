@@ -4,10 +4,9 @@ export const relationsTemplate = (): string =>
 personnage = "Nouveau personnage"
 joueur = "Nom du joueur"
 partie = "Nom de la partie"
-testsDeDrame = 0
 [[autresPersonnages]]
 nom = "Autre personnage"
-ceQueJeSais = "Ce que je sais de lui"
+ceQueJeSais = "Ce que je sais"
 [[pnjs]]
 numero = 1
 nom = "Nouveau PNJ"

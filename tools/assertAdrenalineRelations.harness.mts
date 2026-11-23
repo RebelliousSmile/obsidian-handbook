@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION } from "schema-adrenaline/presentation";
+import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION, type AdrenalinePresentation } from "schema-adrenaline/presentation";
 import { contractRefusal, publishedDefaultNumber, publishedMaxItems } from "../src/features/adrenaline/publishedContract";
 import { renderAdrenalineRelations } from "../src/features/adrenalineRelations/renderer";
 import { documentToRelations, parseRelationsDocument, relationsToToml } from "../src/features/adrenalineRelations/schema";
@@ -37,7 +37,7 @@ const read = (path: string): Record<string, unknown> => JSON.parse(readFileSync(
 const sections = RELATIONS_PRESENTATION.sections;
 assert.deepEqual(sections.map((section) => section.id), ["entete", "autresPersonnages", "pnjs"], "the sections of the relations sheet");
 const forms = sections.reduce<string[]>((all, section) => all.concat(section.blocks.map((block) => block.form ?? "")), []);
-for (const form of forms) assert.ok(["name-card", "pc-ties", "counter", "npc-entries"].indexOf(form) >= 0, `the form "${form}" has a dedicated rendering`);
+for (const form of forms) assert.ok(["name-card", "pc-ties", "npc-entries"].indexOf(form) >= 0, `the form "${form}" has a dedicated rendering`);
 assert.equal(adrenalineRelationsShape.block, RELATIONS_PRESENTATION.sheet.id, "the shape names the published sheet");
 assert.deepEqual(adrenalineRelationsShape.zones.map((zone) => zone.name), sections.map((section) => section.id), "one zone per published section");
 
@@ -56,9 +56,11 @@ const minimal = documentToRelations(read(join(base, "temoins/relations/temoin.js
 assert.ok(minimal, "the minimal witness is read");
 const minimalRoot = renderAdrenalineRelations(minimal, doc);
 assert.equal(withClass(minimalRoot, "tie").length, defaultSlots, "a sheet that sets no count prints the default places");
-assert.equal(withClass(minimalRoot, "npc").length, npcSlots, "one card per NPC the contract allows");
-assert.equal(withClass(minimalRoot, "npc--empty").length, npcSlots, "a sheet without NPCs prints only empty cards");
-assert.equal(withClass(minimalRoot, "npc-column").length, 2, "the NPC cards are laid out in two columns");
+const npcBlock = sections[2].blocks[0];
+assert.equal(npcBlock.display, "table", "the published NPC list is a table");
+assert.equal(withClass(minimalRoot, "npc-table-body")[0].children.length, npcSlots, "one table row per NPC the contract allows");
+assert.equal(withClass(minimalRoot, "npc--empty").length, npcSlots, "a sheet without NPCs prints only empty rows");
+assert.equal(withClass(minimalRoot, "npc-table-head")[0].children[0].children.length, (npcBlock.fieldRows ?? []).length, "one column per row of fields the contract publishes");
 assert.ok(withClass(minimalRoot, "card-value").some((node) => node.textContent === "Claire Vasseur"), "the character name is in the header");
 
 /* The full-capacity witness fills every place, none is dropped. */
@@ -74,8 +76,26 @@ assert.equal(withClass(renderAdrenalineRelations(few, doc), "tie").length, 2, "a
 const tooMany = documentToRelations({ ...few, autresPersonnages: [{ nom: "A" }, { nom: "B" }, { nom: "C" }] });
 assert.equal(withClass(renderAdrenalineRelations(tooMany!, doc), "tie").length, 3, "an entered place is never dropped under the count");
 assert.equal(relationsToToml(few).indexOf("nombreDAutresPersonnages = 2") >= 0, true, "the count survives a copy to TOML");
-assert.equal(withClass(fullRoot, "npc").length, npcSlots, "the full sheet keeps the NPC cards of the contract");
-assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no card of a full sheet is empty");
+assert.equal(withClass(fullRoot, "npc-table-body")[0].children.length, npcSlots, "the full sheet keeps the NPC rows of the contract");
+assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no row of a full sheet is empty");
+
+/* The cards stay drawable when the presentation drops the table: the contract alone brings the table back or removes it. */
+const asCards: AdrenalinePresentation = {
+	...RELATIONS_PRESENTATION,
+	sections: RELATIONS_PRESENTATION.sections.map((section) => section.id !== "pnjs" ? section : {
+		...section,
+		columns: 2,
+		blocks: section.blocks.map((block) => ({
+			...block,
+			display: undefined,
+			columns: 2,
+			fieldRows: [["numero", "nom"], ["attitude", "reliesA"], ["lien"], ["resume"], ["notes"], ["testDeDrame"]],
+		})),
+	}),
+};
+const cardsRoot = renderAdrenalineRelations(minimal, doc, asCards);
+assert.equal(withClass(cardsRoot, "npc").length, npcSlots, "without the table, one card per NPC");
+assert.equal(withClass(cardsRoot, "npc-column").length, 2, "without the table, the cards are laid out in two columns");
 
 /* The attitude is worded by the published levels, and the modifier it sets is not printed: its room goes to the links. */
 for (const level of ATTITUDE_LEVELS) {
@@ -83,8 +103,8 @@ for (const level of ATTITUDE_LEVELS) {
 	assert.ok(data, `attitude ${level.key}: the document is read`);
 	const root = renderAdrenalineRelations(data, doc);
 	assert.equal(withClass(root, "npc-modifier").length, 0, `attitude ${level.key}: no modifier is printed`);
-	const rows = withClass(root, "npc-row");
-	assert.equal(rows.length, withClass(root, "npc").length, `attitude ${level.key}: on each card the attitude and its links share one line`);
+	const rows = withClass(root, "npc-table-row").filter((row) => row.classes.indexOf(`${ROOT}__npc--empty`) < 0 && row.children[0].tagName === "td");
+	assert.equal(rows.length, 1, `attitude ${level.key}: the entered NPC is one table row`);
 	const text = rows[0].walk().map((node) => node.textContent).join(" ");
 	assert.ok(text.indexOf(level.label) >= 0, `attitude ${level.key}: the published label is printed`);
 	assert.ok(text.indexOf("2, 3") >= 0, `attitude ${level.key}: the links are on the attitude line`);
@@ -92,6 +112,21 @@ for (const level of ATTITUDE_LEVELS) {
 const noAttitude = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran" }] });
 assert.ok(noAttitude, "an NPC without attitude is read");
 assert.equal(withClass(renderAdrenalineRelations(noAttitude, doc), "npc-modifier").length, 0, "an NPC without attitude prints no modifier");
+
+/* The drama test is ticked on the NPC that made it, and only there. */
+const drama = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", testDeDrame: true }, { numero: 2, nom: "Gaëlle" }] });
+assert.ok(drama, "NPCs with a drama test are read");
+assert.equal(withClass(renderAdrenalineRelations(drama, doc), "tick--on").length, 1, "one NPC carries the drama test");
+
+/* The labels of the other characters follow their gender, and the gender itself is not printed. */
+const gendered = documentToRelations({ personnage: "Claire", autresPersonnages: [{ nom: "A", genre: "masculin" }, { nom: "B", genre: "feminin" }, { nom: "C", genre: "neutre" }, { nom: "D" }] });
+assert.ok(gendered, "other characters with a gender are read");
+const duLabel = (index: number): string => withClass(renderAdrenalineRelations(gendered, doc), "tie")[index].walk().map((node) => node.textContent).join("|");
+assert.ok(duLabel(0).indexOf("Ce qu'il me doit") >= 0, "a masculine character: what he owes me");
+assert.ok(duLabel(1).indexOf("Ce qu'elle me doit") >= 0, "a feminine character: what she owes me");
+assert.ok(duLabel(2).indexOf("Ce qu'iel me doit") >= 0, "a neutral character: what they owe me");
+assert.ok(duLabel(3).indexOf("Ce qu'iel me doit") >= 0, "a character without gender: the default wording");
+assert.ok(duLabel(0).indexOf("masculin") < 0, "the gender is not printed");
 
 /* A link to a number no NPC carries is shown as typed and does not break the sheet. */
 const orphan = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", reliesA: [7] }] });

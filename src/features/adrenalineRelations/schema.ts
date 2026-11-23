@@ -12,6 +12,7 @@ import { contractRefusal } from "../adrenaline/publishedContract";
 import {
 	AdrenalineRelationsData,
 	RelationAttitude,
+	RelationGender,
 	RelationLinkType,
 	RelationNpc,
 	RelationOtherCharacter,
@@ -19,6 +20,7 @@ import {
 
 const ATTITUDES: readonly string[] = ["hostile", "inamicale", "indifferente", "amicale", "loyale"];
 const LINK_TYPES: readonly string[] = ["familial", "amitie", "travail"];
+const GENDERS: readonly string[] = ["masculin", "feminin", "neutre"];
 
 /** A text as the player entered it: the contract bounds it, this file does not trim or cut it. */
 function entered(value: unknown): string | undefined {
@@ -29,14 +31,15 @@ function readOtherCharacter(value: unknown): RelationOtherCharacter | undefined 
 	const record = asRecord(value);
 	const nom = entered(record?.nom);
 	if (!record || !nom) return undefined;
-	warnUnknownKeys(record, ["nom", "ceQueJeSais", "ceQueJeLuiDois", "ceQuIlMeDoit"], "relations.autresPersonnages");
+	warnUnknownKeys(record, ["nom", "genre", "ceQueJeSais", "ceQueJeLuiDois", "ceQuOnMeDoit"], "relations.autresPersonnages");
 	const result: RelationOtherCharacter = { nom };
 	const known = entered(record.ceQueJeSais);
 	const owed = entered(record.ceQueJeLuiDois);
-	const owing = entered(record.ceQuIlMeDoit);
+	const owing = entered(record.ceQuOnMeDoit);
+	if (typeof record.genre === "string" && GENDERS.indexOf(record.genre) >= 0) result.genre = record.genre as RelationGender;
 	if (known) result.ceQueJeSais = known;
 	if (owed) result.ceQueJeLuiDois = owed;
-	if (owing) result.ceQuIlMeDoit = owing;
+	if (owing) result.ceQuOnMeDoit = owing;
 	return result;
 }
 
@@ -44,7 +47,7 @@ function readNpc(value: unknown): RelationNpc | undefined {
 	const record = asRecord(value);
 	const nom = entered(record?.nom);
 	if (!record || !nom || typeof record.numero !== "number") return undefined;
-	warnUnknownKeys(record, ["numero", "nom", "attitude", "lien", "reliesA", "resume", "notes"], "relations.pnjs");
+	warnUnknownKeys(record, ["numero", "nom", "attitude", "lien", "reliesA", "resume", "notes", "testDeDrame"], "relations.pnjs");
 	const result: RelationNpc = { numero: record.numero, nom };
 	if (typeof record.attitude === "string" && ATTITUDES.indexOf(record.attitude) >= 0) result.attitude = record.attitude as RelationAttitude;
 	const link = asRecord(record.lien);
@@ -58,6 +61,7 @@ function readNpc(value: unknown): RelationNpc | undefined {
 	const notes = entered(record.notes);
 	if (happened) result.resume = happened;
 	if (notes) result.notes = notes;
+	if (typeof record.testDeDrame === "boolean") result.testDeDrame = record.testDeDrame;
 	return result;
 }
 
@@ -65,7 +69,7 @@ export function documentToRelations(value: unknown): AdrenalineRelationsData | n
 	const document = asRecord(value);
 	if (!document) return null;
 	if (contractRefusal("relations", document)) return null;
-	warnUnknownKeys(document, ["personnage", "joueur", "partie", "nombreDAutresPersonnages", "autresPersonnages", "testsDeDrame", "pnjs", "meta"], "relations");
+	warnUnknownKeys(document, ["personnage", "joueur", "partie", "nombreDAutresPersonnages", "autresPersonnages", "pnjs", "meta"], "relations");
 	const personnage = entered(document.personnage);
 	if (!personnage) return null;
 	const data: AdrenalineRelationsData = { personnage };
@@ -80,7 +84,6 @@ export function documentToRelations(value: unknown): AdrenalineRelationsData | n
 			return other ? all.concat(other) : all;
 		}, []);
 	}
-	if (typeof document.testsDeDrame === "number") data.testsDeDrame = document.testsDeDrame;
 	if (Array.isArray(document.pnjs)) {
 		data.pnjs = document.pnjs.reduce<RelationNpc[]>((all, item) => {
 			const npc = readNpc(item);
@@ -105,7 +108,6 @@ export function relationsToDocument(data: AdrenalineRelationsData): AdrenalineDo
 	if (data.partie) document.partie = data.partie;
 	if (data.nombreDAutresPersonnages !== undefined) document.nombreDAutresPersonnages = data.nombreDAutresPersonnages;
 	if (data.autresPersonnages) document.autresPersonnages = data.autresPersonnages;
-	if (data.testsDeDrame !== undefined) document.testsDeDrame = data.testsDeDrame;
 	if (data.pnjs) document.pnjs = data.pnjs;
 	if (data.meta) document.meta = data.meta;
 	return document;
