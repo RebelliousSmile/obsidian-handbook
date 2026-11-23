@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION, type AdrenalinePresentation } from "schema-adrenaline/presentation";
+import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION } from "schema-adrenaline/presentation";
 import { contractRefusal, publishedDefaultNumber, publishedMaxItems } from "../src/features/adrenaline/publishedContract";
 import { renderAdrenalineRelations } from "../src/features/adrenalineRelations/renderer";
 import { documentToRelations, parseRelationsDocument, relationsToToml } from "../src/features/adrenalineRelations/schema";
@@ -57,10 +57,9 @@ assert.ok(minimal, "the minimal witness is read");
 const minimalRoot = renderAdrenalineRelations(minimal, doc);
 assert.equal(withClass(minimalRoot, "tie").length, defaultSlots, "a sheet that sets no count prints the default places");
 const npcBlock = sections[2].blocks[0];
-assert.equal(npcBlock.display, "table", "the published NPC list is a table");
-assert.equal(withClass(minimalRoot, "npc-table-body")[0].children.length, npcSlots, "one table row per NPC the contract allows");
-assert.equal(withClass(minimalRoot, "npc--empty").length, npcSlots, "a sheet without NPCs prints only empty rows");
-assert.equal(withClass(minimalRoot, "npc-table-head")[0].children[0].children.length, (npcBlock.fieldRows ?? []).length, "one column per row of fields the contract publishes");
+assert.equal(withClass(minimalRoot, "npc").length, npcSlots, "one card per NPC the contract allows");
+assert.equal(withClass(minimalRoot, "npc-column").length, npcBlock.columns, "the cards are laid out in the columns the contract publishes");
+assert.equal(withClass(minimalRoot, "npc--empty").length, npcSlots, "a sheet without NPCs prints only empty cards");
 assert.ok(withClass(minimalRoot, "card-value").some((node) => node.textContent === "Claire Vasseur"), "the character name is in the header");
 
 /* The full-capacity witness fills every place, none is dropped. */
@@ -76,26 +75,8 @@ assert.equal(withClass(renderAdrenalineRelations(few, doc), "tie").length, 2, "a
 const tooMany = documentToRelations({ ...few, autresPersonnages: [{ nom: "A" }, { nom: "B" }, { nom: "C" }] });
 assert.equal(withClass(renderAdrenalineRelations(tooMany!, doc), "tie").length, 3, "an entered place is never dropped under the count");
 assert.equal(relationsToToml(few).indexOf("nombreDAutresPersonnages = 2") >= 0, true, "the count survives a copy to TOML");
-assert.equal(withClass(fullRoot, "npc-table-body")[0].children.length, npcSlots, "the full sheet keeps the NPC rows of the contract");
-assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no row of a full sheet is empty");
-
-/* The cards stay drawable when the presentation drops the table: the contract alone brings the table back or removes it. */
-const asCards: AdrenalinePresentation = {
-	...RELATIONS_PRESENTATION,
-	sections: RELATIONS_PRESENTATION.sections.map((section) => section.id !== "pnjs" ? section : {
-		...section,
-		columns: 2,
-		blocks: section.blocks.map((block) => ({
-			...block,
-			display: undefined,
-			columns: 2,
-			fieldRows: [["numero", "nom"], ["attitude", "reliesA"], ["lien"], ["resume"], ["notes"], ["toucheParLeDrame"]],
-		})),
-	}),
-};
-const cardsRoot = renderAdrenalineRelations(minimal, doc, asCards);
-assert.equal(withClass(cardsRoot, "npc").length, npcSlots, "without the table, one card per NPC");
-assert.equal(withClass(cardsRoot, "npc-column").length, 2, "without the table, the cards are laid out in two columns");
+assert.equal(withClass(fullRoot, "npc").length, npcSlots, "the full sheet keeps the NPC cards of the contract");
+assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no card of a full sheet is empty");
 
 /* The attitude is worded by the published levels, and the modifier it sets is not printed: its room goes to the links. */
 for (const level of ATTITUDE_LEVELS) {
@@ -103,8 +84,8 @@ for (const level of ATTITUDE_LEVELS) {
 	assert.ok(data, `attitude ${level.key}: the document is read`);
 	const root = renderAdrenalineRelations(data, doc);
 	assert.equal(withClass(root, "npc-modifier").length, 0, `attitude ${level.key}: no modifier is printed`);
-	const rows = withClass(root, "npc-table-row").filter((row) => row.classes.indexOf(`${ROOT}__npc--empty`) < 0 && row.children[0].tagName === "td");
-	assert.equal(rows.length, 1, `attitude ${level.key}: the entered NPC is one table row`);
+	const rows = withClass(root, "npc").filter((card) => card.classes.indexOf(`${ROOT}__npc--empty`) < 0);
+	assert.equal(rows.length, 1, `attitude ${level.key}: the entered NPC is one card`);
 	const text = rows[0].walk().map((node) => node.textContent).join(" ");
 	assert.ok(text.indexOf(level.label) >= 0, `attitude ${level.key}: the published label is printed`);
 	assert.ok(text.indexOf("2, 3") >= 0, `attitude ${level.key}: the links are on the attitude line`);

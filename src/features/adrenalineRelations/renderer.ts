@@ -1,7 +1,6 @@
 import {
 	RELATIONS_PRESENTATION,
 	type AdrenalineAttitudeLevel,
-	type AdrenalinePresentation,
 	type AdrenalinePresentationBlock,
 	type AdrenalinePresentationSection,
 } from "schema-adrenaline/presentation";
@@ -178,41 +177,8 @@ function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Re
 	writeLine(doc, card, label, npcFieldText(key, entry, levels));
 }
 
-/** The NPCs as a table: a column per row of `fieldRows`, headed by its field, and a row per slot. */
-function renderNpcTable(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	const pointer = block.paths[0];
-	const entries = entriesAt(source, pointer);
-	const slots = slotCount(pointer, entries.length);
-	const levels = block.attitudeLevels ?? [];
-	const table = add(box, doc, "table", "npc-table");
-	const head = add(add(table, doc, "thead", "npc-table-head"), doc, "tr", "npc-table-row");
-	for (const row of fieldRows(block)) {
-		const cell = add(head, doc, "th", "npc-table-cell");
-		cell.classList.add(`${ROOT}__npc-table-cell--${row.join("-")}`);
-		cell.textContent = row.map((key) => FIELD_LABELS[key] ?? humanize(key)).join(" · ");
-	}
-	const body = add(table, doc, "tbody", "npc-table-body");
-	for (let index = 0; index < slots; index += 1) {
-		const entry = entries[index];
-		const line = add(body, doc, "tr", "npc-table-row");
-		if (!entry) line.classList.add(`${ROOT}__npc--empty`);
-		for (const row of fieldRows(block)) {
-			const cell = add(line, doc, "td", "npc-table-cell");
-			cell.classList.add(`${ROOT}__npc-table-cell--${row.join("-")}`);
-			for (const key of row) {
-				if (key === "toucheParLeDrame") tickBox(doc, cell, entry?.toucheParLeDrame === true);
-				else cell.appendChild(value(doc, npcFieldText(key, entry ?? {}, levels), key === "numero" ? "npc-number" : "write-field"));
-			}
-		}
-	}
-}
-
 /** One card per slot, filled column by column: the first half down the left column, the rest down the next. */
 function renderNpcEntries(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
-	if (block.display === "table") {
-		renderNpcTable(doc, box, block, source);
-		return;
-	}
 	const pointer = block.paths[0];
 	const entries = entriesAt(source, pointer);
 	const slots = slotCount(pointer, entries.length);
@@ -280,9 +246,9 @@ function renderSection(doc: Document, section: AdrenalinePresentationSection, so
 	return container;
 }
 
-export function renderAdrenalineRelations(data: AdrenalineRelationsData, doc: Document, presentation: AdrenalinePresentation = RELATIONS_PRESENTATION): HTMLElement {
+export function renderAdrenalineRelations(data: AdrenalineRelationsData, doc: Document): HTMLElement {
 	const root = doc.createElement("article");
-	const appearance = presentation.appearance;
+	const appearance = RELATIONS_PRESENTATION.appearance;
 	root.classList.add(
 		adrenalineRelationsShape.root,
 		`${ROOT}--variant-${appearance.variant}`,
@@ -295,7 +261,7 @@ export function renderAdrenalineRelations(data: AdrenalineRelationsData, doc: Do
 	if (appearance.outerRule) root.classList.add(`${ROOT}--outer-rule`);
 	const source = adrenalineSourceDocument(data) ?? relationsToDocument(data);
 	const builders: Record<string, () => HTMLElement | null> = {};
-	for (const section of presentation.sections) builders[section.id] = () => renderSection(doc, section, source);
+	for (const section of RELATIONS_PRESENTATION.sections) builders[section.id] = () => renderSection(doc, section, source);
 	renderZones(root, adrenalineRelationsShape, builders);
 	return root;
 }

@@ -204,38 +204,6 @@
 	// Dans une rangée partagée, le champ garde une base courte : le libellé et son champ tiennent côte à côte, sans passer à la ligne.
 	.brumes-adrenaline-relations__npc-row .brumes-adrenaline-relations__write-field { flex-basis: 3em; }
 
-	// PNJ en tableau : une rangée par PNJ, une colonne par champ. Le lignage pointillé reste celui des champs (1.5em).
-	.brumes-adrenaline-relations__npc-table {
-		width: 100%;
-		border-collapse: collapse;
-		table-layout: fixed;
-	}
-	.brumes-adrenaline-relations__npc-table-head .brumes-adrenaline-relations__npc-table-cell {
-		padding: 2px 4px;
-		background: var(--adrenaline-band);
-		color: var(--adrenaline-band-ink);
-		font-family: var(--font-header-theme);
-		font-size: 9px;
-		font-weight: 800;
-		letter-spacing: 0.04em;
-		text-align: center;
-		text-transform: uppercase;
-	}
-	.brumes-adrenaline-relations__npc-table-body .brumes-adrenaline-relations__npc-table-cell {
-		vertical-align: top;
-		padding: 2px 4px;
-		border: 1px solid var(--adrenaline-field-border);
-	}
-	.brumes-adrenaline-relations__npc-table-cell--numero,
-	.brumes-adrenaline-relations__npc-table-cell--toucheParLeDrame { width: 3.2em; text-align: center; }
-	.brumes-adrenaline-relations__npc-table-cell--attitude,
-	.brumes-adrenaline-relations__npc-table-cell--reliesA { width: 6.5em; }
-	.brumes-adrenaline-relations__npc-table .brumes-adrenaline-relations__write-field { display: block; }
-	.brumes-adrenaline-relations__npc-table .brumes-adrenaline-relations__npc-number {
-		display: block;
-		border: 0;
-		min-height: 1.5em;
-	}
 	// Case de test de Drame : cochée, elle prend la couleur du jeu.
 	.brumes-adrenaline-relations__tick {
 		display: inline-flex;
