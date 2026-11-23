@@ -24,8 +24,8 @@ importers:
         specifier: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz
         version: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz
       schema-pbta:
-        specifier: https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1-rc.1/schema-pbta-15.0.1.tgz
-        version: https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1-rc.1/schema-pbta-15.0.1.tgz
+        specifier: https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1/schema-pbta-15.0.1.tgz
+        version: https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1/schema-pbta-15.0.1.tgz
       smol-toml:
         specifier: ^1.8.0
         version: 1.8.0
@@ -1520,8 +1520,8 @@ packages:
     resolution: {integrity: sha512-OQTxEOvYS0J276UXon3Acu907x7/723Xt+ZFjHuG3neNXpi4PnBuFE9c3m5sAHGFoEERrJRV+KcaUc89DEKuLw==, tarball: https://github.com/RebelliousSmile/schema-in-the-mist/releases/download/v1.7.0/schema-in-the-mist-1.7.0.tgz}
     version: 1.7.0
 
-  schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1-rc.1/schema-pbta-15.0.1.tgz:
-    resolution: {integrity: sha512-TmTVv4KutQsax7j4cG0AabWEbs2bWnrT9skGJ244jFbWN5ow/tQ8DPSo8zbom4D/5azJBEjISxcV6KIkBg84rg==, tarball: https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1-rc.1/schema-pbta-15.0.1.tgz}
+  schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1/schema-pbta-15.0.1.tgz:
+    resolution: {integrity: sha512-TmTVv4KutQsax7j4cG0AabWEbs2bWnrT9skGJ244jFbWN5ow/tQ8DPSo8zbom4D/5azJBEjISxcV6KIkBg84rg==, tarball: https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1/schema-pbta-15.0.1.tgz}
     version: 15.0.1
 
   semver@6.3.1:
@@ -3416,7 +3416,7 @@ snapshots:
       smol-toml: 1.8.0
       zod: 4.6.2
 
-  schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1-rc.1/schema-pbta-15.0.1.tgz:
+  schema-pbta@https://github.com/RebelliousSmile/schema-pbta/releases/download/v15.0.1/schema-pbta-15.0.1.tgz:
     dependencies:
       smol-toml: 1.8.0
       zod: 4.6.2
