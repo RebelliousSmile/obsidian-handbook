@@ -89,7 +89,7 @@ const asCards: AdrenalinePresentation = {
 			...block,
 			display: undefined,
 			columns: 2,
-			fieldRows: [["numero", "nom"], ["attitude", "reliesA"], ["lien"], ["resume"], ["notes"], ["testDeDrame"]],
+			fieldRows: [["numero", "nom"], ["attitude", "reliesA"], ["lien"], ["resume"], ["notes"], ["toucheParLeDrame"]],
 		})),
 	}),
 };
@@ -114,7 +114,7 @@ assert.ok(noAttitude, "an NPC without attitude is read");
 assert.equal(withClass(renderAdrenalineRelations(noAttitude, doc), "npc-modifier").length, 0, "an NPC without attitude prints no modifier");
 
 /* The drama test is ticked on the NPC that made it, and only there. */
-const drama = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", testDeDrame: true }, { numero: 2, nom: "Gaëlle" }] });
+const drama = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", toucheParLeDrame: true }, { numero: 2, nom: "Gaëlle" }] });
 assert.ok(drama, "NPCs with a drama test are read");
 assert.equal(withClass(renderAdrenalineRelations(drama, doc), "tick--on").length, 1, "one NPC carries the drama test");
 

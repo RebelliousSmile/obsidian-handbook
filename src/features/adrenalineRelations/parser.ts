@@ -25,7 +25,7 @@ export interface RelationNpc {
 	resume?: string;
 	notes?: string;
 	/** A drama test was made on this NPC: one or several per sheet, the tick is on each NPC. */
-	testDeDrame?: boolean;
+	toucheParLeDrame?: boolean;
 }
 
 export interface AdrenalineRelationsData {

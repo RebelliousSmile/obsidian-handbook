@@ -30,7 +30,7 @@ const FIELD_LABELS: Record<string, string> = {
 	reliesA: "Relié à",
 	resume: "Résumé",
 	notes: "Notes",
-	testDeDrame: "Test de drame",
+	toucheParLeDrame: "Touché",
 };
 const LINK_LABELS: Record<string, string> = { familial: "Familial", amitie: "Amitié", travail: "Travail" };
 
@@ -169,10 +169,10 @@ function tickBox(doc: Document, parent: HTMLElement, done: boolean): HTMLElement
 
 function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Record<string, unknown>, levels: readonly AdrenalineAttitudeLevel[]): void {
 	const label = FIELD_LABELS[key] ?? humanize(key);
-	if (key === "testDeDrame") {
+	if (key === "toucheParLeDrame") {
 		const line = add(card, doc, "div", "write-line");
 		add(line, doc, "b", "write-label", label);
-		tickBox(doc, line, entry.testDeDrame === true);
+		tickBox(doc, line, entry.toucheParLeDrame === true);
 		return;
 	}
 	writeLine(doc, card, label, npcFieldText(key, entry, levels));
@@ -200,7 +200,7 @@ function renderNpcTable(doc: Document, box: HTMLElement, block: AdrenalinePresen
 			const cell = add(line, doc, "td", "npc-table-cell");
 			cell.classList.add(`${ROOT}__npc-table-cell--${row.join("-")}`);
 			for (const key of row) {
-				if (key === "testDeDrame") tickBox(doc, cell, entry?.testDeDrame === true);
+				if (key === "toucheParLeDrame") tickBox(doc, cell, entry?.toucheParLeDrame === true);
 				else cell.appendChild(value(doc, npcFieldText(key, entry ?? {}, levels), key === "numero" ? "npc-number" : "write-field"));
 			}
 		}
