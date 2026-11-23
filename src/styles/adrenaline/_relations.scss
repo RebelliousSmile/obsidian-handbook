@@ -216,6 +216,8 @@
 		gap: 0 10px;
 		align-items: baseline;
 	}
+	// Dans une rangée partagée, le champ garde une base courte : le libellé et son champ tiennent côte à côte, sans passer à la ligne.
+	.brumes-adrenaline-relations__npc-row .brumes-adrenaline-relations__write-field { flex-basis: 3em; }
 
 	// Note de fin de bloc.
 	.brumes-adrenaline-relations__block-note {
