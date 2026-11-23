@@ -138,7 +138,7 @@
 		text-align: center;
 	}
 
-	// Autres personnages : quatre fiches côte à côte.
+	// Autres personnages : les fiches côte à côte, sur toute la largeur jusqu'à quatre ; au-delà, des rangées égales (le rendu pose `--ties-per-row`).
 	.brumes-adrenaline-relations__tie {
 		display: flex;
 		flex-direction: column;
@@ -149,10 +149,10 @@
 	}
 	.brumes-adrenaline-relations__form-pc-ties {
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-columns: repeat(var(--ties-per-row, 4), minmax(0, 1fr));
 		gap: 8px;
 	}
-	.brumes-adrenaline-relations__form-pc-ties > :not(.brumes-adrenaline-relations__tie) { grid-column: 1 / -1; }
+	.brumes-adrenaline-relations__form-pc-ties >:not(.brumes-adrenaline-relations__tie) { grid-column: 1 / -1; }
 
 	// PNJ : deux colonnes de cinq fiches, remplies colonne par colonne.
 	.brumes-adrenaline-relations__npc-columns {

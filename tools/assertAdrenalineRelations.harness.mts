@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION } from "schema-adrenaline/presentation";
+import { ATTITUDE_LEVELS, RELATIONS_PRESENTATION, placesPerRow } from "schema-adrenaline/presentation";
 import { contractRefusal, publishedDefaultNumber, publishedMaxItems } from "../src/features/adrenaline/publishedContract";
 import { renderAdrenalineRelations } from "../src/features/adrenalineRelations/renderer";
 import { documentToRelations, parseRelationsDocument, relationsToToml } from "../src/features/adrenalineRelations/schema";
@@ -20,7 +20,8 @@ class El {
 	dataset: Record<string, string> = {};
 	classes: string[] = [];
 	attributes: Record<string, string> = {};
-	style = { setProperty: (_name: string, _value: string) => undefined };
+	properties: Record<string, string> = {};
+	style = { setProperty: (name: string, value: string) => { this.properties[name] = value; } };
 	classList = { add: (...names: string[]) => { for (const name of names) this.classes.push(name); } };
 	constructor(readonly tagName: string) {}
 	setAttribute(name: string, value: string): void { this.attributes[name] = value; }
@@ -74,6 +75,15 @@ assert.ok(few, "the two-character witness is read");
 assert.equal(withClass(renderAdrenalineRelations(few, doc), "tie").length, 2, "a count of two prints two places");
 const tooMany = documentToRelations({ ...few, autresPersonnages: [{ nom: "A" }, { nom: "B" }, { nom: "C" }] });
 assert.equal(withClass(renderAdrenalineRelations(tooMany!, doc), "tie").length, 3, "an entered place is never dropped under the count");
+/* The places share the width: one row of as many as printed up to the section columns, even rows beyond. */
+const placesCount = (count: number): string => {
+	const data = documentToRelations({ personnage: "Claire", nombreDAutresPersonnages: count });
+	assert.ok(data, `a count of ${count} is read`);
+	return withClass(renderAdrenalineRelations(data, doc), "form-pc-ties")[0]?.properties["--ties-per-row"] ?? "";
+};
+const maxPerRow = sections[1].columns ?? 1;
+for (let count = 1; count <= (otherSlots ?? 0); count += 1) assert.equal(placesCount(count), String(placesPerRow(count, maxPerRow)), `${count} places: the row width the contract computes`);
+assert.deepEqual([1, 2, 3, 4, 5, 6].map((count) => placesPerRow(count, 4)), [1, 2, 3, 4, 3, 3], "up to four places fill one row, five and six make two rows of three");
 assert.equal(relationsToToml(few).indexOf("nombreDAutresPersonnages = 2") >= 0, true, "the count survives a copy to TOML");
 assert.equal(withClass(fullRoot, "npc").length, npcSlots, "the full sheet keeps the NPC cards of the contract");
 assert.equal(withClass(fullRoot, "npc--empty").length, 0, "no card of a full sheet is empty");

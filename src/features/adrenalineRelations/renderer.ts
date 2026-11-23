@@ -1,5 +1,6 @@
 import {
 	RELATIONS_PRESENTATION,
+	placesPerRow,
 	type AdrenalineAttitudeLevel,
 	type AdrenalinePresentationBlock,
 	type AdrenalinePresentationSection,
@@ -114,14 +115,16 @@ function tieLabel(block: AdrenalinePresentationBlock, key: string, entry: Record
 
 /**
  * One slot per place the sheet prints: the count the document sets at `countPath`, else the default the contract publishes,
- * never fewer than the entries the document holds. The places are laid out by rows of the section columns.
+ * never fewer than the entries the document holds. The section columns are the most places a row holds: the places fill
+ * the width up to that, and split into even rows beyond it (`placesPerRow`).
  */
-function renderPcTies(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
+function renderPcTies(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument, maxPerRow: number): void {
 	const pointer = block.paths[0];
 	const entries = entriesAt(source, pointer);
 	const entered = block.countPath === undefined ? undefined : at(source, block.countPath);
 	const printed = typeof entered === "number" ? entered : block.countPath === undefined ? undefined : publishedDefaultNumber("relations", block.countPath);
 	const slots = printed === undefined ? slotCount(pointer, entries.length) : Math.max(entries.length, printed);
+	box.style.setProperty("--ties-per-row", String(placesPerRow(slots, maxPerRow)));
 	for (let index = 0; index < slots; index += 1) {
 		const entry = entries[index] ?? {};
 		const tie = add(box, doc, "div", "tie");
@@ -220,14 +223,15 @@ function renderUnknown(doc: Document, box: HTMLElement, block: AdrenalinePresent
 /* These forms print their own labels; any other block prints its title unless it repeats its section's. */
 const TITLED_ELSEWHERE = new Set(["name-card"]);
 
-function renderBlock(doc: Document, block: AdrenalinePresentationBlock, sectionLabel: string, source: AdrenalineDocument): HTMLElement {
+function renderBlock(doc: Document, block: AdrenalinePresentationBlock, section: AdrenalinePresentationSection, source: AdrenalineDocument): HTMLElement {
+	const sectionLabel = section.label;
 	const box = node(doc, "div", block.id);
 	box.classList.add(`${ROOT}__block`, `${ROOT}__form-${block.form ?? "none"}`, `${ROOT}__layout-${block.layout}`);
 	if (block.columns) box.classList.add(`${ROOT}__block-columns-${block.columns}`);
 	if (!TITLED_ELSEWHERE.has(block.form ?? "") && block.label !== sectionLabel) add(box, doc, "h5", "block-title", block.label);
 	switch (block.form) {
 		case "name-card": renderNameCard(doc, box, block, source); break;
-		case "pc-ties": renderPcTies(doc, box, block, source); break;
+		case "pc-ties": renderPcTies(doc, box, block, source, section.columns ?? 1); break;
 		case "npc-entries": renderNpcEntries(doc, box, block, source); break;
 		default: renderUnknown(doc, box, block, source);
 	}
@@ -242,7 +246,7 @@ function renderSection(doc: Document, section: AdrenalinePresentationSection, so
 	if (section.layout !== "banner" && section.showTitle !== false) add(container, doc, "h4", "section-title", section.label);
 	const body = add(container, doc, "div", "section-body");
 	body.classList.add(`${ROOT}__columns-${section.columns ?? 1}`, `${ROOT}__layout-${section.layout}`);
-	for (const block of [...section.blocks].sort((a, b) => a.order - b.order)) body.appendChild(renderBlock(doc, block, section.label, source));
+	for (const block of [...section.blocks].sort((a, b) => a.order - b.order)) body.appendChild(renderBlock(doc, block, section, source));
 	return container;
 }
 
