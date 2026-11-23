@@ -449,7 +449,7 @@ type ResolveImage = (path: string) => string | null;
  * holds no portrait prints none: the section is collapsible and prints only what is entered.
  */
 function renderPortrait(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument, name: string, resolveImage?: ResolveImage): void {
-	const frame = add(box, doc, "figure", "portrait");
+	const frame = add(box, doc, "figure", "portrait-frame");
 	const reference = text(at(source, block.paths[0])).trim();
 	const address = reference ? resolveImage?.(reference) ?? (/^https:\/\//i.test(reference) ? reference : null) : null;
 	if (address) {
@@ -458,7 +458,7 @@ function renderPortrait(doc: Document, box: HTMLElement, block: AdrenalinePresen
 		image.alt = `Portrait de ${name}`;
 		frame.appendChild(image);
 	} else {
-		frame.classList.add(`${ROOT}__portrait--empty`);
+		frame.classList.add(`${ROOT}__portrait-frame--empty`);
 		add(frame, doc, "span", "portrait-missing", "Portrait à ajouter");
 	}
 	add(frame, doc, "figcaption", "portrait-name", name);

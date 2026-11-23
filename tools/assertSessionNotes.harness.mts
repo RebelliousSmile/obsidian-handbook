@@ -51,21 +51,29 @@ function assertNotesLast(root: unknown, label: string, text: string, what: strin
 	assert.equal(children[children.length - 1], notes[0], `${what}: the notes page comes last`);
 }
 
-/* Adrenaline player character. */
-const pjLabel = (PJ_PRESENTATION.pages as readonly AdrenalinePresentationPage[]).find((page) => page.notesPath)?.label.fr;
-assert.ok(pjLabel, "the Adrenaline contract publishes a notes page");
+/* Adrenaline player character: its game notes are a block of the identity section, not a page after the sheet. */
+const pjBlock = PJ_PRESENTATION.sections.reduce<{ id: string; label: string; section: string } | undefined>((found, section) => found ?? section.blocks.filter((block) => block.paths.indexOf("/notesDePartie") >= 0).map((block) => ({ id: block.id, label: block.label, section: section.id }))[0], undefined);
+assert.ok(pjBlock, "the Adrenaline contract publishes the game notes as a block of a section");
+assert.equal((PJ_PRESENTATION.pages as readonly AdrenalinePresentationPage[]).filter((page) => page.notesPath).length, 0, "the Adrenaline contract publishes no separate notes page");
 const pjWitness = JSON.parse(readFileSync("node_modules/schema-adrenaline/corpus/temoins/pj/temoin.json", "utf8")) as Record<string, unknown>;
 const pjText = String(pjWitness.notesDePartie ?? "");
 assert.ok(pjText.trim() !== "", "the Adrenaline witness carries session notes");
 const pj = documentToPj(pjWitness);
 assert.ok(pj, "the Adrenaline witness is read");
-assertNotesLast(renderAdrenalinePj(pj, doc), pjLabel, pjText, "adrenaline-pj");
+const pjBlocksOf = (root: unknown): El[] => (root as El).walk().filter((node) => node.classes.indexOf(`brumes-adrenaline-pj__${pjBlock.id}`) >= 0);
+const pjSheet = renderAdrenalinePj(pj, doc);
+const pjNotes = pjBlocksOf(pjSheet);
+assert.equal(pjNotes.length, 1, "adrenaline-pj: the game notes are drawn once");
+assert.equal(notesOf(pjSheet).length, 0, "adrenaline-pj: no notes page follows the sheet");
+assert.ok(pjNotes[0].walk().some((node) => node.textContent === pjText), "adrenaline-pj: the notes carry the text as typed");
+const pjSection = (pjSheet as El).walk().find((node) => node.classes.indexOf(`brumes-adrenaline-pj--${pjBlock.section}`) >= 0);
+assert.ok(pjSection && pjSection.walk().indexOf(pjNotes[0]) >= 0, "adrenaline-pj: the notes sit in the section the contract publishes");
 for (const blank of [undefined, "", "  \n "]) {
 	// An absent field is a missing key: the contract types it as a string, so `undefined` is not a value.
 	const { notesDePartie: _typed, ...withoutNotes } = pjWitness;
 	const emptied = documentToPj(blank === undefined ? withoutNotes : { ...withoutNotes, notesDePartie: blank });
 	assert.ok(emptied, `adrenaline-pj: a sheet with notes ${JSON.stringify(blank)} is still read`);
-	assert.equal(notesOf(renderAdrenalinePj(emptied, doc)).length, 0, `adrenaline-pj: notes ${JSON.stringify(blank)} draw nothing`);
+	assert.equal(pjBlocksOf(renderAdrenalinePj(emptied, doc)).length, 0, `adrenaline-pj: notes ${JSON.stringify(blank)} draw nothing`);
 }
 
 /* Otherscape character. */

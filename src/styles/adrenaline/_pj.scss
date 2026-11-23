@@ -309,7 +309,7 @@ $ink-roles: box-ticked, dot-filled;
 	.brumes-adrenaline-pj__narrative { margin: 0; white-space: pre-wrap; }
 
 	// Portrait : une illustration à côté de la carte d'identité, le nom en légende ; sans image, un cadre à remplir.
-	.brumes-adrenaline-pj__portrait {
+	.brumes-adrenaline-pj__portrait-frame {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
