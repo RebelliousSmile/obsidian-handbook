@@ -172,9 +172,7 @@ function tickBox(doc: Document, parent: HTMLElement, done: boolean): HTMLElement
 function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Record<string, unknown>, levels: readonly AdrenalineAttitudeLevel[]): void {
 	const label = FIELD_LABELS[key] ?? humanize(key);
 	if (key === "toucheParLeDrame") {
-		const line = add(card, doc, "div", "write-line");
-		add(line, doc, "b", "write-label", label);
-		tickBox(doc, line, entry.toucheParLeDrame === true);
+		tickBox(doc, card, entry.toucheParLeDrame === true);
 		return;
 	}
 	writeLine(doc, card, label, npcFieldText(key, entry, levels));
@@ -196,10 +194,12 @@ function renderNpcEntries(doc: Document, box: HTMLElement, block: AdrenalinePres
 			const card = add(side, doc, "div", "npc");
 			if (!entry) card.classList.add(`${ROOT}__npc--empty`);
 			for (const row of fieldRows(block)) {
-				if (row.length === 2 && row[0] === "numero") {
+				if (row[0] === "numero") {
+					// The head of the card: number, name, and the free tick to the right of the name when the sheet publishes it.
 					const head = add(card, doc, "div", "npc-head");
 					head.appendChild(value(doc, shown(entry?.numero), "npc-number"));
 					head.appendChild(value(doc, shown(entry?.nom), "npc-name"));
+					for (const key of row.slice(2)) renderNpcField(doc, head, key, entry ?? {}, levels);
 					continue;
 				}
 				// A row of several fields is one line of the card: each field takes its share of it.

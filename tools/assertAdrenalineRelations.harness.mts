@@ -108,6 +108,9 @@ assert.equal(withClass(renderAdrenalineRelations(noAttitude, doc), "npc-modifier
 const drama = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", toucheParLeDrame: true }, { numero: 2, nom: "Gaëlle" }] });
 assert.ok(drama, "NPCs with a drama test are read");
 assert.equal(withClass(renderAdrenalineRelations(drama, doc), "tick--on").length, 1, "one NPC carries the drama test");
+const heads = withClass(renderAdrenalineRelations(drama, doc), "npc-head");
+assert.ok(heads.length > 0 && heads.every((head) => head.children.length === 3 && head.children[2].classes.indexOf(`${ROOT}__tick`) >= 0), "the tick sits to the right of the name of every NPC");
+assert.equal(withClass(renderAdrenalineRelations(drama, doc), "npc").every((card) => card.walk().every((node) => node.textContent !== "Touché")), true, "the tick carries no label");
 
 /* The labels of the other characters follow their gender, and the gender itself is not printed. */
 const gendered = documentToRelations({ personnage: "Claire", autresPersonnages: [{ nom: "A", genre: "masculin" }, { nom: "B", genre: "feminin" }, { nom: "C", genre: "neutre" }, { nom: "D" }] });
