@@ -98,17 +98,17 @@
 	.brumes-adrenaline-relations--values-handwritten .brumes-adrenaline-relations__write-field { line-height: 1.5em; }
 	.brumes-adrenaline-relations__value { min-width: 0; }
 
-	// Ligne d'écriture : libellé, champ réglé. Le pointillé se répète à chaque ligne de texte (une ligne = 1.5em),
-	// donc un texte qui passe à la ligne reste posé sur son lignage, et le libellé s'aligne sur la première ligne.
+	// Ligne d'écriture : libellé, champ réglé à sa droite. Le pointillé se répète à chaque ligne de texte (une ligne = 1.5em),
+	// donc un texte long passe à la ligne dans son champ, posé sur son lignage, et le libellé reste sur la première ligne.
 	.brumes-adrenaline-relations__write-line {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		align-items: baseline;
 		gap: 0 5px;
 		min-width: 0;
 	}
 	.brumes-adrenaline-relations__write-field {
-		flex: 1 1 7em;
+		flex: 1 1 3em;
 		min-width: 0;
 		min-height: 1.5em;
 		line-height: 1.5em;
@@ -177,7 +177,10 @@
 	}
 	.brumes-adrenaline-relations__npc-head {
 		display: grid;
-		grid-template-columns: 26px minmax(0, 1fr) auto;
+		// Numéro, nom ; puis, chacun à sa largeur, le repère de genre et la case libre.
+		grid-template-columns: 26px minmax(0, 1fr);
+		grid-auto-columns: auto;
+		grid-auto-flow: column;
 		align-items: end;
 		gap: 6px;
 	}
@@ -201,10 +204,8 @@
 		gap: 0 10px;
 		align-items: baseline;
 	}
-	// Dans une rangée partagée, le champ garde une base courte : le libellé et son champ tiennent côte à côte, sans passer à la ligne.
-	.brumes-adrenaline-relations__npc-row .brumes-adrenaline-relations__write-field { flex-basis: 3em; }
 
-	// Repère de genre, à droite du nom d'un autre personnage : un encadré rempli, comme le badge de dés des cartes.
+	// Repère de genre, à droite du nom d'un personnage (autre PJ ou PNJ) : un encadré rempli, comme le badge de dés des cartes.
 	.brumes-adrenaline-relations__gender-mark {
 		flex: 0 0 auto;
 		padding: 0 0.35rem;

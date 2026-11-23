@@ -109,18 +109,20 @@ const drama = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, no
 assert.ok(drama, "NPCs with a drama test are read");
 assert.equal(withClass(renderAdrenalineRelations(drama, doc), "tick--on").length, 1, "one NPC carries the drama test");
 const heads = withClass(renderAdrenalineRelations(drama, doc), "npc-head");
-assert.ok(heads.length > 0 && heads.every((head) => head.children.length === 3 && head.children[2].classes.indexOf(`${ROOT}__tick`) >= 0), "the tick sits to the right of the name of every NPC");
+assert.ok(heads.length > 0 && heads.every((head) => head.children.length >= 3 && head.children[head.children.length - 1].classes.indexOf(`${ROOT}__tick`) >= 0), "the tick sits to the right of the name of every NPC");
 assert.equal(withClass(renderAdrenalineRelations(drama, doc), "npc").every((card) => card.walk().every((node) => node.textContent !== "Touché")), true, "the tick carries no label");
 
-/* The labels of the other characters follow their gender, and the gender itself is not printed. */
-const gendered = documentToRelations({ personnage: "Claire", autresPersonnages: [{ nom: "A", genre: "masculin" }, { nom: "B", genre: "feminin" }, { nom: "C", genre: "neutre" }, { nom: "D" }] });
+/* The three fields of another character carry fixed labels, whatever the gender, and the gender itself is not printed. */
+const gendered = documentToRelations({ personnage: "Claire", autresPersonnages: [{ nom: "A", genre: "masculin", ceQuOnMeDoit: "un secret" }, { nom: "B", genre: "feminin" }, { nom: "C", genre: "neutre" }, { nom: "D" }] });
 assert.ok(gendered, "other characters with a gender are read");
-const duLabel = (index: number): string => withClass(renderAdrenalineRelations(gendered, doc), "tie")[index].walk().map((node) => node.textContent).join("|");
-assert.ok(duLabel(0).indexOf("Ce qu'il me doit") >= 0, "a masculine character: what he owes me");
-assert.ok(duLabel(1).indexOf("Ce qu'elle me doit") >= 0, "a feminine character: what she owes me");
-assert.ok(duLabel(2).indexOf("Ce qu'iel me doit") >= 0, "a neutral character: what they owe me");
-assert.ok(duLabel(3).indexOf("Ce qu'iel me doit") >= 0, "a character without gender: the default wording");
-assert.ok(duLabel(0).indexOf("masculin") < 0, "the gender is not printed");
+const tieText = (index: number): string => withClass(renderAdrenalineRelations(gendered, doc), "tie")[index].walk().map((node) => node.textContent).join("|");
+assert.ok(tieText(0).indexOf("Secrets") >= 0 && tieText(0).indexOf("me doit") < 0, "the label of the secrets does not follow the gender");
+assert.ok(tieText(0).indexOf("masculin") < 0, "the gender is not printed");
+
+/* A line the document leaves empty is not printed; a place nobody fills stays whole, to be written by hand. */
+assert.ok(tieText(1).indexOf("Description") < 0 && tieText(1).indexOf("Dettes") < 0 && tieText(1).indexOf("Secrets") < 0, "a filled character prints only the lines it fills");
+const emptyPlace = withClass(renderAdrenalineRelations(gendered, doc), "tie").slice(-1)[0].walk().map((node) => node.textContent).join("|");
+assert.ok(emptyPlace.indexOf("Description") >= 0 && emptyPlace.indexOf("Dettes") >= 0 && emptyPlace.indexOf("Secrets") >= 0, "an empty place prints every line");
 
 /* The gender is marked beside the name of another character, with the published text, and nowhere else. */
 const marked = (index: number): string[] => withClass(renderAdrenalineRelations(gendered, doc), "tie")[index].walk().filter((node) => node.classes.indexOf(`${ROOT}__gender-mark`) >= 0).map((node) => node.textContent);
@@ -128,6 +130,17 @@ const mark = sections[1].blocks[0].genderMark;
 assert.ok(mark && mark.key === "nom" && mark.genderKey === "genre", "the contract publishes the gender mark beside the name");
 assert.deepEqual([0, 1, 2, 3].map(marked), [[mark.marks.masculin], [mark.marks.feminin], [mark.marks.neutre], []], "each gender prints its mark, an absent gender prints none");
 assert.ok(withClass(renderAdrenalineRelations(gendered, doc), "tie")[0].walk().filter((node) => node.classes.indexOf(`${ROOT}__write-line`) >= 0)[0].children.slice(-1)[0].classes.indexOf(`${ROOT}__gender-mark`) >= 0, "the mark closes the line of the name");
+
+/* The same mark follows the name of an NPC, between the name and the free tick. */
+const npcMark = sections[2].blocks[0].genderMark;
+assert.ok(npcMark && npcMark.key === "nom" && npcMark.genderKey === "genre", "the contract publishes the gender mark of the NPCs");
+const npcGender = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", genre: "masculin", toucheParLeDrame: true }, { numero: 2, nom: "Gaëlle" }] });
+assert.ok(npcGender, "NPCs with a gender are read");
+const npcHeads = withClass(renderAdrenalineRelations(npcGender, doc), "npc-head");
+assert.deepEqual(npcHeads[0].children.map((node) => node.textContent), ["1", "Ferran", npcMark.marks.masculin, "✓"], "the mark sits between the name and the tick");
+assert.equal(npcHeads[1].children.filter((node) => node.classes.indexOf(`${ROOT}__gender-mark`) >= 0).length, 0, "an NPC without gender prints no mark");
+const npcLines = (index: number): string => withClass(renderAdrenalineRelations(npcGender, doc), "npc")[index].walk().map((node) => node.textContent).join("|");
+assert.ok(npcLines(0).indexOf("Résumé") < 0 && npcLines(0).indexOf("Notes") < 0, "a filled NPC prints only the lines it fills");
 
 /* A link to a number no NPC carries is shown as typed and does not break the sheet. */
 const orphan = documentToRelations({ personnage: "Claire", pnjs: [{ numero: 1, nom: "Ferran", reliesA: [7] }] });

@@ -7,7 +7,7 @@ export type RelationLinkType = "familial" | "amitie" | "travail";
 
 export interface RelationOtherCharacter {
 	nom: string;
-	/** Not printed: the published label of what they owe follows it. */
+	/** Not printed as such: the presentation publishes the short mark printed to the right of the name. */
 	genre?: RelationGender;
 	ceQueJeSais?: string;
 	ceQueJeLuiDois?: string;
@@ -18,6 +18,8 @@ export interface RelationNpc {
 	/** The number the sheet prints for the NPC: shown as written, never renumbered here. */
 	numero: number;
 	nom: string;
+	/** Not printed as such: the presentation publishes the short mark printed to the right of the name. */
+	genre?: RelationGender;
 	attitude?: RelationAttitude;
 	lien?: { type: RelationLinkType; description?: string };
 	/** Numbers of the other NPCs this one is tied to; one that matches no NPC is shown as it is. */

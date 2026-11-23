@@ -47,8 +47,9 @@ function readNpc(value: unknown): RelationNpc | undefined {
 	const record = asRecord(value);
 	const nom = entered(record?.nom);
 	if (!record || !nom || typeof record.numero !== "number") return undefined;
-	warnUnknownKeys(record, ["numero", "nom", "attitude", "lien", "reliesA", "resume", "notes", "toucheParLeDrame"], "relations.pnjs");
+	warnUnknownKeys(record, ["numero", "nom", "genre", "attitude", "lien", "reliesA", "resume", "notes", "toucheParLeDrame"], "relations.pnjs");
 	const result: RelationNpc = { numero: record.numero, nom };
+	if (typeof record.genre === "string" && GENDERS.indexOf(record.genre) >= 0) result.genre = record.genre as RelationGender;
 	if (typeof record.attitude === "string" && ATTITUDES.indexOf(record.attitude) >= 0) result.attitude = record.attitude as RelationAttitude;
 	const link = asRecord(record.lien);
 	if (link && typeof link.type === "string" && LINK_TYPES.indexOf(link.type) >= 0) {

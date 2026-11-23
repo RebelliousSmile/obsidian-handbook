@@ -22,9 +22,9 @@ const reportedFields = new Set<string>();
 const FIELD_LABELS: Record<string, string> = {
 	numero: "N°",
 	nom: "Nom",
-	ceQueJeSais: "Ce que je sais",
-	ceQueJeLuiDois: "Ce que je lui dois",
-	ceQuOnMeDoit: "Ce qu'iel me doit",
+	ceQueJeSais: "Description",
+	ceQueJeLuiDois: "Dettes",
+	ceQuOnMeDoit: "Secrets",
 	attitude: "Attitude",
 	lien: "Lien",
 	reliesA: "Relié à",
@@ -102,18 +102,7 @@ function renderNameCard(doc: Document, box: HTMLElement, block: AdrenalinePresen
 	}
 }
 
-/** The label of a field of another character: the published wording that follows their gender when there is one, else the plain label. */
-function tieLabel(block: AdrenalinePresentationBlock, key: string, entry: Record<string, unknown>): string {
-	const worded = (block.genderedLabels ?? []).find((candidate) => candidate.key === key);
-	if (worded) {
-		const gender = entry[worded.genderKey];
-		const labels: Record<string, string> = worded.labels;
-		return typeof gender === "string" && labels[gender] !== undefined ? labels[gender] : worded.labels.default;
-	}
-	return FIELD_LABELS[key] ?? humanize(key);
-}
-
-/** The short mark of the gender printed beside a field of another character: the published text for their gender, nothing without one. */
+/** The short mark of the gender printed beside a field of a character: the published text for their gender, nothing without one. */
 function genderMark(block: AdrenalinePresentationBlock, key: string, entry: Record<string, unknown>): string {
 	const mark = block.genderMark;
 	if (!mark || mark.key !== key) return "";
@@ -135,11 +124,14 @@ function renderPcTies(doc: Document, box: HTMLElement, block: AdrenalinePresenta
 	const slots = printed === undefined ? slotCount(pointer, entries.length) : Math.max(entries.length, printed);
 	box.style.setProperty("--ties-per-row", String(placesPerRow(slots, maxPerRow)));
 	for (let index = 0; index < slots; index += 1) {
+		const filled = entries[index] !== undefined;
 		const entry = entries[index] ?? {};
 		const tie = add(box, doc, "div", "tie");
 		for (const row of fieldRows(block)) {
 			for (const key of row) {
-				const line = writeLine(doc, tie, tieLabel(block, key, entry), shown(entry[key]));
+				// A place the document fills prints only the lines it fills; an empty place stays whole, to be written by hand.
+				if (filled && shown(entry[key]) === "") continue;
+				const line = writeLine(doc, tie, FIELD_LABELS[key] ?? humanize(key), shown(entry[key]));
 				const mark = genderMark(block, key, entry);
 				if (mark) add(line, doc, "span", "gender-mark", mark);
 			}
@@ -191,6 +183,11 @@ function renderNpcField(doc: Document, card: HTMLElement, key: string, entry: Re
 	writeLine(doc, card, label, npcFieldText(key, entry, levels));
 }
 
+/** The fields of a card line the document fills; an empty place prints them all, to be written by hand. */
+function printedFields(row: readonly string[], entry: Record<string, unknown> | undefined, levels: readonly AdrenalineAttitudeLevel[]): string[] {
+	return row.filter((key) => entry === undefined || npcFieldText(key, entry, levels) !== "");
+}
+
 /** One card per slot, filled column by column: the first half down the left column, the rest down the next. */
 function renderNpcEntries(doc: Document, box: HTMLElement, block: AdrenalinePresentationBlock, source: AdrenalineDocument): void {
 	const pointer = block.paths[0];
@@ -212,12 +209,16 @@ function renderNpcEntries(doc: Document, box: HTMLElement, block: AdrenalinePres
 					const head = add(card, doc, "div", "npc-head");
 					head.appendChild(value(doc, shown(entry?.numero), "npc-number"));
 					head.appendChild(value(doc, shown(entry?.nom), "npc-name"));
+					const mark = genderMark(block, "nom", entry ?? {});
+					if (mark) add(head, doc, "span", "gender-mark", mark);
 					for (const key of row.slice(2)) renderNpcField(doc, head, key, entry ?? {}, levels);
 					continue;
 				}
 				// A row of several fields is one line of the card: each field takes its share of it.
-				const line = row.length > 1 ? add(card, doc, "div", "npc-row") : card;
-				for (const key of row) renderNpcField(doc, line, key, entry ?? {}, levels);
+				const printed = printedFields(row, entry, levels);
+				if (printed.length === 0) continue;
+				const line = printed.length > 1 ? add(card, doc, "div", "npc-row") : card;
+				for (const key of printed) renderNpcField(doc, line, key, entry ?? {}, levels);
 			}
 		}
 	}
