@@ -47,6 +47,7 @@ const MONSTERHEARTS_COMPLEMENT = {
 	// Labelled identity lines, as in the French skins: .handbook-monsterhearts-identity-fields, -label, -fill
 	identity: { heading: "Identité", paragraphs: ["Nom : Ondine, Morgane", "Look : regard humide"] },
 	play: { heading: "Jouer la Selkie", paragraphs: ["Ta peau est ailleurs."] }, // monsterhearts-play
+	sessionNotes: "Session 1 : la peau est cachée sous la jetée.", // monsterhearts-notes, the back of the sheet
 };
 const URBAN_SHADOWS_COMPLEMENT = {
 	harm: { armor: 1, faint: 2, serious: 2, critical: 1 }, // harm-tracker (condition-harm-tracker), -harm-head, -armor, -harm-line
@@ -64,6 +65,7 @@ const monsterheartsData = {
 	...monsterhearts,
 	harm: MONSTERHEARTS_COMPLEMENT.harm,
 	gear: MONSTERHEARTS_COMPLEMENT.gear,
+	sessionNotes: MONSTERHEARTS_COMPLEMENT.sessionNotes,
 	editorial: { ...monsterhearts.editorial, identity: MONSTERHEARTS_COMPLEMENT.identity, play: MONSTERHEARTS_COMPLEMENT.play },
 };
 

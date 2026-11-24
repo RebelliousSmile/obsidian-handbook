@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.53.0] - 2026-11-24
+
+### Changed
+
+- The Monsterhearts and Urban Shadows sheets adopt the playbook contract v16: the game notes are the back of the sheet and print alone on the last page, the Urban Shadows header is editable, and its labels follow the interface language.
+- The Urban Shadows titles are drawn with the Protest Revolution brush (uppercase, purple, slanted) instead of Caveat Brush.
+
+### Added
+
+- `tools/e2e/playbook-capture.ps1 -Pdf` exports the playbooks through Obsidian's real PDF export and fails on a dark page, several columns, a Type 3 font, a blank page, or notes that do not print alone on the last page (`-PrinterFriendlyOff` checks that nothing is forced).
+
 ## [2.52.1] - 2026-11-23
 
 ### Fixed
