@@ -1,6 +1,6 @@
 ---
 objective: "Les playbooks Monsterhearts et Urban Shadows n'exposent plus que des champs conformes aux règles de leur jeu : plus de `startingMoves`, un équipement Monsterhearts réduit à un nom et une description, un équipement Urban Shadows qui s'écrit comme le livret (dégâts, armure, portée, étiquettes) ; Lantern le propose en choix à partir des métadonnées publiées et Handbook l'affiche comme le livret ; un seul train livre le tout."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Équipement et actions de départ conformes aux règles (Monsterhearts, Urban Shadows)

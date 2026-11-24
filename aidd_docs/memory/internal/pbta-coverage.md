@@ -59,3 +59,11 @@ Le partage projetée/alias n'est **pas écrit** dans le code : `tools/pbtaPackCo
 - ⚠ `PBTA_ALIAS_TARGETS` est en revanche une **déclaration locale portant sur une sémantique amont**, ce que « keep game semantics outside consumers » et « drive Handbook menus from published metadata » refusent. Le fait est connu en amont (`KNOWN_ALIAS_TARGETS` dans `schema-pbta`) mais toujours **non publié**, y compris depuis que v5.5.0 publie ses `pack-contract.json` : aucune occurrence de « alias » dans le tarball installé, et `packs/salvage-run/pack-contract.json` déclare `salvage-run-playbook` comme une cible ordinaire. La liste en dur est donc un pis-aller assumé, à remplacer par la lecture d'une métadonnée dès que l'amont l'expose ;
 - « verify corpus and cross-tool round trips » n'est tenu qu'à moitié ici : les round trips de corpus le sont, le round trip croisé avec Lantern ne l'est pas.
 
+
+## Équipement et actions de départ par jeu (contrat v17, constaté le 2026-11-24)
+
+- **Urban Shadows** : un équipement = `name` (seul requis), `description?`, `harm?` (entier ≥ 0, ou `"stun"` pour `s-harm`), `armor?` `{ value, mode: base|bonus }`, `range?` (liste parmi `hand|close|near|far`), `tags?` (liste ouverte). **Monsterhearts** : `gear = [{ name, description? }]`. Ni l'un ni l'autre n'a plus `startingMoves`, `equipmentType` ni `quantity` ; un TOML qui les porte est refusé, sans chemin de lecture de l'ancienne forme.
+- **Masks, The Sprawl et le générique gardent** `gear` avec `quantity` et `startingMoves` : `renderer.ts` ne lit `quantity` que par `"quantity" in gear`, et une mise en page spécialisée ne doit pas supposer l'ancienne forme.
+- L'acquisition d'une action se lit sur `moves[].checked` seul (US et MH) ; une `{ ref }` sans `checked` est non acquise.
+- ⚠ **Pas de `.refine()` dans le contrat** (il ne survit pas à la conversion en schéma JSON) : l'exclusion est portée par la forme (`harm` est une union entier / `"stun"`, l'armure exige valeur **et** mode). Penser ainsi toute règle croisée d'un futur champ.
+- Le vocabulaire des portées et étiquettes (libellés fr/en) est publié dans `packs/urban-shadows/presentation-contract.json` (`equipment.ranges`, `equipment.tags`), pas dans la game-definition ; Lantern et Handbook le lisent là, une étiquette hors liste n'est pas une erreur. Les termes de jeu (`harm`, `armor`, `near`…) ne se traduisent pas.
