@@ -86,10 +86,10 @@ function row(doc: Document, label: string, value: string | number): HTMLElement 
 	return result;
 }
 
-function moveCard(doc: Document, move: MoveEntry, startingMoves: readonly string[]): HTMLElement {
+function moveCard(doc: Document, move: MoveEntry): HTMLElement {
 	const card = el(doc, "article");
 	card.classList.add("handbook-monsterhearts-move");
-	const acquired = move.checked ?? ("ref" in move && startingMoves.includes(move.ref));
+	const acquired = move.checked === true;
 	card.dataset.acquired = String(acquired);
 	const heading = el(doc, "h4");
 	const symbol = el(doc, "span");
@@ -196,7 +196,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		case "playbook-moves": {
 			if (!data.moves.length) return null;
 			const result = section(doc, id, regionLabel(id));
-			for (const move of data.moves) result.appendChild(moveCard(doc, move, data.startingMoves ?? []));
+			for (const move of data.moves) result.appendChild(moveCard(doc, move));
 			return result;
 		}
 		case "ascendants-and-conditions": {
@@ -234,7 +234,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		case "gear": {
 			if (!data.gear?.length) return null;
 			const result = section(doc, id, regionLabel(id));
-			result.appendChild(list(doc, data.gear.map((item) => `${item.name}${item.quantity ? ` × ${item.quantity}` : ""}${item.description ? ` — ${item.description}` : ""}`)));
+			result.appendChild(list(doc, data.gear.map((item) => `${item.name}${item.description ? ` — ${item.description}` : ""}`)));
 			return result;
 		}
 		case "monsterhearts-notes": {
@@ -256,7 +256,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 					result.appendChild(el(doc, "p", paragraph));
 					continue;
 				}
-				result.appendChild(moveCard(doc, { name: named[1], moveType: "skin", description: named[2], checked: false }, []));
+				result.appendChild(moveCard(doc, { name: named[1], moveType: "skin", description: named[2], checked: false }));
 			}
 			if (data.advances.length) {
 				result.appendChild(el(doc, "h4", "Avancées"));

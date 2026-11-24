@@ -1,6 +1,6 @@
 ---
 objective: "Les playbooks Monsterhearts (La Selkie) et Urban Shadows (The Aware) sont validés par l'utilisateur face au PDF d'origine dans Obsidian et dans Lantern ; leur fiche a un verso qui porte les notes de partie (modèle Adrenaline PJ), des libellés dans la langue de l'interface, un en-tête éditable et des polices conformes au PDF là où l'utilisateur les a jugées fausses ; La Selkie s'exporte en PDF sur papier blanc ; un seul train livre le tout."
-status: in-progress
+status: implemented
 ---
 
 # Plan: Dernières corrections de rendu des playbooks PbtA et export PDF de La Selkie

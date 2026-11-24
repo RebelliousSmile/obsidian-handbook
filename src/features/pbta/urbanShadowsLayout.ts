@@ -157,10 +157,37 @@ function marks(doc: Document, kind: "lozenge" | "ring", entries: ReadonlyArray<{
 	return result;
 }
 
-function moveCard(doc: Document, move: MoveEntry, startingMoves: readonly string[]): HTMLElement {
+type GearItem = NonNullable<UrbanShadowsPlaybook["gear"]>[number];
+
+/**
+ * A piece of gear as the booklet prints it: `2-harm near loud concealable`,
+ * armour as `2-armor` or `armor+1`. A tag the contract names is printed in the
+ * interface language; a tag the player added is printed as typed.
+ */
+function gearStats(item: GearItem): string {
+	const parts: string[] = [];
+	if (typeof item.harm === "number") parts.push(`${item.harm}-harm`);
+	else if (item.harm === "stun") parts.push("stun");
+	if (item.armor) parts.push(item.armor.mode === "bonus" ? `armor+${item.armor.value}` : `${item.armor.value}-armor`);
+	for (const range of item.range ?? []) parts.push(range);
+	for (const tag of item.tags ?? []) {
+		let label = tag;
+		for (const known of contract.equipment.tags) if (known.id === tag) label = localized(known.label);
+		parts.push(label);
+	}
+	return parts.join(" ");
+}
+
+/** The line of a piece of gear: its name, its stats, then its description; a bare name stands alone. */
+function gearLine(item: GearItem): string {
+	const stats = gearStats(item);
+	return `${item.name}${stats ? ` — ${stats}` : ""}${item.description ? ` — ${item.description}` : ""}`;
+}
+
+function moveCard(doc: Document, move: MoveEntry): HTMLElement {
 	const card = el(doc, "article");
 	card.classList.add("handbook-urban-shadows-move");
-	const acquired = move.checked ?? ("ref" in move && startingMoves.indexOf(move.ref) >= 0);
+	const acquired = move.checked === true;
 	card.dataset.acquired = String(acquired);
 	const heading = el(doc, "h4");
 	heading.appendChild(checkbox(doc, acquired, "ref" in move ? move.ref : move.name));
@@ -273,7 +300,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 	"playbook-moves": (doc, id, data) => {
 		if (!data.moves.length) return null;
 		const result = section(doc, id, regionLabel(id));
-		for (const move of data.moves) result.appendChild(moveCard(doc, move, data.startingMoves ?? []));
+		for (const move of data.moves) result.appendChild(moveCard(doc, move));
 		return result;
 	},
 	"urban-shadows-advancement": (doc, id, data) => {
@@ -407,7 +434,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		if (!data.gear?.length) return null;
 		const result = section(doc, id, regionLabel(id));
 		const list = el(doc, "ul");
-		for (const item of data.gear) list.appendChild(el(doc, "li", `${item.name}${item.quantity ? ` × ${item.quantity}` : ""}${item.description ? ` — ${item.description}` : ""}`));
+		for (const item of data.gear) list.appendChild(el(doc, "li", gearLine(item)));
 		result.appendChild(list);
 		return result;
 	},

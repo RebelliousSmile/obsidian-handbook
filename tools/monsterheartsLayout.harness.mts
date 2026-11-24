@@ -53,6 +53,12 @@ assert.equal(play.children[0].textContent, "Jouer la Selkie");
 const progression = base.find((node) => node.dataset.region === "monsterhearts-progression");
 assert.deepEqual(progression?.walk().filter((node) => node.tag === "input").map((box) => box.checked), [true, false], "advances are checkboxes");
 
+// Gear is a name and a description; an action is acquired by its own flag only, no starting move is read.
+const gear = regions(render({ gear: [{ name: "Briquet", description: "Il ne s'éteint jamais." }, { name: "Corde" }] })).find((node) => node.dataset.region === "gear");
+assert.deepEqual(gear?.walk().filter((node) => node.tag === "li").map((node) => node.textContent), ["Briquet — Il ne s'éteint jamais.", "Corde"], "gear reads name then description");
+const acquired = render({ startingMoves: ["Known"], moves: [{ ref: "Known" }, { ref: "Other", checked: true }, { name: "Own", moveType: "skin", description: "d", checked: false }] }).filter((node) => node.classes.has("handbook-monsterhearts-move")).map((node) => node.dataset.acquired);
+assert.deepEqual(acquired, ["false", "true", "false"], "only moves[].checked acquires an action");
+
 // The grid is read from the published rows: each row holds its columns, each column
 // the regions the contract places there, in order, when the data renders them.
 const root = render({})[0];

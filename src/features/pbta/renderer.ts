@@ -235,7 +235,7 @@ export function renderPbtaPlaybook(resolved: ResolvedPbtaPlaybook, doc: Document
 		gear: (zone) => {
 			if (!data.gear?.length) return null;
 			const node = section(doc, pbtaPlaybookShape, zone);
-			for (const gear of data.gear) node.appendChild(labelledValue(doc, gear.name, gear.quantity ?? gear.description ?? ""));
+			for (const gear of data.gear) node.appendChild(labelledValue(doc, gear.name, ("quantity" in gear ? gear.quantity : undefined) ?? gear.description ?? ""));
 			return node;
 		},
 		advancement: (zone) => {

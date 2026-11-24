@@ -92,6 +92,30 @@ const track = regions(split).find((node) => node.dataset.region === "urban-shado
 const trackBoxes = track?.walk().filter((node) => node.type === "checkbox") ?? [];
 assert.deepEqual(trackBoxes.map((box) => box.checked), [false, true], "markedCircles ticks its circles, the others stay on the track unticked");
 
+// Gear is written as the booklet prints it; an action is acquired by its own flag only.
+const tagLabel = (id: string) => localized(contract.equipment.tags.find((tag) => tag.id === id)!.label);
+const gearLines = (data: unknown) => regions(render(data)).find((node) => node.dataset.region === "gear")?.walk().filter((node) => node.tag === "li").map((node) => node.textContent);
+assert.deepEqual(gearLines({
+	...complete,
+	gear: [
+		{ name: "9mm Beretta", harm: 2, range: ["near"], tags: ["loud", "concealable"] },
+		{ name: "Kevlar vest", armor: { value: 1, mode: "base" } },
+		{ name: "Jacket", armor: { value: 1, mode: "bonus" } },
+		{ name: "Taser", harm: "stun", tags: ["house tag"] },
+		{ name: "Rope", description: "Fifty feet." },
+		{ name: "Bare" },
+	],
+}), [
+	`9mm Beretta — 2-harm near ${tagLabel("loud")} ${tagLabel("concealable")}`,
+	"Kevlar vest — 1-armor",
+	"Jacket — armor+1",
+	"Taser — stun house tag",
+	"Rope — Fifty feet.",
+	"Bare",
+], "each piece of gear reads like the booklet, a bare name stands alone");
+const acquired = (data: unknown) => render(data).walk().filter((node) => node.classes.has("handbook-urban-shadows-move")).map((node) => node.dataset.acquired);
+assert.deepEqual(acquired({ ...complete, startingMoves: ["Known", "Other"], moves: [{ ref: "Known" }, { ref: "Other", checked: true }, { name: "Own", moveType: "playbook", description: "d", checked: false }] }), ["false", "true", "false"], "no starting move is read: only moves[].checked acquires an action");
+
 // Blank witness: a region without data is not emitted, nothing throws.
 const empty = ids(render(blank));
 for (const id of ["urban-shadows-scars", "urban-shadows-let-it-out", "harm-tracker", "urban-shadows-intimacy", "urban-shadows-extras", "gear"]) {
@@ -103,7 +127,7 @@ for (const list of [emitted, empty]) {
 	assert.ok(list.indexOf("urban-shadows-creation") < 0, "the sheet has no creation column");
 	assert.ok(list.indexOf("urban-shadows-debts") >= 0, "debts always leave room to write");
 }
-assert.ok(regions(full).find((node) => node.dataset.region === "urban-shadows-debts")?.walk().every((node) => node.tagName !== "LI"), "no starting debt is listed");
+assert.ok(regions(full).find((node) => node.dataset.region === "urban-shadows-debts")?.walk().every((node) => node.tag !== "li"), "no starting debt is listed");
 
 // A region the contract publishes and the layout does not know: noted, the rest still renders, no failure.
 log.setLevel("warn");

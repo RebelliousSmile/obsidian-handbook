@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.54.0] - 2026-11-24
+
+### Changed
+
+- The Urban Shadows sheet writes each piece of equipment as the book does: the name, then its harm, range and tags (`9mm Beretta — 2-harm near loud concealable`), armour as `x-armor` or `armor+x`; a bare name stays alone on its line. The game terms stay untranslated.
+- The Monsterhearts sheet writes its equipment as a name and a description.
+- Both sheets read a move as acquired from its own `checked` flag only: the starting moves are gone from the playbook contract (schema-pbta v17), and the sheets no longer print a "starting moves" line.
+
 ## [2.53.0] - 2026-11-24
 
 ### Changed
