@@ -4,7 +4,11 @@ param(
 	[string]$SchemaRoot = "",
 	[string]$OutputDir = "",
 	[string]$ObsidianPath = "C:\Program Files\Obsidian\Obsidian.exe",
-	[int]$Port = 9241
+	[int]$Port = 9241,
+	# Also print the note as Obsidian's PDF export does, and check the paper.
+	[switch]$Pdf,
+	# Turns the vault setting `printerFriendly` off: the note keeps its own background on paper.
+	[switch]$PrinterFriendlyOff
 )
 
 # Captures a Monsterhearts (La Selkie) or Urban Shadows (The Aware) playbook block
@@ -65,12 +69,15 @@ foreach ($id in $games) {
 		foreach ($file in "main.js", "manifest.json", "styles.css") { Copy-Item -LiteralPath (Join-Path $repositoryRoot "dist\$file") -Destination $pluginRoot }
 		Install-Source -VaultRoot $vaultRoot
 		# The data.json of the temporary vault only.
-		Set-Content -LiteralPath (Join-Path $pluginRoot "data.json") -Value ('{"mode":"' + $id + '"}')
+		Set-Content -LiteralPath (Join-Path $pluginRoot "data.json") -Value ('{"mode":"' + $id + '","printerFriendly":' + (-not $PrinterFriendlyOff).ToString().ToLower() + '}')
 		Set-Content -LiteralPath (Join-Path $vaultRoot ".obsidian\community-plugins.json") -Value '["obsidian-handbook"]'
 		Set-Content -LiteralPath (Join-Path $vaultRoot ".obsidian\app.json") -Value '{"defaultViewMode":"preview","readableLineLength":false}'
 		$probePath = Join-Path $vaultRoot "playbook-probe.md"
 		$fence = '```'
-		$body = $fence + "pbta-playbook`n" + (Get-Content -LiteralPath (Join-Path $SchemaRoot $examples[$id]) -Raw) + "`n" + $fence + "`n"
+		$example = Get-Content -LiteralPath (Join-Path $SchemaRoot $examples[$id]) -Raw
+		# The back of the sheet only draws when the playbook carries session notes: the print proof needs both faces.
+		if ($Pdf -and $example -notmatch "(?m)^sessionNotes\s*=") { $example = $example -replace "(?m)^(slug = .*)$", ('$1' + "`n" + 'sessionNotes = "Session 1: the skin is hidden under the pier."') }
+		$body = $fence + "pbta-playbook`n" + $example + "`n" + $fence + "`n"
 		Set-Content -LiteralPath $probePath -Value $body -Encoding utf8
 
 		$profileRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("handbook-playbook-profile-" + [guid]::NewGuid())
@@ -84,7 +91,9 @@ foreach ($id in $games) {
 		$probeUri = "obsidian://open?path=$([uri]::EscapeDataString($probePath))"
 		$arguments = @("--user-data-dir=`"$profileRoot`"", "--remote-debugging-port=$Port", "--remote-allow-origins=*", $probeUri)
 		$process = Start-Process -FilePath $ObsidianPath -ArgumentList $arguments -WindowStyle Normal -PassThru
-		& python (Join-Path $PSScriptRoot "playbook-capture-cdp.py") $Port $OutputDir $vaultRoot $id
+		$captureArguments = @($Port, $OutputDir, $vaultRoot, $id)
+		if ($Pdf) { $captureArguments += @("pdf", (-not $PrinterFriendlyOff).ToString().ToLower()) }
+		& python (Join-Path $PSScriptRoot "playbook-capture-cdp.py") @captureArguments
 		if ($LASTEXITCODE -ne 0) { throw "The $id playbook capture failed." }
 	} finally {
 		if ($process -and -not $process.HasExited) { Stop-ProcessTree -ProcessId $process.Id }

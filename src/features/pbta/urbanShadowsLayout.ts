@@ -1,6 +1,7 @@
 import type { UrbanShadowsPlaybook } from "schema-pbta";
 import contract from "schema-pbta/packs/urban-shadows/presentation-contract.json";
-import { t } from "../../utils/i18n";
+import { localized, localizedHeading, t } from "../../utils/i18n";
+import { renderSessionNotes } from "../blocks/sessionNotes";
 import { logScope } from "../../utils/logger";
 
 const log = logScope("urban-shadows-layout");
@@ -32,10 +33,16 @@ function term(key: string, fallback: string): string {
 	return translated === key ? fallback : translated;
 }
 
-/** Region headings come from the published contract; a language may word one differently. */
+/** Region headings come from the published contract, in the interface language. */
 function regionLabel(id: RegionId): string {
-	for (const region of contract.regions) if (region.id === id) return term(`region:${id}`, region.label);
+	for (const region of contract.regions) if (region.id === id) return localized(region.label);
 	return id;
+}
+
+/** An editorial heading kept as the player wrote it, unless it is only the published label. */
+function headingOf(id: RegionId, typed: string): string {
+	for (const region of contract.regions) if (region.id === id) return localizedHeading(region.label, typed);
+	return typed;
 }
 
 /** Stats and Circles are keys of the document; the language names them. */
@@ -174,33 +181,43 @@ function moveCard(doc: Document, move: MoveEntry, startingMoves: readonly string
 }
 
 function editorial(doc: Document, id: RegionId, value: { heading: string; paragraphs: readonly string[] }): HTMLElement {
-	const result = section(doc, id, value.heading);
+	const result = section(doc, id, headingOf(id, value.heading));
 	paragraphs(doc, result, value.paragraphs);
 	return result;
 }
 
 /** Each region of the contract has one renderer; a region without data is not emitted. */
 const RENDERERS: Record<RegionId, Renderer> = {
-	"game-identity": (doc, id, data, resolveImage) => {
+	"game-identity": (doc, id, data) => {
 		const result = section(doc, id, data.name, "h2");
 		result.appendChild(el(doc, "p", data.description));
 		const bar = el(doc, "div");
 		bar.classList.add("handbook-urban-shadows-identity-bar");
-		for (const label of ["Name (pronouns)", "Demeanor", "Look"]) {
+		const header: ReadonlyArray<readonly [string, string | undefined]> = [
+			["Name (pronouns)", data.characterName],
+			["Demeanor", data.demeanor],
+			["Look", data.look],
+		];
+		for (const [label, value] of header) {
 			const field = el(doc, "p");
 			field.appendChild(el(doc, "span", `${t(label)} :`)).classList.add("handbook-urban-shadows-label");
-			field.appendChild(fill(doc));
+			// The player's own words when the document carries them, a blank to fill in otherwise.
+			field.appendChild(value ? el(doc, "span", value) : fill(doc));
 			bar.appendChild(field);
 		}
 		result.appendChild(bar);
+		return result;
+	},
+	/* The picture of the playbook has a region of its own, under the identity text of the first column. */
+	"urban-shadows-illustration": (doc, id, data, resolveImage) => {
 		const image = data.playbookImage?.trim();
 		const source = image ? resolveImage?.(image) ?? (/^https:\/\//i.test(image) ? image : null) : null;
-		if (source) {
-			const img = el(doc, "img") as HTMLImageElement;
-			img.src = source;
-			img.alt = `Illustration de ${data.name}`;
-			result.appendChild(img);
-		}
+		if (!source) return null;
+		const result = section(doc, id);
+		const img = el(doc, "img") as HTMLImageElement;
+		img.src = source;
+		img.alt = `Illustration de ${data.name}`;
+		result.appendChild(img);
 		return result;
 	},
 	"urban-shadows-opening": (doc, id, data) => {
@@ -209,7 +226,7 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		return result;
 	},
 	"character-identity": (doc, id, data) => {
-		const result = section(doc, id, data.editorial.identity.heading);
+		const result = section(doc, id, headingOf(id, data.editorial.identity.heading));
 		const fields = el(doc, "div");
 		fields.classList.add("handbook-urban-shadows-identity-fields");
 		for (const paragraph of data.editorial.identity.paragraphs) {
@@ -409,6 +426,14 @@ const RENDERERS: Record<RegionId, Renderer> = {
 		return result;
 	},
 	"urban-shadows-play": (doc, id, data) => editorial(doc, id, data.editorial.playAdvice),
+	"urban-shadows-notes": (doc, id, data) => {
+		// The notes of the game are a region of the back of the sheet; blank, it draws nothing.
+		const notes = renderSessionNotes(doc, regionLabel(id), data.sessionNotes);
+		if (!notes) return null;
+		const result = section(doc, id);
+		result.appendChild(notes);
+		return result;
+	},
 };
 
 /** The regions this layout draws; `assert:urban-shadows-layout` compares them with the published contract. */

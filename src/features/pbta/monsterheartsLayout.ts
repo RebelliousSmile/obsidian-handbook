@@ -1,6 +1,7 @@
 import type { MonsterheartsPlaybook } from "schema-pbta";
 import contract from "schema-pbta/packs/monsterhearts/presentation-contract.json";
-import { t } from "../../utils/i18n";
+import { localized, localizedHeading, t } from "../../utils/i18n";
+import { renderSessionNotes } from "../blocks/sessionNotes";
 
 type RegionId = (typeof contract.regions)[number]["id"];
 type Editorial = MonsterheartsPlaybook["editorial"]["opening"];
@@ -20,7 +21,14 @@ function statLabel(key: string): string {
 
 /** Region headings come from the published contract, never from literals here. */
 function regionLabel(id: RegionId): string {
-	return contract.regions.find((region) => region.id === id)?.label ?? id;
+	const region = contract.regions.find((candidate) => candidate.id === id);
+	return region ? localized(region.label) : id;
+}
+
+/** An editorial heading kept as the player wrote it, unless it is only the published label. */
+function headingOf(id: RegionId, typed: string): string {
+	for (const region of contract.regions) if (region.id === id) return localizedHeading(region.label, typed);
+	return typed;
 }
 
 function section(doc: Document, id: RegionId, heading?: string): HTMLElement {
@@ -40,7 +48,7 @@ function checkbox(doc: Document, checked: boolean, label: string): HTMLElement {
 }
 
 function editorial(doc: Document, id: RegionId, value: Editorial): HTMLElement {
-	const result = section(doc, id, value.heading);
+	const result = section(doc, id, headingOf(id, value.heading));
 	for (const paragraph of value.paragraphs) result.appendChild(el(doc, "p", paragraph));
 	return result;
 }
@@ -115,7 +123,7 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 		}
 		case "monsterhearts-opening": return editorial(doc, id, { ...data.editorial.opening, heading: "" });
 		case "character-identity": {
-			const result = section(doc, id, data.editorial.identity.heading);
+			const result = section(doc, id, headingOf(id, data.editorial.identity.heading));
 			const paragraphs = data.editorial.identity.paragraphs;
 			const fields = el(doc, "div");
 			fields.classList.add("handbook-monsterhearts-identity-fields");
@@ -227,6 +235,14 @@ function renderRegion(doc: Document, id: RegionId, data: MonsterheartsPlaybook, 
 			if (!data.gear?.length) return null;
 			const result = section(doc, id, regionLabel(id));
 			result.appendChild(list(doc, data.gear.map((item) => `${item.name}${item.quantity ? ` × ${item.quantity}` : ""}${item.description ? ` — ${item.description}` : ""}`)));
+			return result;
+		}
+		case "monsterhearts-notes": {
+			// The notes of the game are a region of the back of the sheet; blank, it draws nothing.
+			const notes = renderSessionNotes(doc, regionLabel(id), data.sessionNotes);
+			if (!notes) return null;
+			const result = section(doc, id);
+			result.appendChild(notes);
 			return result;
 		}
 		case "monsterhearts-darkest-self": return editorial(doc, id, data.editorial.darkestSelf);

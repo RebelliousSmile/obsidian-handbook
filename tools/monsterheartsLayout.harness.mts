@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import contract from "schema-pbta/packs/monsterhearts/presentation-contract.json";
 import { renderMonsterheartsLayout } from "../src/features/pbta/monsterheartsLayout";
+import { localized } from "../src/utils/i18n";
 
 class FakeElement {
 	children: FakeElement[] = [];
@@ -37,7 +38,7 @@ assert.ok(!base.some((node) => node.dataset.region === "monsterhearts-play"), "n
 
 const merged = base.find((node) => node.dataset.region === "ascendants-and-conditions");
 assert.ok(merged, "the merged region renders");
-assert.equal(merged.children[0].textContent, contract.regions.find((region) => region.id === "ascendants-and-conditions")?.label);
+assert.equal(merged.children[0].textContent, localized(contract.regions.find((region) => region.id === "ascendants-and-conditions")!.label));
 const harmRegion = base.find((node) => node.dataset.region === "harm-tracker");
 assert.ok(harmRegion, "the harm tracker renders its own region");
 const boxes = harmRegion.walk().filter((node) => node.tag === "input");

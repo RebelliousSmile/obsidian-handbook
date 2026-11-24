@@ -55,6 +55,7 @@ const URBAN_SHADOWS_COMPLEMENT = {
 	statProfiles: [{ key: "night-shift", label: "De nuit", stats: { mind: 1 } }], // .handbook-urban-shadows-row
 	// Labelled identity lines, as in the French skins: .handbook-urban-shadows-identity-fields
 	identity: { heading: "Identité", paragraphs: ["Nom : Alex, Sam", "Look : manteau trempé"] },
+	playbookImage: "https://example.com/the-aware.png", // urban-shadows-illustration
 };
 const CONDITIONAL: Record<string, Record<string, string>> = { monsterhearts: {}, "urban-shadows": {} };
 
@@ -73,6 +74,7 @@ const urbanShadowsData = {
 	scars: URBAN_SHADOWS_COMPLEMENT.scars,
 	gear: URBAN_SHADOWS_COMPLEMENT.gear,
 	statProfiles: URBAN_SHADOWS_COMPLEMENT.statProfiles,
+	playbookImage: URBAN_SHADOWS_COMPLEMENT.playbookImage,
 	editorial: { ...urbanShadows.editorial, identity: URBAN_SHADOWS_COMPLEMENT.identity },
 };
 

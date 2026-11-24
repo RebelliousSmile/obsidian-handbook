@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { parseUrbanShadowsPlaybookToml } from "schema-pbta";
 import contract from "schema-pbta/packs/urban-shadows/presentation-contract.json";
 import { log } from "../src/utils/logger";
+import { localized, localizedHeading } from "../src/utils/i18n";
 import { renderUrbanShadowsLayout, URBAN_SHADOWS_LAYOUT_REGIONS } from "../src/features/pbta/urbanShadowsLayout";
 
 class FakeElement {
@@ -55,11 +56,27 @@ assert.deepEqual(placed(full), flat.filter((id) => emitted.indexOf(id) >= 0), "r
 assert.deepEqual(full.children.map((face) => face.dataset.face), ["recto", "verso"], "two faces, front then back");
 const headingOf = (id: string) => regions(full).find((node) => node.dataset.region === id)?.children[0]?.textContent;
 for (const id of ["urban-shadows-stats", "urban-shadows-circles", "playbook-moves", "urban-shadows-end-move"]) {
-	if (emitted.indexOf(id) >= 0) assert.equal(headingOf(id), contract.regions.find((entry) => entry.id === id)?.label, `label of ${id}`);
+	if (emitted.indexOf(id) >= 0) assert.equal(headingOf(id), localized(contract.regions.find((entry) => entry.id === id)!.label), `label of ${id}`);
 }
 assert.ok(emitted.indexOf("urban-shadows-corruption") >= 0, "corruption is always emitted");
 const corruption = regions(full).find((node) => node.dataset.region === "urban-shadows-corruption") as FakeElement;
 assert.equal(corruption.walk().filter((node) => node.dataset.filled === undefined && node.attributes["aria-label"]?.startsWith("Corruption ")).length, complete.corruption.track ?? 0, "corruption track follows corruption.track");
+
+// The header is what the player typed, and the notes of the game sit in a region of the back of the sheet.
+const headed = render(corpus("urban-shadows-playbook-header"));
+const textsOf = (root: FakeElement) => root.walk().map((node) => node.textContent);
+for (const typed of ["Alex (they/them)", "Watchful", "Rain-soaked coat"]) assert.ok(textsOf(headed).indexOf(typed) >= 0, `the header shows "${typed}" as typed`);
+const notesRegion = regions(headed).find((node) => node.dataset.region === "urban-shadows-notes");
+assert.ok(notesRegion, "the notes region is drawn when the player wrote notes");
+assert.equal(headed.children[headed.children.length - 1].walk().indexOf(notesRegion as FakeElement) >= 0, true, "the notes region sits on the back of the sheet");
+assert.ok(textsOf(notesRegion as FakeElement).indexOf("Session 1: the night market.") >= 0, "the notes carry the text as typed");
+assert.equal(regions(render(blank)).filter((node) => node.dataset.region === "urban-shadows-notes").length, 0, "a sheet without notes draws no notes region");
+
+// An editorial heading that is only the published label follows the language; the player's own words stay.
+const playLabel = { fr: "Jouer l'archétype", en: "Playing the playbook" };
+assert.equal(localizedHeading(playLabel, "Playing the playbook", "fr"), "Jouer l'archétype");
+assert.equal(localizedHeading(playLabel, "Jouer l'archétype", "en"), "Playing the playbook");
+assert.equal(localizedHeading(playLabel, "Ma façon de jouer", "fr"), "Ma façon de jouer");
 
 // Stats are split by the keys the document names as Circles; each Circle carries three pips.
 const rich = { ...complete, stats: { blood: 1, heart: 0, mortalis: 2, night: -1 }, statuses: { mortalis: 2, night: 5 }, advancementCircles: ["mortalis", "night"], markedCircles: ["night"] };

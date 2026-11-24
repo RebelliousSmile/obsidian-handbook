@@ -149,3 +149,21 @@ pwsh tools/e2e/playbook-capture.ps1 -Game all -SchemaRoot ../schema-pbta
 
 `-OutputDir` defaults to `%TEMP%\handbook-playbook-capture`, `-Port` to 9241.
 Requires Python 3 with `websocket-client`.
+
+### PDF export proof
+
+`-Pdf` also exports each playbook through Obsidian's real PDF export
+(`printToPdf`) and fails when the print layout regresses:
+
+```powershell
+pwsh tools/e2e/playbook-capture.ps1 -Game all -SchemaRoot ../schema-pbta -Pdf
+pwsh tools/e2e/playbook-capture.ps1 -Game monsterhearts -SchemaRoot ../schema-pbta -Pdf -PrinterFriendlyOff
+```
+
+It asserts, on the dark-theme note with `printerFriendly` on: white paper
+(`rgb(255, 255, 255)`), `brumes--colour-light` on the body, a single grid
+track per sheet, no Type 3 font in the PDF, at least two pages, no blank page,
+and the party notes (the back of the sheet) alone on the last page. With
+`-PrinterFriendlyOff` it asserts that the body class is absent and the page
+background is not forced. The PDFs land in `-OutputDir`. The check is not part
+of `pnpm check` because it needs Obsidian and a schema-pbta checkout.
